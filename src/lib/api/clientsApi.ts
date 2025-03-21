@@ -55,14 +55,14 @@ export const clientsApi = {
     const clientRecord = {
       name: clientData.name,
       contact_name: clientData.contact_name,
-      email: clientData.email,
-      phone: clientData.phone,
-      address: clientData.address,
-      city: clientData.city,
-      state: clientData.state,
-      postcode: clientData.postcode,
-      status: clientData.status,
-      notes: clientData.notes,
+      email: clientData.email || null,
+      phone: clientData.phone || null,
+      address: clientData.address || null,
+      city: clientData.city || null,
+      state: clientData.state || null,
+      postcode: clientData.postcode || null,
+      status: clientData.status as string, // Cast to string to match Supabase expectations
+      notes: clientData.notes || null,
       user_id: user.id,
     };
     
