@@ -1,5 +1,5 @@
-
 import { SiteStatus } from '../SiteCard';
+import { ContactRecord } from '@/lib/types';
 
 export type WindowCleaning = {
   frequency: string;
@@ -100,6 +100,7 @@ export type SiteFormData = {
   clientId: string;
   monthlyCost?: number;
   monthlyRevenue?: number;
+  useClientInfo: boolean;
   subcontractors: Subcontractor[];
   periodicals: Periodicals;
   jobSpecifications: JobSpecifications;
@@ -108,9 +109,9 @@ export type SiteFormData = {
   contractDetails: ContractDetails;
   billingDetails: BillingDetails;
   adHocWorkAuthorization: AdHocWorkAuthorization;
+  contacts: ContactRecord[];
 }
 
-// Required fields for each step
 export const requiredFields = {
   basicInformation: ['name', 'address', 'city', 'state', 'postcode', 'representative', 'clientId'],
   contractDetails: ['startDate', 'contractNumber'],
@@ -118,14 +119,12 @@ export const requiredFields = {
   subcontractors: [] // Subcontractors are optional
 };
 
-// Helper function to validate an email address
 export const isValidEmail = (email: string): boolean => {
   if (!email) return true; // Email is optional
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-// Helper function to validate a phone number
 export const isValidPhone = (phone: string): boolean => {
   if (!phone) return true; // Phone is optional
   const phoneRegex = /^\+?[0-9\s\-()]{8,}$/;
@@ -133,7 +132,6 @@ export const isValidPhone = (phone: string): boolean => {
 };
 
 export const getInitialFormData = (): SiteFormData => ({
-  // Basic information
   name: '',
   address: '',
   city: '',
@@ -146,8 +144,8 @@ export const getInitialFormData = (): SiteFormData => ({
   clientId: '',
   monthlyCost: undefined,
   monthlyRevenue: undefined,
+  useClientInfo: false,
   
-  // Subcontractor details
   subcontractors: [
     {
       businessName: '',
@@ -157,7 +155,6 @@ export const getInitialFormData = (): SiteFormData => ({
     }
   ],
   
-  // Periodical inclusions
   periodicals: {
     windowCleaning: {
       frequency: 'quarterly',
@@ -171,7 +168,6 @@ export const getInitialFormData = (): SiteFormData => ({
     }
   },
   
-  // Job specifications
   jobSpecifications: {
     daysPerWeek: 5,
     hoursPerDay: 3,
@@ -179,13 +175,11 @@ export const getInitialFormData = (): SiteFormData => ({
     notes: ''
   },
   
-  // Replenishables
   replenishables: {
     stock: ['', '', '', '', ''],
     contactDetails: ''
   },
   
-  // Security details
   securityDetails: {
     accessCode: '',
     alarmCode: '',
@@ -193,7 +187,6 @@ export const getInitialFormData = (): SiteFormData => ({
     outOfHoursAccess: false
   },
   
-  // Contract details
   contractDetails: {
     startDate: '',
     endDate: '',
@@ -202,7 +195,6 @@ export const getInitialFormData = (): SiteFormData => ({
     terminationPeriod: ''
   },
   
-  // Billing details
   billingDetails: {
     rate: '',
     billingFrequency: 'monthly',
@@ -223,12 +215,13 @@ export const getInitialFormData = (): SiteFormData => ({
     notes: ''
   },
   
-  // Ad-hoc work authorization
   adHocWorkAuthorization: {
     approvalLimit: 500,
     approverName: '',
     approverEmail: '',
     approverPhone: '',
     requirePurchaseOrder: true
-  }
+  },
+  
+  contacts: []
 });

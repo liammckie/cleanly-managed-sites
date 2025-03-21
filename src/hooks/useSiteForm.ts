@@ -8,6 +8,7 @@ import { useSiteFormHandlers } from './useSiteFormHandlers';
 import { useSiteFormSubcontractors } from './useSiteFormSubcontractors';
 import { useSiteFormReplenishables } from './useSiteFormReplenishables';
 import { useSiteFormBillingContacts } from './useSiteFormBillingContacts';
+import { useSiteFormContacts } from './useSiteFormContacts';
 
 export const useSiteForm = () => {
   // Initialize form data with default values
@@ -27,6 +28,7 @@ export const useSiteForm = () => {
   const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData, errors, setErrors);
   const replenishableHandlers = useSiteFormReplenishables(formData, setFormData);
   const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData, errors, setErrors);
+  const contactHandlers = useSiteFormContacts(formData, setFormData, errors, setErrors);
   
   // Validate a specific step
   const validateStep = (stepIndex: number): boolean => {
@@ -43,6 +45,7 @@ export const useSiteForm = () => {
     ...formHandlers,
     ...subcontractorHandlers,
     ...replenishableHandlers,
-    ...billingContactHandlers
+    ...billingContactHandlers,
+    ...contactHandlers
   };
 };

@@ -26,6 +26,8 @@ export interface SiteRecord {
   contract_details?: any;
   billing_details?: any;
   subcontractors?: any;
+  // Contacts
+  contacts?: ContactRecord[];
 }
 
 export interface ClientRecord {
@@ -40,6 +42,23 @@ export interface ClientRecord {
   postcode?: string;
   status: 'active' | 'inactive' | 'pending';
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Contacts
+  contacts?: ContactRecord[];
+}
+
+export interface ContactRecord {
+  id?: string;
+  name: string;
+  role: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  is_primary?: boolean;
+  notes?: string;
+  entity_id: string; // Either client_id or site_id
+  entity_type: 'client' | 'site';
   created_at?: string;
   updated_at?: string;
 }

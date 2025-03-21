@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SiteFormData } from './siteFormTypes';
 import { BasicInformationStep } from './steps/BasicInformationStep';
@@ -8,8 +9,10 @@ import { ReplenishablesStep } from './steps/ReplenishablesStep';
 import { SecurityStep } from './steps/SecurityStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
+import { ContactsStep } from './steps/ContactsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { SiteStatus } from '../SiteCard';
+import { ContactRecord } from '@/lib/types';
 
 export type StepConfigItem = {
   title: string;
@@ -29,6 +32,11 @@ export type GetStepsConfigProps = {
   handleStockChange: (index: number, value: string) => void;
   addSubcontractor: () => void;
   removeSubcontractor: (index: number) => void;
+  // Contact handlers
+  handleContactChange: (index: number, field: keyof ContactRecord, value: any) => void;
+  addContact: () => void;
+  removeContact: (index: number) => void;
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
 };
 
 export const getStepsConfig = ({
@@ -42,7 +50,11 @@ export const getStepsConfig = ({
   handleSubcontractorChange,
   handleStockChange,
   addSubcontractor,
-  removeSubcontractor
+  removeSubcontractor,
+  handleContactChange,
+  addContact,
+  removeContact,
+  setFormData
 }: GetStepsConfigProps): StepConfigItem[] => [
   {
     title: "Basic Information",
@@ -54,6 +66,20 @@ export const getStepsConfig = ({
         handleChange={handleChange}
         handleStatusChange={handleStatusChange}
         handleClientChange={handleClientChange}
+        setFormData={setFormData}
+      />
+    )
+  },
+  {
+    title: "Contacts",
+    description: "Add contacts for this site.",
+    component: (
+      <ContactsStep 
+        formData={formData}
+        errors={errors}
+        handleContactChange={handleContactChange}
+        addContact={addContact}
+        removeContact={removeContact}
       />
     )
   },

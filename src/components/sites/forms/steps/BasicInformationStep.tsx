@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -14,6 +13,8 @@ import { SiteStatus } from '../../SiteCard';
 import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { useClients } from '@/hooks/useClients';
 import { ClientSelect } from '../../clients/ClientSelect';
+import { Switch } from '@/components/ui/switch';
+import { useClientData } from '@/hooks/useClientData';
 
 interface BasicInformationStepProps {
   formData: SiteFormData;
@@ -21,6 +22,7 @@ interface BasicInformationStepProps {
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStatusChange: (value: SiteStatus) => void;
   handleClientChange: (clientId: string) => void;
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
 }
 
 export function BasicInformationStep({ 
@@ -28,8 +30,11 @@ export function BasicInformationStep({
   errors,
   handleChange, 
   handleStatusChange,
-  handleClientChange
+  handleClientChange,
+  setFormData
 }: BasicInformationStepProps) {
+  const clientData = useClientData(formData.clientId, formData, setFormData);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
@@ -37,11 +42,29 @@ export function BasicInformationStep({
           <Label htmlFor="client">Client <span className="text-destructive">*</span></Label>
           <ClientSelect 
             value={formData.clientId}
-            onChange={handleClientChange}
+            onChange={(clientId) => {
+              handleClientChange(clientId);
+              if (formData.useClientInfo) {
+                clientData.toggleUseClientInfo(false);
+              }
+            }}
             error={errors['clientId']}
           />
           {errors['clientId'] && <FormMessage>{errors['clientId']}</FormMessage>}
         </FormItem>
+        
+        {formData.clientId && (
+          <FormItem className="flex items-center space-x-2">
+            <Switch 
+              id="useClientInfo" 
+              checked={formData.useClientInfo}
+              onCheckedChange={clientData.toggleUseClientInfo}
+            />
+            <Label htmlFor="useClientInfo" className="cursor-pointer">
+              Use client information for billing details
+            </Label>
+          </FormItem>
+        )}
         
         <FormItem className="space-y-2">
           <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>

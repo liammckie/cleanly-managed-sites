@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { SiteRecord } from '../types';
+import { SiteRecord, ContactRecord } from '../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
 // Site API functions
@@ -54,6 +55,23 @@ export const sitesApi = {
     }
     
     return null;
+  },
+  
+  // Get contacts for a site
+  async getSiteContacts(siteId: string): Promise<ContactRecord[]> {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('entity_id', siteId)
+      .eq('entity_type', 'site')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error(`Error fetching contacts for site ${siteId}:`, error);
+      throw error;
+    }
+    
+    return data as ContactRecord[] || [];
   },
   
   // Create a new site
@@ -119,6 +137,31 @@ export const sitesApi = {
       
       if (subError) {
         console.error('Error inserting subcontractors:', subError);
+        // We won't throw here to avoid rolling back the site creation
+      }
+    }
+    
+    // If there are contacts, store them
+    if (siteData.contacts.length > 0) {
+      const contactRecords = siteData.contacts.map(contact => ({
+        name: contact.name,
+        role: contact.role,
+        department: contact.department,
+        email: contact.email,
+        phone: contact.phone,
+        is_primary: contact.is_primary,
+        notes: contact.notes,
+        entity_id: data.id,
+        entity_type: 'site',
+        user_id: user.id
+      }));
+      
+      const { error: contactError } = await supabase
+        .from('contacts')
+        .insert(contactRecords);
+      
+      if (contactError) {
+        console.error('Error inserting contacts:', contactError);
         // We won't throw here to avoid rolling back the site creation
       }
     }
