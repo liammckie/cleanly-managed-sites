@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
+import { toast } from "sonner";
 
 interface DeleteFileDialogProps {
   open: boolean;
@@ -24,6 +25,24 @@ export const DeleteFileDialog = ({
   fileToDelete,
   onConfirmDelete
 }: DeleteFileDialogProps) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const handleDelete = async () => {
+    if (!fileToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await onConfirmDelete();
+      toast.success("File deleted successfully");
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error("Failed to delete file");
+    } finally {
+      setIsDeleting(false);
+      onOpenChange(false);
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -35,11 +54,18 @@ export const DeleteFileDialog = ({
         </p>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" disabled={isDeleting}>Cancel</Button>
           </DialogClose>
-          <Button variant="destructive" onClick={onConfirmDelete}>Delete</Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+

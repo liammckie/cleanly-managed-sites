@@ -7,6 +7,7 @@ import { useGoogleDriveFiles, WorkOrderAttachment } from '@/hooks/useGoogleDrive
 import { DriveConnectionStatus } from './attachments/DriveConnectionStatus';
 import { AttachmentList } from './attachments/AttachmentList';
 import { DeleteFileDialog } from './attachments/DeleteFileDialog';
+import { toast } from "sonner";
 
 interface FileAttachmentsProps {
   workOrderId: string;
@@ -41,10 +42,13 @@ export const FileAttachments = ({
       
       try {
         setIsUploading(true);
+        toast.loading("Uploading file...");
         const newAttachment = await uploadWorkOrderFile(workOrderId, workOrderTitle, file);
         onAttachmentsChange([...attachments, newAttachment]);
+        toast.success("File uploaded successfully");
       } catch (error) {
         console.error('File upload error:', error);
+        toast.error("Failed to upload file");
       } finally {
         setIsUploading(false);
         // Reset the file input
@@ -57,9 +61,12 @@ export const FileAttachments = ({
 
   const handleDownload = async (attachment: WorkOrderAttachment) => {
     try {
+      toast.loading(`Downloading ${attachment.name}...`);
       await downloadWorkOrderFile(attachment);
+      toast.success("File downloaded successfully");
     } catch (error) {
       console.error('File download error:', error);
+      toast.error("Failed to download file");
     }
   };
 
@@ -70,10 +77,10 @@ export const FileAttachments = ({
       await deleteWorkOrderFile(fileToDelete);
       const updatedAttachments = attachments.filter(a => a.id !== fileToDelete.id);
       onAttachmentsChange(updatedAttachments);
-      setDeleteDialogOpen(false);
-      setFileToDelete(null);
+      return Promise.resolve();
     } catch (error) {
       console.error('File deletion error:', error);
+      return Promise.reject(error);
     }
   };
 
