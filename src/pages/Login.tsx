@@ -7,39 +7,101 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabase';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const [error, setError] = useState<string | null>(null);
   
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate login API call
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
       toast.success("Login successful!");
-      setIsLoading(false);
       navigate('/dashboard');
-    }, 1500);
+    } catch (error: any) {
+      setError(error.message || 'Failed to login');
+      toast.error("Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate signup API call
-    setTimeout(() => {
-      toast.success("Account created successfully!");
+    try {
+      // First, sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      // Check if we need email confirmation
+      if (data.user?.identities?.length === 0) {
+        toast.info("Please check your email to confirm your account");
+      } else {
+        toast.success("Account created successfully!");
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Failed to create account');
+      toast.error("Registration failed");
+    } finally {
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Password reset email sent!");
+    } catch (error: any) {
+      setError(error.message || 'Failed to send password reset email');
+      toast.error("Failed to send reset email");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -61,6 +123,13 @@ const Login = () => {
           </CardHeader>
           
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -79,9 +148,13 @@ const Login = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-sm text-primary hover:underline">
+                    <button 
+                      type="button"
+                      onClick={handleResetPassword}
+                      className="text-sm text-primary hover:underline"
+                    >
                       Forgot Password?
-                    </a>
+                    </button>
                   </div>
                   <Input
                     id="password"
