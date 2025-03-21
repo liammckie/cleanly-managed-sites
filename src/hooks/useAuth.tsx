@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -141,16 +142,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // If newPassword is provided, this is a password reset
       if (newPassword) {
+        // For password reset, we use updateUser instead
         const { error } = await supabase.auth.verifyOtp({
           email,
           token,
           type: 'recovery',
-          options: {
-            password: newPassword
-          }
         });
         
         if (error) throw error;
+        
+        // After verification, update the password
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: newPassword
+        });
+        
+        if (updateError) throw updateError;
         
         toast.success('Password has been reset successfully!');
       } else {
