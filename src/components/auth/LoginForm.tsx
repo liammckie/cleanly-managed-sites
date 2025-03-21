@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,7 +104,7 @@ const LoginForm = ({ onSubmit, onResetPassword, isLoading, error }: LoginFormPro
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (
             <span className="flex items-center gap-2">
-              <LoadingSpinner size={16} />
+              <LoadingSpinner size="sm" />
               <span>Logging in...</span>
             </span>
           ) : (
