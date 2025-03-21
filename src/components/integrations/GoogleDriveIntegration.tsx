@@ -24,6 +24,11 @@ export const GoogleDriveIntegration = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentUrl(window.location.origin);
+  }, []);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -67,8 +72,7 @@ export const GoogleDriveIntegration = () => {
     try {
       setError(null);
       
-      const origin = window.location.origin;
-      const redirectUri = `${origin}/api/auth/callback/google`;
+      const redirectUri = `${window.location.origin}/api/auth/callback/google`;
       
       console.log('Using redirect URI:', redirectUri);
       
@@ -180,22 +184,42 @@ export const GoogleDriveIntegration = () => {
     handleOAuthCallback();
   }, [user]);
 
+  const isDevelopmentEnvironment = () => {
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1';
+  };
+
+  const isLovablePreviewEnvironment = () => {
+    return window.location.hostname.includes('lovableproject.com');
+  };
+
   const renderSetupInstructions = () => {
+    const callbackUrl = `${window.location.origin}/api/auth/callback/google`;
+    const alternateCallbackUrl = `${window.location.origin}/integrations?tab=google-drive`;
+    
     return (
       <Alert variant="destructive" className="mt-4">
         <AlertTitle>Google Drive Integration Setup</AlertTitle>
         <AlertDescription className="space-y-4 mt-2">
-          <p>To use Google Drive integration, you need to adjust your OAuth 2.0 credentials:</p>
+          <p>To use Google Drive integration in this environment, you need to configure your Google OAuth 2.0 credentials:</p>
           <ol className="list-decimal pl-5 space-y-2">
             <li>Go to the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline font-medium flex items-center">Google Cloud Console Credentials Page <ExternalLink className="ml-1 h-3 w-3" /></a></li>
             <li>Find and edit your OAuth 2.0 Client ID</li>
-            <li>For Authorized JavaScript origins: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code> (already correct)</li>
-            <li>For Authorized redirect URIs: Change <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/api/auth/callback/google</code> to <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/integrations?tab=google-drive</code></li>
-            <li>OR update the application code to use your current redirect URI</li>
+            <li>For Authorized JavaScript origins: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code></li>
+            <li>For Authorized redirect URIs: Add <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{callbackUrl}</code></li>
+            <li>Alternatively, you can modify the code to use <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{alternateCallbackUrl}</code> as the redirect URI</li>
             <li>Set your Google Client ID as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID</code> in your .env file</li>
             <li>Set your Google Client Secret as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">GOOGLE_CLIENT_SECRET</code> in your Supabase Edge Function secrets</li>
           </ol>
-          <p className="text-sm mt-2">After completing these steps, restart your application and try connecting again.</p>
+          
+          {isLovablePreviewEnvironment() && (
+            <div className="mt-4 p-3 border border-yellow-500/50 bg-yellow-500/10 rounded-md">
+              <p className="font-medium">Note for Lovable Preview Environment:</p>
+              <p>You're currently in the Lovable app builder preview environment. For OAuth to work here, you must add <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code> to your Google OAuth authorized origins and <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{callbackUrl}</code> to your authorized redirect URIs.</p>
+            </div>
+          )}
+          
+          <p className="text-sm mt-2">After completing these steps, refresh the page and try connecting again.</p>
         </AlertDescription>
       </Alert>
     );
@@ -240,6 +264,13 @@ export const GoogleDriveIntegration = () => {
               <div className="p-3 border border-destructive/30 bg-destructive/10 rounded-md text-sm text-destructive">
                 <strong>Error:</strong> {error}
                 {(error === 'Google Client ID is not configured') && renderSetupInstructions()}
+              </div>
+            )}
+            
+            {currentUrl && !error && !isConnected && (
+              <div className="p-3 border border-blue-500/30 bg-blue-500/10 rounded-md text-sm">
+                <strong>Environment Info:</strong> You are currently running at <code>{currentUrl}</code>
+                <p className="mt-2">Make sure this URL is added to your Google OAuth 2.0 credentials as an authorized JavaScript origin, and <code>{`${currentUrl}/api/auth/callback/google`}</code> is added as an authorized redirect URI.</p>
               </div>
             )}
             
