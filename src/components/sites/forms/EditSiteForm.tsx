@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
+import { Form } from "@/components/ui/form";
 import { SiteFormStep } from './SiteFormStep';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
@@ -87,26 +88,28 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Edit Site: {site.name}</h1>
-      
-      <FormProgressBar 
-        currentStep={stepper.currentStep}
-        totalSteps={stepper.totalSteps}
-        progress={stepper.progress}
-      />
-      
-      <SiteFormStep
-        title={steps[stepper.currentStep].title}
-        description={steps[stepper.currentStep].description}
-        onNext={() => stepper.handleNext(handleSubmit)}
-        onBack={stepper.handleBack}
-        isSubmitting={isSubmitting}
-        isLastStep={stepper.isLastStep}
-        isFirstStep={stepper.isFirstStep}
-      >
-        {steps[stepper.currentStep].component}
-      </SiteFormStep>
-    </div>
+    <Form {...formHandlers.form}>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Edit Site: {site.name}</h1>
+        
+        <FormProgressBar 
+          currentStep={stepper.currentStep}
+          totalSteps={stepper.totalSteps}
+          progress={stepper.progress}
+        />
+        
+        <SiteFormStep
+          title={steps[stepper.currentStep].title}
+          description={steps[stepper.currentStep].description}
+          onNext={() => stepper.handleNext(handleSubmit)}
+          onBack={stepper.handleBack}
+          isSubmitting={isSubmitting}
+          isLastStep={stepper.isLastStep}
+          isFirstStep={stepper.isFirstStep}
+        >
+          {steps[stepper.currentStep].component}
+        </SiteFormStep>
+      </div>
+    </Form>
   );
 }

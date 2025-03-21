@@ -40,71 +40,71 @@ export function SubcontractorsStep({
           </div>
           
           <div className="space-y-4">
-            <FormItem className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor={`business-name-${index}`}>Business Name <span className="text-destructive">*</span></Label>
-              <FormControl>
-                <Input
-                  id={`business-name-${index}`}
-                  placeholder="Enter business name"
-                  value={subcontractor.businessName}
-                  onChange={(e) => handleSubcontractorChange(index, 'businessName', e.target.value)}
-                  className={`glass-input ${errors[`subcontractors[${index}].businessName`] ? 'border-destructive' : ''}`}
-                  required
-                  aria-invalid={!!errors[`subcontractors[${index}].businessName`]}
-                />
-              </FormControl>
-              {errors[`subcontractors[${index}].businessName`] && <FormMessage>{errors[`subcontractors[${index}].businessName`]}</FormMessage>}
-            </FormItem>
+              <Input
+                id={`business-name-${index}`}
+                placeholder="Enter business name"
+                value={subcontractor.businessName}
+                onChange={(e) => handleSubcontractorChange(index, 'businessName', e.target.value)}
+                className={`glass-input ${errors[`subcontractors[${index}].businessName`] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors[`subcontractors[${index}].businessName`]}
+              />
+              {errors[`subcontractors[${index}].businessName`] && 
+                <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].businessName`]}</p>
+              }
+            </div>
             
-            <FormItem className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor={`contact-name-${index}`}>Contact Name <span className="text-destructive">*</span></Label>
-              <FormControl>
-                <Input
-                  id={`contact-name-${index}`}
-                  placeholder="Enter contact name"
-                  value={subcontractor.contactName}
-                  onChange={(e) => handleSubcontractorChange(index, 'contactName', e.target.value)}
-                  className={`glass-input ${errors[`subcontractors[${index}].contactName`] ? 'border-destructive' : ''}`}
-                  required
-                  aria-invalid={!!errors[`subcontractors[${index}].contactName`]}
-                />
-              </FormControl>
-              {errors[`subcontractors[${index}].contactName`] && <FormMessage>{errors[`subcontractors[${index}].contactName`]}</FormMessage>}
-            </FormItem>
+              <Input
+                id={`contact-name-${index}`}
+                placeholder="Enter contact name"
+                value={subcontractor.contactName}
+                onChange={(e) => handleSubcontractorChange(index, 'contactName', e.target.value)}
+                className={`glass-input ${errors[`subcontractors[${index}].contactName`] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors[`subcontractors[${index}].contactName`]}
+              />
+              {errors[`subcontractors[${index}].contactName`] && 
+                <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].contactName`]}</p>
+              }
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormItem className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor={`email-${index}`}>Email <span className="text-destructive">*</span></Label>
-                <FormControl>
-                  <Input
-                    id={`email-${index}`}
-                    type="email"
-                    placeholder="Enter email"
-                    value={subcontractor.email}
-                    onChange={(e) => handleSubcontractorChange(index, 'email', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].email`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].email`]}
-                  />
-                </FormControl>
-                {errors[`subcontractors[${index}].email`] && <FormMessage>{errors[`subcontractors[${index}].email`]}</FormMessage>}
-              </FormItem>
+                <Input
+                  id={`email-${index}`}
+                  type="email"
+                  placeholder="Enter email"
+                  value={subcontractor.email}
+                  onChange={(e) => handleSubcontractorChange(index, 'email', e.target.value)}
+                  className={`glass-input ${errors[`subcontractors[${index}].email`] ? 'border-destructive' : ''}`}
+                  required
+                  aria-invalid={!!errors[`subcontractors[${index}].email`]}
+                />
+                {errors[`subcontractors[${index}].email`] && 
+                  <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].email`]}</p>
+                }
+              </div>
               
-              <FormItem className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor={`phone-${index}`}>Phone <span className="text-destructive">*</span></Label>
-                <FormControl>
-                  <Input
-                    id={`phone-${index}`}
-                    placeholder="Enter phone number"
-                    value={subcontractor.phone}
-                    onChange={(e) => handleSubcontractorChange(index, 'phone', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].phone`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].phone`]}
-                  />
-                </FormControl>
-                {errors[`subcontractors[${index}].phone`] && <FormMessage>{errors[`subcontractors[${index}].phone`]}</FormMessage>}
-              </FormItem>
+                <Input
+                  id={`phone-${index}`}
+                  placeholder="Enter phone number"
+                  value={subcontractor.phone}
+                  onChange={(e) => handleSubcontractorChange(index, 'phone', e.target.value)}
+                  className={`glass-input ${errors[`subcontractors[${index}].phone`] ? 'border-destructive' : ''}`}
+                  required
+                  aria-invalid={!!errors[`subcontractors[${index}].phone`]}
+                />
+                {errors[`subcontractors[${index}].phone`] && 
+                  <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].phone`]}</p>
+                }
+              </div>
             </div>
           </div>
         </div>

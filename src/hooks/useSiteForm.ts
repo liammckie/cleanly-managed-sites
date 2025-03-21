@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { SiteStatus } from '@/components/sites/SiteCard';
 import { SiteFormData, getInitialFormData } from '@/components/sites/forms/siteFormTypes';
 import { toast } from 'sonner';
@@ -8,6 +9,11 @@ export function useSiteForm() {
   // Form state
   const [formData, setFormData] = useState<SiteFormData>(getInitialFormData());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Initialize react-hook-form
+  const form = useForm<SiteFormData>({
+    defaultValues: formData
+  });
   
   // Handle basic field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -271,6 +277,7 @@ export function useSiteForm() {
     formData,
     setFormData,
     errors,
+    form,
     handleChange,
     handleStatusChange,
     handleClientChange,
