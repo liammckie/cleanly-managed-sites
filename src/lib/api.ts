@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
@@ -15,6 +16,14 @@ export interface SiteRecord {
   email?: string;
   created_at?: string;
   user_id?: string;
+  // Add missing fields that are referenced in EditSiteForm
+  security_details?: any;
+  job_specifications?: any;
+  periodicals?: any;
+  replenishables?: any;
+  contract_details?: any;
+  billing_details?: any;
+  subcontractors?: any;
 }
 
 // Site API functions

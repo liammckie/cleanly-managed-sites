@@ -5,7 +5,7 @@ interface LoadingSpinnerProps {
   size?: number;
 }
 
-const LoadingSpinner = ({ size = 24 }: LoadingSpinnerProps) => {
+export const LoadingSpinner = ({ size = 24 }: LoadingSpinnerProps) => {
   return (
     <svg 
       className="animate-spin text-white" 
@@ -21,4 +21,5 @@ const LoadingSpinner = ({ size = 24 }: LoadingSpinnerProps) => {
   );
 };
 
+// Add default export as well for backwards compatibility
 export default LoadingSpinner;

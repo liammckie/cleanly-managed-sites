@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { SiteStatus } from '@/components/sites/SiteCard';
 import { SiteFormData, getInitialFormData } from '@/components/sites/forms/siteFormTypes';
@@ -223,6 +224,7 @@ export function useSiteForm() {
 
   return {
     formData,
+    setFormData, // Add this missing export
     errors,
     handleChange,
     handleStatusChange,

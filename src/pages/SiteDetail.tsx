@@ -28,8 +28,13 @@ const SiteDetail = () => {
               <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
               <p>{error.message || 'Unable to load site details'}</p>
             </div>
-          ) : (
+          ) : site ? (
             <SiteDetailView site={site} />
+          ) : (
+            <div className="text-center">
+              <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>
+              <p>The requested site could not be found.</p>
+            </div>
           )}
         </div>
       </div>

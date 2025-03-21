@@ -1,128 +1,15 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteStatus } from './SiteCard';
+import { SiteRecord } from '@/lib/api';
 import { Edit, MapPin, Phone, Mail, User, Calendar, Clock, FileText, Briefcase } from 'lucide-react';
 
-export type SiteDetails = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  postcode: string;
-  status: SiteStatus;
-  representative: string;
-  phone?: string;
-  email?: string;
-  createdAt: string;
-  updatedAt: string;
-  subcontractors: {
-    businessName: string;
-    contactName: string;
-    email: string;
-    phone: string;
-  }[];
-  periodicals: {
-    windowCleaning: {
-      frequency: string;
-      lastCompleted?: string;
-      nextScheduled?: string;
-    };
-    steamCleaning: {
-      charges: string;
-      frequency: string;
-      lastCompleted?: string;
-    };
-  };
-  jobSpecifications: {
-    daysPerWeek: number;
-    hoursPerDay: number;
-    directEmployees: boolean;
-    notes: string;
-  };
-  replenishables: {
-    stock: string[];
-    contactDetails: string;
-  };
-  securityDetails: {
-    accessCode?: string;
-    alarmCode?: string;
-    keyLocation: string;
-    outOfHoursAccess: boolean;
-  };
-};
-
-// Mock data for demonstration
-const mockSiteDetail: SiteDetails = {
-  id: '1',
-  name: 'ABC Office Building',
-  address: '123 Business St',
-  city: 'Sydney',
-  state: 'NSW',
-  postcode: '2000',
-  status: 'active',
-  representative: 'John Smith',
-  phone: '(02) 1234 5678',
-  email: 'john.smith@abcbuilding.com',
-  createdAt: '2023-01-15',
-  updatedAt: '2023-06-22',
-  subcontractors: [
-    {
-      businessName: 'Quality Cleaners Pty Ltd',
-      contactName: 'Mary Johnson',
-      email: 'mary@qualitycleaners.com.au',
-      phone: '0412 345 678'
-    },
-    {
-      businessName: 'Shine Bright Cleaning',
-      contactName: 'Robert Brown',
-      email: 'robert@shinebright.com.au',
-      phone: '0487 654 321'
-    }
-  ],
-  periodicals: {
-    windowCleaning: {
-      frequency: 'Quarterly',
-      lastCompleted: '2023-03-15',
-      nextScheduled: '2023-06-15'
-    },
-    steamCleaning: {
-      charges: '$250 per session',
-      frequency: 'Semi-annually',
-      lastCompleted: '2023-01-20'
-    }
-  },
-  jobSpecifications: {
-    daysPerWeek: 5,
-    hoursPerDay: 3,
-    directEmployees: false,
-    notes: 'Cleaning to be done after business hours. Focus on reception area and meeting rooms.'
-  },
-  replenishables: {
-    stock: [
-      'Hand soap',
-      'Paper towels',
-      'Toilet paper',
-      'Dishwashing liquid',
-      'Garbage bags'
-    ],
-    contactDetails: 'Contact office manager for stock replenishment'
-  },
-  securityDetails: {
-    accessCode: '1234',
-    alarmCode: '5678',
-    keyLocation: 'Security desk at main entrance',
-    outOfHoursAccess: true
-  }
-};
-
-export function SiteDetailView() {
+// Update the component props to accept a site parameter
+export function SiteDetailView({ site }: { site: SiteRecord }) {
   const [activeTab, setActiveTab] = useState('overview');
-  const site = mockSiteDetail; // This would come from your API/database
   
   const getStatusColor = (status: SiteStatus) => {
     switch (status) {
@@ -143,7 +30,7 @@ export function SiteDetailView() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">{site.name}</h1>
-            <Badge className={getStatusColor(site.status)}>
+            <Badge className={getStatusColor(site.status as SiteStatus)}>
               {site.status.charAt(0).toUpperCase() + site.status.slice(1)}
             </Badge>
           </div>
@@ -215,17 +102,18 @@ export function SiteDetailView() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Created On</p>
-                  <p className="font-medium">{site.createdAt}</p>
+                  <p className="font-medium">{site.created_at}</p>
                 </div>
                 
                 <div>
                   <p className="text-sm text-muted-foreground">Last Updated</p>
-                  <p className="font-medium">{site.updatedAt}</p>
+                  <p className="font-medium">{site.created_at}</p>
                 </div>
               </div>
             </div>
           </div>
         </TabsContent>
+        
         
         <TabsContent value="subcontractors" className="mt-0 animate-slide-in">
           <div className="glass-card p-6">
@@ -234,13 +122,13 @@ export function SiteDetailView() {
               Subcontractor Details
             </h3>
             
-            {site.subcontractors.map((subcontractor, index) => (
+            {site.subcontractors?.map((subcontractor, index) => (
               <div key={index} className="border-b border-border py-4 last:border-0 last:pb-0">
-                <h4 className="font-medium">{subcontractor.businessName}</h4>
+                <h4 className="font-medium">{subcontractor.business_name}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Contact Name</p>
-                    <p>{subcontractor.contactName}</p>
+                    <p>{subcontractor.contact_name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Phone</p>
@@ -263,20 +151,20 @@ export function SiteDetailView() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Frequency</p>
-                  <p className="font-medium">{site.periodicals.windowCleaning.frequency}</p>
+                  <p className="font-medium">{site.periodicals?.windowCleaning.frequency}</p>
                 </div>
                 
-                {site.periodicals.windowCleaning.lastCompleted && (
+                {site.periodicals?.windowCleaning.lastCompleted && (
                   <div>
                     <p className="text-sm text-muted-foreground">Last Completed</p>
-                    <p className="font-medium">{site.periodicals.windowCleaning.lastCompleted}</p>
+                    <p className="font-medium">{site.periodicals?.windowCleaning.lastCompleted}</p>
                   </div>
                 )}
                 
-                {site.periodicals.windowCleaning.nextScheduled && (
+                {site.periodicals?.windowCleaning.nextScheduled && (
                   <div>
                     <p className="text-sm text-muted-foreground">Next Scheduled</p>
-                    <p className="font-medium">{site.periodicals.windowCleaning.nextScheduled}</p>
+                    <p className="font-medium">{site.periodicals?.windowCleaning.nextScheduled}</p>
                   </div>
                 )}
               </div>
@@ -287,18 +175,18 @@ export function SiteDetailView() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Frequency</p>
-                  <p className="font-medium">{site.periodicals.steamCleaning.frequency}</p>
+                  <p className="font-medium">{site.periodicals?.steamCleaning.frequency}</p>
                 </div>
                 
                 <div>
                   <p className="text-sm text-muted-foreground">Charges</p>
-                  <p className="font-medium">{site.periodicals.steamCleaning.charges}</p>
+                  <p className="font-medium">{site.periodicals?.steamCleaning.charges}</p>
                 </div>
                 
-                {site.periodicals.steamCleaning.lastCompleted && (
+                {site.periodicals?.steamCleaning.lastCompleted && (
                   <div>
                     <p className="text-sm text-muted-foreground">Last Completed</p>
-                    <p className="font-medium">{site.periodicals.steamCleaning.lastCompleted}</p>
+                    <p className="font-medium">{site.periodicals?.steamCleaning.lastCompleted}</p>
                   </div>
                 )}
               </div>
@@ -316,23 +204,23 @@ export function SiteDetailView() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-muted-foreground">Days Per Week</p>
-                <p className="text-xl font-medium">{site.jobSpecifications.daysPerWeek}</p>
+                <p className="text-xl font-medium">{site.job_specifications?.daysPerWeek}</p>
               </div>
               
               <div>
                 <p className="text-sm text-muted-foreground">Hours Per Day</p>
-                <p className="text-xl font-medium">{site.jobSpecifications.hoursPerDay}</p>
+                <p className="text-xl font-medium">{site.job_specifications?.hoursPerDay}</p>
               </div>
               
               <div>
                 <p className="text-sm text-muted-foreground">Direct Employees</p>
-                <p className="text-xl font-medium">{site.jobSpecifications.directEmployees ? 'Yes' : 'No'}</p>
+                <p className="text-xl font-medium">{site.job_specifications?.directEmployees ? 'Yes' : 'No'}</p>
               </div>
             </div>
             
             <div className="mt-6">
               <p className="text-sm text-muted-foreground">Notes</p>
-              <p className="mt-1">{site.jobSpecifications.notes}</p>
+              <p className="mt-1">{site.job_specifications?.notes}</p>
             </div>
           </div>
         </TabsContent>
@@ -345,7 +233,7 @@ export function SiteDetailView() {
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Stock Items</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {site.replenishables.stock.map((item, index) => (
+                  {site.replenishables?.stock.map((item, index) => (
                     <div key={index} className="bg-secondary p-2 rounded-md">
                       {item}
                     </div>
@@ -355,7 +243,7 @@ export function SiteDetailView() {
               
               <div>
                 <p className="text-sm text-muted-foreground">Contact Details</p>
-                <p className="mt-1">{site.replenishables.contactDetails}</p>
+                <p className="mt-1">{site.replenishables?.contactDetails}</p>
               </div>
             </div>
           </div>
@@ -366,14 +254,14 @@ export function SiteDetailView() {
             <h3 className="text-lg font-medium mb-4">Security Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {site.securityDetails.accessCode && (
+              {site.security_details?.accessCode && (
                 <div>
                   <p className="text-sm text-muted-foreground">Access Code</p>
                   <p className="font-medium">•••• <span className="text-xs">(hidden)</span></p>
                 </div>
               )}
               
-              {site.securityDetails.alarmCode && (
+              {site.security_details?.alarmCode && (
                 <div>
                   <p className="text-sm text-muted-foreground">Alarm Code</p>
                   <p className="font-medium">•••• <span className="text-xs">(hidden)</span></p>
@@ -382,12 +270,12 @@ export function SiteDetailView() {
               
               <div className="md:col-span-2">
                 <p className="text-sm text-muted-foreground">Key Location</p>
-                <p className="font-medium">{site.securityDetails.keyLocation}</p>
+                <p className="font-medium">{site.security_details?.keyLocation}</p>
               </div>
               
               <div>
                 <p className="text-sm text-muted-foreground">Out of Hours Access</p>
-                <p className="font-medium">{site.securityDetails.outOfHoursAccess ? 'Available' : 'Not Available'}</p>
+                <p className="font-medium">{site.security_details?.outOfHoursAccess ? 'Available' : 'Not Available'}</p>
               </div>
             </div>
           </div>
