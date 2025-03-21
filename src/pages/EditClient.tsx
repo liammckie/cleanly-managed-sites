@@ -25,7 +25,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import useMobile from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -34,7 +34,7 @@ const EditClient = () => {
   const { client, isLoading, error } = useClientDetails(id!);
   
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = React.useState(false);
   
   const handleSignOut = async () => {

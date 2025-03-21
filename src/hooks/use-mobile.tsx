@@ -27,12 +27,12 @@ export function useMediaQuery(query: string): boolean {
   return matches;
 }
 
-// Alias for backward compatibility with existing code
+// Export as named export for components that expect this naming
 export function useIsMobile(): boolean {
   return useMediaQuery('(max-width: 768px)');
 }
 
-// For backward compatibility in case some files use it directly
+// Export as default for backward compatibility
 export default function useMobile(): boolean {
   return useMediaQuery('(max-width: 768px)');
 }

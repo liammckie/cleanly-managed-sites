@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClientForm } from '@/components/clients/ClientForm';
 import {
@@ -21,7 +20,7 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
-import useMobile from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -29,7 +28,7 @@ import { Button } from '@/components/ui/button';
 
 const CreateClient = () => {
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = React.useState(false);
   
   const handleSignOut = async () => {
@@ -56,13 +55,11 @@ const CreateClient = () => {
       <div className="flex h-screen w-full bg-background">
         <Sidebar variant="floating" collapsible="offcanvas">
           <SidebarContent>
-            {/* Import and use your existing sidebar content */}
             <div className="pt-6 md:pt-10 px-5 space-y-8">
               <div className="flex items-center justify-center md:justify-start">
                 <h1 className="text-2xl font-bold">CleanSphere</h1>
               </div>
               
-              {/* Your existing sidebar navigation */}
               <nav className="space-y-1">
                 {navItems.map(item => (
                   <NavLink
