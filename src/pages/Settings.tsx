@@ -7,7 +7,9 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { BusinessDetailsForm } from '@/components/settings/BusinessDetailsForm';
-import { Settings as SettingsIcon, Building2 } from 'lucide-react';
+import { UserPreferencesForm } from '@/components/settings/UserPreferencesForm';
+import { WorkOrderSettingsForm } from '@/components/settings/WorkOrderSettingsForm';
+import { Settings as SettingsIcon, Building2, User, Briefcase, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
@@ -47,14 +49,27 @@ const Settings = () => {
                     <Building2 className="h-4 w-4" />
                     Business Details
                   </TabsTrigger>
-                  {/* More tabs can be added here in the future */}
+                  <TabsTrigger value="user" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    User Preferences
+                  </TabsTrigger>
+                  <TabsTrigger value="workorders" className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Work Order Settings
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="business" className="space-y-8">
                   <BusinessDetailsForm />
                 </TabsContent>
                 
-                {/* More tab content can be added here in the future */}
+                <TabsContent value="user" className="space-y-8">
+                  <UserPreferencesForm />
+                </TabsContent>
+                
+                <TabsContent value="workorders" className="space-y-8">
+                  <WorkOrderSettingsForm />
+                </TabsContent>
               </Tabs>
             </div>
           </main>
