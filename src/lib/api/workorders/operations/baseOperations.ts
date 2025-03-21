@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord, CreateWorkOrderData, UpdateWorkOrderData, WorkOrderStatus } from '../types';
 import { Json } from '@/integrations/supabase/types';
+import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 /**
  * Create a new work order
@@ -39,7 +40,7 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
     
     // Ensure attachments are properly cast from Json to WorkOrderAttachment[]
     if (workOrder.attachments) {
-      workOrder.attachments = workOrder.attachments as any;
+      workOrder.attachments = workOrder.attachments as unknown as WorkOrderAttachment[];
     }
     
     return workOrder;
