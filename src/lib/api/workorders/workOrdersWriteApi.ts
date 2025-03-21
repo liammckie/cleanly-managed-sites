@@ -46,7 +46,7 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
 export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
     // Prepare the update data - handle the attachments separately
-    const updateData = { ...workOrderData };
+    const updateData: any = { ...workOrderData };
     if (updateData.attachments) {
       // Convert WorkOrderAttachment[] to a JSON-compatible format
       updateData.attachments = JSON.parse(JSON.stringify(updateData.attachments));
