@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord, ContactRecord } from '../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
@@ -52,8 +51,8 @@ export const sitesApi = {
         clients: undefined // Remove the clients property
       };
       
-      // Get contacts for the site
-      const { data: contacts, error: contactsError } = await supabase
+      // Get contacts for the site separately
+      const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
         .eq('entity_id', id)
@@ -61,8 +60,12 @@ export const sitesApi = {
       
       if (contactsError) {
         console.error(`Error fetching contacts for site ${id}:`, contactsError);
-      } else if (contacts) {
-        transformedData.contacts = contacts as ContactRecord[];
+      } else if (contactsData) {
+        // Add the contacts to the transformed data
+        transformedData.contacts = contactsData as ContactRecord[];
+      } else {
+        // Ensure we always have a contacts array even if empty
+        transformedData.contacts = [];
       }
       
       return transformedData as SiteRecord;
@@ -156,15 +159,15 @@ export const sitesApi = {
     }
     
     // If there are contacts, store them
-    if (siteData.contacts.length > 0) {
+    if (siteData.contacts && siteData.contacts.length > 0) {
       const contactRecords = siteData.contacts.map(contact => ({
         name: contact.name,
         role: contact.role,
-        department: contact.department,
-        email: contact.email,
-        phone: contact.phone,
-        is_primary: contact.is_primary,
-        notes: contact.notes,
+        department: contact.department || null,
+        email: contact.email || null,
+        phone: contact.phone || null,
+        is_primary: contact.is_primary || false,
+        notes: contact.notes || null,
         entity_id: data.id,
         entity_type: 'site',
         user_id: user.id
@@ -180,7 +183,13 @@ export const sitesApi = {
       }
     }
     
-    return data as SiteRecord;
+    // Create a result that includes the contacts
+    const result = {
+      ...data,
+      contacts: siteData.contacts || []
+    } as SiteRecord;
+    
+    return result;
   },
   
   // Update an existing site
@@ -246,7 +255,7 @@ export const sitesApi = {
     }
     
     // If contacts were provided, update them as well
-    if (siteData.contacts && siteData.contacts.length > 0) {
+    if (siteData.contacts) {
       // First, delete existing contacts for this site
       await supabase
         .from('contacts')
@@ -260,11 +269,11 @@ export const sitesApi = {
       const contactRecords = siteData.contacts.map(contact => ({
         name: contact.name,
         role: contact.role,
-        department: contact.department,
-        email: contact.email,
-        phone: contact.phone,
-        is_primary: contact.is_primary,
-        notes: contact.notes,
+        department: contact.department || null,
+        email: contact.email || null,
+        phone: contact.phone || null,
+        is_primary: contact.is_primary || false,
+        notes: contact.notes || null,
         entity_id: id,
         entity_type: 'site',
         user_id: user?.id
@@ -279,7 +288,20 @@ export const sitesApi = {
       }
     }
     
-    return data as SiteRecord;
+    // Fetch the contacts to include in the result
+    const { data: contactsData } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('entity_id', id)
+      .eq('entity_type', 'site');
+    
+    // Create a result that includes the contacts
+    const result = {
+      ...data,
+      contacts: contactsData || []
+    } as SiteRecord;
+    
+    return result;
   },
   
   // Delete a site
