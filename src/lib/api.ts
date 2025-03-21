@@ -5,4 +5,5 @@ export * from './api/clientsApi';
 export * from './api/sites';
 export * from './api/subcontractorsApi';
 export * from './api/authApi';
+export * from './api/workorders';
 export * from './types';

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { WorkOrderRecord } from '@/lib/api/workorders/types';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink,
+  PaginationNext, 
+  PaginationPrevious 
+} from '@/components/ui/pagination';
 
 interface WorkOrdersListProps {
   workOrders: WorkOrderRecord[];
@@ -42,6 +50,9 @@ export const WorkOrdersList = ({
   showSiteInfo = false,
   limit
 }: WorkOrdersListProps) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = limit || 10;
+  
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -59,9 +70,7 @@ export const WorkOrdersList = ({
     );
   }
 
-  const displayWorkOrders = limit ? workOrders.slice(0, limit) : workOrders;
-
-  if (displayWorkOrders.length === 0) {
+  if (workOrders.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
         <p>No work orders found</p>
@@ -69,9 +78,15 @@ export const WorkOrdersList = ({
     );
   }
 
+  // Handle pagination
+  const totalPages = Math.ceil(workOrders.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, workOrders.length);
+  const paginatedOrders = limit ? workOrders.slice(0, limit) : workOrders.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-4">
-      {displayWorkOrders.map((workOrder) => {
+      {paginatedOrders.map((workOrder) => {
         const StatusIcon = statusConfig[workOrder.status]?.icon || FileText;
         
         return (
@@ -130,6 +145,37 @@ export const WorkOrdersList = ({
           </Card>
         );
       })}
+      
+      {!limit && totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink 
+                  isActive={currentPage === i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
       
       {limit && workOrders.length > limit && (
         <div className="flex justify-center">
