@@ -17,6 +17,15 @@ export interface BusinessDetails {
   user_id: string;
   updated_at: string;
   created_at: string;
+  industry?: string;
+  description?: string;
+  business_hours?: string;
+  social_media?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  };
 }
 
 /**
@@ -70,7 +79,7 @@ export const updateBusinessDetails = async (details: Partial<BusinessDetails>): 
       
     if (error) {
       console.error('Error updating business details:', error);
-      return null;
+      throw new Error(`Error updating business details: ${error.message}`);
     }
     
     result = data;
@@ -89,7 +98,7 @@ export const updateBusinessDetails = async (details: Partial<BusinessDetails>): 
       
     if (error) {
       console.error('Error creating business details:', error);
-      return null;
+      throw new Error(`Error creating business details: ${error.message}`);
     }
     
     result = data;
@@ -109,13 +118,29 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
   const fileName = `logo-${user.user.id}-${Date.now()}.${fileExt}`;
   const filePath = `business-logos/${fileName}`;
   
+  // Create business-assets bucket if it doesn't exist
+  const { error: bucketError } = await supabase.storage
+    .createBucket('business-assets', {
+      public: true,
+      fileSizeLimit: 5242880, // 5MB
+      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+    });
+  
+  if (bucketError && !bucketError.message.includes('already exists')) {
+    console.error('Error creating storage bucket:', bucketError);
+    throw new Error(`Error creating storage bucket: ${bucketError.message}`);
+  }
+  
   const { error: uploadError } = await supabase.storage
     .from('business-assets')
-    .upload(filePath, file);
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
 
   if (uploadError) {
     console.error('Error uploading logo:', uploadError);
-    return null;
+    throw new Error(`Error uploading logo: ${uploadError.message}`);
   }
 
   const { data: urlData } = supabase.storage

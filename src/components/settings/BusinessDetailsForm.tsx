@@ -2,33 +2,49 @@
 import React, { useState } from 'react';
 import { useBusinessDetails } from '@/hooks/useBusinessDetails';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { 
   Form, 
   FormControl, 
   FormField, 
   FormItem, 
   FormLabel, 
-  FormMessage 
+  FormMessage,
+  FormDescription
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Upload, Save, Building2, AlertCircle } from 'lucide-react';
+import { Upload, Save, Building2, AlertCircle, Info } from 'lucide-react';
 import { isImageFile } from '@/lib/fileUtils';
+import { toast } from 'sonner';
 
-type BusinessFormValues = {
-  name: string;
-  address: string;
-  city: string;
-  state: string;
-  postcode: string;
-  phone: string;
-  email: string;
-  website: string;
-  tax_id: string;
-};
+// Form validation schema
+const businessFormSchema = z.object({
+  name: z.string().min(1, 'Business name is required'),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postcode: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  tax_id: z.string().optional(),
+  industry: z.string().optional(),
+  description: z.string().optional(),
+  business_hours: z.string().optional(),
+  social_media: z.object({
+    facebook: z.string().optional(),
+    instagram: z.string().optional(),
+    linkedin: z.string().optional(),
+    twitter: z.string().optional()
+  }).optional()
+});
+
+type BusinessFormValues = z.infer<typeof businessFormSchema>;
 
 export const BusinessDetailsForm = () => {
   const { 
@@ -40,8 +56,10 @@ export const BusinessDetailsForm = () => {
   } = useBusinessDetails();
   
   const [logoPreview, setLogoPreview] = useState<string | null>(businessDetails?.logo_url || null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   const form = useForm<BusinessFormValues>({
+    resolver: zodResolver(businessFormSchema),
     defaultValues: {
       name: businessDetails?.name || '',
       address: businessDetails?.address || '',
@@ -51,7 +69,16 @@ export const BusinessDetailsForm = () => {
       phone: businessDetails?.phone || '',
       email: businessDetails?.email || '',
       website: businessDetails?.website || '',
-      tax_id: businessDetails?.tax_id || ''
+      tax_id: businessDetails?.tax_id || '',
+      industry: businessDetails?.industry || '',
+      description: businessDetails?.description || '',
+      business_hours: businessDetails?.business_hours || '',
+      social_media: businessDetails?.social_media || {
+        facebook: '',
+        instagram: '',
+        linkedin: '',
+        twitter: ''
+      }
     }
   });
   
@@ -67,24 +94,49 @@ export const BusinessDetailsForm = () => {
         phone: businessDetails.phone || '',
         email: businessDetails.email || '',
         website: businessDetails.website || '',
-        tax_id: businessDetails.tax_id || ''
+        tax_id: businessDetails.tax_id || '',
+        industry: businessDetails.industry || '',
+        description: businessDetails.description || '',
+        business_hours: businessDetails.business_hours || '',
+        social_media: businessDetails.social_media || {
+          facebook: '',
+          instagram: '',
+          linkedin: '',
+          twitter: ''
+        }
       });
       
       setLogoPreview(businessDetails.logo_url || null);
     }
   }, [businessDetails, form]);
   
-  const onSubmit = (data: BusinessFormValues) => {
-    updateBusinessDetails(data);
+  const onSubmit = async (data: BusinessFormValues) => {
+    try {
+      await updateBusinessDetails(data);
+      toast.success('Business details updated successfully');
+    } catch (error) {
+      console.error('Error updating business details:', error);
+      toast.error('Failed to update business details');
+    }
   };
   
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    setUploadError(null);
+    
     if (!file) return;
     
     // Validate file type
     if (!isImageFile(file.name)) {
-      alert('Please upload an image file (jpg, png, etc.)');
+      setUploadError('Please upload an image file (jpg, png, gif, etc.)');
+      toast.error('Invalid file type. Please upload an image.');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size exceeds 5MB limit');
+      toast.error('File is too large. Maximum size is 5MB.');
       return;
     }
     
@@ -95,8 +147,15 @@ export const BusinessDetailsForm = () => {
     };
     reader.readAsDataURL(file);
     
-    // Upload the file
-    uploadLogo(file);
+    try {
+      // Upload the file
+      await uploadLogo(file);
+      toast.success('Logo uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      setUploadError('Failed to upload logo');
+      toast.error('Failed to upload logo');
+    }
   };
   
   if (isLoading) {
@@ -115,14 +174,14 @@ export const BusinessDetailsForm = () => {
           My Business Details
         </CardTitle>
         <CardDescription>
-          Update your business information and logo
+          Update your business information and logo. This information will appear on invoices, reports, and client communications.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8">
           {/* Logo Section */}
           <div className="flex flex-col items-center gap-4">
-            <div className="border rounded-lg overflow-hidden w-full aspect-square flex items-center justify-center bg-muted">
+            <div className="border rounded-lg overflow-hidden w-full aspect-square flex items-center justify-center bg-muted relative">
               {logoPreview ? (
                 <img 
                   src={logoPreview} 
@@ -168,8 +227,16 @@ export const BusinessDetailsForm = () => {
                   disabled={isUploading}
                 />
               </label>
+              
+              {uploadError && (
+                <div className="text-xs text-destructive mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {uploadError}
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Recommended: Square image, 512x512px or larger
+                Recommended: Square image, 512x512px or larger (max 5MB)
               </p>
             </div>
           </div>
@@ -182,10 +249,47 @@ export const BusinessDetailsForm = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Business Name</FormLabel>
+                    <FormLabel>Business Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="Your Business Name" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      The official registered name of your business
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Brief description of your business" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      A short description of your business services
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="industry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industry</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your industry" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      The primary industry your business operates in
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -199,7 +303,7 @@ export const BusinessDetailsForm = () => {
                   name="address"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address</FormLabel>
+                      <FormLabel>Street Address</FormLabel>
                       <FormControl>
                         <Input placeholder="123 Business St" {...field} />
                       </FormControl>
@@ -263,6 +367,9 @@ export const BusinessDetailsForm = () => {
                       <FormControl>
                         <Input placeholder="(123) 456-7890" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Primary business contact number
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -277,6 +384,9 @@ export const BusinessDetailsForm = () => {
                       <FormControl>
                         <Input placeholder="contact@yourbusiness.com" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Primary business contact email
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -289,8 +399,11 @@ export const BusinessDetailsForm = () => {
                     <FormItem>
                       <FormLabel>Website</FormLabel>
                       <FormControl>
-                        <Input placeholder="www.yourbusiness.com" {...field} />
+                        <Input placeholder="https://www.yourbusiness.com" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Include https:// prefix
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -305,6 +418,26 @@ export const BusinessDetailsForm = () => {
                       <FormControl>
                         <Input placeholder="Tax ID or ABN" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Your business tax identification number
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="business_hours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Hours</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Mon-Fri: 9am-5pm" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Your standard operating hours
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -315,7 +448,7 @@ export const BusinessDetailsForm = () => {
                 <Button 
                   type="submit" 
                   className="mt-4"
-                  disabled={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting || isUploading}
                 >
                   {form.formState.isSubmitting ? (
                     <>
