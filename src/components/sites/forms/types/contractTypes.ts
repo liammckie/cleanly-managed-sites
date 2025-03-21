@@ -9,6 +9,15 @@ export type ContractDetails = {
   billingCycle?: string; // Monthly, quarterly, annually
   autoRenew?: boolean;
   nextReviewDate?: string;
+  
+  // Add legacy properties for compatibility
+  renewalDate?: string;
+  contractValue?: string;
+  paymentTerms?: string;
+  paymentFrequency?: string;
+  contractType?: string;
+  noticePeriod?: string;
+  notes?: string;
 }
 
 export type ContractHistoryEntry = {

@@ -19,6 +19,10 @@ export type BillingDetails = {
   taxId: string;
   xeroContactId: string;
   notes: string;
+  
+  // Add legacy properties for compatibility
+  billingContact?: string;
+  billingPhone?: string;
 }
 
 export type AdHocWorkAuthorization = {

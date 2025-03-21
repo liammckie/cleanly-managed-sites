@@ -16,6 +16,7 @@ export interface SiteRecord {
   client_id: string;
   monthly_cost?: number;
   monthly_revenue?: number;
+  custom_id?: string; // Add custom ID field
   // Client data that may be joined from the query
   client_name?: string;
   // JSON fields
@@ -44,6 +45,7 @@ export interface ClientRecord {
   notes?: string;
   created_at?: string;
   updated_at?: string;
+  custom_id?: string; // Add custom ID field
   // Contacts
   contacts?: ContactRecord[];
 }

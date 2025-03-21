@@ -66,6 +66,7 @@ export type Database = {
           city: string | null
           contact_name: string
           created_at: string
+          custom_id: string | null
           email: string | null
           id: string
           name: string
@@ -82,6 +83,7 @@ export type Database = {
           city?: string | null
           contact_name: string
           created_at?: string
+          custom_id?: string | null
           email?: string | null
           id?: string
           name: string
@@ -98,6 +100,7 @@ export type Database = {
           city?: string | null
           contact_name?: string
           created_at?: string
+          custom_id?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -205,6 +208,7 @@ export type Database = {
           client_id: string
           contract_details: Json | null
           created_at: string
+          custom_id: string | null
           email: string | null
           has_subcontractors: boolean | null
           id: string
@@ -231,6 +235,7 @@ export type Database = {
           client_id: string
           contract_details?: Json | null
           created_at?: string
+          custom_id?: string | null
           email?: string | null
           has_subcontractors?: boolean | null
           id?: string
@@ -257,6 +262,7 @@ export type Database = {
           client_id?: string
           contract_details?: Json | null
           created_at?: string
+          custom_id?: string | null
           email?: string | null
           has_subcontractors?: boolean | null
           id?: string

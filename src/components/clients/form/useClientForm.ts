@@ -24,7 +24,7 @@ export function useClientForm(mode: 'create' | 'edit', client?: ClientRecord) {
           postcode: client.postcode || '',
           status: client.status as any,
           notes: client.notes || '',
-          customId: client.custom_id || '', // Add custom ID from client data
+          customId: client.custom_id || '', // Use custom_id from client data
         } 
       : initialFormData
   );

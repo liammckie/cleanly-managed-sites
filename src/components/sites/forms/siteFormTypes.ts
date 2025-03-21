@@ -5,7 +5,7 @@ import { JobSpecifications } from './types/jobSpecificationTypes';
 import { Periodicals } from './types/periodicalTypes';
 import { Replenishables } from './types/replenishableTypes';
 import { ContractDetails } from './types/contractTypes';
-import { BillingDetails } from './types/billingTypes';
+import { BillingDetails, AdHocWorkAuthorization } from './types/billingTypes';
 import { SiteContact } from './types/contactTypes';
 import { Subcontractor } from './types/subcontractorTypes';
 import { SiteStatus } from '@/components/sites/SiteCard';
@@ -39,6 +39,7 @@ export interface SiteFormData {
   replenishables: Replenishables;
   contractDetails: ContractDetails;
   billingDetails: BillingDetails;
+  adHocWorkAuthorization: AdHocWorkAuthorization;
   
   // Related entities
   contacts: SiteContact[];
@@ -62,10 +63,12 @@ export const getInitialFormData = (): SiteFormData => ({
   
   // Initialize JSON objects with default values
   securityDetails: {
-    needsAlarmCode: false,
+    accessCode: '',
     alarmCode: '',
-    needsKey: false,
     keyLocation: '',
+    outOfHoursAccess: false,
+    needsAlarmCode: false,
+    needsKey: false,
     hasSecurity: false,
     securityNotes: '',
     hasCamera: false,
@@ -73,24 +76,42 @@ export const getInitialFormData = (): SiteFormData => ({
   },
   
   jobSpecifications: {
+    daysPerWeek: 5,
+    hoursPerDay: 3,
+    directEmployees: false,
+    notes: '',
     requiresSpecialEquipment: false,
     equipmentDetails: '',
     cleaningInstructions: '',
-    notes: '',
     areas: []
   },
   
   periodicals: {
+    windowCleaning: {
+      frequency: 'quarterly',
+      lastCompleted: '',
+      nextScheduled: ''
+    },
+    steamCleaning: {
+      charges: '',
+      frequency: 'semi-annually',
+      lastCompleted: ''
+    },
     tasks: []
   },
   
   replenishables: {
+    stock: ['', '', '', '', ''],
+    contactDetails: '',
     supplies: []
   },
   
   contractDetails: {
     startDate: '',
     endDate: '',
+    contractNumber: '',
+    renewalTerms: '',
+    terminationPeriod: '',
     renewalDate: '',
     contractValue: '',
     paymentTerms: '',
@@ -101,17 +122,33 @@ export const getInitialFormData = (): SiteFormData => ({
   },
   
   billingDetails: {
-    billingContact: '',
+    rate: '',
+    billingFrequency: 'monthly',
+    paymentTerms: '30 days',
+    invoiceMethod: 'email',
+    accountNumber: '',
+    purchaseOrderRequired: false,
+    purchaseOrderNumber: '',
     billingEmail: '',
-    billingPhone: '',
     billingAddress: '',
     billingCity: '',
     billingState: '',
     billingPostcode: '',
-    billingMethod: 'invoice',
-    purchaseOrderRequired: false,
-    purchaseOrderNumber: '',
+    useSiteAddress: true,
     contacts: [],
+    taxId: '',
+    xeroContactId: '',
+    notes: '',
+    billingContact: '',
+    billingPhone: '',
+  },
+  
+  adHocWorkAuthorization: {
+    approvalLimit: 500,
+    approverName: '',
+    approverEmail: '',
+    approverPhone: '',
+    requirePurchaseOrder: true
   },
   
   contacts: [],

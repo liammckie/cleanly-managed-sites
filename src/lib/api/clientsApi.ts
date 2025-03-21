@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ClientRecord, SiteRecord } from '../types';
 
@@ -62,7 +61,7 @@ export const clientsApi = {
   },
   
   // Create a new client
-  async createClient(clientData: Partial<ClientRecord>): Promise<ClientRecord> {
+  async createClient(clientData: Partial<ClientRecord> & { custom_id?: string }): Promise<ClientRecord> {
     console.log('Creating client with data:', clientData);
     
     // Get the current user
@@ -109,17 +108,17 @@ export const clientsApi = {
   },
   
   // Update an existing client
-  async updateClient(id: string, clientData: Partial<ClientRecord>): Promise<ClientRecord> {
+  async updateClient({ id, data }: { id: string; data: Partial<ClientRecord> & { custom_id?: string } }): Promise<ClientRecord> {
     // Create update object
     const updateData = {
-      ...clientData,
+      ...data,
       // Only include custom_id if it exists and isn't empty
-      ...(clientData.custom_id !== undefined ? 
-        (clientData.custom_id.trim() !== '' ? { custom_id: clientData.custom_id } : { custom_id: null }) 
+      ...(data.custom_id !== undefined ? 
+        (data.custom_id.trim() !== '' ? { custom_id: data.custom_id } : { custom_id: null }) 
         : {})
     };
     
-    const { data, error } = await supabase
+    const { data: responseData, error } = await supabase
       .from('clients')
       .update(updateData)
       .eq('id', id)
@@ -131,7 +130,7 @@ export const clientsApi = {
       throw error;
     }
     
-    return data as ClientRecord;
+    return responseData as ClientRecord;
   },
   
   // Delete a client

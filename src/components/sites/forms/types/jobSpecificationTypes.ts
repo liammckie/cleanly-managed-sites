@@ -4,4 +4,10 @@ export type JobSpecifications = {
   hoursPerDay: number;
   directEmployees: boolean;
   notes: string;
+  
+  // Add legacy properties for compatibility
+  requiresSpecialEquipment?: boolean;
+  equipmentDetails?: string;
+  cleaningInstructions?: string;
+  areas?: any[];
 }

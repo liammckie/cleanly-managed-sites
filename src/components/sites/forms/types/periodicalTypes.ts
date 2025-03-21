@@ -14,4 +14,7 @@ export type SteamCleaning = {
 export type Periodicals = {
   windowCleaning: WindowCleaning;
   steamCleaning: SteamCleaning;
+  
+  // Add legacy properties for compatibility
+  tasks?: any[];
 }

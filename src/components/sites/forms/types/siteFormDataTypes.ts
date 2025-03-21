@@ -23,6 +23,7 @@ export type SiteFormData = {
   phone: string;
   email: string;
   clientId: string;
+  customId?: string; // Add custom ID field
   monthlyCost?: number;
   monthlyRevenue?: number;
   useClientInfo: boolean;
@@ -48,6 +49,7 @@ export const getInitialFormData = (): SiteFormData => ({
   phone: '',
   email: '',
   clientId: '',
+  customId: '', // Initialize empty custom ID
   monthlyCost: undefined,
   monthlyRevenue: undefined,
   useClientInfo: false,
