@@ -16,7 +16,7 @@ export const clientsApi = {
       throw error;
     }
     
-    return clients || [];
+    return clients as ClientRecord[] || [];
   },
   
   // Get a single client by ID
@@ -32,7 +32,7 @@ export const clientsApi = {
       throw error;
     }
     
-    return data;
+    return data as ClientRecord;
   },
   
   // Create a new client
@@ -44,6 +44,11 @@ export const clientsApi = {
     
     if (!user) {
       throw new Error('User not authenticated');
+    }
+    
+    // Make sure required fields are present
+    if (!clientData.name || !clientData.contact_name || !clientData.status) {
+      throw new Error('Missing required client data: name, contact_name, and status are required');
     }
     
     // Prepare the client data for insertion
@@ -63,7 +68,7 @@ export const clientsApi = {
       throw error;
     }
     
-    return data;
+    return data as ClientRecord;
   },
   
   // Update an existing client
@@ -80,7 +85,7 @@ export const clientsApi = {
       throw error;
     }
     
-    return data;
+    return data as ClientRecord;
   },
   
   // Delete a client
@@ -109,6 +114,6 @@ export const clientsApi = {
       throw error;
     }
     
-    return data || [];
+    return data as SiteRecord[] || [];
   }
 };

@@ -17,7 +17,7 @@ export const sitesApi = {
       throw error;
     }
     
-    return sites || [];
+    return sites as SiteRecord[] || [];
   },
   
   // Get a single site by ID
@@ -33,7 +33,7 @@ export const sitesApi = {
       throw error;
     }
     
-    return data;
+    return data as SiteRecord;
   },
   
   // Create a new site
@@ -103,7 +103,7 @@ export const sitesApi = {
       }
     }
     
-    return data;
+    return data as SiteRecord;
   },
   
   // Update an existing site
@@ -168,7 +168,7 @@ export const sitesApi = {
       }
     }
     
-    return data;
+    return data as SiteRecord;
   },
   
   // Delete a site
