@@ -50,10 +50,18 @@ export function SitesList() {
   
   // Get unique cities and clients for filters
   const cities = Array.from(new Set(sites.map(site => site.city))).sort();
-  const clients = Array.from(new Set(sites.map(site => {
-    const clientObj = site.clients as { name: string } | null;
-    return clientObj?.name || 'Unknown';
-  }))).sort();
+  
+  // For clients, we need to account for the client_id field instead of the clients object
+  // This handles if client data was joined in the query
+  const getClientName = (site: SiteRecord) => {
+    // Check if client name is available through a joined client record
+    if (site.client_name) {
+      return site.client_name;
+    }
+    return 'Unknown';
+  };
+  
+  const clients = Array.from(new Set(sites.map(site => getClientName(site)))).sort();
   
   const filteredSites = sites.filter(site => {
     // Filter by search term
@@ -68,7 +76,7 @@ export function SitesList() {
     const matchesCity = cityFilter === 'all' || site.city === cityFilter;
     
     // Filter by client
-    const clientName = (site.clients as { name: string } | null)?.name || 'Unknown';
+    const clientName = getClientName(site);
     const matchesClient = clientFilter === 'all' || clientName === clientFilter;
     
     return matchesSearch && matchesStatus && matchesCity && matchesClient;
@@ -269,7 +277,7 @@ export function SitesList() {
                   status={site.status as any}
                   representative={site.representative}
                   phone={site.phone}
-                  clientName={(site.clients as { name: string } | null)?.name}
+                  clientName={getClientName(site)}
                   annualBilling={getAnnualBilling(site)}
                 />
               ))}
@@ -300,7 +308,7 @@ export function SitesList() {
                           </Link>
                         </TableCell>
                         <TableCell>
-                          {(site.clients as { name: string } | null)?.name || "—"}
+                          {getClientName(site) || "—"}
                         </TableCell>
                         <TableCell>
                           <div>{site.address}</div>

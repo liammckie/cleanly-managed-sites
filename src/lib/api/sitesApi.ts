@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord } from '../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
@@ -17,7 +16,17 @@ export const sitesApi = {
       throw error;
     }
     
-    return sites as SiteRecord[] || [];
+    // Transform the result to include client_name
+    const transformedSites = sites.map(site => {
+      const clientData = site.clients as { name: string } | null;
+      return {
+        ...site,
+        client_name: clientData?.name || null,
+        clients: undefined // Remove the clients property
+      };
+    });
+    
+    return transformedSites as SiteRecord[];
   },
   
   // Get a single site by ID
@@ -33,7 +42,18 @@ export const sitesApi = {
       throw error;
     }
     
-    return data as SiteRecord;
+    // Transform to include client_name
+    if (data) {
+      const clientData = data.clients as { name: string } | null;
+      const transformedData = {
+        ...data,
+        client_name: clientData?.name || null,
+        clients: undefined // Remove the clients property
+      };
+      return transformedData as SiteRecord;
+    }
+    
+    return null;
   },
   
   // Create a new site

@@ -16,6 +16,8 @@ export interface SiteRecord {
   client_id: string;
   monthly_cost?: number;
   monthly_revenue?: number;
+  // Client data that may be joined from the query
+  client_name?: string;
   // JSON fields
   security_details?: any;
   job_specifications?: any;
