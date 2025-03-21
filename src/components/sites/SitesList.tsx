@@ -114,7 +114,7 @@ export function SitesList() {
         </Button>
       </div>
       
-      <div className="glass-card p-4">
+      <div className="border border-border rounded-lg bg-card p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -123,16 +123,16 @@ export function SitesList() {
               placeholder="Search sites..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 glass-input"
+              className="pl-9"
             />
           </div>
           
           <div className="flex gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px] glass-input">
+              <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="glass">
+              <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -141,10 +141,10 @@ export function SitesList() {
             </Select>
             
             <Select value={cityFilter} onValueChange={setCityFilter}>
-              <SelectTrigger className="w-[140px] glass-input">
+              <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="City" />
               </SelectTrigger>
-              <SelectContent className="glass">
+              <SelectContent>
                 <SelectItem value="all">All Cities</SelectItem>
                 {cities.map(city => (
                   <SelectItem key={city} value={city}>{city}</SelectItem>
@@ -162,7 +162,7 @@ export function SitesList() {
           ))}
         </div>
       ) : (
-        <div className="glass-card p-8 text-center">
+        <div className="rounded-lg p-8 text-center border border-border bg-card">
           <p className="text-lg text-muted-foreground">No sites found matching your criteria.</p>
           <Button className="mt-4" asChild>
             <Link to="/sites/create">Create New Site</Link>

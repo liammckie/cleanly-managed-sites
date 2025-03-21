@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Home, 
   Map, 
@@ -50,6 +51,7 @@ const SidebarItem = ({
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const { signOut } = useAuth();
 
   const sidebarItems = [
     { icon: Home, title: 'Dashboard', path: '/dashboard' },
@@ -62,10 +64,14 @@ export function Sidebar() {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <div
       className={cn(
-        "glass h-screen flex flex-col border-r border-border transition-all duration-300 ease-in-out",
+        "h-screen flex flex-col border-r border-border transition-all duration-300 ease-in-out bg-background",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
@@ -108,6 +114,7 @@ export function Sidebar() {
             "w-full justify-start gap-3 text-foreground/70 hover:text-foreground",
             isCollapsed && "justify-center"
           )}
+          onClick={handleLogout}
         >
           <LogOut size={18} />
           {!isCollapsed && <span>Logout</span>}

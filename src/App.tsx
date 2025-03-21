@@ -22,43 +22,45 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/sites" element={
-              <ProtectedRoute>
-                <Sites />
-              </ProtectedRoute>
-            } />
-            <Route path="/sites/:id" element={
-              <ProtectedRoute>
-                <SiteDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/sites/create" element={
-              <ProtectedRoute>
-                <CreateSite />
-              </ProtectedRoute>
-            } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/sites" element={
+                <ProtectedRoute>
+                  <Sites />
+                </ProtectedRoute>
+              } />
+              <Route path="/sites/:id" element={
+                <ProtectedRoute>
+                  <SiteDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/sites/create" element={
+                <ProtectedRoute>
+                  <CreateSite />
+                </ProtectedRoute>
+              } />
+              {/* Catch-all route for 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

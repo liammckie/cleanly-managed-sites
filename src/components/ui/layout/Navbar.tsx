@@ -3,6 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,19 @@ import { Bell, Search, HelpCircle, User, Settings, LogOut } from 'lucide-react';
 
 export function Navbar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  
+  // Get initial letters for avatar fallback
+  const getInitials = () => {
+    if (!user || !user.user_metadata?.full_name) return 'U';
+    
+    const fullName = user.user_metadata.full_name;
+    const names = fullName.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return fullName[0].toUpperCase();
+  };
   
   // Get the current page title based on the path
   const getPageTitle = () => {
@@ -31,8 +45,12 @@ export function Navbar() {
     return 'Dashboard';
   };
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
-    <div className="glass-card h-16 px-4 flex items-center justify-between border-b border-border">
+    <div className="h-16 px-4 flex items-center justify-between border-b border-border bg-background">
       <div className="flex items-center">
         <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
       </div>
@@ -43,28 +61,28 @@ export function Navbar() {
           <input
             type="text"
             placeholder="Search..."
-            className="glass-input pl-9 pr-4 py-2 w-[240px] text-sm focus:outline-none"
+            className="pl-9 pr-4 py-2 w-[240px] text-sm focus:outline-none rounded-md border border-input bg-background"
           />
         </div>
         
-        <Button variant="ghost" size="icon" className="rounded-full animate-hover">
+        <Button variant="ghost" size="icon" className="rounded-full">
           <Bell size={18} />
         </Button>
         
-        <Button variant="ghost" size="icon" className="rounded-full animate-hover">
+        <Button variant="ghost" size="icon" className="rounded-full">
           <HelpCircle size={18} />
         </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="rounded-full p-1 animate-hover">
+            <Button variant="ghost" className="rounded-full p-1">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-primary/10 text-primary">JD</AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary">{getInitials()}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 glass">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2">
@@ -76,7 +94,7 @@ export function Navbar() {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive focus:text-destructive">
               <LogOut size={16} />
               <span>Log out</span>
             </DropdownMenuItem>
