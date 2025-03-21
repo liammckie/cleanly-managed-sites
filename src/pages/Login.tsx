@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,10 +15,20 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   
   // If user is already logged in, redirect to dashboard
-  if (user) {
-    navigate('/dashboard', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  // Check for verification parameters in the URL
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('token') && url.searchParams.has('type')) {
+      // The auth provider will handle verification
+      setActiveTab('login');
+    }
+  }, []);
   
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
@@ -39,6 +49,9 @@ const Login = () => {
     
     try {
       await signUp(email, password, name);
+      // Switch to login tab after successful signup
+      setActiveTab('login');
+      setError('Please check your email to verify your account before logging in.');
     } catch (error: any) {
       setError(error.message || 'Failed to create account');
     } finally {
@@ -63,6 +76,8 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  if (user) return null; // Prevent flash of content when redirecting
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/30">
