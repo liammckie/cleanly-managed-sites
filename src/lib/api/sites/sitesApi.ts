@@ -1,9 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord } from '../../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 import { getSiteContacts } from './siteContactsApi';
 import { handleSiteSubcontractors } from './siteSubcontractorsApi';
 import { handleSiteContacts } from './siteContactsApi';
+import { contractHistoryApi } from './contractHistoryApi';
 
 // Core Site API functions
 export const sitesApi = {
@@ -138,6 +140,20 @@ export const sitesApi = {
   
   // Update an existing site
   async updateSite(id: string, siteData: Partial<SiteFormData>): Promise<SiteRecord> {
+    // First, if contract details are provided, save the contract history
+    if (siteData.contractDetails) {
+      try {
+        await contractHistoryApi.saveContractVersion(
+          id, 
+          siteData.contractDetails,
+          'Updated via site form'
+        );
+      } catch (error) {
+        console.error('Error saving contract history:', error);
+        // Don't throw here, continue with site update
+      }
+    }
+    
     const { data, error } = await supabase
       .from('sites')
       .update({
@@ -229,4 +245,3 @@ export const sitesApi = {
     }
   }
 };
-

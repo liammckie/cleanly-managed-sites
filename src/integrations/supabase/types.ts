@@ -159,6 +159,44 @@ export type Database = {
         }
         Relationships: []
       }
+      site_contract_history: {
+        Row: {
+          contract_details: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          site_id: string
+          version_number: number
+        }
+        Insert: {
+          contract_details: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          site_id: string
+          version_number: number
+        }
+        Update: {
+          contract_details?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          site_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_contract_history_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           address: string

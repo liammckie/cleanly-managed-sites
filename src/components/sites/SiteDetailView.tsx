@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteStatus } from './SiteCard';
 import { SiteRecord } from '@/lib/api';
-import { Edit, MapPin, Phone, Mail, User, Calendar, Clock, FileText, Briefcase } from 'lucide-react';
+import { Edit, MapPin, Phone, Mail, User, Calendar, Clock, FileText, Briefcase, FileContract } from 'lucide-react';
+import { useContractHistory } from '@/hooks/useContractHistory';
+import { ContractHistoryTable } from './contract/ContractHistoryTable';
 
-// Update the component props to accept a site parameter
 export function SiteDetailView({ site }: { site: SiteRecord }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
   
   const getStatusColor = (status: SiteStatus) => {
     switch (status) {
@@ -50,13 +52,14 @@ export function SiteDetailView({ site }: { site: SiteRecord }) {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="glass-card grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 mb-6">
+        <TabsList className="glass-card grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
           <TabsTrigger value="periodicals">Periodicals</TabsTrigger>
           <TabsTrigger value="job">Job Specs</TabsTrigger>
           <TabsTrigger value="supplies">Supplies</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-0 animate-slide-in">
@@ -113,7 +116,6 @@ export function SiteDetailView({ site }: { site: SiteRecord }) {
             </div>
           </div>
         </TabsContent>
-        
         
         <TabsContent value="subcontractors" className="mt-0 animate-slide-in">
           <div className="glass-card p-6">
@@ -278,6 +280,50 @@ export function SiteDetailView({ site }: { site: SiteRecord }) {
                 <p className="font-medium">{site.security_details?.outOfHoursAccess ? 'Available' : 'Not Available'}</p>
               </div>
             </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="contracts" className="mt-0 animate-slide-in">
+          <div className="space-y-6">
+            <div className="glass-card p-6">
+              <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
+                <FileContract size={18} className="text-primary" />
+                Current Contract Details
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Contract Number</p>
+                  <p className="font-medium">{site.contract_details?.contractNumber || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Start Date</p>
+                  <p className="font-medium">{site.contract_details?.startDate || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">End Date</p>
+                  <p className="font-medium">{site.contract_details?.endDate || 'Not specified'}</p>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Termination Period</p>
+                  <p className="font-medium">{site.contract_details?.terminationPeriod || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Renewal Terms</p>
+                  <p className="font-medium line-clamp-3">{site.contract_details?.renewalTerms || 'Not specified'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <ContractHistoryTable 
+              history={history} 
+              isLoading={isLoadingHistory} 
+              currentContractDetails={site.contract_details}
+            />
           </div>
         </TabsContent>
       </Tabs>

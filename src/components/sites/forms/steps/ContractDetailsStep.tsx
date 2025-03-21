@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteFormData } from '../siteFormTypes';
+import { History } from 'lucide-react';
 
 interface ContractDetailsStepProps {
   formData: SiteFormData;
@@ -21,7 +22,13 @@ export function ContractDetailsStep({ formData, handleNestedChange }: ContractDe
   return (
     <div className="space-y-6">
       <div className="glass-card p-6 space-y-4">
-        <h3 className="text-lg font-medium">Contract Information</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-medium">Contract Information</h3>
+          <div className="flex items-center text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+            <History className="h-3.5 w-3.5 mr-1 text-blue-500" />
+            Changes will be versioned
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
