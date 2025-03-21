@@ -16,6 +16,7 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './hooks/useAuth';
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -24,31 +25,33 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            {/* Site Routes */}
+            <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
+            <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} />
+            <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
+            <Route path="/sites/:id/edit" element={<ProtectedRoute><EditSite /></ProtectedRoute>} />
+            
+            {/* Client Routes */}
+            <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+            <Route path="/clients/create" element={<ProtectedRoute><CreateClient /></ProtectedRoute>} />
+            <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+            <Route path="/clients/:id/edit" element={<ProtectedRoute><EditClient /></ProtectedRoute>} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
           
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          
-          {/* Site Routes */}
-          <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
-          <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} />
-          <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
-          <Route path="/sites/:id/edit" element={<ProtectedRoute><EditSite /></ProtectedRoute>} />
-          
-          {/* Client Routes */}
-          <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-          <Route path="/clients/create" element={<ProtectedRoute><CreateClient /></ProtectedRoute>} />
-          <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
-          <Route path="/clients/:id/edit" element={<ProtectedRoute><EditClient /></ProtectedRoute>} />
-          
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Toaster position="top-right" />
+        </AuthProvider>
       </Router>
-      
-      <Toaster position="top-right" />
     </QueryClientProvider>
   )
 }
