@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { SidebarContext } from "./types"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -114,7 +113,7 @@ export const SidebarProvider = React.forwardRef<
               ...style,
             } as React.CSSProperties
           }
-          className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar"
+          className="group/sidebar-wrapper flex h-screen w-full has-[[data-variant=inset]]:bg-sidebar"
           ref={ref}
           {...props}
         >

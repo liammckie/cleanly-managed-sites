@@ -12,7 +12,7 @@ import {
   FileText,
   Boxes 
 } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile'; 
+import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
 import { SidebarContent } from '@/components/ui/sidebar/sidebar-sections';
 import { BusinessBranding } from '@/components/BusinessBranding';
@@ -20,7 +20,7 @@ import { BusinessBranding } from '@/components/BusinessBranding';
 export function Sidebar() {
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
 
   const menuItems = [
     {
@@ -76,7 +76,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col">
       <div className="p-4 mb-2">
         <BusinessBranding />
       </div>
@@ -94,17 +94,17 @@ export function Sidebar() {
               }`}
             >
               {item.icon}
-              <span>{item.label}</span>
+              <span className="text-sm">{item.label}</span>
             </Link>
           ))}
         </nav>
       </div>
 
       {user && (
-        <div className="p-4 mt-auto">
+        <div className="p-4 mt-auto border-t">
           <Button
-            variant="outline" 
-            className="w-full justify-start" 
+            variant="ghost" 
+            className="w-full justify-start text-sm" 
             onClick={handleSignOut}
           >
             <LogOut className="mr-2 h-4 w-4" />
