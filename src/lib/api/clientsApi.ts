@@ -90,6 +90,8 @@ export const clientsApi = {
       status: clientData.status as string, // Cast to string to match Supabase expectations
       notes: clientData.notes || null,
       user_id: user.id,
+      // If custom_id exists and is not empty, use it
+      ...(clientData.custom_id && clientData.custom_id.trim() !== '' ? { custom_id: clientData.custom_id } : {})
     };
     
     const { data, error } = await supabase
@@ -108,9 +110,18 @@ export const clientsApi = {
   
   // Update an existing client
   async updateClient(id: string, clientData: Partial<ClientRecord>): Promise<ClientRecord> {
+    // Create update object
+    const updateData = {
+      ...clientData,
+      // Only include custom_id if it exists and isn't empty
+      ...(clientData.custom_id !== undefined ? 
+        (clientData.custom_id.trim() !== '' ? { custom_id: clientData.custom_id } : { custom_id: null }) 
+        : {})
+    };
+    
     const { data, error } = await supabase
       .from('clients')
-      .update(clientData)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

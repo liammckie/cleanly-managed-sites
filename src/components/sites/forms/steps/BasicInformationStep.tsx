@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,22 +73,39 @@ export function BasicInformationStep({
           </FormItem>
         )}
         
-        <FormItem className="space-y-2">
-          <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
-          <FormControl>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Enter site name"
-              value={formData.name}
-              onChange={handleChange}
-              className={`glass-input ${errors['name'] ? 'border-destructive' : ''}`}
-              required
-              aria-invalid={!!errors['name']}
-            />
-          </FormControl>
-          {errors['name'] && <FormMessage>{errors['name']}</FormMessage>}
-        </FormItem>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormItem className="space-y-2">
+            <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
+            <FormControl>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Enter site name"
+                value={formData.name}
+                onChange={handleChange}
+                className={`glass-input ${errors['name'] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors['name']}
+              />
+            </FormControl>
+            {errors['name'] && <FormMessage>{errors['name']}</FormMessage>}
+          </FormItem>
+          
+          <FormItem className="space-y-2">
+            <Label htmlFor="customId">Custom ID</Label>
+            <FormControl>
+              <Input
+                id="customId"
+                name="customId"
+                placeholder="Enter custom ID (optional)"
+                value={formData.customId || ''}
+                onChange={handleChange}
+                className="glass-input"
+              />
+            </FormControl>
+            <p className="text-xs text-muted-foreground">Leave blank to use system-generated ID</p>
+          </FormItem>
+        </div>
         
         <FormItem className="space-y-2">
           <Label htmlFor="address">Address <span className="text-destructive">*</span></Label>

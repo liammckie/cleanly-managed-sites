@@ -13,6 +13,7 @@ export type ClientFormData = {
   postcode: string;
   status: 'active' | 'inactive' | 'pending';
   notes: string;
+  customId?: string; // Add field for user-defined ID
 };
 
 export interface ClientFormProps {
@@ -31,4 +32,5 @@ export const initialFormData: ClientFormData = {
   postcode: '',
   status: 'active',
   notes: '',
+  customId: '', // Initialize empty custom ID
 };

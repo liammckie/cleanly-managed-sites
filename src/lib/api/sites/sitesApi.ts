@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord } from '../../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
@@ -106,6 +105,8 @@ export const sitesApi = {
       billing_details: siteData.billingDetails,
       // If there are subcontractors, store them
       has_subcontractors: siteData.subcontractors.length > 0,
+      // If custom_id exists and is not empty, use it
+      ...(siteData.customId && siteData.customId.trim() !== '' ? { custom_id: siteData.customId } : {})
     };
     
     const { data, error } = await supabase
@@ -154,30 +155,36 @@ export const sitesApi = {
       }
     }
     
+    const updateData = {
+      name: siteData.name,
+      address: siteData.address,
+      city: siteData.city,
+      state: siteData.state,
+      postcode: siteData.postcode,
+      status: siteData.status,
+      representative: siteData.representative,
+      phone: siteData.phone,
+      email: siteData.email,
+      client_id: siteData.clientId,
+      monthly_cost: siteData.monthlyCost,
+      monthly_revenue: siteData.monthlyRevenue,
+      // Update the JSON fields if provided
+      ...(siteData.securityDetails && { security_details: siteData.securityDetails }),
+      ...(siteData.jobSpecifications && { job_specifications: siteData.jobSpecifications }),
+      ...(siteData.periodicals && { periodicals: siteData.periodicals }),
+      ...(siteData.replenishables && { replenishables: siteData.replenishables }),
+      ...(siteData.contractDetails && { contract_details: siteData.contractDetails }),
+      ...(siteData.billingDetails && { billing_details: siteData.billingDetails }),
+      ...(siteData.subcontractors && { has_subcontractors: siteData.subcontractors.length > 0 }),
+      // Handle custom ID updates
+      ...(siteData.customId !== undefined ? 
+        (siteData.customId.trim() !== '' ? { custom_id: siteData.customId } : { custom_id: null }) 
+        : {})
+    };
+    
     const { data, error } = await supabase
       .from('sites')
-      .update({
-        name: siteData.name,
-        address: siteData.address,
-        city: siteData.city,
-        state: siteData.state,
-        postcode: siteData.postcode,
-        status: siteData.status,
-        representative: siteData.representative,
-        phone: siteData.phone,
-        email: siteData.email,
-        client_id: siteData.clientId,
-        monthly_cost: siteData.monthlyCost,
-        monthly_revenue: siteData.monthlyRevenue,
-        // Update the JSON fields if provided
-        ...(siteData.securityDetails && { security_details: siteData.securityDetails }),
-        ...(siteData.jobSpecifications && { job_specifications: siteData.jobSpecifications }),
-        ...(siteData.periodicals && { periodicals: siteData.periodicals }),
-        ...(siteData.replenishables && { replenishables: siteData.replenishables }),
-        ...(siteData.contractDetails && { contract_details: siteData.contractDetails }),
-        ...(siteData.billingDetails && { billing_details: siteData.billingDetails }),
-        ...(siteData.subcontractors && { has_subcontractors: siteData.subcontractors.length > 0 }),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

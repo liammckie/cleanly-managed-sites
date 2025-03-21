@@ -24,6 +24,7 @@ export function useClientForm(mode: 'create' | 'edit', client?: ClientRecord) {
           postcode: client.postcode || '',
           status: client.status as any,
           notes: client.notes || '',
+          customId: client.custom_id || '', // Add custom ID from client data
         } 
       : initialFormData
   );
@@ -64,6 +65,15 @@ export function useClientForm(mode: 'create' | 'edit', client?: ClientRecord) {
   const validateForm = (): boolean => {
     const newErrors = validateClientForm(formData);
     
+    // Add custom validation for customId if needed
+    if (formData.customId && formData.customId.trim() !== '') {
+      // Check if customId is already in use (this would require additional API check)
+      // For now, just validate that it's a reasonable length
+      if (formData.customId.length < 3) {
+        newErrors.customId = 'Custom ID must be at least 3 characters';
+      }
+    }
+    
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
@@ -82,11 +92,17 @@ export function useClientForm(mode: 'create' | 'edit', client?: ClientRecord) {
     }
     
     try {
+      // Convert formData to format expected by API
+      const apiData = {
+        ...formData,
+        custom_id: formData.customId, // Map to API field name
+      };
+      
       if (mode === 'create') {
-        await createClient(formData);
+        await createClient(apiData);
         navigate('/clients');
       } else if (mode === 'edit' && client) {
-        await updateClient({ id: client.id, data: formData });
+        await updateClient({ id: client.id, data: apiData });
         navigate(`/clients/${client.id}`);
       }
     } catch (error) {
