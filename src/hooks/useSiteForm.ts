@@ -48,27 +48,35 @@ export const useSiteForm = () => {
   
   // Handle nested object changes
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
-      }
-    }));
+    setFormData(prev => {
+      const sectionData = prev[section] || {};
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [field]: value
+        }
+      };
+    });
   };
   
   // Handle doubly nested object changes
   const handleDoubleNestedChange = (section: keyof SiteFormData, subsection: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [subsection]: {
-          ...(prev[section] as any)[subsection],
-          [field]: value
+    setFormData(prev => {
+      const sectionData = prev[section] || {};
+      const subsectionData = (sectionData as any)[subsection] || {};
+      
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [subsection]: {
+            ...subsectionData,
+            [field]: value
+          }
         }
-      }
-    }));
+      };
+    });
   };
   
   // Handle subcontractor changes
