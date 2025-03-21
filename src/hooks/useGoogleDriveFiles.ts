@@ -1,9 +1,6 @@
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/auth';
-import { supabase } from '@/integrations/supabase/client';
-import { useGoogleDriveFileOperations } from './useGoogleDriveFileOperations';
+import { useGoogleDriveAuth } from './googleDrive/useGoogleDriveAuth';
+import { useWorkOrderFileOperations } from './googleDrive/useWorkOrderFileOperations';
 
 export interface GoogleDriveFile {
   id: string;
@@ -27,35 +24,9 @@ export interface WorkOrderAttachment {
 }
 
 export const useGoogleDriveFiles = () => {
-  const { user } = useAuth();
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const { uploadWorkOrderFile, downloadWorkOrderFile, deleteWorkOrderFile } = useGoogleDriveFileOperations();
+  const { isConnected, isCheckingConnection } = useGoogleDriveAuth();
+  const { uploadWorkOrderFile, downloadWorkOrderFile, deleteWorkOrderFile } = useWorkOrderFileOperations();
   
-  // Check if the user has connected Google Drive
-  const { isLoading: isCheckingConnection } = useQuery({
-    queryKey: ['googleDriveConnection', user?.id],
-    queryFn: async () => {
-      if (!user) return false;
-      
-      const { data, error } = await supabase
-        .from('user_integrations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('provider', 'google_drive')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error checking Google Drive connection:', error);
-        setIsConnected(false);
-        return false;
-      }
-      
-      setIsConnected(!!data);
-      return !!data;
-    },
-    enabled: !!user
-  });
-
   return {
     isConnected,
     isCheckingConnection,

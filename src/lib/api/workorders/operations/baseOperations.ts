@@ -34,7 +34,15 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
       throw error;
     }
 
-    return data as unknown as WorkOrderRecord;
+    // Cast the returned data to WorkOrderRecord
+    const workOrder = data as unknown as WorkOrderRecord;
+    
+    // Ensure attachments are properly cast from Json to WorkOrderAttachment[]
+    if (workOrder.attachments) {
+      workOrder.attachments = workOrder.attachments as any;
+    }
+    
+    return workOrder;
   } catch (error) {
     console.error('Error creating work order:', error);
     throw error;
