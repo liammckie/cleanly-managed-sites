@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { SiteFormData } from '../siteFormTypes';
-import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
 interface SubcontractorsStepProps {
   formData: SiteFormData;

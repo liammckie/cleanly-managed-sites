@@ -50,25 +50,27 @@ export function CreateSiteForm() {
 
   return (
     <Form {...formHandlers.form}>
-      <div className="max-w-4xl mx-auto">
-        <FormProgressBar 
-          currentStep={stepper.currentStep}
-          totalSteps={stepper.totalSteps}
-          progress={stepper.progress}
-        />
-        
-        <SiteFormStep
-          title={steps[stepper.currentStep].title}
-          description={steps[stepper.currentStep].description}
-          onNext={() => stepper.handleNext(handleSubmit)}
-          onBack={stepper.handleBack}
-          isSubmitting={isSubmitting}
-          isLastStep={stepper.isLastStep}
-          isFirstStep={stepper.isFirstStep}
-        >
-          {steps[stepper.currentStep].component}
-        </SiteFormStep>
-      </div>
+      <form>
+        <div className="max-w-4xl mx-auto">
+          <FormProgressBar 
+            currentStep={stepper.currentStep}
+            totalSteps={stepper.totalSteps}
+            progress={stepper.progress}
+          />
+          
+          <SiteFormStep
+            title={steps[stepper.currentStep].title}
+            description={steps[stepper.currentStep].description}
+            onNext={() => stepper.handleNext(handleSubmit)}
+            onBack={stepper.handleBack}
+            isSubmitting={isSubmitting}
+            isLastStep={stepper.isLastStep}
+            isFirstStep={stepper.isFirstStep}
+          >
+            {steps[stepper.currentStep].component}
+          </SiteFormStep>
+        </div>
+      </form>
     </Form>
   );
 }
