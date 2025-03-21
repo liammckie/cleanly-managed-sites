@@ -123,31 +123,24 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     return isValid;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    if (mode === 'create') {
-      createClient(formData, {
-        onSuccess: () => {
-          navigate('/clients');
-        },
-      });
-    } else if (mode === 'edit' && client) {
-      updateClient(
-        { 
-          id: client.id, 
-          data: formData 
-        }, 
-        {
-          onSuccess: () => {
-            navigate(`/clients/${client.id}`);
-          },
-        }
-      );
+    try {
+      if (mode === 'create') {
+        await createClient(formData);
+        navigate('/clients');
+      } else if (mode === 'edit' && client) {
+        await updateClient({ id: client.id, data: formData });
+        navigate(`/clients/${client.id}`);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('An unexpected error occurred');
     }
   };
   

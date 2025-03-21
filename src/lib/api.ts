@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
@@ -80,6 +79,8 @@ export const clientsApi = {
   
   // Create a new client
   async createClient(clientData: Partial<ClientRecord>): Promise<ClientRecord> {
+    console.log('Creating client with data:', clientData);
+    
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     
