@@ -167,6 +167,7 @@ export const useGoogleDriveFileOperations = () => {
       await uploadFileMutation.mutateAsync({ uploadUrl, file });
       
       // Step 4: Return the attachment metadata
+      // Make sure all properties are JSON-compatible
       const attachment: WorkOrderAttachment = {
         id: crypto.randomUUID(),
         name: file.name,

@@ -14,6 +14,8 @@ export interface GoogleDriveFile {
   webViewLink?: string;
 }
 
+// Make the interface compatible with Supabase's Json type
+// by ensuring all properties use basic JSON-compatible types
 export interface WorkOrderAttachment {
   id: string;
   name: string;
@@ -21,6 +23,7 @@ export interface WorkOrderAttachment {
   size: number;
   driveFileId: string;
   uploadedAt: string;
+  [key: string]: string | number | boolean | null; // Add index signature for Json compatibility
 }
 
 export const useGoogleDriveFiles = () => {

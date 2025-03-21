@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord, CreateWorkOrderData, UpdateWorkOrderData, WorkOrderStatus } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Create a new work order
@@ -23,8 +24,8 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         created_by: (await supabase.auth.getUser()).data.user?.id,
         requires_purchase_order: workOrderData.requires_purchase_order,
         purchase_order_number: workOrderData.purchase_order_number,
-        // Store attachments array directly - Supabase handles JSON conversion
-        attachments: workOrderData.attachments || null
+        // Cast attachments to Json for Supabase
+        attachments: workOrderData.attachments ? (workOrderData.attachments as unknown as Json) : null
       })
       .select()
       .single();
@@ -45,10 +46,18 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
  */
 export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
+    // Process data to ensure proper types
+    const processedData = { ...workOrderData };
+    
+    // Cast attachments to Json for Supabase if they exist
+    if (processedData.attachments) {
+      processedData.attachments = processedData.attachments as unknown as Json;
+    }
+    
     // Just pass the update data directly - Supabase handles JSON conversion
     const { data, error } = await supabase
       .from('work_orders')
-      .update(workOrderData)
+      .update(processedData)
       .eq('id', id)
       .select()
       .single();

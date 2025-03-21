@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 import { WorkOrderRecord } from '../types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Add attachment to a work order
@@ -20,16 +21,19 @@ export const addWorkOrderAttachment = async (id: string, attachment: WorkOrderAt
     }
 
     // Initialize attachments array or use existing one
-    const existingAttachments = workOrder?.attachments || [];
+    const existingAttachments = workOrder?.attachments ? 
+      (Array.isArray(workOrder.attachments) ? workOrder.attachments : []) : 
+      [];
     
     // Create a new array with the added attachment
     const updatedAttachments = [...existingAttachments, attachment];
 
     // Update the work order with the new attachment
+    // Cast attachments to Json type for Supabase
     const { data, error } = await supabase
       .from('work_orders')
       .update({ 
-        attachments: updatedAttachments 
+        attachments: updatedAttachments as unknown as Json
       })
       .eq('id', id)
       .select()
@@ -73,10 +77,11 @@ export const removeWorkOrderAttachment = async (id: string, attachmentId: string
     );
 
     // Update the work order with the filtered attachments
+    // Cast attachments to Json type for Supabase
     const { data, error } = await supabase
       .from('work_orders')
       .update({ 
-        attachments: updatedAttachments 
+        attachments: updatedAttachments as unknown as Json
       })
       .eq('id', id)
       .select()
@@ -99,10 +104,11 @@ export const removeWorkOrderAttachment = async (id: string, attachmentId: string
 export const updateWorkOrderAttachments = async (id: string, attachments: WorkOrderAttachment[]): Promise<WorkOrderRecord> => {
   try {
     // Update the work order with the new attachments
+    // Cast attachments to Json type for Supabase
     const { data, error } = await supabase
       .from('work_orders')
       .update({ 
-        attachments: attachments 
+        attachments: attachments as unknown as Json
       })
       .eq('id', id)
       .select()
