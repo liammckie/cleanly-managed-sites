@@ -8,6 +8,7 @@ import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { getStepsConfig } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi, SiteRecord } from '@/lib/api';
+import { getInitialFormData } from './siteFormTypes';
 
 interface EditSiteFormProps {
   site: SiteRecord;
@@ -23,16 +24,31 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   // Initialize form with the site data
   useEffect(() => {
     if (site) {
+      // Create a base form data with all required fields
+      const baseFormData = getInitialFormData();
+      
       // Convert from API format to form format (flattening JSON fields)
       const formData = {
-        ...site,
-        securityDetails: site.security_details || formHandlers.formData.securityDetails,
-        jobSpecifications: site.job_specifications || formHandlers.formData.jobSpecifications,
-        periodicals: site.periodicals || formHandlers.formData.periodicals,
-        replenishables: site.replenishables || formHandlers.formData.replenishables,
-        contractDetails: site.contract_details || formHandlers.formData.contractDetails,
-        billingDetails: site.billing_details || formHandlers.formData.billingDetails,
-        subcontractors: site.subcontractors || formHandlers.formData.subcontractors,
+        ...baseFormData,
+        // Copy over basic fields
+        name: site.name,
+        address: site.address,
+        city: site.city,
+        state: site.state,
+        postcode: site.postcode,
+        status: site.status,
+        representative: site.representative,
+        // Handle optional fields with fallbacks
+        phone: site.phone || baseFormData.phone,
+        email: site.email || baseFormData.email,
+        // Merge JSON fields with defaults
+        securityDetails: site.security_details || baseFormData.securityDetails,
+        jobSpecifications: site.job_specifications || baseFormData.jobSpecifications,
+        periodicals: site.periodicals || baseFormData.periodicals,
+        replenishables: site.replenishables || baseFormData.replenishables,
+        contractDetails: site.contract_details || baseFormData.contractDetails,
+        billingDetails: site.billing_details || baseFormData.billingDetails,
+        subcontractors: site.subcontractors || baseFormData.subcontractors,
       };
       
       formHandlers.setFormData(formData);
