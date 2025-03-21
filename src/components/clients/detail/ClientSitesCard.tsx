@@ -37,6 +37,18 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
       </span>
     );
   };
+  
+  // Calculate annual billing amount
+  const getAnnualBilling = (site: SiteRecord) => {
+    if (!site.monthly_revenue) return null;
+    return site.monthly_revenue * 12;
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null) return "—";
+    return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
+  };
 
   return (
     <Card className="h-full">
@@ -91,6 +103,7 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                   status={site.status as any}
                   representative={site.representative}
                   phone={site.phone}
+                  annualBilling={getAnnualBilling(site)}
                 />
               ))}
             </div>
@@ -102,6 +115,7 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                     <TableHead>Name</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Representative</TableHead>
+                    <TableHead>Annual Billing</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -121,6 +135,7 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                         <div className="text-muted-foreground text-sm">{site.city}</div>
                       </TableCell>
                       <TableCell>{site.representative}</TableCell>
+                      <TableCell>{formatCurrency(getAnnualBilling(site))}</TableCell>
                       <TableCell>
                         <StatusBadge status={site.status} />
                       </TableCell>

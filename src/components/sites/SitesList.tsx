@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SiteCard, SiteStatus } from './SiteCard';
+import { SiteCard } from './SiteCard';
 import { Plus, Search, LayoutGrid, List } from 'lucide-react';
 import {
   Table,
@@ -28,87 +28,38 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-
-type Site = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  status: SiteStatus;
-  representative: string;
-  phone?: string;
-};
-
-// Mock data for demonstration
-const mockSites: Site[] = [
-  {
-    id: '1',
-    name: 'ABC Office Building',
-    address: '123 Business St',
-    city: 'Sydney',
-    status: 'active',
-    representative: 'John Smith',
-    phone: '(02) 1234 5678',
-  },
-  {
-    id: '2',
-    name: 'Riverside Plaza',
-    address: '45 Harbor Rd',
-    city: 'Melbourne',
-    status: 'active',
-    representative: 'Sarah Johnson',
-    phone: '(03) 8765 4321',
-  },
-  {
-    id: '3',
-    name: 'Central Mall',
-    address: '789 Shopping Ln',
-    city: 'Brisbane',
-    status: 'inactive',
-    representative: 'Michael Brown',
-  },
-  {
-    id: '4',
-    name: 'Tech Park Tower',
-    address: '567 Innovation Ave',
-    city: 'Perth',
-    status: 'pending',
-    representative: 'Emily Wilson',
-    phone: '(08) 9876 5432',
-  },
-  {
-    id: '5',
-    name: 'Harbor View Hotel',
-    address: '321 Ocean Dr',
-    city: 'Gold Coast',
-    status: 'active',
-    representative: 'David Lee',
-    phone: '(07) 2468 1357',
-  },
-  {
-    id: '6',
-    name: 'Sunset Corporate Center',
-    address: '987 Business Pkwy',
-    city: 'Adelaide',
-    status: 'inactive',
-    representative: 'Lisa Taylor',
-  },
-];
+import { useSites } from '@/hooks/useSites';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { SiteRecord } from '@/lib/types';
 
 export function SitesList() {
+  const { sites, isLoading, isError, error } = useSites();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
+  const [clientFilter, setClientFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9; // For grid view
   const tableItemsPerPage = 10; // For table view
   
-  const filteredSites = mockSites.filter(site => {
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, cityFilter, clientFilter]);
+  
+  // Get unique cities and clients for filters
+  const cities = Array.from(new Set(sites.map(site => site.city))).sort();
+  const clients = Array.from(new Set(sites.map(site => {
+    const clientObj = site.clients as { name: string } | null;
+    return clientObj?.name || 'Unknown';
+  }))).sort();
+  
+  const filteredSites = sites.filter(site => {
     // Filter by search term
     const matchesSearch = site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         site.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         site.representative.toLowerCase().includes(searchTerm.toLowerCase());
+                         (site.address && site.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (site.representative && site.representative.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Filter by status
     const matchesStatus = statusFilter === 'all' || site.status === statusFilter;
@@ -116,11 +67,12 @@ export function SitesList() {
     // Filter by city
     const matchesCity = cityFilter === 'all' || site.city === cityFilter;
     
-    return matchesSearch && matchesStatus && matchesCity;
+    // Filter by client
+    const clientName = (site.clients as { name: string } | null)?.name || 'Unknown';
+    const matchesClient = clientFilter === 'all' || clientName === clientFilter;
+    
+    return matchesSearch && matchesStatus && matchesCity && matchesClient;
   });
-  
-  // Get unique cities for the filter
-  const cities = Array.from(new Set(mockSites.map(site => site.city))).sort();
 
   // Pagination logic
   const itemsPerCurrentView = viewMode === 'grid' ? itemsPerPage : tableItemsPerPage;
@@ -137,7 +89,7 @@ export function SitesList() {
   };
 
   // Status badge component
-  const StatusBadge = ({ status }: { status: SiteStatus }) => {
+  const StatusBadge = ({ status }: { status: string }) => {
     const statusClasses = {
       active: "bg-green-100 text-green-800",
       inactive: "bg-gray-100 text-gray-800",
@@ -145,10 +97,22 @@ export function SitesList() {
     };
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClasses[status]}`}>
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClasses[status as keyof typeof statusClasses] || ''}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
+  };
+
+  // Calculate annual billing amount
+  const getAnnualBilling = (site: SiteRecord) => {
+    if (!site.monthly_revenue) return null;
+    return site.monthly_revenue * 12;
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null) return "—";
+    return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
   };
 
   // Generate array of pages for pagination display
@@ -188,6 +152,25 @@ export function SitesList() {
     return pages;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-60">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-lg p-8 text-center border border-border bg-card">
+        <p className="text-lg text-destructive">Error loading sites: {(error as any)?.message || 'Unknown error'}</p>
+        <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -213,7 +196,7 @@ export function SitesList() {
             />
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Status" />
@@ -234,6 +217,18 @@ export function SitesList() {
                 <SelectItem value="all">All Cities</SelectItem>
                 {cities.map(city => (
                   <SelectItem key={city} value={city}>{city}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={clientFilter} onValueChange={setClientFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clients</SelectItem>
+                {clients.map(client => (
+                  <SelectItem key={client} value={client}>{client}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -265,7 +260,18 @@ export function SitesList() {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedSites.map(site => (
-                <SiteCard key={site.id} {...site} />
+                <SiteCard 
+                  key={site.id} 
+                  id={site.id}
+                  name={site.name}
+                  address={site.address}
+                  city={site.city}
+                  status={site.status as any}
+                  representative={site.representative}
+                  phone={site.phone}
+                  clientName={(site.clients as { name: string } | null)?.name}
+                  annualBilling={getAnnualBilling(site)}
+                />
               ))}
             </div>
           ) : (
@@ -274,9 +280,10 @@ export function SitesList() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Client</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Representative</TableHead>
-                    <TableHead>Contact</TableHead>
+                    <TableHead>Annual Billing</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -293,11 +300,14 @@ export function SitesList() {
                           </Link>
                         </TableCell>
                         <TableCell>
+                          {(site.clients as { name: string } | null)?.name || "—"}
+                        </TableCell>
+                        <TableCell>
                           <div>{site.address}</div>
                           <div className="text-muted-foreground text-sm">{site.city}</div>
                         </TableCell>
-                        <TableCell>{site.representative}</TableCell>
-                        <TableCell>{site.phone || "—"}</TableCell>
+                        <TableCell>{site.representative || "—"}</TableCell>
+                        <TableCell>{formatCurrency(getAnnualBilling(site))}</TableCell>
                         <TableCell>
                           <StatusBadge status={site.status} />
                         </TableCell>
@@ -305,7 +315,7 @@ export function SitesList() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                         No sites found matching your criteria.
                       </TableCell>
                     </TableRow>

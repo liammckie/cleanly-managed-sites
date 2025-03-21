@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MapPin, Phone, User } from 'lucide-react';
+import { ArrowRight, MapPin, Phone, User, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 
@@ -17,6 +17,8 @@ export type SiteCardProps = {
   status: SiteStatus;
   representative: string;
   phone?: string;
+  clientName?: string;
+  annualBilling?: number | null;
   className?: string;
 };
 
@@ -28,6 +30,8 @@ export function SiteCard({
   status,
   representative,
   phone,
+  clientName,
+  annualBilling,
   className,
 }: SiteCardProps) {
   const getStatusColor = (status: SiteStatus) => {
@@ -41,6 +45,12 @@ export function SiteCard({
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400';
     }
+  };
+  
+  // Format currency
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null || amount === undefined) return null;
+    return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
   };
 
   return (
@@ -59,6 +69,12 @@ export function SiteCard({
         </div>
         
         <div className="mt-4 space-y-2">
+          {clientName && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Building2 size={16} className="mr-2 flex-shrink-0" />
+              <span>{clientName}</span>
+            </div>
+          )}
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin size={16} className="mr-2 flex-shrink-0" />
             <span className="truncate">{address}, {city}</span>
@@ -74,6 +90,17 @@ export function SiteCard({
             </div>
           )}
         </div>
+        
+        {annualBilling && (
+          <div className="mt-4 pt-3 border-t border-border">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Annual Billing:</span>
+              <span className="font-medium ml-2 text-primary">
+                {formatCurrency(annualBilling)}
+              </span>
+            </div>
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="pt-2 pb-6 flex justify-end">
