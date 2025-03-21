@@ -31,6 +31,56 @@ export function ReviewStep({ formData }: ReviewStepProps) {
           </div>
           
           <div className="pt-4 border-t border-border">
+            <h4 className="font-medium text-sm text-muted-foreground">Contract Details</h4>
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <span className="text-sm text-muted-foreground">Contract #:</span>
+                <p className="mt-1">{formData.contractDetails.contractNumber || 'Not specified'}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Contract Period:</span>
+                <p className="mt-1">
+                  {formData.contractDetails.startDate && formData.contractDetails.endDate 
+                    ? `${formData.contractDetails.startDate} to ${formData.contractDetails.endDate}`
+                    : 'Not specified'}
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Termination Period:</span>
+                <p className="mt-1">{formData.contractDetails.terminationPeriod || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="pt-4 border-t border-border">
+            <h4 className="font-medium text-sm text-muted-foreground">Billing Details</h4>
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <span className="text-sm text-muted-foreground">Rate:</span>
+                <p className="mt-1">{formData.billingDetails.rate || 'Not specified'}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Billing Frequency:</span>
+                <p className="mt-1 capitalize">{formData.billingDetails.billingFrequency}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Payment Terms:</span>
+                <p className="mt-1">{formData.billingDetails.paymentTerms}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Invoice Method:</span>
+                <p className="mt-1 capitalize">{formData.billingDetails.invoiceMethod}</p>
+              </div>
+              {formData.billingDetails.accountNumber && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Account #:</span>
+                  <p className="mt-1">{formData.billingDetails.accountNumber}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="pt-4 border-t border-border">
             <h4 className="font-medium text-sm text-muted-foreground">Subcontractors</h4>
             <div className="mt-2 space-y-2">
               {formData.subcontractors.map((sub, index) => (

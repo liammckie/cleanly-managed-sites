@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
@@ -77,6 +76,8 @@ export const sitesApi = {
       job_specifications: siteData.jobSpecifications,
       periodicals: siteData.periodicals,
       replenishables: siteData.replenishables,
+      contract_details: siteData.contractDetails,
+      billing_details: siteData.billingDetails,
       // If there are subcontractors, store them
       has_subcontractors: siteData.subcontractors.length > 0,
     };
@@ -135,6 +136,8 @@ export const sitesApi = {
         ...(siteData.jobSpecifications && { job_specifications: siteData.jobSpecifications }),
         ...(siteData.periodicals && { periodicals: siteData.periodicals }),
         ...(siteData.replenishables && { replenishables: siteData.replenishables }),
+        ...(siteData.contractDetails && { contract_details: siteData.contractDetails }),
+        ...(siteData.billingDetails && { billing_details: siteData.billingDetails }),
         ...(siteData.subcontractors && { has_subcontractors: siteData.subcontractors.length > 0 }),
       })
       .eq('id', id)

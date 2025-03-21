@@ -44,6 +44,22 @@ export type Subcontractor = {
   phone: string;
 }
 
+export type ContractDetails = {
+  startDate: string;
+  endDate: string;
+  contractNumber: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+}
+
+export type BillingDetails = {
+  rate: string;
+  billingFrequency: string;
+  paymentTerms: string;
+  invoiceMethod: string;
+  accountNumber: string;
+}
+
 export type SiteFormData = {
   name: string;
   address: string;
@@ -59,6 +75,8 @@ export type SiteFormData = {
   jobSpecifications: JobSpecifications;
   replenishables: Replenishables;
   securityDetails: SecurityDetails;
+  contractDetails: ContractDetails;
+  billingDetails: BillingDetails;
 }
 
 export const getInitialFormData = (): SiteFormData => ({
@@ -117,5 +135,23 @@ export const getInitialFormData = (): SiteFormData => ({
     alarmCode: '',
     keyLocation: '',
     outOfHoursAccess: false
+  },
+  
+  // Contract details
+  contractDetails: {
+    startDate: '',
+    endDate: '',
+    contractNumber: '',
+    renewalTerms: '',
+    terminationPeriod: ''
+  },
+  
+  // Billing details
+  billingDetails: {
+    rate: '',
+    billingFrequency: 'monthly',
+    paymentTerms: '30 days',
+    invoiceMethod: 'email',
+    accountNumber: ''
   }
 });

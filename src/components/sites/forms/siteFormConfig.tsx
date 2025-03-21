@@ -7,6 +7,8 @@ import { PeriodicalsStep } from './steps/PeriodicalsStep';
 import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
 import { ReplenishablesStep } from './steps/ReplenishablesStep';
 import { SecurityStep } from './steps/SecurityStep';
+import { ContractDetailsStep } from './steps/ContractDetailsStep';
+import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { SiteStatus } from '../SiteCard';
 
@@ -50,6 +52,26 @@ export const getStepsConfig = ({
         errors={errors}
         handleChange={handleChange}
         handleStatusChange={handleStatusChange}
+      />
+    )
+  },
+  {
+    title: "Contract Details",
+    description: "Add contract information for this site.",
+    component: (
+      <ContractDetailsStep 
+        formData={formData}
+        handleNestedChange={handleNestedChange}
+      />
+    )
+  },
+  {
+    title: "Billing Details",
+    description: "Add billing information for this site.",
+    component: (
+      <BillingDetailsStep 
+        formData={formData}
+        handleNestedChange={handleNestedChange}
       />
     )
   },
