@@ -9,7 +9,9 @@ export const contractHistoryApi = {
   ): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
 
-    // We don't need to set version_number manually as the database trigger will handle this
+    // Note: The version_number is automatically set via a database trigger
+    // This was previously causing an error because our code was trying to set a field
+    // that's automatically set by the database
     const { error } = await supabase
       .from('site_contract_history')
       .insert({
@@ -17,7 +19,7 @@ export const contractHistoryApi = {
         contract_details: contractDetails,
         notes: notes,
         created_by: user?.id,
-        // Removed version_number as it's set by a database trigger
+        // The version_number is omitted as it's auto-set by a database trigger
       });
 
     if (error) {
@@ -41,7 +43,6 @@ export const contractHistoryApi = {
     return data || [];
   },
 
-  // Implement the missing getContractVersion function
   async getContractVersion(versionId: string): Promise<any> {
     const { data, error } = await supabase
       .from('site_contract_history')
