@@ -5,6 +5,10 @@ export type ContractDetails = {
   contractNumber: string;
   renewalTerms: string;
   terminationPeriod: string;
+  value?: number;      // Monthly contract value
+  billingCycle?: string; // Monthly, quarterly, annually
+  autoRenew?: boolean;
+  nextReviewDate?: string;
 }
 
 export type ContractHistoryEntry = {
@@ -15,4 +19,20 @@ export type ContractHistoryEntry = {
   created_by?: string;
   version_number: number;
   notes?: string;
+}
+
+export type ContractForecast = {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+export type ContractSummary = {
+  totalValue: number;
+  activeContracts: number;
+  expiringWithin30Days: number;
+  expiringWithin90Days: number;
+  averageContractLength: number;
+  renewalRate: number;
 }

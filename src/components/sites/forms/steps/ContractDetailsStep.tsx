@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Select,
   SelectContent,
@@ -61,6 +62,57 @@ export function ContractDetailsStep({ formData, handleNestedChange }: ContractDe
               onChange={(e) => handleNestedChange('contractDetails', 'endDate', e.target.value)}
               className="glass-input"
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="next-review-date">Next Review Date</Label>
+            <Input
+              id="next-review-date"
+              type="date"
+              value={formData.contractDetails.nextReviewDate || ''}
+              onChange={(e) => handleNestedChange('contractDetails', 'nextReviewDate', e.target.value)}
+              className="glass-input"
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="contract-value">Monthly Value ($)</Label>
+            <Input
+              id="contract-value"
+              type="number"
+              placeholder="0.00"
+              value={formData.contractDetails.value || ''}
+              onChange={(e) => handleNestedChange('contractDetails', 'value', parseFloat(e.target.value))}
+              className="glass-input"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="billing-cycle">Billing Cycle</Label>
+            <Select 
+              value={formData.contractDetails.billingCycle || 'monthly'}
+              onValueChange={(value) => handleNestedChange('contractDetails', 'billingCycle', value)}
+            >
+              <SelectTrigger id="billing-cycle" className="glass-input">
+                <SelectValue placeholder="Select billing cycle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center space-x-2 pt-8">
+            <Checkbox 
+              id="auto-renew" 
+              checked={formData.contractDetails.autoRenew || false}
+              onCheckedChange={(checked) => handleNestedChange('contractDetails', 'autoRenew', checked)}
+            />
+            <Label htmlFor="auto-renew">Auto-renew contract</Label>
           </div>
         </div>
       </div>
