@@ -18,13 +18,74 @@ import { SiteStatus } from '../SiteCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
+// Define types for the nested form data
+type WindowCleaning = {
+  frequency: string;
+  lastCompleted: string;
+  nextScheduled: string;
+}
+
+type SteamCleaning = {
+  charges: string;
+  frequency: string;
+  lastCompleted: string;
+}
+
+type Periodicals = {
+  windowCleaning: WindowCleaning;
+  steamCleaning: SteamCleaning;
+}
+
+type JobSpecifications = {
+  daysPerWeek: number;
+  hoursPerDay: number;
+  directEmployees: boolean;
+  notes: string;
+}
+
+type Replenishables = {
+  stock: string[];
+  contactDetails: string;
+}
+
+type SecurityDetails = {
+  accessCode: string;
+  alarmCode: string;
+  keyLocation: string;
+  outOfHoursAccess: boolean;
+}
+
+type Subcontractor = {
+  businessName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+}
+
+type FormData = {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postcode: string;
+  status: SiteStatus;
+  representative: string;
+  phone: string;
+  email: string;
+  subcontractors: Subcontractor[];
+  periodicals: Periodicals;
+  jobSpecifications: JobSpecifications;
+  replenishables: Replenishables;
+  securityDetails: SecurityDetails;
+}
+
 export function CreateSiteForm() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // Basic information
     name: '',
     address: '',
@@ -93,24 +154,24 @@ export function CreateSiteForm() {
   };
   
   // Handle nested field changes
-  const handleNestedChange = (section: string, field: string, value: any) => {
+  const handleNestedChange = (section: keyof FormData, field: string, value: any) => {
     setFormData({
       ...formData,
       [section]: {
-        ...formData[section as keyof typeof formData],
+        ...(formData[section] as object),
         [field]: value
       }
     });
   };
   
   // Handle nested within nested field changes
-  const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
+  const handleDoubleNestedChange = (section: keyof FormData, subsection: string, field: string, value: any) => {
     setFormData({
       ...formData,
       [section]: {
-        ...formData[section as keyof typeof formData],
+        ...(formData[section] as object),
         [subsection]: {
-          ...formData[section as keyof typeof formData][subsection as any],
+          ...((formData[section] as any)[subsection] as object),
           [field]: value
         }
       }
