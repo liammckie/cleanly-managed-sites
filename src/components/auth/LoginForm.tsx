@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import LoadingSpinner from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -20,12 +19,10 @@ const LoginForm = ({ onSubmit, onResetPassword, isLoading, error }: LoginFormPro
   const [isResetPasswordLoading, setIsResetPasswordLoading] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
 
-  // Check if we're coming from a verification flow
   useEffect(() => {
     const url = new URL(window.location.href);
     if (url.searchParams.has('verified') && url.searchParams.get('verified') === 'true') {
       setVerificationMessage('Your email has been verified. You can now log in.');
-      // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -46,7 +43,6 @@ const LoginForm = ({ onSubmit, onResetPassword, isLoading, error }: LoginFormPro
       await onResetPassword(email);
       setVerificationMessage('Password reset email sent. Please check your inbox.');
     } catch (error) {
-      // Error handling is done in the parent component
     } finally {
       setIsResetPasswordLoading(false);
     }

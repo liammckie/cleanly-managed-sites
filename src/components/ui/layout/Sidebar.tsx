@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
@@ -19,7 +18,8 @@ import {
 
 export function Sidebar() {
   const navigate = useNavigate();
-  const { isMobile, isOpen, setIsOpen } = useMobile();
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = React.useState(false);
   
   const handleSignOut = async () => {
     try {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -16,6 +15,7 @@ import {
 import { useClients } from '@/hooks/useClients';
 import { ClientRecord } from '@/lib/api';
 import { toast } from 'sonner';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface ClientFormProps {
   mode: 'create' | 'edit';
@@ -71,11 +71,9 @@ export function ClientForm({ mode, client }: ClientFormProps) {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Clear error when field is edited
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -90,7 +88,6 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     }));
   };
   
-  // Handle status change
   const handleStatusChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -98,7 +95,6 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     }));
   };
   
-  // Form validation
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
@@ -127,7 +123,6 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     return isValid;
   };
   
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -156,7 +151,6 @@ export function ClientForm({ mode, client }: ClientFormProps) {
     }
   };
   
-  // Handle cancel
   const handleCancel = () => {
     if (mode === 'edit' && client) {
       navigate(`/clients/${client.id}`);
