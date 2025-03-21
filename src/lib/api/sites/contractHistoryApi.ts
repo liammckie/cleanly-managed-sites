@@ -17,12 +17,17 @@ export const contractHistoryApi = {
     }
 
     // First get the current max version number for this site
-    const { data: versionData } = await supabase
+    const { data: versionData, error: versionError } = await supabase
       .from('site_contract_history')
       .select('version_number')
       .eq('site_id', siteId)
       .order('version_number', { ascending: false })
       .limit(1);
+    
+    if (versionError) {
+      console.error('Error fetching version data:', versionError);
+      throw versionError;
+    }
     
     // Calculate next version number
     const nextVersion = versionData && versionData.length > 0 
@@ -37,7 +42,7 @@ export const contractHistoryApi = {
         contract_details: contractDetails,
         created_by: user.id,
         notes: notes || null,
-        version_number: nextVersion // Set version explicitly for TypeScript
+        version_number: nextVersion
       })
       .select()
       .single();

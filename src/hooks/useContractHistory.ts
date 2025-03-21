@@ -6,7 +6,15 @@ import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTyp
 export function useContractHistory(siteId: string | undefined) {
   const historyQuery = useQuery({
     queryKey: ['contractHistory', siteId],
-    queryFn: () => siteId ? contractHistoryApi.getContractHistory(siteId) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!siteId) return [];
+      try {
+        return await contractHistoryApi.getContractHistory(siteId);
+      } catch (error) {
+        console.error('Failed to fetch contract history:', error);
+        throw error;
+      }
+    },
     enabled: !!siteId
   });
 
@@ -21,7 +29,15 @@ export function useContractHistory(siteId: string | undefined) {
 export function useContractVersion(versionId: string | undefined) {
   const versionQuery = useQuery({
     queryKey: ['contractVersion', versionId],
-    queryFn: () => versionId ? contractHistoryApi.getContractVersion(versionId) : Promise.resolve(null),
+    queryFn: async () => {
+      if (!versionId) return null;
+      try {
+        return await contractHistoryApi.getContractVersion(versionId);
+      } catch (error) {
+        console.error('Failed to fetch contract version:', error);
+        throw error;
+      }
+    },
     enabled: !!versionId
   });
 
