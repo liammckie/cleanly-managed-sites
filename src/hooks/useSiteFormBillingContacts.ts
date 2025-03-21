@@ -50,13 +50,13 @@ export const useSiteFormBillingContacts = (
     setErrors(updatedErrors);
   };
   
-  // Update billing contact field
+  // Update billing contact field - fix the symbol-to-string conversion
   const updateBillingContact = (index: number, field: keyof BillingContact, value: string) => {
     const updatedContacts = [...(formData.billingDetails.contacts || [])];
     
     updatedContacts[index] = {
       ...updatedContacts[index],
-      [field]: value
+      [String(field)]: value // Convert symbol to string explicitly
     };
     
     setFormData(prev => ({
@@ -68,7 +68,7 @@ export const useSiteFormBillingContacts = (
     }));
     
     // Clear error when field is filled
-    const errorKey = `billingDetails.contacts[${index}].${field}`;
+    const errorKey = `billingDetails.contacts[${index}].${String(field)}`;
     if (errors[errorKey] && value.trim()) {
       const updatedErrors = { ...errors };
       delete updatedErrors[errorKey];

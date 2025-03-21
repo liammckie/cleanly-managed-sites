@@ -1,6 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord, ContactRecord } from '../../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { getSiteContacts, handleSiteContacts } from './siteContactsApi';
+import { handleSiteSubcontractors } from './siteSubcontractorsApi';
+import { contractHistoryApi } from './contractHistoryApi';
+import { convertSiteContactToContactRecord } from '@/components/sites/forms/types/contactTypes';
 
 // Site API functions
 export const sitesApi = {
@@ -122,14 +127,15 @@ export const sitesApi = {
     
     // Handle contacts separately
     if (siteData.contacts && siteData.contacts.length > 0) {
-      await handleSiteContacts(data.id, siteData.contacts, user.id);
+      await handleSiteContacts(data.id, siteData.contacts.map(contact => 
+        convertSiteContactToContactRecord(contact, data.id)), user.id);
     }
     
     // Create a result that includes the contacts
     const result = {
       ...data,
       contacts: siteData.contacts || []
-    } as SiteRecord;
+    } as unknown as SiteRecord; // Use unknown to avoid type issues
     
     return result;
   },
@@ -194,7 +200,8 @@ export const sitesApi = {
     
     // Handle contacts if provided
     if (siteData.contacts) {
-      await handleSiteContacts(id, siteData.contacts, user?.id);
+      await handleSiteContacts(id, siteData.contacts.map(contact => 
+        convertSiteContactToContactRecord(contact, id)), user?.id);
     }
     
     // Fetch the contacts to include in the result
@@ -210,7 +217,7 @@ export const sitesApi = {
     const result = {
       ...data,
       contacts: contacts || []
-    } as SiteRecord;
+    } as unknown as SiteRecord; // Use unknown to avoid type issues
     
     return result;
   },
