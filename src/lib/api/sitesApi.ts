@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord, ContactRecord } from '../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
@@ -48,7 +49,8 @@ export const sitesApi = {
       const transformedData = {
         ...data,
         client_name: clientData?.name || null,
-        clients: undefined // Remove the clients property
+        clients: undefined, // Remove the clients property
+        contacts: [] as ContactRecord[] // Initialize with empty array
       };
       
       // Get contacts for the site separately
@@ -63,9 +65,6 @@ export const sitesApi = {
       } else if (contactsData) {
         // Add the contacts to the transformed data
         transformedData.contacts = contactsData as ContactRecord[];
-      } else {
-        // Ensure we always have a contacts array even if empty
-        transformedData.contacts = [];
       }
       
       return transformedData as SiteRecord;
