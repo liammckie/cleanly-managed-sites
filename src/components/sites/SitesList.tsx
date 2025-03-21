@@ -11,7 +11,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteCard, SiteStatus } from './SiteCard';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 type Site = {
   id: string;
@@ -83,6 +99,10 @@ export function SitesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9; // For grid view
+  const tableItemsPerPage = 10; // For table view
   
   const filteredSites = mockSites.filter(site => {
     // Filter by search term
@@ -101,6 +121,72 @@ export function SitesList() {
   
   // Get unique cities for the filter
   const cities = Array.from(new Set(mockSites.map(site => site.city))).sort();
+
+  // Pagination logic
+  const itemsPerCurrentView = viewMode === 'grid' ? itemsPerPage : tableItemsPerPage;
+  const totalPages = Math.ceil(filteredSites.length / itemsPerCurrentView);
+  const paginatedSites = filteredSites.slice(
+    (currentPage - 1) * itemsPerCurrentView,
+    currentPage * itemsPerCurrentView
+  );
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Status badge component
+  const StatusBadge = ({ status }: { status: SiteStatus }) => {
+    const statusClasses = {
+      active: "bg-green-100 text-green-800",
+      inactive: "bg-gray-100 text-gray-800",
+      pending: "bg-yellow-100 text-yellow-800"
+    };
+
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClasses[status]}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
+
+  // Generate array of pages for pagination display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      // If we have fewer pages than max, show all
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Add first page
+      pages.push(1);
+      
+      // Add middle pages
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      if (startPage > 2) {
+        pages.push(-1); // Indicator for ellipsis
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      if (endPage < totalPages - 1) {
+        pages.push(-1); // Indicator for ellipsis
+      }
+      
+      // Add last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
 
   return (
     <div className="space-y-6">
@@ -151,15 +237,118 @@ export function SitesList() {
                 ))}
               </SelectContent>
             </Select>
+
+            <div className="flex border rounded-md overflow-hidden">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                className="rounded-none border-0"
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <LayoutGrid size={18} />
+              </Button>
+              <Button 
+                variant={viewMode === 'table' ? 'default' : 'outline'} 
+                className="rounded-none border-0"
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                <List size={18} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
       
       {filteredSites.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSites.map(site => (
-            <SiteCard key={site.id} {...site} />
-          ))}
+        <div className="space-y-6">
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedSites.map(site => (
+                <SiteCard key={site.id} {...site} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Representative</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedSites.length > 0 ? (
+                    paginatedSites.map(site => (
+                      <TableRow key={site.id}>
+                        <TableCell className="font-medium">
+                          <Link 
+                            to={`/sites/${site.id}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {site.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <div>{site.address}</div>
+                          <div className="text-muted-foreground text-sm">{site.city}</div>
+                        </TableCell>
+                        <TableCell>{site.representative}</TableCell>
+                        <TableCell>{site.phone || "—"}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={site.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                        No sites found matching your criteria.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          
+          {totalPages > 1 && (
+            <Pagination className="mt-6">
+              <PaginationContent>
+                {currentPage > 1 && (
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} />
+                  </PaginationItem>
+                )}
+                
+                {getPageNumbers().map((page, index) => (
+                  page === -1 ? (
+                    <PaginationItem key={`ellipsis-${index}`}>
+                      <span className="flex h-9 w-9 items-center justify-center">...</span>
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={page}>
+                      <PaginationLink 
+                        isActive={page === currentPage}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                ))}
+                
+                {currentPage < totalPages && (
+                  <PaginationItem>
+                    <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
+                  </PaginationItem>
+                )}
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       ) : (
         <div className="rounded-lg p-8 text-center border border-border bg-card">
