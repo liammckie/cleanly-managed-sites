@@ -5,6 +5,32 @@ import { Json } from '@/integrations/supabase/types';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 /**
+ * Helper function to safely convert Json to WorkOrderAttachment[]
+ */
+const jsonToAttachments = (json: Json | null): WorkOrderAttachment[] | undefined => {
+  if (!json) return undefined;
+  
+  // Handle the case where it's already an array
+  if (Array.isArray(json)) {
+    return json as WorkOrderAttachment[];
+  }
+  
+  // Handle the case where it might be a JSON string
+  if (typeof json === 'string') {
+    try {
+      const parsed = JSON.parse(json);
+      return Array.isArray(parsed) ? parsed : undefined;
+    } catch (e) {
+      console.error('Error parsing attachments JSON:', e);
+      return undefined;
+    }
+  }
+  
+  // For other cases, return undefined
+  return undefined;
+};
+
+/**
  * Create a new work order
  */
 export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promise<WorkOrderRecord> => {
@@ -26,7 +52,7 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         requires_purchase_order: workOrderData.requires_purchase_order,
         purchase_order_number: workOrderData.purchase_order_number,
         // Cast attachments to Json for Supabase
-        attachments: workOrderData.attachments ? (workOrderData.attachments as unknown as Json) : null
+        attachments: workOrderData.attachments as unknown as Json
       })
       .select()
       .single();
@@ -35,13 +61,11 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
       throw error;
     }
 
-    // Cast the returned data to WorkOrderRecord
-    const workOrder = data as unknown as WorkOrderRecord;
-    
-    // Ensure attachments are properly cast from Json to WorkOrderAttachment[]
-    if (workOrder.attachments) {
-      workOrder.attachments = workOrder.attachments as unknown as WorkOrderAttachment[];
-    }
+    // Cast the returned data to WorkOrderRecord and handle attachments specially
+    const workOrder: WorkOrderRecord = {
+      ...data as unknown as WorkOrderRecord,
+      attachments: jsonToAttachments(data.attachments)
+    };
     
     return workOrder;
   } catch (error) {
@@ -75,13 +99,11 @@ export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrder
       throw error;
     }
 
-    // Need to explicitly cast the return type
-    const workOrder = data as unknown as WorkOrderRecord;
-    
-    // If the data contains attachments, ensure they are properly cast back to WorkOrderAttachment[]
-    if (workOrder.attachments) {
-      workOrder.attachments = workOrder.attachments as unknown as WorkOrderAttachment[];
-    }
+    // Need to explicitly cast and handle attachments
+    const workOrder: WorkOrderRecord = {
+      ...data as unknown as WorkOrderRecord,
+      attachments: jsonToAttachments(data.attachments)
+    };
     
     return workOrder;
   } catch (error) {
