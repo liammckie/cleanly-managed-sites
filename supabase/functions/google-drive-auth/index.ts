@@ -23,6 +23,8 @@ serve(async (req) => {
       );
     }
 
+    console.log('Received request with redirectUri:', redirectUri);
+
     // Get environment variables
     const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
     const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
@@ -43,7 +45,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Exchanging code for token...');
+    console.log('Exchanging code for token with redirectUri:', redirectUri);
     
     // Exchange the authorization code for access and refresh tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {

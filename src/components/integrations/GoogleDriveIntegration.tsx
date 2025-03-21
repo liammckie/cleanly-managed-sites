@@ -67,8 +67,10 @@ export const GoogleDriveIntegration = () => {
     try {
       setError(null);
       
-      // Get redirect URI from window location
-      const redirectUri = `${window.location.origin}/integrations?tab=google-drive`;
+      // Get current origin for the redirect URI
+      const origin = window.location.origin;
+      // Ensure the redirect path exactly matches what's in the Google Cloud Console
+      const redirectUri = `${origin}/integrations?tab=google-drive`;
       
       // Construct the Google OAuth URL
       const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -82,6 +84,8 @@ export const GoogleDriveIntegration = () => {
       const scope = 'https://www.googleapis.com/auth/drive.file';
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+      
+      console.log('Redirecting to Google OAuth with redirect URI:', redirectUri);
       
       // Redirect to Google OAuth
       window.location.href = authUrl;
@@ -140,8 +144,11 @@ export const GoogleDriveIntegration = () => {
       setError(null);
       
       try {
-        // Get redirect URI from window location
-        const redirectUri = `${window.location.origin}/integrations?tab=google-drive`;
+        // Get current origin for the redirect URI - must match exactly what was used in the initial request
+        const origin = window.location.origin;
+        const redirectUri = `${origin}/integrations?tab=google-drive`;
+        
+        console.log('Processing OAuth callback with redirect URI:', redirectUri);
         
         // Call Supabase edge function to exchange code for tokens
         const { data, error } = await supabase.functions.invoke('google-drive-auth', {
