@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -15,11 +15,37 @@ import { Plus, Search } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { ClientRecord } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ClientDashboard } from './ClientDashboard';
 
 export function ClientList() {
   const { clients, isLoading, isError, error } = useClients();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
+  
+  // Update status filter when URL params change
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status) {
+      setStatusFilter(status);
+    } else {
+      setStatusFilter('all');
+    }
+  }, [searchParams]);
+  
+  // Update URL when status filter changes
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    
+    if (value === 'all') {
+      searchParams.delete('status');
+    } else {
+      searchParams.set('status', value);
+    }
+    
+    setSearchParams(searchParams);
+  };
   
   // Filter clients based on search and status
   const filteredClients = clients.filter(client => {
@@ -67,6 +93,8 @@ export function ClientList() {
         </Button>
       </div>
       
+      <ClientDashboard />
+      
       <div className="border border-border rounded-lg bg-card p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
@@ -80,7 +108,7 @@ export function ClientList() {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>

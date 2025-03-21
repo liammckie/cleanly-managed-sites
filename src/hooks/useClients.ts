@@ -12,12 +12,26 @@ export function useClients() {
     queryFn: clientsApi.getClients,
   });
   
+  // Query for client status counts
+  const clientStatusCountsQuery = useQuery({
+    queryKey: ['clientStatusCounts'],
+    queryFn: clientsApi.getClientCountByStatus,
+  });
+  
+  // Total client count
+  const clientsTotalCountQuery = useQuery({
+    queryKey: ['clientsTotalCount'],
+    queryFn: clientsApi.getClientsTotalCount,
+  });
+  
   // Mutation for creating a new client
   const createClientMutation = useMutation({
     mutationFn: (clientData: Partial<ClientRecord>) => clientsApi.createClient(clientData),
     onSuccess: () => {
       // Invalidate the clients query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['clientStatusCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['clientsTotalCount'] });
       toast.success('Client created successfully');
     },
     onError: (error: any) => {
@@ -32,6 +46,7 @@ export function useClients() {
       clientsApi.updateClient(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['clientStatusCounts'] });
       toast.success('Client updated successfully');
     },
     onError: (error: any) => {
@@ -45,6 +60,9 @@ export function useClients() {
     mutationFn: (id: string) => clientsApi.deleteClient(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['clientStatusCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['clientsTotalCount'] });
+      queryClient.invalidateQueries({ queryKey: ['sites'] });
       toast.success('Client deleted successfully');
     },
     onError: (error: any) => {
@@ -55,7 +73,9 @@ export function useClients() {
   
   return {
     clients: clientsQuery.data || [],
-    isLoading: clientsQuery.isLoading,
+    statusCounts: clientStatusCountsQuery.data || { active: 0, inactive: 0, pending: 0 },
+    totalCount: clientsTotalCountQuery.data || 0,
+    isLoading: clientsQuery.isLoading || clientStatusCountsQuery.isLoading,
     isError: clientsQuery.isError,
     error: clientsQuery.error,
     createClient: createClientMutation.mutateAsync,
@@ -92,6 +112,7 @@ export function useClientDetails(clientId: string | undefined) {
       // Invalidate both the clients list and the current client detail
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client', clientId] });
+      queryClient.invalidateQueries({ queryKey: ['clientStatusCounts'] });
       toast.success('Client updated successfully');
     },
     onError: (error: any) => {

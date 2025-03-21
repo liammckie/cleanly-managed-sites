@@ -19,6 +19,32 @@ export const clientsApi = {
     return clients as ClientRecord[] || [];
   },
   
+  // Get client count by status
+  async getClientCountByStatus(): Promise<Record<string, number>> {
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('status');
+    
+    if (error) {
+      console.error('Error fetching client status counts:', error);
+      throw error;
+    }
+    
+    const statusCount: Record<string, number> = {
+      active: 0,
+      inactive: 0,
+      pending: 0
+    };
+    
+    clients?.forEach(client => {
+      if (client.status in statusCount) {
+        statusCount[client.status] += 1;
+      }
+    });
+    
+    return statusCount;
+  },
+  
   // Get a single client by ID
   async getClientById(id: string): Promise<ClientRecord | null> {
     const { data, error } = await supabase
@@ -99,6 +125,30 @@ export const clientsApi = {
   
   // Delete a client
   async deleteClient(id: string): Promise<void> {
+    // First, check if the client has any sites
+    const { data: sites } = await supabase
+      .from('sites')
+      .select('id')
+      .eq('client_id', id);
+    
+    if (sites && sites.length > 0) {
+      // Delete all sites associated with this client
+      for (const site of sites) {
+        // Delete any subcontractors for each site
+        await supabase
+          .from('subcontractors')
+          .delete()
+          .eq('site_id', site.id);
+      }
+      
+      // Delete all sites
+      await supabase
+        .from('sites')
+        .delete()
+        .eq('client_id', id);
+    }
+    
+    // Now delete the client
     const { error } = await supabase
       .from('clients')
       .delete()
@@ -124,5 +174,19 @@ export const clientsApi = {
     }
     
     return data as SiteRecord[] || [];
+  },
+  
+  // Get total count of clients
+  async getClientsTotalCount(): Promise<number> {
+    const { count, error } = await supabase
+      .from('clients')
+      .select('id', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('Error counting clients:', error);
+      throw error;
+    }
+    
+    return count || 0;
   }
 };
