@@ -1,15 +1,14 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useClientDetails } from '@/hooks/useClients';
-import { useClients } from '@/hooks/useClients';
+import { useClientDetails, useClients } from '@/hooks/useClients';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ClientHeader } from './detail/ClientHeader';
-import { ClientInfoCard } from './detail/ClientInfoCard';
-import { ClientNotesCard } from './detail/ClientNotesCard';
-import { ClientSitesCard } from './detail/ClientSitesCard';
-import { ClientErrorState } from './detail/ClientErrorState';
-import { ClientNotFoundState } from './detail/ClientNotFoundState';
+import { ClientHeader } from './ClientHeader';
+import { ClientInfoCard } from './ClientInfoCard';
+import { ClientNotesCard } from './ClientNotesCard';
+import { ClientSitesCard } from './ClientSitesCard';
+import { ClientErrorState } from './ClientErrorState';
+import { ClientNotFoundState } from './ClientNotFoundState';
 
 interface ClientDetailProps {
   clientId: string;

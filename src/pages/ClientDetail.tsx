@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
-import { ClientDetail } from '@/components/clients/ClientDetail';
+import { ClientDetail } from '@/components/clients/detail';
 
 const ClientDetailPage = () => {
   const { id } = useParams<{ id: string }>();
