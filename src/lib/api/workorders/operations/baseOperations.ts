@@ -23,8 +23,8 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         created_by: (await supabase.auth.getUser()).data.user?.id,
         requires_purchase_order: workOrderData.requires_purchase_order,
         purchase_order_number: workOrderData.purchase_order_number,
-        // Convert WorkOrderAttachment[] to a JSON-compatible format
-        attachments: workOrderData.attachments ? JSON.parse(JSON.stringify(workOrderData.attachments)) : null
+        // Store attachments array directly - Supabase handles JSON conversion
+        attachments: workOrderData.attachments || null
       })
       .select()
       .single();
@@ -45,16 +45,10 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
  */
 export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
-    // Prepare the update data - handle the attachments separately
-    const updateData: any = { ...workOrderData };
-    if (updateData.attachments) {
-      // Convert WorkOrderAttachment[] to a JSON-compatible format
-      updateData.attachments = JSON.parse(JSON.stringify(updateData.attachments));
-    }
-
+    // Just pass the update data directly - Supabase handles JSON conversion
     const { data, error } = await supabase
       .from('work_orders')
-      .update(updateData)
+      .update(workOrderData)
       .eq('id', id)
       .select()
       .single();

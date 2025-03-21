@@ -22,16 +22,15 @@ export const addWorkOrderAttachment = async (id: string, attachment: WorkOrderAt
     // Initialize attachments array or use existing one
     const existingAttachments = workOrder?.attachments || [];
     
-    // Convert to a proper format for database storage
-    const attachmentsData = JSON.parse(JSON.stringify([
-      ...existingAttachments,
-      attachment
-    ]));
+    // Create a new array with the added attachment
+    const updatedAttachments = [...existingAttachments, attachment];
 
     // Update the work order with the new attachment
     const { data, error } = await supabase
       .from('work_orders')
-      .update({ attachments: attachmentsData })
+      .update({ 
+        attachments: updatedAttachments 
+      })
       .eq('id', id)
       .select()
       .single();
@@ -73,13 +72,12 @@ export const removeWorkOrderAttachment = async (id: string, attachmentId: string
       (attachment: any) => attachment.id !== attachmentId
     );
 
-    // Convert to a proper format for database storage
-    const attachmentsData = JSON.parse(JSON.stringify(updatedAttachments));
-
     // Update the work order with the filtered attachments
     const { data, error } = await supabase
       .from('work_orders')
-      .update({ attachments: attachmentsData })
+      .update({ 
+        attachments: updatedAttachments 
+      })
       .eq('id', id)
       .select()
       .single();
@@ -100,13 +98,12 @@ export const removeWorkOrderAttachment = async (id: string, attachmentId: string
  */
 export const updateWorkOrderAttachments = async (id: string, attachments: WorkOrderAttachment[]): Promise<WorkOrderRecord> => {
   try {
-    // Convert to a proper format for database storage
-    const attachmentsData = JSON.parse(JSON.stringify(attachments));
-
     // Update the work order with the new attachments
     const { data, error } = await supabase
       .from('work_orders')
-      .update({ attachments: attachmentsData })
+      .update({ 
+        attachments: attachments 
+      })
       .eq('id', id)
       .select()
       .single();
