@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  verifyOtp: (email: string, token: string) => Promise<void>;
+  verifyOtp: (email: string, token: string, newPassword?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             toast.success('Email verified successfully! You can now log in.');
             // Clean up the URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            navigate('/login');
+            navigate('/login?verified=true');
           }
         } catch (error: any) {
           console.error('Error during verification:', error);
@@ -137,22 +136,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Verify OTP token
-  const verifyOtp = async (email: string, token: string) => {
+  // Verify OTP token (for signup or password reset)
+  const verifyOtp = async (email: string, token: string, newPassword?: string) => {
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'signup'
-      });
+      // If newPassword is provided, this is a password reset
+      if (newPassword) {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'recovery',
+          options: {
+            password: newPassword
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast.success('Password has been reset successfully!');
+      } else {
+        // Otherwise it's an email verification
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'signup'
+        });
+        
+        if (error) throw error;
+        
+        toast.success('Email verified successfully!');
+      }
       
-      if (error) throw error;
-      
-      toast.success('Email verified successfully!');
       navigate('/login');
     } catch (error: any) {
-      console.error('Error verifying email:', error);
-      toast.error(error.message || 'Failed to verify email');
+      console.error('Error verifying token:', error);
+      toast.error(error.message || 'Verification failed');
       throw error;
     }
   };
