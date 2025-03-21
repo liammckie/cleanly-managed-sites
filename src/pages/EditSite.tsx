@@ -3,11 +3,11 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
-import { SiteDetailView } from '@/components/sites/SiteDetailView';
+import { EditSiteForm } from '@/components/sites/forms/EditSiteForm';
 import { useSite } from '@/hooks/useSite';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-const SiteDetail = () => {
+const EditSite = () => {
   const { id } = useParams<{ id: string }>();
   const { site, isLoading, error } = useSite(id);
   
@@ -28,8 +28,13 @@ const SiteDetail = () => {
               <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
               <p>{error.message || 'Unable to load site details'}</p>
             </div>
+          ) : site ? (
+            <EditSiteForm site={site} />
           ) : (
-            <SiteDetailView site={site} />
+            <div className="text-center">
+              <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>
+              <p>The requested site could not be found.</p>
+            </div>
           )}
         </div>
       </div>
@@ -37,4 +42,4 @@ const SiteDetail = () => {
   );
 };
 
-export default SiteDetail;
+export default EditSite;

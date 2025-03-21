@@ -79,6 +79,28 @@ export type SiteFormData = {
   billingDetails: BillingDetails;
 }
 
+// Required fields for each step
+export const requiredFields = {
+  basicInformation: ['name', 'address', 'city', 'state', 'postcode', 'representative'],
+  contractDetails: ['startDate', 'contractNumber'],
+  billingDetails: ['rate', 'billingFrequency', 'paymentTerms'],
+  subcontractors: [] // Subcontractors are optional
+};
+
+// Helper function to validate an email address
+export const isValidEmail = (email: string): boolean => {
+  if (!email) return true; // Email is optional
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Helper function to validate a phone number
+export const isValidPhone = (phone: string): boolean => {
+  if (!phone) return true; // Phone is optional
+  const phoneRegex = /^\+?[0-9\s\-()]{8,}$/;
+  return phoneRegex.test(phone);
+};
+
 export const getInitialFormData = (): SiteFormData => ({
   // Basic information
   name: '',

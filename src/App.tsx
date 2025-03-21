@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Sites from "./pages/Sites";
 import SiteDetail from "./pages/SiteDetail";
 import CreateSite from "./pages/CreateSite";
+import EditSite from "./pages/EditSite";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -51,6 +52,11 @@ function App() {
               <Route path="/sites/create" element={
                 <ProtectedRoute>
                   <CreateSite />
+                </ProtectedRoute>
+              } />
+              <Route path="/sites/:id/edit" element={
+                <ProtectedRoute>
+                  <EditSite />
                 </ProtectedRoute>
               } />
               {/* Catch-all route for 404 */}
