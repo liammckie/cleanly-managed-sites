@@ -52,7 +52,7 @@ const Login = () => {
         
         <Card className="glass-card animate-slide-in">
           <CardHeader>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -61,7 +61,7 @@ const Login = () => {
           </CardHeader>
           
           <CardContent>
-            <TabsContent value="login" className="mt-0">
+            <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -110,7 +110,7 @@ const Login = () => {
               </form>
             </TabsContent>
             
-            <TabsContent value="register" className="mt-0">
+            <TabsContent value="register">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
