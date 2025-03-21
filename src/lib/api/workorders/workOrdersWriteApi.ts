@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord, CreateWorkOrderData, UpdateWorkOrderData, WorkOrderStatus } from './types';
 
@@ -22,7 +21,8 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         status: 'draft', // Always start as draft
         created_by: (await supabase.auth.getUser()).data.user?.id,
         requires_purchase_order: workOrderData.requires_purchase_order,
-        purchase_order_number: workOrderData.purchase_order_number
+        purchase_order_number: workOrderData.purchase_order_number,
+        attachments: workOrderData.attachments || []
       })
       .select()
       .single();
@@ -30,8 +30,6 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
     if (error) {
       throw error;
     }
-
-    // TODO: Handle file uploads for attachments if needed
 
     return data as unknown as WorkOrderRecord;
   } catch (error) {
@@ -127,6 +125,90 @@ export const assignWorkOrder = async (id: string, subcontractorId: string): Prom
     return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error(`Error assigning work order ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Add an attachment to a work order
+ */
+export const addWorkOrderAttachment = async (
+  id: string, 
+  attachment: any
+): Promise<WorkOrderRecord> => {
+  try {
+    // First get the current attachments
+    const { data: workOrder, error: getError } = await supabase
+      .from('work_orders')
+      .select('attachments')
+      .eq('id', id)
+      .single();
+    
+    if (getError) {
+      throw getError;
+    }
+    
+    const currentAttachments = workOrder.attachments || [];
+    const updatedAttachments = [...currentAttachments, attachment];
+    
+    // Update the work order with the new attachment
+    const { data, error } = await supabase
+      .from('work_orders')
+      .update({ attachments: updatedAttachments })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data as unknown as WorkOrderRecord;
+  } catch (error) {
+    console.error(`Error adding attachment to work order ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Remove an attachment from a work order
+ */
+export const removeWorkOrderAttachment = async (
+  id: string,
+  attachmentId: string
+): Promise<WorkOrderRecord> => {
+  try {
+    // First get the current attachments
+    const { data: workOrder, error: getError } = await supabase
+      .from('work_orders')
+      .select('attachments')
+      .eq('id', id)
+      .single();
+    
+    if (getError) {
+      throw getError;
+    }
+    
+    const currentAttachments = workOrder.attachments || [];
+    const updatedAttachments = currentAttachments.filter(
+      (attachment: any) => attachment.id !== attachmentId
+    );
+    
+    // Update the work order with the filtered attachments
+    const { data, error } = await supabase
+      .from('work_orders')
+      .update({ attachments: updatedAttachments })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data as unknown as WorkOrderRecord;
+  } catch (error) {
+    console.error(`Error removing attachment from work order ${id}:`, error);
     throw error;
   }
 };

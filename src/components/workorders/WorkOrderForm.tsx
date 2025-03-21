@@ -17,6 +17,8 @@ import {
   PurchaseOrderFields
 } from './form/WorkOrderFormFields';
 import { DateSelector } from './form/DateSelector';
+import { FileAttachments } from './form/FileAttachments';
+import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 interface WorkOrderFormProps {
   site: SiteRecord;
@@ -28,6 +30,7 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
   const { createWorkOrderMutation } = useWorkOrders();
   const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors(site.id);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [attachments, setAttachments] = useState<WorkOrderAttachment[]>([]);
 
   const form = useForm<CreateWorkOrderData>({
     defaultValues: {
@@ -45,6 +48,11 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
       data.due_date = format(selectedDate, 'yyyy-MM-dd');
     }
 
+    // Add attachments to the data
+    if (attachments.length > 0) {
+      data.attachments = attachments;
+    }
+
     await createWorkOrderMutation.mutateAsync(data);
     if (onSuccess) {
       onSuccess();
@@ -52,6 +60,9 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
       navigate(`/sites/${site.id}`);
     }
   };
+
+  // For storing a temporary workOrderId to use with file uploads before the work order is created
+  const tempWorkOrderId = React.useMemo(() => crypto.randomUUID(), []);
 
   return (
     <Form {...form}>
@@ -82,6 +93,13 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
         <CostFields form={form} />
         
         <PurchaseOrderFields form={form} />
+        
+        <FileAttachments
+          workOrderId={tempWorkOrderId}
+          workOrderTitle={form.watch('title') || 'New Work Order'}
+          attachments={attachments}
+          onAttachmentsChange={setAttachments}
+        />
 
         <div className="flex justify-end space-x-3">
           <Button type="button" variant="outline" onClick={() => navigate(`/sites/${site.id}`)}>

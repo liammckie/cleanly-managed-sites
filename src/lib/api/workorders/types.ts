@@ -1,5 +1,6 @@
 
 import { SiteRecord } from '@/lib/types';
+import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 export type WorkOrderStatus = 
   | 'draft' 
@@ -34,7 +35,7 @@ export interface WorkOrderRecord {
   purchase_order_number?: string;
   xero_purchase_order_id?: string;
   xero_invoice_id?: string;
-  attachments?: string[];
+  attachments?: WorkOrderAttachment[];
   // Joined data
   site?: SiteRecord;
 }
@@ -50,7 +51,7 @@ export interface CreateWorkOrderData {
   assigned_to?: string;
   requires_purchase_order: boolean;
   purchase_order_number?: string;
-  attachments?: File[];
+  attachments?: WorkOrderAttachment[];
 }
 
 export interface UpdateWorkOrderData {
@@ -68,5 +69,5 @@ export interface UpdateWorkOrderData {
   purchase_order_number?: string;
   xero_purchase_order_id?: string;
   xero_invoice_id?: string;
-  attachments?: string[];
+  attachments?: WorkOrderAttachment[];
 }

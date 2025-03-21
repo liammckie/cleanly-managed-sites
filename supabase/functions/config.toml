@@ -5,3 +5,6 @@ verify_jwt = false
 
 [google_drive-disconnect]
 verify_jwt = false
+
+[google_drive-files]
+verify_jwt = false

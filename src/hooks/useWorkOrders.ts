@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -9,9 +8,12 @@ import {
   deleteWorkOrder, 
   updateWorkOrderStatus, 
   assignWorkOrder,
-  getSiteWorkOrders 
+  getSiteWorkOrders,
+  addWorkOrderAttachment,
+  removeWorkOrderAttachment 
 } from '@/lib/api/workorders/workOrdersApi';
 import { WorkOrderStatus, CreateWorkOrderData, UpdateWorkOrderData } from '@/lib/api/workorders/types';
+import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 export const useWorkOrders = () => {
   const queryClient = useQueryClient();
@@ -112,6 +114,36 @@ export const useWorkOrders = () => {
     }
   });
   
+  // Add attachment to work order
+  const addAttachmentMutation = useMutation({
+    mutationFn: ({ id, attachment }: { id: string; attachment: WorkOrderAttachment }) => 
+      addWorkOrderAttachment(id, attachment),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
+      toast.success('Attachment added successfully');
+    },
+    onError: (error) => {
+      console.error('Error adding attachment:', error);
+      toast.error('Failed to add attachment');
+    }
+  });
+  
+  // Remove attachment from work order
+  const removeAttachmentMutation = useMutation({
+    mutationFn: ({ id, attachmentId }: { id: string; attachmentId: string }) => 
+      removeWorkOrderAttachment(id, attachmentId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
+      toast.success('Attachment removed successfully');
+    },
+    onError: (error) => {
+      console.error('Error removing attachment:', error);
+      toast.error('Failed to remove attachment');
+    }
+  });
+  
   return {
     workOrders,
     isLoadingWorkOrders,
@@ -123,6 +155,8 @@ export const useWorkOrders = () => {
     updateWorkOrderMutation,
     deleteWorkOrderMutation,
     updateStatusMutation,
-    assignWorkOrderMutation
+    assignWorkOrderMutation,
+    addAttachmentMutation,
+    removeAttachmentMutation
   };
 };
