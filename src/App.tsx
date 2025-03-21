@@ -1,4 +1,3 @@
-
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
@@ -34,18 +33,15 @@ function App() {
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            
-            {/* Site Routes */}
-            <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
-            <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} />
-            <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
-            <Route path="/sites/:id/edit" element={<ProtectedRoute><EditSite /></ProtectedRoute>} />
-            
-            {/* Client Routes */}
             <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/clients/create" element={<ProtectedRoute><CreateClient /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
             <Route path="/clients/:id/edit" element={<ProtectedRoute><EditClient /></ProtectedRoute>} />
+            <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
+            <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} />
+            <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
+            <Route path="/sites/:id/edit" element={<ProtectedRoute><EditSite /></ProtectedRoute>} />
+            <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
