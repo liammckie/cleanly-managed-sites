@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,8 @@ const Login = () => {
         
         <Card className="glass-card animate-slide-in">
           <CardHeader>
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+            <CardTitle>Welcome back</CardTitle>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -99,7 +101,7 @@ const Login = () => {
               </Alert>
             )}
             
-            <TabsContent value="login">
+            {activeTab === "login" && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -150,9 +152,9 @@ const Login = () => {
                   )}
                 </Button>
               </form>
-            </TabsContent>
+            )}
             
-            <TabsContent value="register">
+            {activeTab === "register" && (
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
@@ -206,7 +208,7 @@ const Login = () => {
                   )}
                 </Button>
               </form>
-            </TabsContent>
+            )}
           </CardContent>
           
           <CardFooter className="justify-center">
