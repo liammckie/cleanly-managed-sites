@@ -15,6 +15,7 @@ import EditClient from './pages/EditClient';
 import NotFound from './pages/NotFound';
 import ResetPassword from './pages/ResetPassword';
 import Integrations from './pages/Integrations';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -44,6 +45,7 @@ function App() {
             <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
             <Route path="/sites/:id/edit" element={<ProtectedRoute><EditSite /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

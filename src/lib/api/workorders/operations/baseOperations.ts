@@ -66,7 +66,10 @@ export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrder
       throw error;
     }
 
-    return data as unknown as WorkOrderRecord;
+    // Need to explicitly cast the return type because Supabase returns Json
+    // but our code expects WorkOrderAttachment[]
+    const workOrder = data as unknown as WorkOrderRecord;
+    return workOrder;
   } catch (error) {
     console.error(`Error updating work order ${id}:`, error);
     throw error;
