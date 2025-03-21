@@ -51,6 +51,20 @@ export const sitesApi = {
         client_name: clientData?.name || null,
         clients: undefined // Remove the clients property
       };
+      
+      // Get contacts for the site
+      const { data: contacts, error: contactsError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('entity_id', id)
+        .eq('entity_type', 'site');
+      
+      if (contactsError) {
+        console.error(`Error fetching contacts for site ${id}:`, contactsError);
+      } else if (contacts) {
+        transformedData.contacts = contacts as ContactRecord[];
+      }
+      
       return transformedData as SiteRecord;
     }
     
@@ -231,18 +245,59 @@ export const sitesApi = {
       }
     }
     
+    // If contacts were provided, update them as well
+    if (siteData.contacts && siteData.contacts.length > 0) {
+      // First, delete existing contacts for this site
+      await supabase
+        .from('contacts')
+        .delete()
+        .eq('entity_id', id)
+        .eq('entity_type', 'site');
+      
+      // Then insert the new ones
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const contactRecords = siteData.contacts.map(contact => ({
+        name: contact.name,
+        role: contact.role,
+        department: contact.department,
+        email: contact.email,
+        phone: contact.phone,
+        is_primary: contact.is_primary,
+        notes: contact.notes,
+        entity_id: id,
+        entity_type: 'site',
+        user_id: user?.id
+      }));
+      
+      const { error: contactError } = await supabase
+        .from('contacts')
+        .insert(contactRecords);
+      
+      if (contactError) {
+        console.error('Error updating contacts:', contactError);
+      }
+    }
+    
     return data as SiteRecord;
   },
   
   // Delete a site
   async deleteSite(id: string): Promise<void> {
-    // First delete related subcontractors
+    // First delete related contacts
+    await supabase
+      .from('contacts')
+      .delete()
+      .eq('entity_id', id)
+      .eq('entity_type', 'site');
+    
+    // Then delete related subcontractors
     await supabase
       .from('subcontractors')
       .delete()
       .eq('site_id', id);
     
-    // Then delete the site
+    // Finally delete the site
     const { error } = await supabase
       .from('sites')
       .delete()

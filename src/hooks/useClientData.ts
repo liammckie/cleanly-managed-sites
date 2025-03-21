@@ -69,7 +69,7 @@ export const useClientData = (
         [...prev.contacts, ...client.contacts.map(contact => ({
           ...contact,
           entity_id: '', // This will be filled when the site is created
-          entity_type: 'site'
+          entity_type: 'site' as const
         }))] : 
         prev.contacts
     }));
