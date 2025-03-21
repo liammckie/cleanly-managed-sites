@@ -14,9 +14,6 @@ import {
 } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar/sidebar-trigger';
-import { SidebarMenu } from '@/components/ui/sidebar/sidebar-menu';
-import { SidebarRail } from '@/components/ui/sidebar/sidebar-rail';
 import { SidebarContent } from '@/components/ui/sidebar/sidebar-sections';
 import { BusinessBranding } from '@/components/BusinessBranding';
 
@@ -79,49 +76,13 @@ export function Sidebar() {
   };
 
   return (
-    <>
-      <SidebarRail>
-        <SidebarTrigger />
-        <div className="flex flex-col items-center justify-between h-full py-4">
-          <div className="flex flex-col gap-4 items-center w-full">
-            <BusinessBranding showName={false} size="sm" />
-            
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors ${
-                  item.active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-foreground hover:bg-primary/10'
-                }`}
-                aria-label={item.label}
-              >
-                {item.icon}
-              </Link>
-            ))}
-          </div>
-
-          {user && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              className="text-foreground hover:bg-destructive/10 hover:text-destructive"
-              aria-label="Sign out"
-            >
-              <LogOut size={20} />
-            </Button>
-          )}
-        </div>
-      </SidebarRail>
-
-      <SidebarContent>
-        <SidebarMenu>
-          <div className="pb-4">
-            <BusinessBranding />
-          </div>
-          
+    <div className="flex flex-col h-full">
+      <div className="p-4 mb-2">
+        <BusinessBranding />
+      </div>
+      
+      <div className="flex-1 overflow-y-auto">
+        <nav className="space-y-1 px-2">
           {menuItems.map((item) => (
             <Link
               key={item.href}
@@ -136,8 +97,21 @@ export function Sidebar() {
               <span>{item.label}</span>
             </Link>
           ))}
-        </SidebarMenu>
-      </SidebarContent>
-    </>
+        </nav>
+      </div>
+
+      {user && (
+        <div className="p-4 mt-auto">
+          <Button
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

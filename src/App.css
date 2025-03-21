@@ -1,10 +1,14 @@
+
+/* Reset default styles */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
+/* Logo styling */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -18,6 +22,7 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Animation keyframes */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -33,10 +38,13 @@
   }
 }
 
+/* Generic classes */
 .card {
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
+/* Fix for nested button issue */
+button > button {
+  all: unset;
+  cursor: pointer;
 }
