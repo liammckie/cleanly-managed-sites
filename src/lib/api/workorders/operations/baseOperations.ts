@@ -5,55 +5,33 @@ import { Json } from '@/integrations/supabase/types';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
 /**
- * Helper function to safely convert Json to WorkOrderAttachment[]
- */
-const jsonToAttachments = (json: Json | null): WorkOrderAttachment[] | undefined => {
-  if (!json) return undefined;
-  
-  // Handle the case where it's already an array
-  if (Array.isArray(json)) {
-    return json as WorkOrderAttachment[];
-  }
-  
-  // Handle the case where it might be a JSON string
-  if (typeof json === 'string') {
-    try {
-      const parsed = JSON.parse(json);
-      return Array.isArray(parsed) ? parsed : undefined;
-    } catch (e) {
-      console.error('Error parsing attachments JSON:', e);
-      return undefined;
-    }
-  }
-  
-  // For other cases, return undefined
-  return undefined;
-};
-
-/**
  * Create a new work order
  */
 export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
+    // Prepare the data for Supabase
+    // For attachments, we need to serialize to a format Supabase can handle
+    const dataForSupabase = {
+      title: workOrderData.title,
+      description: workOrderData.description,
+      site_id: workOrderData.site_id,
+      priority: workOrderData.priority,
+      due_date: workOrderData.due_date,
+      estimated_cost: workOrderData.estimated_cost,
+      billing_amount: workOrderData.billing_amount,
+      assigned_to: workOrderData.assigned_to,
+      status: 'draft', // Always start as draft
+      created_by: (await supabase.auth.getUser()).data.user?.id,
+      requires_purchase_order: workOrderData.requires_purchase_order,
+      purchase_order_number: workOrderData.purchase_order_number,
+      // Convert attachments to JSON string if they exist
+      attachments: workOrderData.attachments ? JSON.stringify(workOrderData.attachments) : null
+    };
+
     // First insert the work order
     const { data, error } = await supabase
       .from('work_orders')
-      .insert({
-        title: workOrderData.title,
-        description: workOrderData.description,
-        site_id: workOrderData.site_id,
-        priority: workOrderData.priority,
-        due_date: workOrderData.due_date,
-        estimated_cost: workOrderData.estimated_cost,
-        billing_amount: workOrderData.billing_amount,
-        assigned_to: workOrderData.assigned_to,
-        status: 'draft', // Always start as draft
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-        requires_purchase_order: workOrderData.requires_purchase_order,
-        purchase_order_number: workOrderData.purchase_order_number,
-        // Cast attachments to Json for Supabase
-        attachments: workOrderData.attachments as unknown as Json
-      })
+      .insert(dataForSupabase)
       .select()
       .single();
 
@@ -61,10 +39,26 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
       throw error;
     }
 
-    // Cast the returned data to WorkOrderRecord and handle attachments specially
+    // Parse attachments back from JSON string to array if they exist
+    let attachments: WorkOrderAttachment[] | undefined = undefined;
+    if (data.attachments) {
+      try {
+        // Try to parse the JSON string
+        const parsedAttachments = typeof data.attachments === 'string' 
+          ? JSON.parse(data.attachments) 
+          : data.attachments;
+        
+        // Ensure it's an array
+        attachments = Array.isArray(parsedAttachments) ? parsedAttachments : undefined;
+      } catch (e) {
+        console.error('Error parsing attachments:', e);
+      }
+    }
+
+    // Return a properly typed WorkOrderRecord
     const workOrder: WorkOrderRecord = {
-      ...data as unknown as WorkOrderRecord,
-      attachments: jsonToAttachments(data.attachments)
+      ...data as unknown as Omit<WorkOrderRecord, 'attachments'>,
+      attachments
     };
     
     return workOrder;
@@ -79,18 +73,24 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
  */
 export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
-    // Process data to ensure proper types
-    const processedData = { ...workOrderData };
+    // Create a clean update object without type issues
+    const updateData: Record<string, any> = {};
     
-    // Cast attachments to Json for Supabase if they exist
-    if (processedData.attachments) {
-      processedData.attachments = processedData.attachments as unknown as Json;
+    // Copy all fields except attachments
+    Object.keys(workOrderData).forEach(key => {
+      if (key !== 'attachments') {
+        updateData[key] = workOrderData[key as keyof UpdateWorkOrderData];
+      }
+    });
+    
+    // Handle attachments separately - convert to JSON string
+    if (workOrderData.attachments !== undefined) {
+      updateData.attachments = JSON.stringify(workOrderData.attachments);
     }
     
-    // Just pass the update data directly - Supabase handles JSON conversion
     const { data, error } = await supabase
       .from('work_orders')
-      .update(processedData)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -99,10 +99,26 @@ export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrder
       throw error;
     }
 
-    // Need to explicitly cast and handle attachments
+    // Parse attachments back from JSON string to array if they exist
+    let attachments: WorkOrderAttachment[] | undefined = undefined;
+    if (data.attachments) {
+      try {
+        // Try to parse the JSON string
+        const parsedAttachments = typeof data.attachments === 'string' 
+          ? JSON.parse(data.attachments) 
+          : data.attachments;
+        
+        // Ensure it's an array
+        attachments = Array.isArray(parsedAttachments) ? parsedAttachments : undefined;
+      } catch (e) {
+        console.error('Error parsing attachments:', e);
+      }
+    }
+
+    // Return a properly typed WorkOrderRecord
     const workOrder: WorkOrderRecord = {
-      ...data as unknown as WorkOrderRecord,
-      attachments: jsonToAttachments(data.attachments)
+      ...data as unknown as Omit<WorkOrderRecord, 'attachments'>,
+      attachments
     };
     
     return workOrder;
