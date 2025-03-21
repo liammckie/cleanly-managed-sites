@@ -52,12 +52,39 @@ export type ContractDetails = {
   terminationPeriod: string;
 }
 
+export type BillingContact = {
+  name: string;
+  position: string;
+  email: string;
+  phone: string;
+}
+
 export type BillingDetails = {
   rate: string;
   billingFrequency: string;
   paymentTerms: string;
   invoiceMethod: string;
   accountNumber: string;
+  purchaseOrderRequired: boolean;
+  purchaseOrderNumber: string;
+  billingEmail: string;
+  billingAddress: string;
+  billingCity: string;
+  billingState: string;
+  billingPostcode: string;
+  useSiteAddress: boolean;
+  contacts: BillingContact[];
+  taxId: string;
+  xeroContactId: string;
+  notes: string;
+}
+
+export type AdHocWorkAuthorization = {
+  approvalLimit: number;
+  approverName: string;
+  approverEmail: string;
+  approverPhone: string;
+  requirePurchaseOrder: boolean;
 }
 
 export type SiteFormData = {
@@ -80,6 +107,7 @@ export type SiteFormData = {
   securityDetails: SecurityDetails;
   contractDetails: ContractDetails;
   billingDetails: BillingDetails;
+  adHocWorkAuthorization: AdHocWorkAuthorization;
 }
 
 // Required fields for each step
@@ -180,6 +208,27 @@ export const getInitialFormData = (): SiteFormData => ({
     billingFrequency: 'monthly',
     paymentTerms: '30 days',
     invoiceMethod: 'email',
-    accountNumber: ''
+    accountNumber: '',
+    purchaseOrderRequired: false,
+    purchaseOrderNumber: '',
+    billingEmail: '',
+    billingAddress: '',
+    billingCity: '',
+    billingState: '',
+    billingPostcode: '',
+    useSiteAddress: true,
+    contacts: [],
+    taxId: '',
+    xeroContactId: '',
+    notes: ''
+  },
+  
+  // Ad-hoc work authorization
+  adHocWorkAuthorization: {
+    approvalLimit: 500,
+    approverName: '',
+    approverEmail: '',
+    approverPhone: '',
+    requirePurchaseOrder: true
   }
 });
