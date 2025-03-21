@@ -6,6 +6,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/auth';
 
+// Define the interface for a user integration record
+interface UserIntegration {
+  id: string;
+  user_id: string;
+  provider: string;
+  access_token: string;
+  refresh_token?: string;
+  expires_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const GoogleDriveIntegration = () => {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
@@ -16,12 +28,15 @@ export const GoogleDriveIntegration = () => {
       if (!user) return;
       
       try {
+        setIsLoading(true);
+        
+        // Use a raw query to check for Google Drive integration
         const { data, error } = await supabase
           .from('user_integrations')
           .select('*')
           .eq('user_id', user.id)
           .eq('provider', 'google_drive')
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Error checking Google Drive connection:', error);
