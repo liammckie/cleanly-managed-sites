@@ -9,7 +9,190 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          postcode: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sites: {
+        Row: {
+          address: string
+          billing_details: Json | null
+          city: string
+          client_id: string
+          contract_details: Json | null
+          created_at: string
+          email: string | null
+          has_subcontractors: boolean | null
+          id: string
+          job_specifications: Json | null
+          monthly_cost: number | null
+          monthly_revenue: number | null
+          name: string
+          periodicals: Json | null
+          phone: string | null
+          postcode: string
+          replenishables: Json | null
+          representative: string
+          security_details: Json | null
+          state: string
+          status: string
+          subcontractors: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          billing_details?: Json | null
+          city: string
+          client_id: string
+          contract_details?: Json | null
+          created_at?: string
+          email?: string | null
+          has_subcontractors?: boolean | null
+          id?: string
+          job_specifications?: Json | null
+          monthly_cost?: number | null
+          monthly_revenue?: number | null
+          name: string
+          periodicals?: Json | null
+          phone?: string | null
+          postcode: string
+          replenishables?: Json | null
+          representative: string
+          security_details?: Json | null
+          state: string
+          status?: string
+          subcontractors?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          billing_details?: Json | null
+          city?: string
+          client_id?: string
+          contract_details?: Json | null
+          created_at?: string
+          email?: string | null
+          has_subcontractors?: boolean | null
+          id?: string
+          job_specifications?: Json | null
+          monthly_cost?: number | null
+          monthly_revenue?: number | null
+          name?: string
+          periodicals?: Json | null
+          phone?: string | null
+          postcode?: string
+          replenishables?: Json | null
+          representative?: string
+          security_details?: Json | null
+          state?: string
+          status?: string
+          subcontractors?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractors: {
+        Row: {
+          business_name: string
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          phone: string | null
+          site_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name: string
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          site_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          phone?: string | null
+          site_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractors_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

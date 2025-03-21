@@ -23,6 +23,7 @@ export type GetStepsConfigProps = {
   errors: Record<string, string>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStatusChange: (value: SiteStatus) => void;
+  handleClientChange: (clientId: string) => void;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
   handleDoubleNestedChange: (section: keyof SiteFormData, subsection: string, field: string, value: any) => void;
   handleSubcontractorChange: (index: number, field: string, value: string) => void;
@@ -36,6 +37,7 @@ export const getStepsConfig = ({
   errors,
   handleChange,
   handleStatusChange,
+  handleClientChange,
   handleNestedChange,
   handleDoubleNestedChange,
   handleSubcontractorChange,
@@ -52,6 +54,7 @@ export const getStepsConfig = ({
         errors={errors}
         handleChange={handleChange}
         handleStatusChange={handleStatusChange}
+        handleClientChange={handleClientChange}
       />
     )
   },

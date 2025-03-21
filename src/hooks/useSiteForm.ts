@@ -33,6 +33,23 @@ export function useSiteForm() {
     handleChange({ target: { name: 'status', value } } as any);
   };
   
+  // Handle client change
+  const handleClientChange = (clientId: string) => {
+    // Clear error when client is selected
+    if (errors['clientId']) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors['clientId'];
+        return newErrors;
+      });
+    }
+    
+    setFormData({
+      ...formData,
+      clientId
+    });
+  };
+  
   // Handle nested field changes
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
     // Clear error when field is edited
@@ -151,6 +168,11 @@ export function useSiteForm() {
     // Validation rules for each step
     switch (stepIndex) {
       case 0: // Basic Information
+        if (!formData.clientId) {
+          newErrors['clientId'] = 'Client is required';
+          isValid = false;
+        }
+        
         if (!formData.name.trim()) {
           newErrors['name'] = 'Site name is required';
           isValid = false;
@@ -182,35 +204,58 @@ export function useSiteForm() {
         }
         break;
         
-      case 1: // Subcontractors
-        formData.subcontractors.forEach((sub, index) => {
-          if (!sub.businessName.trim()) {
-            newErrors[`subcontractors[${index}].businessName`] = 'Business name is required';
-            isValid = false;
-          }
-          
-          if (!sub.contactName.trim()) {
-            newErrors[`subcontractors[${index}].contactName`] = 'Contact name is required';
-            isValid = false;
-          }
-          
-          if (!sub.email.trim()) {
-            newErrors[`subcontractors[${index}].email`] = 'Email is required';
-            isValid = false;
-          } else if (!/^\S+@\S+\.\S+$/.test(sub.email)) {
-            newErrors[`subcontractors[${index}].email`] = 'Valid email is required';
-            isValid = false;
-          }
-          
-          if (!sub.phone.trim()) {
-            newErrors[`subcontractors[${index}].phone`] = 'Phone is required';
-            isValid = false;
-          }
-        });
+      case 1: // Contract Details
+        if (!formData.contractDetails.startDate) {
+          newErrors['contractDetails.startDate'] = 'Start date is required';
+          isValid = false;
+        }
+        
+        if (!formData.contractDetails.contractNumber) {
+          newErrors['contractDetails.contractNumber'] = 'Contract number is required';
+          isValid = false;
+        }
         break;
         
-      // Other steps can have validations added as needed
-      // For simplicity, we'll assume other steps don't have required fields
+      case 2: // Billing Details
+        if (!formData.billingDetails.rate) {
+          newErrors['billingDetails.rate'] = 'Rate is required';
+          isValid = false;
+        }
+        
+        if (!formData.billingDetails.billingFrequency) {
+          newErrors['billingDetails.billingFrequency'] = 'Billing frequency is required';
+          isValid = false;
+        }
+        
+        if (!formData.billingDetails.paymentTerms) {
+          newErrors['billingDetails.paymentTerms'] = 'Payment terms are required';
+          isValid = false;
+        }
+        break;
+        
+      case 3: // Subcontractors
+        // Only validate if there are any subcontractors
+        if (formData.subcontractors.length > 0) {
+          formData.subcontractors.forEach((sub, index) => {
+            if (sub.businessName || sub.contactName || sub.email || sub.phone) {
+              if (!sub.businessName.trim()) {
+                newErrors[`subcontractors[${index}].businessName`] = 'Business name is required';
+                isValid = false;
+              }
+              
+              if (!sub.contactName.trim()) {
+                newErrors[`subcontractors[${index}].contactName`] = 'Contact name is required';
+                isValid = false;
+              }
+              
+              if (sub.email && !/^\S+@\S+\.\S+$/.test(sub.email)) {
+                newErrors[`subcontractors[${index}].email`] = 'Valid email is required';
+                isValid = false;
+              }
+            }
+          });
+        }
+        break;
     }
     
     setErrors(newErrors);
@@ -224,10 +269,11 @@ export function useSiteForm() {
 
   return {
     formData,
-    setFormData, // Add this missing export
+    setFormData,
     errors,
     handleChange,
     handleStatusChange,
+    handleClientChange,
     handleNestedChange,
     handleDoubleNestedChange,
     handleSubcontractorChange,

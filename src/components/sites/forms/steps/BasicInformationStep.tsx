@@ -12,23 +12,37 @@ import {
 import { SiteFormData } from '../siteFormTypes';
 import { SiteStatus } from '../../SiteCard';
 import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { useClients } from '@/hooks/useClients';
+import { ClientSelect } from '../../clients/ClientSelect';
 
 interface BasicInformationStepProps {
   formData: SiteFormData;
   errors: Record<string, string>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStatusChange: (value: SiteStatus) => void;
+  handleClientChange: (clientId: string) => void;
 }
 
 export function BasicInformationStep({ 
   formData, 
   errors,
   handleChange, 
-  handleStatusChange 
+  handleStatusChange,
+  handleClientChange
 }: BasicInformationStepProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
+        <FormItem className="space-y-2">
+          <Label htmlFor="client">Client <span className="text-destructive">*</span></Label>
+          <ClientSelect 
+            value={formData.clientId}
+            onChange={handleClientChange}
+            error={errors['clientId']}
+          />
+          {errors['clientId'] && <FormMessage>{errors['clientId']}</FormMessage>}
+        </FormItem>
+        
         <FormItem className="space-y-2">
           <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
           <FormControl>
@@ -192,6 +206,48 @@ export function BasicInformationStep({
                 className="glass-input"
               />
             </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">Financial Information</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="monthlyCost">Monthly Cost ($)</Label>
+            <Input
+              id="monthlyCost"
+              name="monthlyCost"
+              type="number"
+              placeholder="Enter monthly cost"
+              value={formData.monthlyCost || ''}
+              onChange={(e) => handleChange({
+                target: {
+                  name: 'monthlyCost',
+                  value: e.target.value ? parseFloat(e.target.value) : undefined
+                }
+              } as any)}
+              className="glass-input"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="monthlyRevenue">Monthly Revenue ($)</Label>
+            <Input
+              id="monthlyRevenue"
+              name="monthlyRevenue"
+              type="number"
+              placeholder="Enter monthly revenue"
+              value={formData.monthlyRevenue || ''}
+              onChange={(e) => handleChange({
+                target: {
+                  name: 'monthlyRevenue',
+                  value: e.target.value ? parseFloat(e.target.value) : undefined
+                }
+              } as any)}
+              className="glass-input"
+            />
           </div>
         </div>
       </div>

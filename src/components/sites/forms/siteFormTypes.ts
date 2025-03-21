@@ -70,6 +70,9 @@ export type SiteFormData = {
   representative: string;
   phone: string;
   email: string;
+  clientId: string;
+  monthlyCost?: number;
+  monthlyRevenue?: number;
   subcontractors: Subcontractor[];
   periodicals: Periodicals;
   jobSpecifications: JobSpecifications;
@@ -81,7 +84,7 @@ export type SiteFormData = {
 
 // Required fields for each step
 export const requiredFields = {
-  basicInformation: ['name', 'address', 'city', 'state', 'postcode', 'representative'],
+  basicInformation: ['name', 'address', 'city', 'state', 'postcode', 'representative', 'clientId'],
   contractDetails: ['startDate', 'contractNumber'],
   billingDetails: ['rate', 'billingFrequency', 'paymentTerms'],
   subcontractors: [] // Subcontractors are optional
@@ -112,6 +115,9 @@ export const getInitialFormData = (): SiteFormData => ({
   representative: '',
   phone: '',
   email: '',
+  clientId: '',
+  monthlyCost: undefined,
+  monthlyRevenue: undefined,
   
   // Subcontractor details
   subcontractors: [
