@@ -30,15 +30,21 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!googleClientId || !googleClientSecret || !supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables', { 
+        hasClientId: !!googleClientId,
+        hasClientSecret: !!googleClientSecret,
+        hasSupabaseUrl: !!supabaseUrl,
+        hasSupabaseKey: !!supabaseServiceKey
+      });
+      
       return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
+        JSON.stringify({ error: 'Server configuration error - missing environment variables' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create a Supabase client with the service role key for admin privileges
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+    console.log('Exchanging code for token...');
+    
     // Exchange the authorization code for access and refresh tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -59,10 +65,19 @@ serve(async (req) => {
     if (tokenData.error) {
       console.error('Google OAuth error:', tokenData);
       return new Response(
-        JSON.stringify({ error: 'Failed to exchange authorization code' }),
+        JSON.stringify({ 
+          error: 'Failed to exchange authorization code', 
+          details: tokenData.error,
+          error_description: tokenData.error_description || 'No additional details available'
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Token exchange successful, saving to database...');
+
+    // Create a Supabase client with the service role key for admin privileges
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Store the tokens in the database (encrypted)
     const { access_token, refresh_token, expires_in } = tokenData;
@@ -91,7 +106,7 @@ serve(async (req) => {
       if (error) {
         console.error('Error updating integration:', error);
         return new Response(
-          JSON.stringify({ error: 'Failed to update integration' }),
+          JSON.stringify({ error: 'Failed to update integration', details: error }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -112,11 +127,13 @@ serve(async (req) => {
       if (error) {
         console.error('Error creating integration:', error);
         return new Response(
-          JSON.stringify({ error: 'Failed to create integration' }),
+          JSON.stringify({ error: 'Failed to create integration', details: error }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }
+
+    console.log('Integration saved successfully');
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -125,7 +142,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing request:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

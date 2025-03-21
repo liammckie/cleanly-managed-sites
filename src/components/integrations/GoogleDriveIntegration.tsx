@@ -22,6 +22,7 @@ export const GoogleDriveIntegration = () => {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -29,6 +30,7 @@ export const GoogleDriveIntegration = () => {
       
       try {
         setIsLoading(true);
+        setError(null);
         
         // Use a raw query to check for Google Drive integration
         const { data, error } = await supabase
@@ -40,12 +42,14 @@ export const GoogleDriveIntegration = () => {
         
         if (error) {
           console.error('Error checking Google Drive connection:', error);
+          setError('Failed to check Google Drive connection status');
           return;
         }
         
         setIsConnected(!!data);
       } catch (error) {
         console.error('Error:', error);
+        setError('An unexpected error occurred');
       } finally {
         setIsLoading(false);
       }
@@ -55,31 +59,57 @@ export const GoogleDriveIntegration = () => {
   }, [user]);
 
   const handleConnect = () => {
-    // Get redirect URI from window location
-    const redirectUri = `${window.location.origin}/integrations?tab=google-drive`;
+    if (!user) {
+      toast.error('You must be logged in to connect to Google Drive');
+      return;
+    }
     
-    // Construct the Google OAuth URL
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-    const scope = 'https://www.googleapis.com/auth/drive.file';
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
-    
-    // Redirect to Google OAuth
-    window.location.href = authUrl;
+    try {
+      setError(null);
+      
+      // Get redirect URI from window location
+      const redirectUri = `${window.location.origin}/integrations?tab=google-drive`;
+      
+      // Construct the Google OAuth URL
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+      if (!googleClientId) {
+        setError('Google Client ID is not configured');
+        toast.error('Google Drive integration is not properly configured');
+        return;
+      }
+      
+      // Include the drive.file scope for file access
+      const scope = 'https://www.googleapis.com/auth/drive.file';
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+      
+      // Redirect to Google OAuth
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error initiating Google OAuth:', error);
+      setError('Failed to start Google authentication');
+      toast.error('Failed to connect to Google Drive');
+    }
   };
 
   const handleDisconnect = async () => {
     try {
       setIsLoading(true);
-      if (!user) return;
+      setError(null);
+      
+      if (!user) {
+        toast.error('You must be logged in to disconnect from Google Drive');
+        return;
+      }
       
       // Call Supabase edge function to revoke the token
-      const { error } = await supabase.functions.invoke('google-drive-disconnect', {
+      const { error: functionError } = await supabase.functions.invoke('google-drive-disconnect', {
         body: { userId: user.id }
       });
       
-      if (error) {
-        console.error('Error disconnecting from Google Drive:', error);
+      if (functionError) {
+        console.error('Error disconnecting from Google Drive:', functionError);
+        setError('Failed to disconnect from Google Drive');
         toast.error('Failed to disconnect from Google Drive');
         return;
       }
@@ -88,6 +118,7 @@ export const GoogleDriveIntegration = () => {
       toast.success('Successfully disconnected from Google Drive');
     } catch (error) {
       console.error('Error:', error);
+      setError('An unexpected error occurred');
       toast.error('An error occurred while disconnecting');
     } finally {
       setIsLoading(false);
@@ -106,6 +137,7 @@ export const GoogleDriveIntegration = () => {
       if (tab !== 'google-drive' || !code || error || !user) return;
       
       setIsLoading(true);
+      setError(null);
       
       try {
         // Get redirect URI from window location
@@ -122,7 +154,15 @@ export const GoogleDriveIntegration = () => {
         
         if (error) {
           console.error('Error connecting to Google Drive:', error);
+          setError(`Failed to connect to Google Drive: ${error.message || 'Unknown error'}`);
           toast.error('Failed to connect to Google Drive');
+          return;
+        }
+        
+        if (data && data.error) {
+          console.error('Google Drive connection error:', data.error, data.details);
+          setError(`Failed to connect: ${data.error_description || data.details || data.error}`);
+          toast.error(`Failed to connect: ${data.error_description || data.details || data.error}`);
           return;
         }
         
@@ -133,6 +173,7 @@ export const GoogleDriveIntegration = () => {
         window.history.replaceState({}, document.title, '/integrations?tab=google-drive');
       } catch (error) {
         console.error('Error:', error);
+        setError('An unexpected error occurred during authentication');
         toast.error('An error occurred while connecting');
       } finally {
         setIsLoading(false);
@@ -166,16 +207,25 @@ export const GoogleDriveIntegration = () => {
               </div>
               <div>
                 {isConnected ? (
-                  <Button variant="outline" onClick={handleDisconnect}>
+                  <Button variant="outline" onClick={handleDisconnect} disabled={isLoading}>
                     Disconnect
                   </Button>
                 ) : (
-                  <Button onClick={handleConnect}>
+                  <Button onClick={handleConnect} disabled={isLoading}>
                     Connect
                   </Button>
                 )}
               </div>
             </div>
+            
+            {error && (
+              <div className="p-3 border border-destructive/30 bg-destructive/10 rounded-md text-sm text-destructive">
+                <strong>Error:</strong> {error}
+                <p className="mt-1 text-xs">
+                  Please ensure you've configured the Google API credentials correctly in both Google Cloud Console and application environment variables.
+                </p>
+              </div>
+            )}
             
             {isConnected && (
               <div className="pt-4 border-t">
