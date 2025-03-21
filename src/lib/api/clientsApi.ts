@@ -53,7 +53,16 @@ export const clientsApi = {
     
     // Prepare the client data for insertion
     const clientRecord = {
-      ...clientData,
+      name: clientData.name,
+      contact_name: clientData.contact_name,
+      email: clientData.email,
+      phone: clientData.phone,
+      address: clientData.address,
+      city: clientData.city,
+      state: clientData.state,
+      postcode: clientData.postcode,
+      status: clientData.status,
+      notes: clientData.notes,
       user_id: user.id,
     };
     
