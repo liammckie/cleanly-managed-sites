@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteStatus } from './SiteCard';
 import { SiteRecord } from '@/lib/api';
-import { Edit, MapPin, Phone, Mail, User, Calendar, Clock, FileText, Briefcase, FileContract } from 'lucide-react';
+import { Edit, MapPin, Phone, Mail, User, Calendar, Clock, FileText, Briefcase, FileIcon } from 'lucide-react';
 import { useContractHistory } from '@/hooks/useContractHistory';
 import { ContractHistoryTable } from './contract/ContractHistoryTable';
 
@@ -287,7 +287,7 @@ export function SiteDetailView({ site }: { site: SiteRecord }) {
           <div className="space-y-6">
             <div className="glass-card p-6">
               <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
-                <FileContract size={18} className="text-primary" />
+                <FileIcon size={18} className="text-primary" />
                 Current Contract Details
               </h3>
               

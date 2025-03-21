@@ -16,14 +16,15 @@ export const contractHistoryApi = {
       throw new Error('User not authenticated');
     }
 
+    // Note: We don't need to set version_number as it's handled by a database trigger
     const { data, error } = await supabase
       .from('site_contract_history')
       .insert({
         site_id: siteId,
         contract_details: contractDetails,
         created_by: user.id,
-        notes: notes || null,
-        // version_number will be set by the trigger
+        notes: notes || null
+        // version_number will be set automatically by the database trigger
       })
       .select()
       .single();
