@@ -1,0 +1,7 @@
+
+project_id = "lchmrratcvszwnaugeaw"
+[google_drive-auth]
+verify_jwt = false
+
+[google_drive-disconnect]
+verify_jwt = false
