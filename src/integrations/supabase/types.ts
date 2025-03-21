@@ -274,6 +274,90 @@ export type Database = {
         }
         Relationships: []
       }
+      work_orders: {
+        Row: {
+          actual_cost: number | null
+          assigned_to: string | null
+          attachments: Json | null
+          billing_amount: number | null
+          completion_date: string | null
+          created_at: string
+          created_by: string
+          description: string
+          due_date: string | null
+          estimated_cost: number | null
+          id: string
+          priority: string
+          purchase_order_number: string | null
+          requires_purchase_order: boolean
+          site_id: string
+          status: string
+          title: string
+          updated_at: string
+          xero_invoice_id: string | null
+          xero_purchase_order_id: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          billing_amount?: number | null
+          completion_date?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          due_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          priority: string
+          purchase_order_number?: string | null
+          requires_purchase_order?: boolean
+          site_id: string
+          status: string
+          title: string
+          updated_at?: string
+          xero_invoice_id?: string | null
+          xero_purchase_order_id?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          attachments?: Json | null
+          billing_amount?: number | null
+          completion_date?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          due_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          priority?: string
+          purchase_order_number?: string | null
+          requires_purchase_order?: boolean
+          site_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          xero_invoice_id?: string | null
+          xero_purchase_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

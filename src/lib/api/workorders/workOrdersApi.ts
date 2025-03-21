@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord, CreateWorkOrderData, UpdateWorkOrderData, WorkOrderStatus } from './types';
-import { toast } from 'sonner';
 
 /**
  * Get all work orders
@@ -28,7 +27,7 @@ export const getWorkOrders = async (): Promise<WorkOrderRecord[]> => {
       throw error;
     }
 
-    return data as WorkOrderRecord[];
+    return data as unknown as WorkOrderRecord[];
   } catch (error) {
     console.error('Error fetching work orders:', error);
     throw error;
@@ -61,7 +60,7 @@ export const getSiteWorkOrders = async (siteId: string): Promise<WorkOrderRecord
       throw error;
     }
 
-    return data as WorkOrderRecord[];
+    return data as unknown as WorkOrderRecord[];
   } catch (error) {
     console.error(`Error fetching work orders for site ${siteId}:`, error);
     throw error;
@@ -92,7 +91,7 @@ export const getWorkOrder = async (id: string): Promise<WorkOrderRecord | null> 
       throw error;
     }
 
-    return data as WorkOrderRecord;
+    return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error(`Error fetching work order ${id}:`, error);
     throw error;
@@ -117,6 +116,7 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         billing_amount: workOrderData.billing_amount,
         assigned_to: workOrderData.assigned_to,
         status: 'draft', // Always start as draft
+        created_by: (await supabase.auth.getUser()).data.user?.id,
         requires_purchase_order: workOrderData.requires_purchase_order,
         purchase_order_number: workOrderData.purchase_order_number
       })
@@ -129,7 +129,7 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
 
     // TODO: Handle file uploads for attachments if needed
 
-    return data as WorkOrderRecord;
+    return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error('Error creating work order:', error);
     throw error;
@@ -152,7 +152,7 @@ export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrder
       throw error;
     }
 
-    return data as WorkOrderRecord;
+    return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error(`Error updating work order ${id}:`, error);
     throw error;
@@ -194,7 +194,7 @@ export const updateWorkOrderStatus = async (id: string, status: WorkOrderStatus)
       throw error;
     }
 
-    return data as WorkOrderRecord;
+    return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error(`Error updating work order status ${id}:`, error);
     throw error;
@@ -220,7 +220,7 @@ export const assignWorkOrder = async (id: string, subcontractorId: string): Prom
       throw error;
     }
 
-    return data as WorkOrderRecord;
+    return data as unknown as WorkOrderRecord;
   } catch (error) {
     console.error(`Error assigning work order ${id}:`, error);
     throw error;

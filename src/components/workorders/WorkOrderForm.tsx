@@ -49,7 +49,7 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
       description: '',
       site_id: site.id,
       priority: 'medium',
-      requires_purchase_order: site.billingDetails?.purchaseOrderRequired || false,
+      requires_purchase_order: site.billing_details?.purchaseOrderRequired || false,
     },
   });
 
