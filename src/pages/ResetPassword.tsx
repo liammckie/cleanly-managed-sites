@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { AlertCircle, ArrowLeft, KeyRound } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
 
 const ResetPassword = () => {
@@ -23,7 +22,6 @@ const ResetPassword = () => {
   const [email, setEmail] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   
-  // Extract token and email from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const tokenParam = searchParams.get('token');
