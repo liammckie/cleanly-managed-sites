@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ExternalLink } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-// Define the interface for a user integration record
 interface UserIntegration {
   id: string;
   user_id: string;
@@ -35,7 +33,6 @@ export const GoogleDriveIntegration = () => {
         setIsLoading(true);
         setError(null);
         
-        // Use a raw query to check for Google Drive integration
         const { data, error } = await supabase
           .from('user_integrations')
           .select('*')
@@ -70,12 +67,11 @@ export const GoogleDriveIntegration = () => {
     try {
       setError(null);
       
-      // Get current origin for the redirect URI
       const origin = window.location.origin;
-      // Ensure the redirect path exactly matches what's in the Google Cloud Console
-      const redirectUri = `${origin}/integrations?tab=google-drive`;
+      const redirectUri = `${origin}/api/auth/callback/google`;
       
-      // Construct the Google OAuth URL
+      console.log('Using redirect URI:', redirectUri);
+      
       const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
       if (!googleClientId) {
         setError('Google Client ID is not configured');
@@ -83,14 +79,12 @@ export const GoogleDriveIntegration = () => {
         return;
       }
       
-      // Include the drive.file scope for file access
       const scope = 'https://www.googleapis.com/auth/drive.file';
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
       
       console.log('Redirecting to Google OAuth with redirect URI:', redirectUri);
       
-      // Redirect to Google OAuth
       window.location.href = authUrl;
     } catch (error) {
       console.error('Error initiating Google OAuth:', error);
@@ -109,7 +103,6 @@ export const GoogleDriveIntegration = () => {
         return;
       }
       
-      // Call Supabase edge function to revoke the token
       const { error: functionError } = await supabase.functions.invoke('google-drive-disconnect', {
         body: { userId: user.id }
       });
@@ -133,27 +126,22 @@ export const GoogleDriveIntegration = () => {
   };
 
   useEffect(() => {
-    // Handle OAuth callback
     const handleOAuthCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
-      const tab = urlParams.get('tab');
       
-      // Only proceed if we're on the Google Drive tab and have a code
-      if (tab !== 'google-drive' || !code || error || !user) return;
+      if (!code || error || !user) return;
       
       setIsLoading(true);
       setError(null);
       
       try {
-        // Get current origin for the redirect URI - must match exactly what was used in the initial request
         const origin = window.location.origin;
-        const redirectUri = `${origin}/integrations?tab=google-drive`;
+        const redirectUri = `${origin}/api/auth/callback/google`;
         
         console.log('Processing OAuth callback with redirect URI:', redirectUri);
         
-        // Call Supabase edge function to exchange code for tokens
         const { data, error } = await supabase.functions.invoke('google-drive-auth', {
           body: { 
             code,
@@ -179,7 +167,6 @@ export const GoogleDriveIntegration = () => {
         setIsConnected(true);
         toast.success('Successfully connected to Google Drive');
         
-        // Clean up URL parameters
         window.history.replaceState({}, document.title, '/integrations?tab=google-drive');
       } catch (error) {
         console.error('Error:', error);
@@ -198,17 +185,15 @@ export const GoogleDriveIntegration = () => {
       <Alert variant="destructive" className="mt-4">
         <AlertTitle>Google Drive Integration Setup</AlertTitle>
         <AlertDescription className="space-y-4 mt-2">
-          <p>To use Google Drive integration, you need to set up OAuth 2.0 credentials:</p>
+          <p>To use Google Drive integration, you need to adjust your OAuth 2.0 credentials:</p>
           <ol className="list-decimal pl-5 space-y-2">
-            <li>Go to the <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium flex items-center">Google Cloud Console <ExternalLink className="ml-1 h-3 w-3" /></a></li>
-            <li>Create a new project or select an existing one</li>
-            <li>Enable the Google Drive API for your project</li>
-            <li>Configure OAuth consent screen (External type is fine for testing)</li>
-            <li>Create OAuth 2.0 credentials (Web application type)</li>
-            <li>Add authorized JavaScript origins: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code></li>
-            <li>Add authorized redirect URI: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/integrations?tab=google-drive</code></li>
-            <li>Copy the Client ID and set it as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID</code> in your .env file</li>
-            <li>Copy the Client Secret and set it as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">GOOGLE_CLIENT_SECRET</code> in your Supabase Edge Function secrets</li>
+            <li>Go to the <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline font-medium flex items-center">Google Cloud Console Credentials Page <ExternalLink className="ml-1 h-3 w-3" /></a></li>
+            <li>Find and edit your OAuth 2.0 Client ID</li>
+            <li>For Authorized JavaScript origins: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code> (already correct)</li>
+            <li>For Authorized redirect URIs: Change <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/api/auth/callback/google</code> to <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/integrations?tab=google-drive</code></li>
+            <li>OR update the application code to use your current redirect URI</li>
+            <li>Set your Google Client ID as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID</code> in your .env file</li>
+            <li>Set your Google Client Secret as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">GOOGLE_CLIENT_SECRET</code> in your Supabase Edge Function secrets</li>
           </ol>
           <p className="text-sm mt-2">After completing these steps, restart your application and try connecting again.</p>
         </AlertDescription>
