@@ -21,13 +21,13 @@ export function ClientFormContainer({ mode, client }: ClientFormProps) {
   } = useClientForm(mode, client);
   
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
+    <form onSubmit={handleSubmit} className="animate-fade-in">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
           <CardTitle>{mode === 'create' ? 'Create New Client' : 'Edit Client'}</CardTitle>
         </CardHeader>
         
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <BasicInformation 
             formData={formData} 
             errors={errors} 
@@ -47,7 +47,7 @@ export function ClientFormContainer({ mode, client }: ClientFormProps) {
           />
         </CardContent>
         
-        <CardFooter>
+        <CardFooter className="flex justify-between pt-4 border-t">
           <ClientFormActions 
             mode={mode} 
             isLoading={isLoading} 
