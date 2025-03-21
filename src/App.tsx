@@ -1,3 +1,4 @@
+
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Index from './pages/Index';
@@ -13,6 +14,7 @@ import CreateClient from './pages/CreateClient';
 import EditClient from './pages/EditClient';
 import NotFound from './pages/NotFound';
 import ResetPassword from './pages/ResetPassword';
+import Integrations from './pages/Integrations';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

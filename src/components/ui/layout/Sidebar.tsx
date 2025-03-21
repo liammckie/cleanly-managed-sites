@@ -1,3 +1,4 @@
+
 import React from "react"
 import {
   Home,
@@ -9,50 +10,104 @@ import {
   Building2,
   Cable
 } from "lucide-react"
+import { Link } from "react-router-dom"
 
-import { SidebarClose } from "@/components/ui/sidebar/sidebar-close"
-import { SidebarFooter } from "@/components/ui/sidebar/sidebar-footer"
-import { SidebarHeader } from "@/components/ui/sidebar/sidebar-header"
-import { SidebarItem } from "@/components/ui/sidebar/sidebar-item"
-import { SidebarMenu } from "@/components/ui/sidebar/sidebar-menu"
-import { SidebarNav } from "@/components/ui/sidebar/sidebar-nav"
-import { SidebarRail } from "@/components/ui/sidebar/sidebar-rail"
-import { SidebarSection } from "@/components/ui/sidebar/sidebar-section"
-import { SidebarSections } from "@/components/ui/sidebar/sidebar-sections"
-import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger"
+import { 
+  Sidebar as SidebarComponent,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent
+} from "@/components/ui/sidebar"
 
 export function Sidebar() {
   return (
-    <SidebarRail>
-      <SidebarTrigger />
-      
-      <SidebarSections>
-        <SidebarSection>
-          <SidebarHeader>
-            CRM
-          </SidebarHeader>
-          <SidebarNav>
-            <SidebarItem to="/settings" icon={Settings}>Settings</SidebarItem>
-          </SidebarNav>
-        </SidebarSection>
+    <SidebarComponent>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>CRM</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/settings">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         
-        <SidebarMenu>
-          <SidebarItem to="/dashboard" icon={Home}>Dashboard</SidebarItem>
-          <SidebarItem to="/clients" icon={Users}>Clients</SidebarItem>
-          <SidebarItem to="/sites" icon={Building2}>Sites</SidebarItem>
-          <SidebarItem to="/integrations" icon={Cable}>Integrations</SidebarItem>
-        </SidebarMenu>
-        
-        <SidebarSection>
-          <SidebarHeader>
-            More
-          </SidebarHeader>
-          <SidebarNav>
-            <SidebarItem to="/documents" icon={File}>Documents</SidebarItem>
-            <SidebarItem to="/calendar" icon={Calendar}>Calendar</SidebarItem>
-          </SidebarNav>
-        </SidebarSection>
-      </SidebarSections>
-    </SidebarRail>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/dashboard">
+                    <Home className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/clients">
+                    <Users className="h-4 w-4" />
+                    <span>Clients</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/sites">
+                    <Building2 className="h-4 w-4" />
+                    <span>Sites</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/integrations">
+                    <Cable className="h-4 w-4" />
+                    <span>Integrations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>More</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/documents">
+                    <File className="h-4 w-4" />
+                    <span>Documents</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/calendar">
+                    <Calendar className="h-4 w-4" />
+                    <span>Calendar</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </SidebarComponent>
   );
 }

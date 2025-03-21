@@ -18,7 +18,6 @@ export const triggerSiteCreated = (site: SiteFormData) => {
   if (!zapierIntegration) return;
   
   zapierIntegration.triggerEvent('site.created', {
-    site_id: site.id,
     site_name: site.name,
     site_address: site.address,
     site_city: site.city,
@@ -33,7 +32,6 @@ export const triggerSiteUpdated = (site: SiteFormData) => {
   if (!zapierIntegration) return;
   
   zapierIntegration.triggerEvent('site.updated', {
-    site_id: site.id,
     site_name: site.name,
     site_address: site.address,
     site_city: site.city,
