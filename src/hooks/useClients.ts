@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { clientsApi, ClientRecord } from '@/lib/api';
@@ -42,8 +41,8 @@ export function useClients() {
   
   // Mutation for updating a client
   const updateClientMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<ClientRecord> }) => 
-      clientsApi.updateClient(id, data),
+    mutationFn: (data: { id: string; data: Partial<ClientRecord> }) => 
+      clientsApi.updateClient(data.id, data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['clientStatusCounts'] });

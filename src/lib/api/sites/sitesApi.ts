@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord, ContactRecord } from '../../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';

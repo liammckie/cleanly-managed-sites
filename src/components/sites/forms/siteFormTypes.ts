@@ -10,7 +10,7 @@ import { Subcontractor } from './types/subcontractorTypes';
 import { SiteStatus } from '@/components/sites/SiteCard';
 
 // Export BillingContact for use in other modules
-export { BillingContact };
+export type { BillingContact };
 
 // Main form data type
 export interface SiteFormData {

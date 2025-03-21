@@ -1,5 +1,6 @@
 
-import { SiteFormData, BillingContact } from '@/components/sites/forms/siteFormTypes';
+import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { BillingContact } from '@/components/sites/forms/types/contactTypes';
 
 export const useSiteFormBillingContacts = (
   formData: SiteFormData,
@@ -56,7 +57,7 @@ export const useSiteFormBillingContacts = (
     
     updatedContacts[index] = {
       ...updatedContacts[index],
-      [String(field)]: value // Convert symbol to string explicitly
+      [field]: value // No need for explicit conversion as keyof BillingContact is already a string
     };
     
     setFormData(prev => ({
