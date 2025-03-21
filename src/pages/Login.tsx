@@ -1,18 +1,17 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/lib/supabase';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { signIn, signUp, resetPassword, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const [error, setError] = useState<string | null>(null);
@@ -22,24 +21,21 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   
+  // If user is already logged in, redirect to dashboard
+  if (user) {
+    navigate('/dashboard', { replace: true });
+    return null;
+  }
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Login successful!");
-      navigate('/dashboard');
+      await signIn(email, password);
     } catch (error: any) {
       setError(error.message || 'Failed to login');
-      toast.error("Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -51,29 +47,9 @@ const Login = () => {
     setError(null);
     
     try {
-      // First, sign up the user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
-      });
-      
-      if (error) throw error;
-      
-      // Check if we need email confirmation
-      if (data.user?.identities?.length === 0) {
-        toast.info("Please check your email to confirm your account");
-      } else {
-        toast.success("Account created successfully!");
-        navigate('/dashboard');
-      }
+      await signUp(email, password, name);
     } catch (error: any) {
       setError(error.message || 'Failed to create account');
-      toast.error("Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -89,16 +65,9 @@ const Login = () => {
     setError(null);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      toast.success("Password reset email sent!");
+      await resetPassword(email);
     } catch (error: any) {
       setError(error.message || 'Failed to send password reset email');
-      toast.error("Failed to send reset email");
     } finally {
       setIsLoading(false);
     }
