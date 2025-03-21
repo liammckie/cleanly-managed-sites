@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteRecord } from '../../types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
@@ -26,7 +25,8 @@ export const sitesApi = {
       return {
         ...site,
         client_name: clientData?.name || null,
-        clients: undefined // Remove the clients property
+        clients: undefined, // Remove the clients property
+        contacts: [] // Initialize with empty contacts array
       };
     });
     
@@ -56,9 +56,14 @@ export const sitesApi = {
         contacts: [] // Initialize with empty array
       };
       
-      // Get contacts for the site separately
-      const siteContacts = await getSiteContacts(id);
-      transformedData.contacts = siteContacts;
+      try {
+        // Get contacts for the site separately
+        const siteContacts = await getSiteContacts(id);
+        transformedData.contacts = siteContacts;
+      } catch (contactError) {
+        console.error(`Error fetching contacts for site ${id}:`, contactError);
+        // Keep empty contacts array if there's an error
+      }
       
       return transformedData as SiteRecord;
     }
@@ -180,7 +185,13 @@ export const sitesApi = {
     }
     
     // Fetch the contacts to include in the result
-    const contacts = await getSiteContacts(id);
+    let contacts = [];
+    try {
+      contacts = await getSiteContacts(id);
+    } catch (contactError) {
+      console.error(`Error fetching contacts for site ${id}:`, contactError);
+      // Keep empty contacts array if there's an error
+    }
     
     // Create a result that includes the contacts
     const result = {
@@ -218,3 +229,4 @@ export const sitesApi = {
     }
   }
 };
+
