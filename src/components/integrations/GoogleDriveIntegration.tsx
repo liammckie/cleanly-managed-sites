@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ExternalLink } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // Define the interface for a user integration record
 interface UserIntegration {
@@ -190,6 +193,29 @@ export const GoogleDriveIntegration = () => {
     handleOAuthCallback();
   }, [user]);
 
+  const renderSetupInstructions = () => {
+    return (
+      <Alert variant="destructive" className="mt-4">
+        <AlertTitle>Google Drive Integration Setup</AlertTitle>
+        <AlertDescription className="space-y-4 mt-2">
+          <p>To use Google Drive integration, you need to set up OAuth 2.0 credentials:</p>
+          <ol className="list-decimal pl-5 space-y-2">
+            <li>Go to the <a href="https://console.cloud.google.com/apis/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium flex items-center">Google Cloud Console <ExternalLink className="ml-1 h-3 w-3" /></a></li>
+            <li>Create a new project or select an existing one</li>
+            <li>Enable the Google Drive API for your project</li>
+            <li>Configure OAuth consent screen (External type is fine for testing)</li>
+            <li>Create OAuth 2.0 credentials (Web application type)</li>
+            <li>Add authorized JavaScript origins: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}</code></li>
+            <li>Add authorized redirect URI: <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{window.location.origin}/integrations?tab=google-drive</code></li>
+            <li>Copy the Client ID and set it as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">VITE_GOOGLE_CLIENT_ID</code> in your .env file</li>
+            <li>Copy the Client Secret and set it as <code className="bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">GOOGLE_CLIENT_SECRET</code> in your Supabase Edge Function secrets</li>
+          </ol>
+          <p className="text-sm mt-2">After completing these steps, restart your application and try connecting again.</p>
+        </AlertDescription>
+      </Alert>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -201,7 +227,7 @@ export const GoogleDriveIntegration = () => {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-4">
-            <div className="animate-spin h-6 w-6 border-2 border-primary rounded-full border-t-transparent"></div>
+            <LoadingSpinner size="md" />
           </div>
         ) : (
           <div className="space-y-4">
@@ -228,9 +254,7 @@ export const GoogleDriveIntegration = () => {
             {error && (
               <div className="p-3 border border-destructive/30 bg-destructive/10 rounded-md text-sm text-destructive">
                 <strong>Error:</strong> {error}
-                <p className="mt-1 text-xs">
-                  Please ensure you've configured the Google API credentials correctly in both Google Cloud Console and application environment variables.
-                </p>
+                {(error === 'Google Client ID is not configured') && renderSetupInstructions()}
               </div>
             )}
             
