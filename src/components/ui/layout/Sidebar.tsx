@@ -12,12 +12,12 @@ import {
   FileText,
   Boxes 
 } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile'; // This import is correct as per error
+import { useMediaQuery } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar/sidebar-trigger';
 import { SidebarMenu } from '@/components/ui/sidebar/sidebar-menu';
 import { SidebarRail } from '@/components/ui/sidebar/sidebar-rail';
-import { SidebarSections } from '@/components/ui/sidebar/sidebar-sections';
+import { SidebarContent } from '@/components/ui/sidebar/sidebar-sections';
 import { BusinessBranding } from '@/components/BusinessBranding';
 
 export function Sidebar() {
@@ -116,7 +116,7 @@ export function Sidebar() {
         </div>
       </SidebarRail>
 
-      <SidebarSections>
+      <SidebarContent>
         <SidebarMenu>
           <div className="pb-4">
             <BusinessBranding />
@@ -137,7 +137,7 @@ export function Sidebar() {
             </Link>
           ))}
         </SidebarMenu>
-      </SidebarSections>
+      </SidebarContent>
     </>
   );
 }

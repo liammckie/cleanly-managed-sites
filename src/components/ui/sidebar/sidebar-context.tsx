@@ -1,6 +1,7 @@
+
 import * as React from "react"
 import { SidebarContext } from "./types"
-import { useIsMobile } from "@/hooks/use-mobile"
+import useMobile from "@/hooks/use-mobile"
 
 // Constants
 export const SIDEBAR_COOKIE_NAME = "sidebar:state"
@@ -41,7 +42,7 @@ export const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
-    const isMobile = useIsMobile()
+    const isMobile = useMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
     // This is the internal state of the sidebar.

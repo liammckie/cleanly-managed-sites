@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ClientForm } from '@/components/clients/ClientForm';
@@ -24,7 +25,7 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
+import useMobile from '@/hooks/use-mobile';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -33,7 +34,7 @@ const EditClient = () => {
   const { client, isLoading, error } = useClientDetails(id!);
   
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const isMobile = useMobile();
   const [isOpen, setIsOpen] = React.useState(false);
   
   const handleSignOut = async () => {

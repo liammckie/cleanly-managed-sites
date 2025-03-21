@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ClientForm } from '@/components/clients/ClientForm';
 import {
@@ -20,7 +21,7 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import useMobile from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
@@ -28,7 +29,7 @@ import { Button } from '@/components/ui/button';
 
 const CreateClient = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const isMobile = useMobile();
   const [isOpen, setIsOpen] = React.useState(false);
   
   const handleSignOut = async () => {
