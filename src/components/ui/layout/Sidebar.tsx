@@ -12,13 +12,13 @@ import {
   FileText,
   Boxes 
 } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useMediaQuery } from '@/hooks/use-mobile'; // This import is correct as per error
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar/sidebar-trigger';
 import { SidebarMenu } from '@/components/ui/sidebar/sidebar-menu';
 import { SidebarRail } from '@/components/ui/sidebar/sidebar-rail';
 import { SidebarSections } from '@/components/ui/sidebar/sidebar-sections';
-import BusinessBranding from '@/components/BusinessBranding';
+import { BusinessBranding } from '@/components/BusinessBranding';
 
 export function Sidebar() {
   const { pathname } = useLocation();
@@ -84,7 +84,7 @@ export function Sidebar() {
         <SidebarTrigger />
         <div className="flex flex-col items-center justify-between h-full py-4">
           <div className="flex flex-col gap-4 items-center w-full">
-            <BusinessBranding minimal={true} />
+            <BusinessBranding showName={false} size="sm" />
             
             {menuItems.map((item) => (
               <Link
