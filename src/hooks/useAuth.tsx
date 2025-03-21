@@ -1,12 +1,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '@/lib/api';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: any | null;
+  user: User | null;
+  session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
@@ -17,29 +18,18 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Initialize authentication state
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Set up auth state change listener
+    // Set up auth state change listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
+      (event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         
         if (event === 'SIGNED_IN') {
           navigate('/dashboard');
@@ -48,6 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setIsLoading(false);
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -88,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       
-      toast.success('Account created successfully');
+      toast.success('Account created successfully! Please check your email for confirmation.');
     } catch (error: any) {
       console.error('Error signing up:', error);
       toast.error(error.message || 'Failed to create account');
@@ -132,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        session,
         isLoading,
         signIn,
         signUp,
