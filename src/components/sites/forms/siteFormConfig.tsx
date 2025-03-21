@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteFormData } from './siteFormTypes';
 import { BasicInformationStep } from './steps/BasicInformationStep';
@@ -75,6 +74,7 @@ export const getStepsConfig = ({
       <BillingDetailsStep 
         formData={formData}
         handleNestedChange={handleNestedChange}
+        handleDoubleNestedChange={handleDoubleNestedChange}
       />
     )
   },
