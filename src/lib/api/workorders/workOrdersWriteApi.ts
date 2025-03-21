@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord, CreateWorkOrderData, UpdateWorkOrderData, WorkOrderStatus } from './types';
 
@@ -22,7 +23,8 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
         created_by: (await supabase.auth.getUser()).data.user?.id,
         requires_purchase_order: workOrderData.requires_purchase_order,
         purchase_order_number: workOrderData.purchase_order_number,
-        attachments: workOrderData.attachments || []
+        // Convert WorkOrderAttachment[] to a JSON-compatible format
+        attachments: workOrderData.attachments ? JSON.parse(JSON.stringify(workOrderData.attachments)) : null
       })
       .select()
       .single();
@@ -43,9 +45,16 @@ export const createWorkOrder = async (workOrderData: CreateWorkOrderData): Promi
  */
 export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrderData): Promise<WorkOrderRecord> => {
   try {
+    // Prepare the update data - handle the attachments separately
+    const updateData = { ...workOrderData };
+    if (updateData.attachments) {
+      // Convert WorkOrderAttachment[] to a JSON-compatible format
+      updateData.attachments = JSON.parse(JSON.stringify(updateData.attachments));
+    }
+
     const { data, error } = await supabase
       .from('work_orders')
-      .update(workOrderData)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -148,13 +157,21 @@ export const addWorkOrderAttachment = async (
       throw getError;
     }
     
+    // Handle the case where attachments might be null
     const currentAttachments = workOrder.attachments || [];
-    const updatedAttachments = [...currentAttachments, attachment];
+    
+    // Ensure currentAttachments is an array
+    const attachmentsArray = Array.isArray(currentAttachments) ? currentAttachments : [];
+    
+    // Add the new attachment
+    const updatedAttachments = [...attachmentsArray, attachment];
     
     // Update the work order with the new attachment
     const { data, error } = await supabase
       .from('work_orders')
-      .update({ attachments: updatedAttachments })
+      .update({ 
+        attachments: JSON.parse(JSON.stringify(updatedAttachments)) 
+      })
       .eq('id', id)
       .select()
       .single();
@@ -189,15 +206,23 @@ export const removeWorkOrderAttachment = async (
       throw getError;
     }
     
+    // Handle the case where attachments might be null
     const currentAttachments = workOrder.attachments || [];
-    const updatedAttachments = currentAttachments.filter(
+    
+    // Ensure currentAttachments is an array
+    const attachmentsArray = Array.isArray(currentAttachments) ? currentAttachments : [];
+    
+    // Filter out the attachment to remove
+    const updatedAttachments = attachmentsArray.filter(
       (attachment: any) => attachment.id !== attachmentId
     );
     
     // Update the work order with the filtered attachments
     const { data, error } = await supabase
       .from('work_orders')
-      .update({ attachments: updatedAttachments })
+      .update({ 
+        attachments: JSON.parse(JSON.stringify(updatedAttachments)) 
+      })
       .eq('id', id)
       .select()
       .single();

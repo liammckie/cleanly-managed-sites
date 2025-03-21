@@ -106,7 +106,7 @@ export const FileAttachments = ({
 
   if (!isConnected) {
     return (
-      <Alert variant="warning" className="mb-4">
+      <Alert className="mb-4">
         <AlertTitle>Google Drive not connected</AlertTitle>
         <AlertDescription>
           <p className="mb-2">
