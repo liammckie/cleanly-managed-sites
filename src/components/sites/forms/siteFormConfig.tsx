@@ -18,6 +18,7 @@ export type StepConfigItem = {
 
 export type GetStepsConfigProps = {
   formData: SiteFormData;
+  errors: Record<string, string>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStatusChange: (value: SiteStatus) => void;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
@@ -30,6 +31,7 @@ export type GetStepsConfigProps = {
 
 export const getStepsConfig = ({
   formData,
+  errors,
   handleChange,
   handleStatusChange,
   handleNestedChange,
@@ -45,6 +47,7 @@ export const getStepsConfig = ({
     component: (
       <BasicInformationStep 
         formData={formData}
+        errors={errors}
         handleChange={handleChange}
         handleStatusChange={handleStatusChange}
       />
@@ -56,6 +59,7 @@ export const getStepsConfig = ({
     component: (
       <SubcontractorsStep 
         formData={formData}
+        errors={errors}
         handleSubcontractorChange={handleSubcontractorChange}
         addSubcontractor={addSubcontractor}
         removeSubcontractor={removeSubcontractor}

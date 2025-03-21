@@ -18,11 +18,19 @@ export function CreateSiteForm() {
   // Get steps configuration
   const steps = getStepsConfig(formHandlers);
   
-  // Use stepper hook
-  const stepper = useSiteFormStepper(steps);
+  // Use stepper hook with validation
+  const stepper = useSiteFormStepper({
+    steps,
+    validateStep: formHandlers.validateStep
+  });
   
   // Handle submit
   const handleSubmit = () => {
+    // Final validation before submitting
+    if (!formHandlers.validateStep(stepper.currentStep)) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simulate API call

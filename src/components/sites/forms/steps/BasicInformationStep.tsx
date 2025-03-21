@@ -11,68 +11,87 @@ import {
 } from '@/components/ui/select';
 import { SiteFormData } from '../siteFormTypes';
 import { SiteStatus } from '../../SiteCard';
+import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 
 interface BasicInformationStepProps {
   formData: SiteFormData;
+  errors: Record<string, string>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStatusChange: (value: SiteStatus) => void;
 }
 
 export function BasicInformationStep({ 
   formData, 
+  errors,
   handleChange, 
   handleStatusChange 
 }: BasicInformationStepProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
-        <div className="space-y-2">
+        <FormItem className="space-y-2">
           <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
-          <Input
-            id="name"
-            name="name"
-            placeholder="Enter site name"
-            value={formData.name}
-            onChange={handleChange}
-            className="glass-input"
-            required
-          />
-        </div>
+          <FormControl>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Enter site name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`glass-input ${errors['name'] ? 'border-destructive' : ''}`}
+              required
+              aria-invalid={!!errors['name']}
+            />
+          </FormControl>
+          {errors['name'] && <FormMessage>{errors['name']}</FormMessage>}
+        </FormItem>
         
-        <div className="space-y-2">
+        <FormItem className="space-y-2">
           <Label htmlFor="address">Address <span className="text-destructive">*</span></Label>
-          <Input
-            id="address"
-            name="address"
-            placeholder="Enter street address"
-            value={formData.address}
-            onChange={handleChange}
-            className="glass-input"
-            required
-          />
-        </div>
+          <FormControl>
+            <Input
+              id="address"
+              name="address"
+              placeholder="Enter street address"
+              value={formData.address}
+              onChange={handleChange}
+              className={`glass-input ${errors['address'] ? 'border-destructive' : ''}`}
+              required
+              aria-invalid={!!errors['address']}
+            />
+          </FormControl>
+          {errors['address'] && <FormMessage>{errors['address']}</FormMessage>}
+        </FormItem>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+          <FormItem className="space-y-2">
             <Label htmlFor="city">City <span className="text-destructive">*</span></Label>
-            <Input
-              id="city"
-              name="city"
-              placeholder="Enter city"
-              value={formData.city}
-              onChange={handleChange}
-              className="glass-input"
-              required
-            />
-          </div>
+            <FormControl>
+              <Input
+                id="city"
+                name="city"
+                placeholder="Enter city"
+                value={formData.city}
+                onChange={handleChange}
+                className={`glass-input ${errors['city'] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors['city']}
+              />
+            </FormControl>
+            {errors['city'] && <FormMessage>{errors['city']}</FormMessage>}
+          </FormItem>
           
-          <div className="space-y-2">
+          <FormItem className="space-y-2">
             <Label htmlFor="state">State <span className="text-destructive">*</span></Label>
             <Select 
               value={formData.state} 
               onValueChange={(value) => handleChange({ target: { name: 'state', value } } as any)}
             >
-              <SelectTrigger id="state" className="glass-input">
+              <SelectTrigger 
+                id="state" 
+                className={`glass-input ${errors['state'] ? 'border-destructive' : ''}`}
+                aria-invalid={!!errors['state']}
+              >
                 <SelectValue placeholder="Select state" />
               </SelectTrigger>
               <SelectContent className="glass">
@@ -86,22 +105,27 @@ export function BasicInformationStep({
                 <SelectItem value="NT">Northern Territory</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+            {errors['state'] && <FormMessage>{errors['state']}</FormMessage>}
+          </FormItem>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+          <FormItem className="space-y-2">
             <Label htmlFor="postcode">Postcode <span className="text-destructive">*</span></Label>
-            <Input
-              id="postcode"
-              name="postcode"
-              placeholder="Enter postcode"
-              value={formData.postcode}
-              onChange={handleChange}
-              className="glass-input"
-              required
-            />
-          </div>
+            <FormControl>
+              <Input
+                id="postcode"
+                name="postcode"
+                placeholder="Enter postcode"
+                value={formData.postcode}
+                onChange={handleChange}
+                className={`glass-input ${errors['postcode'] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors['postcode']}
+              />
+            </FormControl>
+            {errors['postcode'] && <FormMessage>{errors['postcode']}</FormMessage>}
+          </FormItem>
           
           <div className="space-y-2">
             <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
@@ -126,18 +150,22 @@ export function BasicInformationStep({
         <h3 className="text-lg font-medium">Contact Information</h3>
         
         <div className="space-y-4">
-          <div className="space-y-2">
+          <FormItem className="space-y-2">
             <Label htmlFor="representative">Representative Name <span className="text-destructive">*</span></Label>
-            <Input
-              id="representative"
-              name="representative"
-              placeholder="Enter representative name"
-              value={formData.representative}
-              onChange={handleChange}
-              className="glass-input"
-              required
-            />
-          </div>
+            <FormControl>
+              <Input
+                id="representative"
+                name="representative"
+                placeholder="Enter representative name"
+                value={formData.representative}
+                onChange={handleChange}
+                className={`glass-input ${errors['representative'] ? 'border-destructive' : ''}`}
+                required
+                aria-invalid={!!errors['representative']}
+              />
+            </FormControl>
+            {errors['representative'] && <FormMessage>{errors['representative']}</FormMessage>}
+          </FormItem>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
