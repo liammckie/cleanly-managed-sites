@@ -7,6 +7,8 @@ import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Sites from '@/pages/Sites';
 import Clients from '@/pages/Clients';
+import CreateClient from '@/pages/CreateClient';
+import EditClient from '@/pages/EditClient';
 import CreateSite from '@/pages/CreateSite';
 import EditSite from '@/pages/EditSite';
 import SiteDetail from '@/pages/SiteDetail';
@@ -34,13 +36,22 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            
+            <Route path="/clients/create" element={
+              <ProtectedRoute>
+                <CreateClient />
+              </ProtectedRoute>
+            } />
+            <Route path="/clients/:id/edit" element={
+              <ProtectedRoute>
+                <EditClient />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
@@ -104,9 +115,9 @@ function App() {
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
-        </Router>
-        <Toaster />
-      </AuthProvider>
+          <Toaster />
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
