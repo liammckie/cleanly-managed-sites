@@ -79,7 +79,7 @@ export const updateWorkOrder = async (id: string, workOrderData: UpdateWorkOrder
     
     // If the data contains attachments, ensure they are properly cast back to WorkOrderAttachment[]
     if (workOrder.attachments) {
-      workOrder.attachments = workOrder.attachments as any;
+      workOrder.attachments = workOrder.attachments as unknown as WorkOrderAttachment[];
     }
     
     return workOrder;
