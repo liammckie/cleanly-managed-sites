@@ -10,10 +10,10 @@ export function useSite(id?: string) {
   } = useQuery<SiteRecord, Error>({
     queryKey: ['site', id],
     queryFn: () => {
-      if (!id) throw new Error('Site ID is required');
+      if (!id || id.trim() === '') throw new Error('Site ID is required');
       return sitesApi.getSiteById(id);
     },
-    enabled: !!id,
+    enabled: !!id && id.trim() !== '',
   });
 
   return {

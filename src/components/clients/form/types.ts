@@ -1,7 +1,8 @@
 
-import { ClientRecord } from '@/lib/api';
+import { ClientRecord } from '@/lib/types';
 
 export type ClientFormData = {
+  id?: string; // Add ID field for consistency
   name: string;
   contact_name: string;
   email: string;

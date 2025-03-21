@@ -15,7 +15,8 @@ export const useClientData = (
 
   // Fetch client data when the clientId changes
   useEffect(() => {
-    if (!clientId) {
+    // Don't attempt to fetch if clientId is empty
+    if (!clientId || clientId.trim() === '') {
       setClient(null);
       return;
     }

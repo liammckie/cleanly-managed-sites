@@ -22,10 +22,21 @@ export function ClientSelect({ value, onChange, error }: ClientSelectProps) {
   const { clients, isLoading } = useClients();
   const navigate = useNavigate();
   
+  // Handle empty or invalid values
+  const handleChange = (newValue: string) => {
+    // Validate the ID before passing it up
+    if (newValue && clients.some(client => client.id === newValue)) {
+      onChange(newValue);
+    } else if (newValue === '') {
+      // Handle clearing the selection
+      onChange('');
+    }
+  };
+  
   return (
     <div className="flex space-x-2">
       <div className="flex-1">
-        <Select value={value} onValueChange={onChange}>
+        <Select value={value} onValueChange={handleChange}>
           <SelectTrigger className={`glass-input ${error ? 'border-destructive' : ''}`}>
             <SelectValue placeholder="Select client" />
           </SelectTrigger>

@@ -35,6 +35,12 @@ export function BasicInformationStep({
 }: BasicInformationStepProps) {
   const clientData = useClientData(formData.clientId, formData, setFormData);
 
+  useEffect(() => {
+    if (formData.clientId && formData.clientId.trim() === '') {
+      handleClientChange('');
+    }
+  }, [formData.clientId, handleClientChange]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
@@ -53,7 +59,7 @@ export function BasicInformationStep({
           {errors['clientId'] && <FormMessage>{errors['clientId']}</FormMessage>}
         </FormItem>
         
-        {formData.clientId && (
+        {formData.clientId && formData.clientId.trim() !== '' && (
           <FormItem className="flex items-center space-x-2">
             <Switch 
               id="useClientInfo" 
