@@ -7,7 +7,7 @@ export const useSiteFormSubcontractors = (
   errors: Record<string, string>,
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
 ) => {
-  // Handle subcontractor changes
+  // Handle subcontractor changes with type safety
   const handleSubcontractorChange = (index: number, field: string, value: string) => {
     const updatedSubcontractors = [...formData.subcontractors];
     updatedSubcontractors[index] = {

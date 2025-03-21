@@ -39,10 +39,12 @@ export const useSiteFormHandlers = (
     }
   };
   
-  // Handle nested object changes
+  // Handle nested object changes with type safety
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
     setFormData(prev => {
-      const sectionData = prev[section] || {};
+      // Ensure we have an object to spread
+      const sectionData = prev[section] as Record<string, any> || {};
+      
       return {
         ...prev,
         [section]: {
@@ -53,11 +55,12 @@ export const useSiteFormHandlers = (
     });
   };
   
-  // Handle doubly nested object changes
+  // Handle doubly nested object changes with type safety
   const handleDoubleNestedChange = (section: keyof SiteFormData, subsection: string, field: string, value: any) => {
     setFormData(prev => {
-      const sectionData = prev[section] || {};
-      const subsectionData = (sectionData as any)[subsection] || {};
+      // Ensure we have objects to spread at both levels
+      const sectionData = prev[section] as Record<string, any> || {};
+      const subsectionData = sectionData[subsection] as Record<string, any> || {};
       
       return {
         ...prev,

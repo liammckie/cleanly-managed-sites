@@ -5,7 +5,7 @@ export const useSiteFormReplenishables = (
   formData: SiteFormData,
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) => {
-  // Handle stock item changes
+  // Handle stock item changes with type safety
   const handleStockChange = (index: number, value: string) => {
     const updatedStock = [...formData.replenishables.stock];
     updatedStock[index] = value;
