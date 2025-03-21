@@ -1,151 +1,127 @@
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { ContactRecord } from '@/lib/types';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-export const useContacts = (entityType: 'client' | 'site', entityId?: string) => {
-  const queryClient = useQueryClient();
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+export const useContacts = () => {
+  const [contacts, setContacts] = useState<ContactRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Fetch contacts
-  const {
-    data: contacts = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['contacts', entityType, entityId],
-    queryFn: async () => {
-      if (!entityId) return [];
-      
+  // Fetch all contacts for an entity (client or site)
+  const fetchContactsForEntity = async (entityId: string, entityType: 'client' | 'site') => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
-        .eq('entity_type', entityType)
         .eq('entity_id', entityId)
-        .order('is_primary', { ascending: false })
-        .order('name');
+        .eq('entity_type', entityType)
+        .order('created_at', { ascending: false });
       
       if (error) {
-        console.error(`Error fetching ${entityType} contacts:`, error);
-        throw error;
+        throw new Error(`Error fetching contacts: ${error.message}`);
       }
       
-      return data as ContactRecord[];
-    },
-    enabled: !!entityId
-  });
+      setContacts(data as ContactRecord[]);
+    } catch (err) {
+      console.error('Error in fetchContactsForEntity:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch contacts'));
+      setContacts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Create contact
-  const createContact = useMutation({
-    mutationFn: async (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => {
-      setIsCreating(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
+  // Add a new contact
+  const addContact = async (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const { data, error } = await supabase
         .from('contacts')
-        .insert({ ...contact, user_id: user.id })
+        .insert(contact)
         .select()
         .single();
       
       if (error) {
-        console.error('Error creating contact:', error);
-        throw error;
+        throw new Error(`Error creating contact: ${error.message}`);
       }
       
+      setContacts(prev => [...prev, data as ContactRecord]);
       return data as ContactRecord;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', entityType, entityId] });
-      toast.success('Contact created successfully');
-    },
-    onError: (error) => {
-      toast.error(`Failed to create contact: ${error.message}`);
-    },
-    onSettled: () => {
-      setIsCreating(false);
+    } catch (err) {
+      console.error('Error in addContact:', err);
+      setError(err instanceof Error ? err : new Error('Failed to add contact'));
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
-  // Update contact
-  const updateContact = useMutation({
-    mutationFn: async (contact: Partial<ContactRecord> & { id: string }) => {
-      setIsUpdating(true);
-      
+  // Update an existing contact
+  const updateContact = async (id: string, contact: Partial<ContactRecord>) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const { data, error } = await supabase
         .from('contacts')
         .update(contact)
-        .eq('id', contact.id)
+        .eq('id', id)
         .select()
         .single();
       
       if (error) {
-        console.error('Error updating contact:', error);
-        throw error;
+        throw new Error(`Error updating contact: ${error.message}`);
       }
       
+      setContacts(prev => prev.map(c => c.id === id ? (data as ContactRecord) : c));
       return data as ContactRecord;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', entityType, entityId] });
-      toast.success('Contact updated successfully');
-    },
-    onError: (error) => {
-      toast.error(`Failed to update contact: ${error.message}`);
-    },
-    onSettled: () => {
-      setIsUpdating(false);
+    } catch (err) {
+      console.error('Error in updateContact:', err);
+      setError(err instanceof Error ? err : new Error('Failed to update contact'));
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
-  // Delete contact
-  const deleteContact = useMutation({
-    mutationFn: async (contactId: string) => {
-      setIsDeleting(true);
-      
+  // Delete a contact
+  const deleteContact = async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const { error } = await supabase
         .from('contacts')
         .delete()
-        .eq('id', contactId);
+        .eq('id', id);
       
       if (error) {
-        console.error('Error deleting contact:', error);
-        throw error;
+        throw new Error(`Error deleting contact: ${error.message}`);
       }
       
-      return contactId;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts', entityType, entityId] });
-      toast.success('Contact deleted successfully');
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete contact: ${error.message}`);
-    },
-    onSettled: () => {
-      setIsDeleting(false);
+      setContacts(prev => prev.filter(c => c.id !== id));
+    } catch (err) {
+      console.error('Error in deleteContact:', err);
+      setError(err instanceof Error ? err : new Error('Failed to delete contact'));
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
   return {
     contacts,
     isLoading,
     error,
-    refetch,
-    createContact: createContact.mutate,
-    updateContact: updateContact.mutate,
-    deleteContact: deleteContact.mutate,
-    isCreating,
-    isUpdating,
-    isDeleting
+    fetchContactsForEntity,
+    addContact,
+    updateContact,
+    deleteContact
   };
 };
