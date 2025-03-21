@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -248,7 +249,8 @@ export function ClientForm({ mode, client }: ClientFormProps) {
                     <SelectValue placeholder="Select state" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Select a state</SelectItem>
+                    {/* Fixed issue: Replaced empty value with a non-empty string */}
+                    <SelectItem value="none">Select a state</SelectItem>
                     <SelectItem value="NSW">New South Wales</SelectItem>
                     <SelectItem value="VIC">Victoria</SelectItem>
                     <SelectItem value="QLD">Queensland</SelectItem>
