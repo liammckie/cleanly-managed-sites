@@ -1,4 +1,3 @@
-
 // Types for database records
 export interface SiteRecord {
   id: string;
@@ -63,4 +62,37 @@ export interface ContactRecord {
   entity_type: 'client' | 'site';
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ContractorRecord {
+  id: string;
+  business_name: string;
+  contact_name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  status: 'active' | 'inactive' | 'pending';
+  contractor_type: string;
+  hourly_rate?: number;
+  day_rate?: number;
+  abn?: string;
+  tax_id?: string;
+  notes?: string;
+  specialty?: string[];
+  rating?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ContractorVersionHistoryEntry {
+  id: string;
+  contractor_id: string;
+  contractor_data: ContractorRecord;
+  version_number: number;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
 }
