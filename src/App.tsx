@@ -24,6 +24,8 @@ import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/hooks/auth/AuthProvider';
+import CreateContractor from '@/pages/CreateContractor';
+import ContractorDetail from '@/pages/ContractorDetail';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -107,6 +109,18 @@ function App() {
               <Route path="/contractors" element={
                 <ProtectedRoute>
                   <Contractors />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/contractors/create" element={
+                <ProtectedRoute>
+                  <CreateContractor />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/contractors/:id" element={
+                <ProtectedRoute>
+                  <ContractorDetail />
                 </ProtectedRoute>
               } />
               
