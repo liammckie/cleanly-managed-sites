@@ -10,14 +10,15 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Plus, Search, AlertTriangle } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Input } from '@/components/ui/input';
+import { ContractorRecord } from '@/lib/types';
 
 const Contractors = () => {
   const { contractors, isLoading, error, contractorCounts } = useContractors();
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredContractors = React.useMemo(() => {
-    if (!contractors) return [];
-    return contractors.filter(
+    if (!contractors || !Array.isArray(contractors)) return [];
+    return (contractors as ContractorRecord[]).filter(
       (contractor) =>
         contractor.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contractor.contact_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

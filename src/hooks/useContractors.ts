@@ -1,7 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { contractorsApi, ContractorRecord } from '@/lib/api';
+import { contractorsApi } from '@/lib/api/contractors';
+import { ContractorRecord } from '@/lib/types';
 
 export function useContractors() {
   const queryClient = useQueryClient();
@@ -65,6 +66,13 @@ export function useContractors() {
     },
   });
   
+  // Calculate the derived contractorCounts prop that pages are looking for
+  const contractorCounts = {
+    totalContractors: contractorsQuery.data?.length || 0,
+    activeContractors: contractorsQuery.data?.filter(c => c.status === 'active')?.length || 0,
+    expiringDocuments: 0 // This is a placeholder as we don't have document expiry logic yet
+  };
+  
   return {
     contractors: contractorsQuery.data || [],
     statusCounts: contractorStatusCountsQuery.data || { active: 0, inactive: 0, pending: 0 },
@@ -77,6 +85,7 @@ export function useContractors() {
     isCreating: createContractorMutation.isPending,
     isUpdating: updateContractorMutation.isPending,
     isDeleting: deleteContractorMutation.isPending,
+    contractorCounts // Add the derived contractor counts
   };
 }
 

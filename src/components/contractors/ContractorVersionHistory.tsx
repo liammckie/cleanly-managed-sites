@@ -1,256 +1,165 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useContractorVersionHistory } from '@/hooks/useContractorVersionHistory';
 import { format } from 'date-fns';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Clock, FileText, Info } from 'lucide-react';
-import { ContractorVersionHistoryEntry } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Clock, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { ContractorRecord, ContractorVersionHistoryEntry } from '@/lib/types';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface ContractorVersionHistoryProps {
-  history: ContractorVersionHistoryEntry[];
-  isLoading: boolean;
-  currentContractor: any;
+  contractorId: string;
 }
 
-export function ContractorVersionHistory({ 
-  history, 
-  isLoading, 
-  currentContractor 
-}: ContractorVersionHistoryProps) {
+export const ContractorVersionHistory: React.FC<ContractorVersionHistoryProps> = ({ contractorId }) => {
+  const { history, isLoading, isError } = useContractorVersionHistory(contractorId);
+  const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
+  
+  const toggleExpand = (versionId: string) => {
+    if (expandedVersion === versionId) {
+      setExpandedVersion(null);
+    } else {
+      setExpandedVersion(versionId);
+    }
+  };
+  
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <History className="h-5 w-5 mr-2" />
+            Version History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <LoadingSpinner />
+        </CardContent>
+      </Card>
     );
   }
-
+  
+  if (isError) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <History className="h-5 w-5 mr-2" />
+            Version History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-destructive">Error loading version history</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   if (!history || history.length === 0) {
     return (
-      <div className="text-center py-8 glass-card p-6">
-        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-medium mb-2">No Version History</h3>
-        <p className="text-muted-foreground">
-          When contractor details are updated, versions will be stored and displayed here.
-        </p>
-      </div>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <History className="h-5 w-5 mr-2" />
+            Version History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No version history available</p>
+        </CardContent>
+      </Card>
     );
   }
-
+  
   return (
-    <div className="glass-card overflow-hidden">
-      <div className="bg-muted/50 p-4 flex items-center gap-2 border-b">
-        <Clock className="h-5 w-5 text-primary" />
-        <h3 className="font-medium">Contractor Version History</h3>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Version</TableHead>
-            <TableHead>Date Modified</TableHead>
-            <TableHead>Business Name</TableHead>
-            <TableHead>Contact Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell>
-              <Badge variant="outline" className="bg-primary text-primary-foreground">Current</Badge>
-            </TableCell>
-            <TableCell>Current Version</TableCell>
-            <TableCell>{currentContractor?.business_name || 'N/A'}</TableCell>
-            <TableCell>{currentContractor?.contact_name || 'N/A'}</TableCell>
-            <TableCell>
-              <Badge variant={
-                currentContractor?.status === 'active' ? 'success' :
-                currentContractor?.status === 'inactive' ? 'destructive' : 'default'
-              }>
-                {currentContractor?.status || 'N/A'}
-              </Badge>
-            </TableCell>
-            <TableCell className="max-w-[200px] truncate">{currentContractor?.notes || '-'}</TableCell>
-            <TableCell className="text-right">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="text-xs px-2 py-1 rounded hover:bg-muted flex items-center ml-auto">
-                    <Info className="h-4 w-4 mr-1" />
-                    View
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Contractor Details (Current Version)</DialogTitle>
-                  </DialogHeader>
-                  <ContractorVersionDetails contractor={currentContractor} />
-                </DialogContent>
-              </Dialog>
-            </TableCell>
-          </TableRow>
-          {history.map((entry) => (
-            <TableRow key={entry.id}>
-              <TableCell>
-                <Badge variant="outline">v{entry.version_number}</Badge>
-              </TableCell>
-              <TableCell>{format(new Date(entry.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
-              <TableCell>{entry.contractor_data.business_name}</TableCell>
-              <TableCell>{entry.contractor_data.contact_name}</TableCell>
-              <TableCell>
-                <Badge variant={
-                  entry.contractor_data.status === 'active' ? 'success' :
-                  entry.contractor_data.status === 'inactive' ? 'destructive' : 'default'
-                }>
-                  {entry.contractor_data.status || 'N/A'}
-                </Badge>
-              </TableCell>
-              <TableCell className="max-w-[200px] truncate">{entry.notes || '-'}</TableCell>
-              <TableCell className="text-right">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="text-xs px-2 py-1 rounded hover:bg-muted flex items-center ml-auto">
-                      <Info className="h-4 w-4 mr-1" />
-                      View
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                      <DialogTitle>Contractor Details (Version {entry.version_number})</DialogTitle>
-                    </DialogHeader>
-                    <ContractorVersionDetails contractor={entry.contractor_data} />
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
-            </TableRow>
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <History className="h-5 w-5 mr-2" />
+          Version History
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {history.map((version) => (
+            <div key={version.id} className="border rounded-lg overflow-hidden">
+              <div 
+                className="flex items-center justify-between p-4 cursor-pointer bg-muted/30"
+                onClick={() => toggleExpand(version.id)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Clock className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Version {version.version_number}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {version.created_at && format(new Date(version.created_at), 'PPP p')}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpand(version.id);
+                  }}
+                >
+                  {expandedVersion === version.id ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              
+              {expandedVersion === version.id && (
+                <div className="p-4 border-t">
+                  <p className="text-sm font-medium mb-2">Changes:</p>
+                  <div className="space-y-2 text-sm">
+                    {version.notes && (
+                      <p className="text-muted-foreground">{version.notes}</p>
+                    )}
+                    <Separator />
+                    <p className="font-medium mt-2">Previous Data:</p>
+                    {version.contractor_data && renderContractorData(version.contractor_data)}
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
-        </TableBody>
-      </Table>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
 
-// Component to display contractor version details in the dialog
-interface ContractorVersionDetailsProps {
-  contractor: any;
-}
-
-function ContractorVersionDetails({ contractor }: ContractorVersionDetailsProps) {
-  if (!contractor) {
-    return <div className="text-center py-4">No contractor details available</div>;
-  }
-
+// Helper function to render contractor data nicely
+function renderContractorData(data: ContractorRecord) {
   return (
-    <div className="space-y-6 py-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Business Information</h3>
-          <div className="space-y-2 bg-muted/50 p-4 rounded-md">
-            <div>
-              <p className="text-sm text-muted-foreground">Business Name</p>
-              <p className="font-medium">{contractor.business_name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Contact Name</p>
-              <p className="font-medium">{contractor.contact_name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <p className="font-medium capitalize">{contractor.status}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Contractor Type</p>
-              <p className="font-medium capitalize">{contractor.contractor_type?.replace('_', ' ')}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Contact Information</h3>
-          <div className="bg-muted/50 p-4 rounded-md">
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{contractor.email || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium">{contractor.phone || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Address</p>
-              <p className="font-medium">{contractor.address || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Location</p>
-              <p className="font-medium">
-                {[contractor.city, contractor.state, contractor.postcode]
-                  .filter(Boolean)
-                  .join(', ') || 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+      <div>
+        <span className="text-muted-foreground">Business Name:</span> {data.business_name}
       </div>
-      
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Financial Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/50 p-4 rounded-md">
-          <div>
-            <p className="text-sm text-muted-foreground">Hourly Rate</p>
-            <p className="font-medium">{contractor.hourly_rate ? `$${contractor.hourly_rate}` : 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Day Rate</p>
-            <p className="font-medium">{contractor.day_rate ? `$${contractor.day_rate}` : 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">ABN</p>
-            <p className="font-medium">{contractor.abn || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Tax ID</p>
-            <p className="font-medium">{contractor.tax_id || 'N/A'}</p>
-          </div>
-        </div>
+      <div>
+        <span className="text-muted-foreground">Contact:</span> {data.contact_name}
       </div>
-
-      {contractor.notes && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Notes</h3>
-          <div className="bg-muted/50 p-4 rounded-md">
-            <p className="whitespace-pre-line">{contractor.notes}</p>
-          </div>
-        </div>
-      )}
-
-      {contractor.specialty && contractor.specialty.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Specialties</h3>
-          <div className="bg-muted/50 p-4 rounded-md">
-            <div className="flex flex-wrap gap-2">
-              {contractor.specialty.map((spec: string) => (
-                <Badge key={spec} variant="secondary" className="capitalize">
-                  {spec.replace('_', ' ')}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <div>
+        <span className="text-muted-foreground">Email:</span> {data.email || 'N/A'}
+      </div>
+      <div>
+        <span className="text-muted-foreground">Phone:</span> {data.phone || 'N/A'}
+      </div>
+      <div>
+        <span className="text-muted-foreground">Status:</span> {data.status}
+      </div>
+      <div>
+        <span className="text-muted-foreground">Type:</span> {data.contractor_type}
+      </div>
     </div>
   );
 }

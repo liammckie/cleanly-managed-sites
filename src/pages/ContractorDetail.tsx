@@ -9,14 +9,15 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ContractorRecord } from '@/lib/types';
 
 const ContractorDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { contractors, isLoading, error, deleteContractor } = useContractors();
   
-  // Find the contractor by ID
-  const contractor = contractors.find(c => c.id === id);
+  // Find the contractor by ID - safely cast contractors to array type
+  const contractor = (Array.isArray(contractors) ? contractors : []).find(c => c.id === id) as ContractorRecord | undefined;
   
   // Handle delete contractor
   const handleDelete = async () => {

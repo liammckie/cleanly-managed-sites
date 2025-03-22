@@ -9,9 +9,11 @@ export function useContractorVersionHistory(contractorId: string | null) {
     queryKey: ['contractor-history', contractorId],
     queryFn: () => contractorId ? contractorHistoryApi.getContractorHistory(contractorId) : Promise.resolve([]),
     enabled: !!contractorId,
-    onError: (error: any) => {
-      console.error('Error fetching contractor history:', error);
-      toast.error(`Failed to load contractor history: ${error.message || 'Unknown error'}`);
+    meta: {
+      onError: (error: any) => {
+        console.error('Error fetching contractor history:', error);
+        toast.error(`Failed to load contractor history: ${error.message || 'Unknown error'}`);
+      }
     }
   });
 

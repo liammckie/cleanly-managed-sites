@@ -6,4 +6,6 @@ export * from './api/sites';
 export * from './api/subcontractorsApi';
 export * from './api/authApi';
 export * from './api/workorders';
-export * from './types';
+export * from './api/contractors';
+export * from './api/types';
+
