@@ -3,9 +3,9 @@ import React from 'react';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { ClientDashboard } from '@/components/clients/ClientDashboard';
+import { ImportExportPage } from '@/components/data/ImportExportPage';
 
-const Dashboard = () => {
+const ImportExport = () => {
   return (
     <SidebarProvider>
       <div className="flex h-screen">
@@ -15,14 +15,7 @@ const Dashboard = () => {
           <Navbar />
           
           <div className="flex-1 overflow-y-auto p-6 animate-fade-in">
-            <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
-            <p className="text-muted-foreground mb-6">
-              Welcome to your dashboard. This is where you can manage your business data.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <ClientDashboard />
-            </div>
+            <ImportExportPage />
           </div>
         </div>
       </div>
@@ -30,4 +23,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default ImportExport;

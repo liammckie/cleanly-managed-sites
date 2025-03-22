@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import WorkOrders from '@/pages/WorkOrders';
 import Settings from '@/pages/Settings';
 import Integrations from '@/pages/Integrations';
 import Contracts from '@/pages/Contracts';
+import ImportExport from '@/pages/ImportExport';
 import NotFound from '@/pages/NotFound';
 import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
@@ -24,7 +24,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/hooks/auth/AuthProvider';
 import './App.css';
 
-// Create a client 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -44,6 +43,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              
               <Route path="/clients/create" element={
                 <ProtectedRoute>
                   <CreateClient />
@@ -59,6 +59,7 @@ function App() {
                   <ClientDetail />
                 </ProtectedRoute>
               } />
+              
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -88,7 +89,7 @@ function App() {
                   <EditSite />
                 </ProtectedRoute>
               } />
-
+              
               <Route path="/contracts" element={
                 <ProtectedRoute>
                   <Contracts />
@@ -104,6 +105,12 @@ function App() {
               <Route path="/workorders" element={
                 <ProtectedRoute>
                   <WorkOrders />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/import-export" element={
+                <ProtectedRoute>
+                  <ImportExport />
                 </ProtectedRoute>
               } />
               

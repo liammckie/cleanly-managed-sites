@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut, 
   FileText,
-  Boxes 
+  Boxes,
+  Download
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,12 @@ export function Sidebar() {
       icon: <ClipboardList size={20} />,
       label: 'Work Orders',
       active: pathname.startsWith('/workorders')
+    },
+    {
+      href: '/import-export',
+      icon: <Download size={20} />,
+      label: 'Import & Export',
+      active: pathname === '/import-export'
     },
     {
       href: '/integrations',
