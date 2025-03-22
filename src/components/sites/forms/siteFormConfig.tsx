@@ -36,6 +36,14 @@ export type GetStepsConfigProps = {
   handleContactChange: (index: number, field: keyof ContactRecord, value: any) => void;
   addContact: () => void;
   removeContact: (index: number) => void;
+  // Billing lines handlers
+  addBillingLine?: () => void;
+  removeBillingLine?: (index: number) => void;
+  updateBillingLine?: (index: number, field: string, value: any) => void;
+  // Contract terms handlers
+  addContractTerm?: () => void;
+  removeContractTerm?: (index: number) => void;
+  updateContractTerm?: (index: number, field: string, value: any) => void;
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
 };
 
@@ -54,6 +62,12 @@ export const getStepsConfig = ({
   handleContactChange,
   addContact,
   removeContact,
+  addBillingLine,
+  removeBillingLine,
+  updateBillingLine,
+  addContractTerm,
+  removeContractTerm,
+  updateContractTerm,
   setFormData
 }: GetStepsConfigProps): StepConfigItem[] => [
   {
@@ -90,6 +104,9 @@ export const getStepsConfig = ({
       <ContractDetailsStep 
         formData={formData}
         handleNestedChange={handleNestedChange}
+        addContractTerm={addContractTerm}
+        removeContractTerm={removeContractTerm}
+        updateContractTerm={updateContractTerm}
       />
     )
   },
@@ -101,6 +118,9 @@ export const getStepsConfig = ({
         formData={formData}
         handleNestedChange={handleNestedChange}
         handleDoubleNestedChange={handleDoubleNestedChange}
+        addBillingLine={addBillingLine}
+        removeBillingLine={removeBillingLine}
+        updateBillingLine={updateBillingLine}
       />
     )
   },

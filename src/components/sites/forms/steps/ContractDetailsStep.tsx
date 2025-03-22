@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { 
   Select,
   SelectContent,
@@ -12,19 +13,29 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteFormData } from '../siteFormTypes';
-import { History } from 'lucide-react';
+import { History, Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ContractDetailsStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  addContractTerm?: () => void;
+  removeContractTerm?: (index: number) => void;
+  updateContractTerm?: (index: number, field: string, value: any) => void;
 }
 
-export function ContractDetailsStep({ formData, handleNestedChange }: ContractDetailsStepProps) {
+export function ContractDetailsStep({ 
+  formData, 
+  handleNestedChange,
+  addContractTerm,
+  removeContractTerm,
+  updateContractTerm
+}: ContractDetailsStepProps) {
   return (
     <div className="space-y-6">
       <div className="glass-card p-6 space-y-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-medium">Contract Information</h3>
+          <h3 className="text-lg font-medium">Primary Contract Information</h3>
           <div className="flex items-center text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
             <History className="h-3.5 w-3.5 mr-1 text-blue-500" />
             Changes will be versioned
@@ -99,6 +110,7 @@ export function ContractDetailsStep({ formData, handleNestedChange }: ContractDe
                 <SelectValue placeholder="Select billing cycle" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
                 <SelectItem value="quarterly">Quarterly</SelectItem>
                 <SelectItem value="annually">Annually</SelectItem>
@@ -118,10 +130,136 @@ export function ContractDetailsStep({ formData, handleNestedChange }: ContractDe
       </div>
       
       <div className="glass-card p-6 space-y-4">
-        <h3 className="text-lg font-medium">Contract Terms</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Contract Terms</h3>
+          {addContractTerm && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={addContractTerm}
+              className="flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" /> Add Term
+            </Button>
+          )}
+        </div>
+        
+        {formData.contractDetails.terms && formData.contractDetails.terms.length > 0 ? (
+          <div className="space-y-4">
+            {formData.contractDetails.terms.map((term, index) => (
+              <Card key={index} className="border border-muted">
+                <CardHeader className="pb-2 flex flex-row items-start justify-between">
+                  <CardTitle className="text-base font-medium">
+                    Term {index + 1}: {term.name || 'Untitled Term'}
+                  </CardTitle>
+                  {removeContractTerm && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeContractTerm(index)}
+                      className="h-8 w-8 p-0 text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-name-${index}`}>Term Name</Label>
+                      <Input
+                        id={`term-name-${index}`}
+                        value={term.name}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'name', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-description-${index}`}>Description</Label>
+                      <Input
+                        id={`term-description-${index}`}
+                        value={term.description}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'description', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-start-date-${index}`}>Start Date</Label>
+                      <Input
+                        id={`term-start-date-${index}`}
+                        type="date"
+                        value={term.startDate}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'startDate', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-end-date-${index}`}>End Date</Label>
+                      <Input
+                        id={`term-end-date-${index}`}
+                        type="date"
+                        value={term.endDate}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'endDate', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-renewal-terms-${index}`}>Renewal Terms</Label>
+                      <Input
+                        id={`term-renewal-terms-${index}`}
+                        value={term.renewalTerms}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'renewalTerms', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`term-termination-period-${index}`}>Termination Period</Label>
+                      <Input
+                        id={`term-termination-period-${index}`}
+                        value={term.terminationPeriod}
+                        onChange={(e) => updateContractTerm && updateContractTerm(index, 'terminationPeriod', e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="col-span-2 flex items-center space-x-2 mt-2">
+                      <Checkbox 
+                        id={`term-auto-renew-${index}`} 
+                        checked={term.autoRenew || false}
+                        onCheckedChange={(checked) => updateContractTerm && updateContractTerm(index, 'autoRenew', checked)}
+                      />
+                      <Label htmlFor={`term-auto-renew-${index}`}>Auto-renew this term</Label>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            No contract terms added. Click "Add Term" to create a new contract term.
+          </div>
+        )}
         
         <div className="space-y-2">
-          <Label htmlFor="renewal-terms">Renewal Terms</Label>
+          <Label htmlFor="termination-period">Main Termination Period</Label>
+          <Input
+            id="termination-period"
+            placeholder="e.g., 30 days notice"
+            value={formData.contractDetails.terminationPeriod}
+            onChange={(e) => handleNestedChange('contractDetails', 'terminationPeriod', e.target.value)}
+            className="glass-input"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="renewal-terms">General Renewal Terms</Label>
           <Textarea
             id="renewal-terms"
             placeholder="Enter renewal terms..."
@@ -129,17 +267,6 @@ export function ContractDetailsStep({ formData, handleNestedChange }: ContractDe
             value={formData.contractDetails.renewalTerms}
             onChange={(e) => handleNestedChange('contractDetails', 'renewalTerms', e.target.value)}
             className="glass-input resize-none"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="termination-period">Termination Period</Label>
-          <Input
-            id="termination-period"
-            placeholder="e.g., 30 days notice"
-            value={formData.contractDetails.terminationPeriod}
-            onChange={(e) => handleNestedChange('contractDetails', 'terminationPeriod', e.target.value)}
-            className="glass-input"
           />
         </div>
       </div>

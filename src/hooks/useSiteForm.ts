@@ -8,6 +8,8 @@ import { useSiteFormHandlers } from './useSiteFormHandlers';
 import { useSiteFormSubcontractors } from './useSiteFormSubcontractors';
 import { useSiteFormReplenishables } from './useSiteFormReplenishables';
 import { useSiteFormBillingContacts } from './useSiteFormBillingContacts';
+import { useSiteFormBillingLines } from './useSiteFormBillingLines';
+import { useSiteFormContractTerms } from './useSiteFormContractTerms';
 import { useSiteFormContacts } from './useSiteFormContacts';
 
 export const useSiteForm = () => {
@@ -28,6 +30,8 @@ export const useSiteForm = () => {
   const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData, errors, setErrors);
   const replenishableHandlers = useSiteFormReplenishables(formData, setFormData);
   const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData, errors, setErrors);
+  const billingLineHandlers = useSiteFormBillingLines(formData, setFormData, errors, setErrors);
+  const contractTermHandlers = useSiteFormContractTerms(formData, setFormData, errors, setErrors);
   const contactHandlers = useSiteFormContacts(formData, setFormData, errors, setErrors);
   
   // Validate a specific step
@@ -46,6 +50,8 @@ export const useSiteForm = () => {
     ...subcontractorHandlers,
     ...replenishableHandlers,
     ...billingContactHandlers,
+    ...billingLineHandlers,
+    ...contractTermHandlers,
     ...contactHandlers
   };
 };

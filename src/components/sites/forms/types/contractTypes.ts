@@ -1,4 +1,16 @@
 
+export type ContractTerm = {
+  id?: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+  autoRenew?: boolean;
+  nextReviewDate?: string;
+}
+
 export type ContractDetails = {
   startDate: string;
   endDate: string;
@@ -9,6 +21,7 @@ export type ContractDetails = {
   billingCycle?: string; // Monthly, quarterly, annually
   autoRenew?: boolean;
   nextReviewDate?: string;
+  terms: ContractTerm[];  // Multiple contract terms per site
   
   // Add legacy properties for compatibility
   renewalDate?: string;

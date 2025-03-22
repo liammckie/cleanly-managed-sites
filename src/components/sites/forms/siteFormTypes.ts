@@ -1,10 +1,11 @@
+
 import { SiteRecord, ContactRecord, ClientRecord } from '@/lib/types';
 import { SecurityDetails } from './types/securityTypes';
 import { JobSpecifications } from './types/jobSpecificationTypes';
 import { Periodicals } from './types/periodicalTypes';
 import { Replenishables } from './types/replenishableTypes';
-import { ContractDetails } from './types/contractTypes';
-import { BillingDetails, AdHocWorkAuthorization } from './types/billingTypes';
+import { ContractDetails, ContractTerm } from './types/contractTypes';
+import { BillingDetails, AdHocWorkAuthorization, BillingLine, BillingFrequency } from './types/billingTypes';
 import { SiteContact, BillingContact } from './types/contactTypes';
 import { Subcontractor } from './types/subcontractorTypes';
 import { SiteStatus } from '@/components/sites/SiteCard';
@@ -121,6 +122,7 @@ export const getInitialFormData = (): SiteFormData => ({
     contractType: 'ongoing',
     noticePeriod: '',
     notes: '',
+    terms: [], // Initialize with empty terms array
   },
   
   billingDetails: {
@@ -143,6 +145,7 @@ export const getInitialFormData = (): SiteFormData => ({
     notes: '',
     billingContact: '',
     billingPhone: '',
+    billingLines: [], // Initialize with empty billing lines array
   },
   
   adHocWorkAuthorization: {
