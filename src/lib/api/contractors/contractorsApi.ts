@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { ContractorRecord } from '@/lib/types';
 
@@ -151,7 +152,7 @@ export const contractorsApi = {
     
     // Create a history entry
     try {
-      // Create history entry
+      // Create history entry - explicitly omitting the version_number since it's handled by a trigger
       const historyEntry = {
         contractor_id: id,
         contractor_data: currentContractor,
@@ -159,6 +160,7 @@ export const contractorsApi = {
         notes: 'Contractor details updated'
       };
       
+      // The DB trigger will handle the version_number
       await supabase
         .from('contractor_history')
         .insert(historyEntry);
