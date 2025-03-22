@@ -53,7 +53,8 @@ export const BusinessDetailsForm = () => {
     isLoading, 
     isUploading,
     updateBusinessDetails, 
-    uploadLogo 
+    uploadLogo,
+    refetch 
   } = useBusinessDetails();
   
   const form = useForm<BusinessFormValues>({
@@ -115,7 +116,10 @@ export const BusinessDetailsForm = () => {
     
     try {
       console.log('Logo upload initiated with file:', file.name);
-      await uploadLogo(file);
+      const result = await uploadLogo(file);
+      console.log('Upload result:', result);
+      // Refetch business details to update the UI with the new logo
+      await refetch();
     } catch (error) {
       console.error('Error in handleLogoUpload:', error);
       toast.error('Failed to upload logo');

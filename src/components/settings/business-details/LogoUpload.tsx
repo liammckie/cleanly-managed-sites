@@ -15,11 +15,21 @@ interface LogoUploadProps {
 export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   // Update preview when logoUrl changes
   useEffect(() => {
     setLogoPreview(logoUrl);
   }, [logoUrl]);
+  
+  const handleFileButtonClick = () => {
+    if (isUploading) return;
+    // Manually trigger file input click
+    if (fileInputRef.current) {
+      console.log('Triggering file input click');
+      fileInputRef.current.click();
+    }
+  };
   
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,10 +67,14 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
       // Upload the file
       console.log('Uploading file...');
       await onUpload(file);
+      
+      // Reset the file input so the same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error('Error uploading logo:', error);
       setUploadError('Failed to upload logo');
-      // Preview will still show but upload failed
       toast.error('Failed to upload logo');
     }
   };
@@ -80,39 +94,34 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
       </div>
       
       <div className="w-full">
-        <label 
-          htmlFor="logo-upload" 
-          className="cursor-pointer"
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full"
+          disabled={isUploading}
+          onClick={handleFileButtonClick}
         >
-          <div className="flex items-center justify-center gap-2 w-full">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full"
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  <span className="ml-2">Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Logo
-                </>
-              )}
-            </Button>
-          </div>
-          <input
-            id="logo-upload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleLogoUpload}
-            disabled={isUploading}
-          />
-        </label>
+          {isUploading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span className="ml-2">Uploading...</span>
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Logo
+            </>
+          )}
+        </Button>
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoUpload}
+          disabled={isUploading}
+        />
         
         {uploadError && (
           <div className="text-xs text-destructive mt-2 flex items-center gap-1">

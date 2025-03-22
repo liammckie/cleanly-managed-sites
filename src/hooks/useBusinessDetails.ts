@@ -48,7 +48,7 @@ export const useBusinessDetails = () => {
     
     try {
       setIsUploading(true);
-      console.log('Uploading logo file:', file.name, file.size);
+      console.log('Uploading logo file:', file.name, file.size, 'type:', file.type);
       
       // Upload the file to Supabase storage
       const logoUrl = await uploadBusinessLogo(file);
