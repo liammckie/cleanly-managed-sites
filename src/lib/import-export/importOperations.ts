@@ -153,3 +153,107 @@ export const importContracts = async (contracts: Partial<ContractHistoryEntry>[]
     }
   }
 };
+
+// Import invoices
+export const importInvoices = async (invoices: any[]): Promise<void> => {
+  try {
+    // We would do validation here similar to other import functions
+    // For brevity, proceeding directly to import
+    
+    // Check for existing invoices by ID to avoid duplicates
+    const invoicesWithIds = invoices.filter(invoice => invoice.id);
+    const existingIds = await checkExistingItems('invoices', invoicesWithIds.map(invoice => invoice.id));
+    
+    const invoicesToInsert = invoices.filter(invoice => !invoice.id || !existingIds.includes(invoice.id));
+    const invoicesToUpdate = invoices.filter(invoice => invoice.id && existingIds.includes(invoice.id));
+    
+    // Insert new invoices
+    if (invoicesToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from('invoices')
+        .insert(invoicesToInsert);
+      
+      if (insertError) {
+        console.error('Error inserting invoices:', insertError);
+        throw new Error(`Failed to import invoices: ${insertError.message}`);
+      }
+    }
+    
+    // Update existing invoices
+    for (const invoice of invoicesToUpdate) {
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update(invoice)
+        .eq('id', invoice.id);
+      
+      if (updateError) {
+        console.error(`Error updating invoice ${invoice.id}:`, updateError);
+      }
+    }
+    
+    // Process invoice line items if they exist
+    for (const invoice of invoices) {
+      if (invoice.lineItems && Array.isArray(invoice.lineItems) && invoice.lineItems.length > 0) {
+        // For each invoice, process its line items
+        await importInvoiceLineItems(invoice.id, invoice.lineItems);
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error importing invoices:', error);
+    throw error;
+  }
+};
+
+// Helper function to import invoice line items
+const importInvoiceLineItems = async (invoiceId: string, lineItems: any[]): Promise<void> => {
+  try {
+    // First, get existing line items for this invoice
+    const { data: existingLineItems, error: fetchError } = await supabase
+      .from('invoice_line_items')
+      .select('id')
+      .eq('invoice_id', invoiceId);
+    
+    if (fetchError) {
+      console.error(`Error fetching line items for invoice ${invoiceId}:`, fetchError);
+      return;
+    }
+    
+    const existingIds = existingLineItems?.map(item => item.id) || [];
+    
+    // Filter items to insert vs update
+    const itemsToInsert = lineItems.filter(item => !item.id || !existingIds.includes(item.id));
+    const itemsToUpdate = lineItems.filter(item => item.id && existingIds.includes(item.id));
+    
+    // Insert new items
+    if (itemsToInsert.length > 0) {
+      const preparedItems = itemsToInsert.map(item => ({
+        ...item,
+        invoice_id: invoiceId
+      }));
+      
+      const { error: insertError } = await supabase
+        .from('invoice_line_items')
+        .insert(preparedItems);
+      
+      if (insertError) {
+        console.error(`Error inserting line items for invoice ${invoiceId}:`, insertError);
+      }
+    }
+    
+    // Update existing items
+    for (const item of itemsToUpdate) {
+      const { error: updateError } = await supabase
+        .from('invoice_line_items')
+        .update(item)
+        .eq('id', item.id);
+      
+      if (updateError) {
+        console.error(`Error updating line item ${item.id}:`, updateError);
+      }
+    }
+    
+  } catch (error) {
+    console.error(`Error processing line items for invoice ${invoiceId}:`, error);
+  }
+};

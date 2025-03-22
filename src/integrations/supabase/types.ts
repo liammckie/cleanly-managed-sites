@@ -77,6 +77,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          xero_contact_id: string | null
         }
         Insert: {
           address?: string | null
@@ -94,6 +95,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          xero_contact_id?: string | null
         }
         Update: {
           address?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          xero_contact_id?: string | null
         }
         Relationships: []
       }
@@ -161,6 +164,132 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          tax_type: string | null
+          unit_price: number
+          updated_at: string
+          xero_account_code: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          tax_type?: string | null
+          unit_price?: number
+          updated_at?: string
+          xero_account_code?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          tax_type?: string | null
+          unit_price?: number
+          updated_at?: string
+          xero_account_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          gst_inclusive: boolean
+          id: string
+          invoice_date: string
+          invoice_number: string | null
+          notes: string | null
+          site_id: string | null
+          status: string
+          sync_status: string | null
+          updated_at: string
+          work_order_id: string | null
+          xero_invoice_id: string | null
+          xero_synced_at: string | null
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          gst_inclusive?: boolean
+          id?: string
+          invoice_date?: string
+          invoice_number?: string | null
+          notes?: string | null
+          site_id?: string | null
+          status?: string
+          sync_status?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+          xero_invoice_id?: string | null
+          xero_synced_at?: string | null
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          gst_inclusive?: boolean
+          id?: string
+          invoice_date?: string
+          invoice_number?: string | null
+          notes?: string | null
+          site_id?: string | null
+          status?: string
+          sync_status?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+          xero_invoice_id?: string | null
+          xero_synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_contract_history: {
         Row: {
@@ -387,10 +516,12 @@ export type Database = {
           requires_purchase_order: boolean
           site_id: string
           status: string
+          sync_status: string | null
           title: string
           updated_at: string
           xero_invoice_id: string | null
           xero_purchase_order_id: string | null
+          xero_synced_at: string | null
         }
         Insert: {
           actual_cost?: number | null
@@ -409,10 +540,12 @@ export type Database = {
           requires_purchase_order?: boolean
           site_id: string
           status: string
+          sync_status?: string | null
           title: string
           updated_at?: string
           xero_invoice_id?: string | null
           xero_purchase_order_id?: string | null
+          xero_synced_at?: string | null
         }
         Update: {
           actual_cost?: number | null
@@ -431,10 +564,12 @@ export type Database = {
           requires_purchase_order?: boolean
           site_id?: string
           status?: string
+          sync_status?: string | null
           title?: string
           updated_at?: string
           xero_invoice_id?: string | null
           xero_purchase_order_id?: string | null
+          xero_synced_at?: string | null
         }
         Relationships: [
           {

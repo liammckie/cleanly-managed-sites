@@ -1,18 +1,18 @@
 
 import { parseCSV, parseUnifiedImport, convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat } from './csvParser';
 import { exportToJson, exportToCSV, exportClients, exportSites, exportContracts, generateUnifiedImportTemplate } from './exportOperations';
-import { parseImportedFile, importClients, importSites, importContracts } from './importOperations';
+import { parseImportedFile, importClients, importSites, importContracts, importInvoices } from './importOperations';
 import { checkExistingItems, mergeImportData, validateClientData, validateSiteData, validateContractData } from './dataValidation';
 import { generateTestData, setupTestData } from './testData';
-import { ParsedImportData, ImportOptions } from './types';
+import { ParsedImportData, ImportOptions, InvoiceRecord, InvoiceLineItemRecord } from './types';
 
 // Handle unified import of data
 export const handleUnifiedImport = async (file: File, options: ImportOptions): Promise<void> => {
   try {
     const csvData = await parseCSV(file);
-    const { clients, sites, contracts } = await parseUnifiedImport(csvData, options);
+    const { clients, sites, contracts, invoices } = await parseUnifiedImport(csvData, options);
     
-    console.log(`Parsed unified import: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts`);
+    console.log(`Parsed unified import: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts, ${invoices?.length || 0} invoices`);
     
     if (clients.length > 0) {
       await importClients(clients);
@@ -24,6 +24,10 @@ export const handleUnifiedImport = async (file: File, options: ImportOptions): P
     
     if (contracts.length > 0) {
       await importContracts(contracts);
+    }
+    
+    if (invoices && invoices.length > 0) {
+      await importInvoices(invoices);
     }
   } catch (error) {
     console.error('Error during unified import:', error);
@@ -52,6 +56,7 @@ export {
   importClients,
   importSites,
   importContracts,
+  importInvoices,
   
   // Data validation
   checkExistingItems,
@@ -62,5 +67,9 @@ export {
   
   // Test data
   generateTestData,
-  setupTestData
+  setupTestData,
+  
+  // Types
+  type InvoiceRecord,
+  type InvoiceLineItemRecord
 };
