@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -5,6 +6,11 @@ import { ClientRecord, SiteRecord } from '@/lib/types';
 import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 import Papa from 'papaparse';
+import {
+  getClientCSVTemplate,
+  getSiteCSVTemplate,
+  getContractCSVTemplate
+} from '@/lib/importValidation';
 
 // Type guards for validation
 const validateClientData = (importedClients: any[]): importedClients is ClientRecord[] => {
@@ -331,26 +337,6 @@ export function useDataImportExport() {
       console.error(`Error importing ${type} from CSV:`, error);
       throw error;
     }
-  };
-
-  const getClientCSVTemplate = () => {
-    const headers = ['name', 'contact_name', 'email', 'phone', 'address', 'city', 'state', 'postcode', 'status', 'notes', 'custom_id'];
-    const sample = ['ACME Corp', 'John Doe', 'john@acme.com', '123-456-7890', '123 Main St', 'New York', 'NY', '10001', 'active', 'Sample notes', 'CL001'];
-    return Papa.unparse([sample], { header: true, columns: headers });
-  };
-
-  const getSiteCSVTemplate = () => {
-    const headers = ['name', 'address', 'city', 'state', 'postcode', 'status', 'representative', 'phone', 
-      'email', 'client_id', 'custom_id', 'monthly_cost', 'monthly_revenue'];
-    const sample = ['Main Office', '456 Business Ave', 'Chicago', 'IL', '60601', 'active', 'Jane Smith', 
-      '987-654-3210', 'jane@acme.com', '', 'ST001', '1000', '1500'];
-    return Papa.unparse([sample], { header: true, columns: headers });
-  };
-
-  const getContractCSVTemplate = () => {
-    const headers = ['site_id', 'start_date', 'end_date', 'contract_number', 'renewal_terms', 'termination_period', 'notes'];
-    const sample = ['site-id-goes-here', '2023-01-01', '2024-01-01', 'CNT-001', '30 days', '60 days', 'Sample contract notes'];
-    return Papa.unparse([sample], { header: true, columns: headers });
   };
 
   return {
