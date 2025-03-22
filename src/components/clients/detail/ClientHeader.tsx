@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ClientRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,8 @@ const statusColor = {
 };
 
 export function ClientHeader({ client, onDelete, isDeleting }: ClientHeaderProps) {
+  const navigate = useNavigate();
+  
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -44,7 +46,6 @@ export function ClientHeader({ client, onDelete, isDeleting }: ClientHeaderProps
           </Link>
         </Button>
         <h2 className="text-2xl font-semibold">{client.name}</h2>
-        {/* Fix: Move Badge outside of any potential paragraph tags */}
         <Badge className={`${statusColor[client.status as keyof typeof statusColor]} capitalize`}>
           {client.status}
         </Badge>

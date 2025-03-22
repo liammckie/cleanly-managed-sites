@@ -12,6 +12,7 @@ import EditClient from '@/pages/EditClient';
 import CreateSite from '@/pages/CreateSite';
 import EditSite from '@/pages/EditSite';
 import SiteDetail from '@/pages/SiteDetail';
+import ClientDetail from '@/pages/ClientDetail';
 import WorkOrders from '@/pages/WorkOrders';
 import Settings from '@/pages/Settings';
 import Integrations from '@/pages/Integrations';
@@ -50,6 +51,11 @@ function App() {
             <Route path="/clients/:id/edit" element={
               <ProtectedRoute>
                 <EditClient />
+              </ProtectedRoute>
+            } />
+            <Route path="/clients/:id" element={
+              <ProtectedRoute>
+                <ClientDetail />
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
