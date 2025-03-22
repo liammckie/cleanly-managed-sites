@@ -1,229 +1,241 @@
 
 import { supabase } from '../supabase';
+import { ClientRecord, SiteRecord } from '../types';
+import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
+import { ParsedImportData } from './types';
 
-// Generate unique identifier for imported data
-export const generateImportId = (item: any, type: 'clients' | 'sites' | 'contracts'): string => {
-  switch (type) {
-    case 'clients':
-      // Try to identify client by custom_id first, then by name + contact
-      return item.custom_id || `${item.name}-${item.contact_name}`;
-    case 'sites':
-      // Try to identify site by custom_id first, then by name + client_id
-      return item.custom_id || `${item.name}-${item.client_id}`;
-    case 'contracts':
-      // Identify contract by site_id + contract number or start date
-      return `${item.site_id}-${item.contract_details?.contractNumber || item.contract_details?.startDate}`;
-    default:
-      return '';
+export type ValidationMessage = {
+  row: number;
+  field: string;
+  message: string;
+  value: any;
+};
+
+export type ValidationResult = {
+  isValid: boolean;
+  errors: ValidationMessage[];
+  warnings: ValidationMessage[];
+  data: any[];
+};
+
+// Check if items already exist in the database
+export const checkExistingItems = async (type: 'clients' | 'sites' | 'contracts', ids: string[]): Promise<string[]> => {
+  if (ids.length === 0) return [];
+  
+  try {
+    let { data } = await supabase
+      .from(type)
+      .select('id')
+      .in('id', ids);
+    
+    return data?.map(item => item.id) || [];
+  } catch (error) {
+    console.error(`Error checking existing ${type}:`, error);
+    return [];
   }
 };
 
-// Check if an item already exists in the database based on identifying fields
-export const checkExistingItems = async (
-  items: any[], 
-  type: 'clients' | 'sites' | 'contracts'
-): Promise<{ existing: any[], new: any[] }> => {
-  const result = { existing: [], new: [] };
+// Merge imported data with existing data (for incremental imports)
+export const mergeImportData = async (
+  importData: ParsedImportData,
+  existingData: ParsedImportData
+): Promise<ParsedImportData> => {
+  // Create maps of existing data for faster lookups
+  const clientsMap = new Map(existingData.clients.map(client => [client.id, client]));
+  const sitesMap = new Map(existingData.sites.map(site => [site.id, site]));
+  const contractsMap = new Map(existingData.contracts.map(contract => [contract.id, contract]));
   
-  if (items.length === 0) return result;
+  // Helper function to merge objects, where import values override existing values if present
+  const mergeObjects = (existing: any, imported: any) => {
+    const result = { ...existing };
+    
+    for (const key in imported) {
+      if (imported[key] !== null && imported[key] !== undefined) {
+        result[key] = imported[key];
+      }
+    }
+    
+    return result;
+  };
   
-  switch (type) {
-    case 'clients': {
-      // Get all custom_ids first
-      const customIds = items
-        .filter(item => item.custom_id)
-        .map(item => item.custom_id);
-      
-      // Query clients with matching custom_ids
-      if (customIds.length > 0) {
-        const { data: existingByCustomId } = await supabase
-          .from('clients')
-          .select('id, custom_id, name, contact_name')
-          .in('custom_id', customIds);
-        
-        if (existingByCustomId && existingByCustomId.length > 0) {
-          const existingCustomIds = existingByCustomId.map(item => item.custom_id);
-          
-          // Add existing clients to the result
-          existingByCustomId.forEach(existing => {
-            const matchingItem = items.find(item => item.custom_id === existing.custom_id);
-            if (matchingItem) {
-              result.existing.push({
-                ...matchingItem,
-                id: existing.id,
-                _isExisting: true
-              });
-            }
-          });
-          
-          // Add remaining items that don't have a matching custom_id
-          items
-            .filter(item => !existingCustomIds.includes(item.custom_id))
-            .forEach(item => result.new.push(item));
-        } else {
-          // If no matching custom_ids, all items are new
-          items.forEach(item => result.new.push(item));
-        }
-      } else {
-        // If no custom_ids, all items are new
-        items.forEach(item => result.new.push(item));
+  // Process clients
+  const mergedClients = [...existingData.clients];
+  for (const importedClient of importData.clients) {
+    if (importedClient.id && clientsMap.has(importedClient.id)) {
+      // Update existing client
+      const existingClient = clientsMap.get(importedClient.id);
+      if (existingClient) {
+        const index = mergedClients.findIndex(c => c.id === importedClient.id);
+        mergedClients[index] = mergeObjects(existingClient, importedClient);
       }
-      break;
+    } else {
+      // Add new client
+      mergedClients.push(importedClient);
     }
-    
-    case 'sites': {
-      // Similar logic for sites
-      const customIds = items
-        .filter(item => item.custom_id)
-        .map(item => item.custom_id);
-      
-      if (customIds.length > 0) {
-        const { data: existingByCustomId } = await supabase
-          .from('sites')
-          .select('id, custom_id, name, client_id')
-          .in('custom_id', customIds);
-        
-        if (existingByCustomId && existingByCustomId.length > 0) {
-          const existingCustomIds = existingByCustomId.map(item => item.custom_id);
-          
-          // Add existing sites to the result
-          existingByCustomId.forEach(existing => {
-            const matchingItem = items.find(item => item.custom_id === existing.custom_id);
-            if (matchingItem) {
-              result.existing.push({
-                ...matchingItem,
-                id: existing.id,
-                _isExisting: true
-              });
-            }
-          });
-          
-          // Add remaining items that don't have a matching custom_id
-          items
-            .filter(item => !existingCustomIds.includes(item.custom_id))
-            .forEach(item => result.new.push(item));
-        } else {
-          // If no matching custom_ids, all items are new
-          items.forEach(item => result.new.push(item));
-        }
-      } else {
-        // If no custom_ids, all items are new
-        items.forEach(item => result.new.push(item));
-      }
-      break;
-    }
-    
-    case 'contracts': {
-      // For contracts, we need to check site_id and contract details
-      const siteIds = [...new Set(items.map(item => item.site_id))];
-      
-      if (siteIds.length > 0) {
-        const { data: existingContracts } = await supabase
-          .from('site_contract_history')
-          .select('id, site_id, contract_details')
-          .in('site_id', siteIds);
-        
-        if (existingContracts && existingContracts.length > 0) {
-          // Check for matching contracts by site_id and contract number
-          items.forEach(item => {
-            const matchingContract = existingContracts.find(existing => {
-              // Type checking to avoid the error
-              if (existing.site_id === item.site_id) {
-                // Safely access contract_details.contractNumber
-                const existingContractNumber = typeof existing.contract_details === 'object' && 
-                  existing.contract_details !== null ? 
-                  (existing.contract_details as any).contractNumber : 
-                  undefined;
-                
-                const itemContractNumber = item.contract_details && 
-                  typeof item.contract_details === 'object' ? 
-                  (item.contract_details as any).contractNumber : 
-                  undefined;
-                
-                return existingContractNumber === itemContractNumber;
-              }
-              return false;
-            });
-            
-            if (matchingContract) {
-              result.existing.push({
-                ...item,
-                id: matchingContract.id,
-                _isExisting: true
-              });
-            } else {
-              result.new.push(item);
-            }
-          });
-        } else {
-          // If no matching contracts, all items are new
-          items.forEach(item => result.new.push(item));
-        }
-      } else {
-        // If no site_ids, all items are new
-        items.forEach(item => result.new.push(item));
-      }
-      break;
-    }
-    
-    default:
-      items.forEach(item => result.new.push(item));
   }
   
-  return result;
+  // Process sites
+  const mergedSites = [...existingData.sites];
+  for (const importedSite of importData.sites) {
+    if (importedSite.id && sitesMap.has(importedSite.id)) {
+      // Update existing site
+      const existingSite = sitesMap.get(importedSite.id);
+      if (existingSite) {
+        const index = mergedSites.findIndex(s => s.id === importedSite.id);
+        mergedSites[index] = mergeObjects(existingSite, importedSite);
+      }
+    } else {
+      // Add new site
+      mergedSites.push(importedSite);
+    }
+  }
+  
+  // Process contracts
+  const mergedContracts = [...existingData.contracts];
+  for (const importedContract of importData.contracts) {
+    if (importedContract.id && contractsMap.has(importedContract.id)) {
+      // Update existing contract
+      const existingContract = contractsMap.get(importedContract.id);
+      if (existingContract) {
+        const index = mergedContracts.findIndex(c => c.id === importedContract.id);
+        mergedContracts[index] = mergeObjects(existingContract, importedContract);
+      }
+    } else {
+      // Add new contract
+      mergedContracts.push(importedContract);
+    }
+  }
+  
+  return {
+    clients: mergedClients,
+    sites: mergedSites,
+    contracts: mergedContracts
+  };
 };
 
-// Merge imported data with existing data
-export const mergeImportData = (
-  importedData: any[], 
-  existingItems: any[]
-): any[] => {
-  // Create a map of existing items by ID for quick lookup
-  const existingMap = new Map(existingItems.map(item => [item.id, item]));
+// Validate client data
+export const validateClientData = (data: any[]): ValidationResult => {
+  const errors: ValidationMessage[] = [];
+  const warnings: ValidationMessage[] = [];
+  const validData: Partial<ClientRecord>[] = [];
   
-  // Process imported data to update existing items or add new ones
-  return importedData.map(importedItem => {
-    // If the imported item has an ID and it exists in our map
-    if (importedItem.id && existingMap.has(importedItem.id)) {
-      const existingItem = existingMap.get(importedItem.id);
-      // Merge the imported item with the existing one
-      return {
-        ...existingItem,
-        ...importedItem,
-        _isExisting: true // Flag to indicate this is an update, not an insert
-      };
+  data.forEach((row, index) => {
+    if (!row.name) {
+      errors.push({
+        row: index + 1,
+        field: 'name',
+        message: 'Client name is required',
+        value: row.name
+      });
     }
-    // Return the imported item as is (for new items)
-    return importedItem;
+    
+    if (!row.contact_name) {
+      errors.push({
+        row: index + 1,
+        field: 'contact_name',
+        message: 'Contact name is required',
+        value: row.contact_name
+      });
+    }
+    
+    if (row.email && !/\S+@\S+\.\S+/.test(row.email)) {
+      warnings.push({
+        row: index + 1,
+        field: 'email',
+        message: 'Email format appears to be invalid',
+        value: row.email
+      });
+    }
+    
+    // Add the row to validData if it has all required fields
+    if (row.name && row.contact_name) {
+      validData.push(row);
+    }
   });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    data: validData
+  };
 };
 
-// Data validation functions
-export const validateClientData = (importedClients: any[]): importedClients is ClientRecord[] => {
-  return Array.isArray(importedClients) && 
-    importedClients.every(client => 
-      typeof client === 'object' && 
-      client !== null &&
-      'name' in client &&
-      'contact_name' in client
-    );
+// Validate site data
+export const validateSiteData = (data: any[]): ValidationResult => {
+  const errors: ValidationMessage[] = [];
+  const warnings: ValidationMessage[] = [];
+  const validData: Partial<SiteRecord>[] = [];
+  
+  data.forEach((row, index) => {
+    if (!row.name) {
+      errors.push({
+        row: index + 1,
+        field: 'name',
+        message: 'Site name is required',
+        value: row.name
+      });
+    }
+    
+    if (!row.address) {
+      errors.push({
+        row: index + 1,
+        field: 'address',
+        message: 'Site address is required',
+        value: row.address
+      });
+    }
+    
+    if (!row.client_id) {
+      errors.push({
+        row: index + 1,
+        field: 'client_id',
+        message: 'Client ID is required',
+        value: row.client_id
+      });
+    }
+    
+    // Add the row to validData if it has all required fields
+    if (row.name && row.address && row.client_id) {
+      validData.push(row);
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    data: validData
+  };
 };
 
-export const validateSiteData = (importedSites: any[]): importedSites is SiteRecord[] => {
-  return Array.isArray(importedSites) && 
-    importedSites.every(site => 
-      typeof site === 'object' && 
-      site !== null &&
-      'name' in site &&
-      'address' in site
-    );
-};
-
-export const validateContractData = (importedContracts: any[]): importedContracts is ContractHistoryEntry[] => {
-  return Array.isArray(importedContracts) && 
-    importedContracts.every(contract => 
-      typeof contract === 'object' && 
-      contract !== null &&
-      'site_id' in contract
-    );
+// Validate contract data
+export const validateContractData = (data: any[]): ValidationResult => {
+  const errors: ValidationMessage[] = [];
+  const warnings: ValidationMessage[] = [];
+  const validData: Partial<ContractHistoryEntry>[] = [];
+  
+  data.forEach((row, index) => {
+    if (!row.site_id) {
+      errors.push({
+        row: index + 1,
+        field: 'site_id',
+        message: 'Site ID is required',
+        value: row.site_id
+      });
+    }
+    
+    // Add the row to validData if it has all required fields
+    if (row.site_id) {
+      // Add to valid data even with warnings
+      validData.push(row);
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    data: validData
+  };
 };
