@@ -33,11 +33,16 @@ export const exportContracts = (contracts: ContractHistoryEntry[]): void => {
   exportToJson(contracts, `contracts-export-${new Date().toISOString().slice(0, 10)}.json`);
 };
 
+// Export contractors to JSON file
+export const exportContractors = (contractors: any[]): void => {
+  exportToJson(contractors, `contractors-export-${new Date().toISOString().slice(0, 10)}.json`);
+};
+
 // Generate a single unified import template
 export const generateUnifiedImportTemplate = (): string => {
   // Define the headers with correct database field names
   const headers = [
-    'record_type', // Type of record: client, site, or contract
+    'record_type', // Type of record: client, site, contract, or contractor
     'action', // Action to take: create, update, or delete
     'id', // Database ID (blank for new records)
     'custom_id', // Custom identifier
@@ -76,7 +81,11 @@ export const generateUnifiedImportTemplate = (): string => {
     'end_date', // Will be mapped to contract_details.endDate
     'contract_number', // Will be mapped to contract_details.contractNumber
     'renewal_terms', // Will be mapped to contract_details.renewalTerms
-    'termination_period' // Will be mapped to contract_details.terminationPeriod
+    'termination_period', // Will be mapped to contract_details.terminationPeriod
+    
+    // Contractor fields
+    'business_name',
+    'services'
   ];
   
   // Sample data for clients
@@ -165,6 +174,26 @@ export const generateUnifiedImportTemplate = (): string => {
     'termination_period': '60 days written notice'
   };
   
+  // Sample data for contractors
+  const contractorSample = {
+    'record_type': 'contractor',
+    'action': 'create',
+    'id': '',
+    'custom_id': 'CON001',
+    'name': '',
+    'contact_name': 'Robert Smith',
+    'email': 'robert@cleaningpros.com',
+    'phone': '555-123-4567',
+    'address': '789 Service Rd',
+    'city': 'Boston',
+    'state': 'MA',
+    'postcode': '02108',
+    'status': 'active',
+    'notes': 'Specialized in commercial cleaning',
+    'business_name': 'Cleaning Pros LLC',
+    'services': 'Window Cleaning,Carpet Cleaning,Pressure Washing'
+  };
+  
   // Create one row for each record type so the user can see examples of each
-  return Papa.unparse([clientSample, siteSample, contractSample], { header: true });
+  return Papa.unparse([clientSample, siteSample, contractSample, contractorSample], { header: true });
 };

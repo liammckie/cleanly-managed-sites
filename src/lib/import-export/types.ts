@@ -12,8 +12,25 @@ export type ParsedImportData = {
   clients: any[];
   sites: any[];
   contracts: any[];
+  contractors?: any[];
   invoices?: any[];
 };
+
+export interface ContractorRecord {
+  id?: string;
+  business_name: string;
+  contact_name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  services?: string[];
+  status: 'active' | 'inactive' | 'pending';
+  notes?: string;
+  custom_id?: string;
+}
 
 export interface InvoiceRecord {
   id?: string;

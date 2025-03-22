@@ -2,7 +2,7 @@
 import Papa from 'papaparse';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { ParsedImportData } from './types';
+import { ContractorRecord, ParsedImportData } from './types';
 
 // Parse CSV file to data array
 export const parseCSV = async (file: File): Promise<any[]> => {
@@ -80,6 +80,28 @@ export const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHist
   }));
 };
 
+// Convert CSV data to contractor format
+export const convertCSVToContractorFormat = (csvData: any[]): Partial<ContractorRecord>[] => {
+  return csvData.map(row => ({
+    business_name: row.business_name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    status: row.status || 'active',
+    notes: row.notes || '',
+    custom_id: row.custom_id || '',
+    services: row.services ? (
+      typeof row.services === 'string' 
+        ? row.services.split(',').map((s: string) => s.trim())
+        : row.services
+    ) : undefined
+  }));
+};
+
 // Parse unified import CSV data
 export const parseUnifiedImport = async (
   csvData: any[], 
@@ -88,6 +110,7 @@ export const parseUnifiedImport = async (
   const clients: any[] = [];
   const sites: any[] = [];
   const contracts: any[] = [];
+  const contractors: any[] = [];
   
   console.log('Parsing unified import with', csvData.length, 'rows');
 
@@ -182,11 +205,43 @@ export const parseUnifiedImport = async (
         break;
       }
       
+      case 'contractor': {
+        // For contractor records, map fields directly
+        const contractor = {
+          business_name: row.business_name || '',
+          contact_name: row.contact_name || '',
+          email: row.email || '',
+          phone: row.phone || '',
+          address: row.address || '',
+          city: row.city || '',
+          state: row.state || '',
+          postcode: row.postcode || '',
+          status: row.status || 'active',
+          notes: row.notes || '',
+          custom_id: row.custom_id || '',
+          services: row.services ? (
+            typeof row.services === 'string' 
+              ? row.services.split(',').map((s: string) => s.trim())
+              : row.services
+          ) : undefined,
+          id: row.id || undefined,
+          action: row.action || 'create'
+        };
+        
+        if (contractor.business_name && contractor.contact_name) {
+          contractors.push(contractor);
+          console.log(`Added contractor: ${contractor.business_name}`);
+        } else {
+          console.warn(`Row ${index + 1}: Contractor missing required fields (business_name, contact_name), skipping`);
+        }
+        break;
+      }
+      
       default:
         console.warn(`Row ${index + 1}: Unknown record_type: ${row.record_type}, skipping`);
     }
   });
 
-  console.log(`Parsed: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts`);
-  return { clients, sites, contracts };
+  console.log(`Parsed: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts, ${contractors.length} contractors`);
+  return { clients, sites, contracts, contractors };
 };
