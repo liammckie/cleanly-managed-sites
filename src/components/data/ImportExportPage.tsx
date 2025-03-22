@@ -49,6 +49,11 @@ export const ImportExportPage: React.FC = () => {
     await handleCSVImport(file, 'contracts');
   };
   
+  // Create a wrapper for unified import that returns Promise<void>
+  const handleUnifiedImportWrapper = async (file: File, options: { mode: 'full' | 'incremental' }) => {
+    await handleUnifiedImport(file, options);
+  };
+  
   const handleSetupTestData = async () => {
     try {
       await setupTestData();
@@ -83,7 +88,7 @@ export const ImportExportPage: React.FC = () => {
         onCSVImportClients={handleCSVImportClients}
         onCSVImportSites={handleCSVImportSites}
         onCSVImportContracts={handleCSVImportContracts}
-        onUnifiedImport={handleUnifiedImport}
+        onUnifiedImport={handleUnifiedImportWrapper}
         getClientCSVTemplate={getClientCSVTemplate}
         getSiteCSVTemplate={getSiteCSVTemplate}
         getContractCSVTemplate={getContractCSVTemplate}

@@ -171,10 +171,24 @@ export const checkExistingItems = async (
         if (existingContracts && existingContracts.length > 0) {
           // Check for matching contracts by site_id and contract number
           items.forEach(item => {
-            const matchingContract = existingContracts.find(existing => 
-              existing.site_id === item.site_id && 
-              existing.contract_details.contractNumber === item.contract_details?.contractNumber
-            );
+            const matchingContract = existingContracts.find(existing => {
+              // Type checking to avoid the error
+              if (existing.site_id === item.site_id) {
+                // Safely access contract_details.contractNumber
+                const existingContractNumber = typeof existing.contract_details === 'object' && 
+                  existing.contract_details !== null ? 
+                  (existing.contract_details as any).contractNumber : 
+                  undefined;
+                
+                const itemContractNumber = item.contract_details && 
+                  typeof item.contract_details === 'object' ? 
+                  (item.contract_details as any).contractNumber : 
+                  undefined;
+                
+                return existingContractNumber === itemContractNumber;
+              }
+              return false;
+            });
             
             if (matchingContract) {
               result.existing.push({

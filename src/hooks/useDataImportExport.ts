@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -13,7 +12,6 @@ import {
 } from '@/lib/importValidation';
 import { checkExistingItems, generateTestData } from '@/lib/exportImport';
 
-// Type guards for validation
 const validateClientData = (importedClients: any[]): importedClients is ClientRecord[] => {
   return Array.isArray(importedClients) && 
     importedClients.every(client => 
@@ -43,7 +41,6 @@ const validateContractData = (importedContracts: any[]): importedContracts is Co
     );
 };
 
-// Main functions for importing different entity types
 const importClients = async (importedClients: Partial<ClientRecord>[]) => {
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -199,7 +196,6 @@ const updateSiteContractDetails = async (
   }
 };
 
-// CSV-specific handling
 const parseCSV = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -272,7 +268,6 @@ const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHistoryEntr
   }));
 };
 
-// Parse unified CSV import
 const parseUnifiedImport = async (
   csvData: any[], 
   options: { mode: 'full' | 'incremental' } = { mode: 'incremental' }
@@ -281,14 +276,11 @@ const parseUnifiedImport = async (
   const sites: any[] = [];
   const contracts: any[] = [];
 
-  // Process the unified data by record type
   csvData.forEach(row => {
-    // Skip empty rows
     if (!row.record_type) return;
 
     switch (row.record_type.toLowerCase()) {
       case 'client': {
-        // Map unified import fields to client fields
         const client = {
           name: row.client_name || '',
           contact_name: row.client_contact_name || '',
@@ -304,7 +296,6 @@ const parseUnifiedImport = async (
           id: row.id || undefined
         };
         
-        // Only add if essential fields are present
         if (client.name && client.contact_name) {
           clients.push(client);
         }
@@ -312,7 +303,6 @@ const parseUnifiedImport = async (
       }
       
       case 'site': {
-        // Map unified import fields to site fields
         const site = {
           name: row.site_name || '',
           address: row.site_address || '',
@@ -330,7 +320,6 @@ const parseUnifiedImport = async (
           id: row.id || undefined
         };
         
-        // Only add if essential fields are present
         if (site.name && site.address && site.client_id) {
           sites.push(site);
         }
@@ -338,7 +327,6 @@ const parseUnifiedImport = async (
       }
       
       case 'contract': {
-        // Map unified import fields to contract fields
         const contract = {
           site_id: row.contract_site_id || '',
           notes: row.contract_notes || '',
@@ -354,7 +342,6 @@ const parseUnifiedImport = async (
           id: row.id || undefined
         };
         
-        // Only add if essential fields are present
         if (contract.site_id) {
           contracts.push(contract);
         }
@@ -363,23 +350,17 @@ const parseUnifiedImport = async (
     }
   });
 
-  // If we're doing a full import and options.mode is 'full', we might need to handle deletions here
-  // For incremental, we just return what we parsed
   return { clients, sites, contracts };
 };
 
-// Unified import handling
-const handleUnifiedImport = async (file: File, options: { mode: 'full' | 'incremental' }): Promise<boolean> => {
+const handleUnifiedImport = async (file: File, options: { mode: 'full' | 'incremental' }): Promise<void> => {
   try {
-    // Parse the file
     const csvData = await parseCSV(file);
     
-    // Process the data based on record type
     const { clients, sites, contracts } = await parseUnifiedImport(csvData, options);
     
     console.log(`Parsed unified import: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts`);
     
-    // Import in the correct order: clients -> sites -> contracts
     if (clients.length > 0) {
       await importClients(clients);
       toast.success(`${clients.length} clients imported successfully`);
@@ -395,14 +376,12 @@ const handleUnifiedImport = async (file: File, options: { mode: 'full' | 'increm
       toast.success(`${contracts.length} contracts imported successfully`);
     }
     
-    return true;
   } catch (error) {
     console.error('Error during unified import:', error);
     throw error;
   }
 };
 
-// Setup test data
 const setupTestData = async (): Promise<void> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -412,7 +391,6 @@ const setupTestData = async (): Promise<void> => {
     
     const testData = generateTestData();
     
-    // Import test clients
     const { data: clients } = await supabase
       .from('clients')
       .insert(testData.clients.map(client => ({
@@ -425,14 +403,12 @@ const setupTestData = async (): Promise<void> => {
       throw new Error('Failed to create test clients');
     }
     
-    // Update the site test data with the new client IDs
     const sitesWithClientIds = testData.sites.map((site, index) => ({
       ...site,
       client_id: clients[Math.min(index, clients.length - 1)].id,
       user_id: user.id
     }));
     
-    // Import test sites
     const { data: sites } = await supabase
       .from('sites')
       .insert(sitesWithClientIds)
@@ -442,20 +418,17 @@ const setupTestData = async (): Promise<void> => {
       throw new Error('Failed to create test sites');
     }
     
-    // Update the contract test data with the new site IDs
     const contractsWithSiteIds = testData.contracts.map((contract, index) => ({
       ...contract,
       site_id: sites[Math.min(index, sites.length - 1)].id,
       created_by: user.id
     }));
     
-    // Import test contracts
     for (const contract of contractsWithSiteIds) {
       await supabase
         .from('site_contract_history')
         .insert(contract);
       
-      // Update the site's contract details
       await supabase
         .from('sites')
         .update({ contract_details: contract.contract_details })
@@ -515,7 +488,7 @@ export function useDataImportExport() {
     await importContracts(contractData);
   };
 
-  const handleCSVImport = async (file: File, type: 'clients' | 'sites' | 'contracts'): Promise<boolean> => {
+  const handleCSVImport = async (file: File, type: 'clients' | 'sites' | 'contracts'): Promise<void> => {
     try {
       const parsedData = await parseCSV(file);
       
@@ -530,8 +503,6 @@ export function useDataImportExport() {
           await handleImportContracts(parsedData, 'csv');
           break;
       }
-      
-      return true;
     } catch (error) {
       console.error(`Error importing ${type} from CSV:`, error);
       throw error;
