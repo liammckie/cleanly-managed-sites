@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ClientDashboard } from '@/components/clients/ClientDashboard';
+import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
 
 const Dashboard = () => {
   return (
@@ -20,8 +21,12 @@ const Dashboard = () => {
               Welcome to your dashboard. This is where you can manage your business data.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <ClientDashboard />
+            <div className="space-y-8">
+              <ContractValueMetrics />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ClientDashboard />
+              </div>
             </div>
           </div>
         </div>
