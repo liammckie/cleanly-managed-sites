@@ -100,7 +100,8 @@ export const getInitialFormData = (): SiteFormData => ({
     endDate: '',
     contractNumber: '',
     renewalTerms: '',
-    terminationPeriod: ''
+    terminationPeriod: '',
+    terms: [] // Initialize with empty terms array
   },
   
   billingDetails: {
@@ -120,7 +121,8 @@ export const getInitialFormData = (): SiteFormData => ({
     contacts: [],
     taxId: '',
     xeroContactId: '',
-    notes: ''
+    notes: '',
+    billingLines: [] // Initialize with empty billing lines array
   },
   
   adHocWorkAuthorization: {
