@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -99,6 +98,7 @@ export const ContractorForm = () => {
         ...values,
         hourly_rate: hourlyRate,
         day_rate: dayRate,
+        rating: null, // Add the missing rating property, default to null
       });
 
       // Navigate back to contractors list on success
