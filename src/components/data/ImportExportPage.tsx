@@ -7,6 +7,9 @@ import { useDataImportExport } from '@/hooks/useDataImportExport';
 import { ImportExportHeader } from './ImportExportHeader';
 import { ImportExportCardGrid } from './ImportExportCardGrid';
 import { ImportExportInstructions } from './ImportExportInstructions';
+import { Button } from '@/components/ui/button';
+import { Beaker } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const ImportExportPage: React.FC = () => {
   const { clients, isLoading: isLoadingClients } = useClients();
@@ -18,6 +21,8 @@ export const ImportExportPage: React.FC = () => {
     handleImportSites,
     handleImportContracts,
     handleCSVImport,
+    handleUnifiedImport,
+    setupTestData,
     getClientCSVTemplate,
     getSiteCSVTemplate,
     getContractCSVTemplate
@@ -44,9 +49,29 @@ export const ImportExportPage: React.FC = () => {
     await handleCSVImport(file, 'contracts');
   };
   
+  const handleSetupTestData = async () => {
+    try {
+      await setupTestData();
+      toast.success('Test data created successfully!');
+    } catch (error: any) {
+      toast.error(`Failed to create test data: ${error.message}`);
+    }
+  };
+  
   return (
     <div className="space-y-8">
-      <ImportExportHeader />
+      <div className="flex justify-between items-center">
+        <ImportExportHeader />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSetupTestData}
+          className="gap-2"
+        >
+          <Beaker className="h-4 w-4" />
+          Create Test Data
+        </Button>
+      </div>
       <ImportExportInstructions />
       <ImportExportCardGrid 
         clients={clients}
@@ -58,6 +83,7 @@ export const ImportExportPage: React.FC = () => {
         onCSVImportClients={handleCSVImportClients}
         onCSVImportSites={handleCSVImportSites}
         onCSVImportContracts={handleCSVImportContracts}
+        onUnifiedImport={handleUnifiedImport}
         getClientCSVTemplate={getClientCSVTemplate}
         getSiteCSVTemplate={getSiteCSVTemplate}
         getContractCSVTemplate={getContractCSVTemplate}

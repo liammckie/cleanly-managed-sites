@@ -11,6 +11,7 @@ import {
   getSiteCSVTemplate,
   getContractCSVTemplate
 } from '@/lib/importValidation';
+import { checkExistingItems, generateTestData } from '@/lib/exportImport';
 
 // Type guards for validation
 const validateClientData = (importedClients: any[]): importedClients is ClientRecord[] => {
@@ -38,11 +39,11 @@ const validateContractData = (importedContracts: any[]): importedContracts is Co
     importedContracts.every(contract => 
       typeof contract === 'object' && 
       contract !== null &&
-      'site_id' in contract &&
-      'contract_details' in contract
+      'site_id' in contract
     );
 };
 
+// Main functions for importing different entity types
 const importClients = async (importedClients: Partial<ClientRecord>[]) => {
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -148,7 +149,7 @@ const insertContractsAndUpdateSites = async (
 ) => {
   const preparedContracts = importedContracts.map(contract => ({
     site_id: contract.site_id as string,
-    contract_details: contract.contract_details,
+    contract_details: contract.contract_details || {},
     notes: contract.notes || 'Imported contract',
     created_by: userId,
     version_number: 0
@@ -198,6 +199,7 @@ const updateSiteContractDetails = async (
   }
 };
 
+// CSV-specific handling
 const parseCSV = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -270,6 +272,203 @@ const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHistoryEntr
   }));
 };
 
+// Parse unified CSV import
+const parseUnifiedImport = async (
+  csvData: any[], 
+  options: { mode: 'full' | 'incremental' } = { mode: 'incremental' }
+): Promise<{ clients: any[], sites: any[], contracts: any[] }> => {
+  const clients: any[] = [];
+  const sites: any[] = [];
+  const contracts: any[] = [];
+
+  // Process the unified data by record type
+  csvData.forEach(row => {
+    // Skip empty rows
+    if (!row.record_type) return;
+
+    switch (row.record_type.toLowerCase()) {
+      case 'client': {
+        // Map unified import fields to client fields
+        const client = {
+          name: row.client_name || '',
+          contact_name: row.client_contact_name || '',
+          email: row.client_email || '',
+          phone: row.client_phone || '',
+          address: row.client_address || '',
+          city: row.client_city || '',
+          state: row.client_state || '',
+          postcode: row.client_postcode || '',
+          status: row.client_status || 'active',
+          notes: row.client_notes || '',
+          custom_id: row.custom_id || '',
+          id: row.id || undefined
+        };
+        
+        // Only add if essential fields are present
+        if (client.name && client.contact_name) {
+          clients.push(client);
+        }
+        break;
+      }
+      
+      case 'site': {
+        // Map unified import fields to site fields
+        const site = {
+          name: row.site_name || '',
+          address: row.site_address || '',
+          city: row.site_city || '',
+          state: row.site_state || '',
+          postcode: row.site_postcode || '',
+          status: row.site_status || 'active',
+          representative: row.site_representative || '',
+          phone: row.site_phone || '',
+          email: row.site_email || '',
+          client_id: row.site_client_id || '',
+          custom_id: row.custom_id || '',
+          monthly_cost: row.site_monthly_cost ? parseFloat(row.site_monthly_cost) : undefined,
+          monthly_revenue: row.site_monthly_revenue ? parseFloat(row.site_monthly_revenue) : undefined,
+          id: row.id || undefined
+        };
+        
+        // Only add if essential fields are present
+        if (site.name && site.address && site.client_id) {
+          sites.push(site);
+        }
+        break;
+      }
+      
+      case 'contract': {
+        // Map unified import fields to contract fields
+        const contract = {
+          site_id: row.contract_site_id || '',
+          notes: row.contract_notes || '',
+          version_number: 0,
+          contract_details: {
+            startDate: row.contract_start_date || '',
+            endDate: row.contract_end_date || '',
+            contractNumber: row.contract_number || '',
+            renewalTerms: row.contract_renewal_terms || '',
+            terminationPeriod: row.contract_termination_period || '',
+            terms: []
+          },
+          id: row.id || undefined
+        };
+        
+        // Only add if essential fields are present
+        if (contract.site_id) {
+          contracts.push(contract);
+        }
+        break;
+      }
+    }
+  });
+
+  // If we're doing a full import and options.mode is 'full', we might need to handle deletions here
+  // For incremental, we just return what we parsed
+  return { clients, sites, contracts };
+};
+
+// Unified import handling
+const handleUnifiedImport = async (file: File, options: { mode: 'full' | 'incremental' }): Promise<boolean> => {
+  try {
+    // Parse the file
+    const csvData = await parseCSV(file);
+    
+    // Process the data based on record type
+    const { clients, sites, contracts } = await parseUnifiedImport(csvData, options);
+    
+    console.log(`Parsed unified import: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts`);
+    
+    // Import in the correct order: clients -> sites -> contracts
+    if (clients.length > 0) {
+      await importClients(clients);
+      toast.success(`${clients.length} clients imported successfully`);
+    }
+    
+    if (sites.length > 0) {
+      await importSites(sites);
+      toast.success(`${sites.length} sites imported successfully`);
+    }
+    
+    if (contracts.length > 0) {
+      await importContracts(contracts);
+      toast.success(`${contracts.length} contracts imported successfully`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error during unified import:', error);
+    throw error;
+  }
+};
+
+// Setup test data
+const setupTestData = async (): Promise<void> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('You must be logged in to set up test data');
+    }
+    
+    const testData = generateTestData();
+    
+    // Import test clients
+    const { data: clients } = await supabase
+      .from('clients')
+      .insert(testData.clients.map(client => ({
+        ...client,
+        user_id: user.id
+      })))
+      .select();
+    
+    if (!clients || clients.length === 0) {
+      throw new Error('Failed to create test clients');
+    }
+    
+    // Update the site test data with the new client IDs
+    const sitesWithClientIds = testData.sites.map((site, index) => ({
+      ...site,
+      client_id: clients[Math.min(index, clients.length - 1)].id,
+      user_id: user.id
+    }));
+    
+    // Import test sites
+    const { data: sites } = await supabase
+      .from('sites')
+      .insert(sitesWithClientIds)
+      .select();
+    
+    if (!sites || sites.length === 0) {
+      throw new Error('Failed to create test sites');
+    }
+    
+    // Update the contract test data with the new site IDs
+    const contractsWithSiteIds = testData.contracts.map((contract, index) => ({
+      ...contract,
+      site_id: sites[Math.min(index, sites.length - 1)].id,
+      created_by: user.id
+    }));
+    
+    // Import test contracts
+    for (const contract of contractsWithSiteIds) {
+      await supabase
+        .from('site_contract_history')
+        .insert(contract);
+      
+      // Update the site's contract details
+      await supabase
+        .from('sites')
+        .update({ contract_details: contract.contract_details })
+        .eq('id', contract.site_id);
+    }
+    
+    toast.success('Test data set up successfully!');
+  } catch (error: any) {
+    console.error('Error setting up test data:', error);
+    toast.error(`Failed to set up test data: ${error.message}`);
+  }
+};
+
 export function useDataImportExport() {
   const { data: contractHistory, isLoading: isLoadingContracts } = useQuery({
     queryKey: ['all-contracts-history'],
@@ -316,7 +515,7 @@ export function useDataImportExport() {
     await importContracts(contractData);
   };
 
-  const handleCSVImport = async (file: File, type: 'clients' | 'sites' | 'contracts') => {
+  const handleCSVImport = async (file: File, type: 'clients' | 'sites' | 'contracts'): Promise<boolean> => {
     try {
       const parsedData = await parseCSV(file);
       
@@ -346,6 +545,8 @@ export function useDataImportExport() {
     handleImportSites,
     handleImportContracts,
     handleCSVImport,
+    handleUnifiedImport,
+    setupTestData,
     getClientCSVTemplate,
     getSiteCSVTemplate,
     getContractCSVTemplate

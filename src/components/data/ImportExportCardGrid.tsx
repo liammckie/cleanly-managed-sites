@@ -14,6 +14,7 @@ interface ImportExportCardGridProps {
   onCSVImportClients?: (file: File) => Promise<void>;
   onCSVImportSites?: (file: File) => Promise<void>;
   onCSVImportContracts?: (file: File) => Promise<void>;
+  onUnifiedImport?: (file: File, options: { mode: 'full' | 'incremental' }) => Promise<void>;
   getClientCSVTemplate?: () => string;
   getSiteCSVTemplate?: () => string;
   getContractCSVTemplate?: () => string;
@@ -29,12 +30,22 @@ export const ImportExportCardGrid: React.FC<ImportExportCardGridProps> = ({
   onCSVImportClients,
   onCSVImportSites,
   onCSVImportContracts,
+  onUnifiedImport,
   getClientCSVTemplate,
   getSiteCSVTemplate,
   getContractCSVTemplate
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+      <ImportExportCard
+        type="unified"
+        data={[]}
+        onImport={async () => {}} // Not directly used for unified import
+        onUnifiedImport={onUnifiedImport}
+        title="Unified Import/Export"
+        description="Import or export all data types in a single operation"
+      />
+      
       <ImportExportCard
         type="clients"
         data={clients}

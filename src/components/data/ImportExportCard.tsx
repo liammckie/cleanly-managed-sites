@@ -12,7 +12,8 @@ import {
   exportClients, 
   exportSites, 
   exportContracts,
-  parseImportedFile
+  parseImportedFile,
+  generateUnifiedImportTemplate
 } from '@/lib/exportImport';
 import {
   validateClientData,
@@ -48,8 +49,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
-type DataType = 'clients' | 'sites' | 'contracts';
+type DataType = 'clients' | 'sites' | 'contracts' | 'unified';
 
 interface ImportExportCardProps {
   type: DataType;
@@ -59,6 +62,7 @@ interface ImportExportCardProps {
   description: string;
   onCSVImport?: (file: File) => Promise<void>;
   getCSVTemplate?: () => string;
+  onUnifiedImport?: (file: File, options: { mode: 'full' | 'incremental' }) => Promise<void>;
 }
 
 export const ImportExportCard: React.FC<ImportExportCardProps> = ({
@@ -68,7 +72,8 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
   title,
   description,
   onCSVImport,
-  getCSVTemplate
+  getCSVTemplate,
+  onUnifiedImport
 }) => {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -77,6 +82,7 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
   const [parsedData, setParsedData] = useState<any[] | null>(null);
   const [fileType, setFileType] = useState<'json' | 'csv'>('json');
   const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [importMode, setImportMode] = useState<'full' | 'incremental'>('incremental');
   
   const handleExport = () => {
     try {
@@ -89,6 +95,18 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
           break;
         case 'contracts':
           exportContracts(data);
+          break;
+        case 'unified':
+          // Export all types of data to a unified CSV
+          const csv = generateUnifiedImportTemplate();
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', `unified-import-template.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
           break;
       }
       toast.success(`${title} exported successfully`);
@@ -110,6 +128,24 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
         break;
       case 'contracts':
         result = validateContractData(data);
+        break;
+      case 'unified':
+        // For unified imports, we'll validate each record type separately
+        const clientRecords = data.filter(record => record.record_type === 'client');
+        const siteRecords = data.filter(record => record.record_type === 'site');
+        const contractRecords = data.filter(record => record.record_type === 'contract');
+        
+        // Combine validation results
+        const clientValidation = clientRecords.length > 0 ? validateClientData(clientRecords) : { isValid: true, errors: [], warnings: [], data: [] };
+        const siteValidation = siteRecords.length > 0 ? validateSiteData(siteRecords) : { isValid: true, errors: [], warnings: [], data: [] };
+        const contractValidation = contractRecords.length > 0 ? validateContractData(contractRecords) : { isValid: true, errors: [], warnings: [], data: [] };
+        
+        result = {
+          isValid: clientValidation.isValid && siteValidation.isValid && contractValidation.isValid,
+          errors: [...clientValidation.errors, ...siteValidation.errors, ...contractValidation.errors],
+          warnings: [...clientValidation.warnings, ...siteValidation.warnings, ...contractValidation.warnings],
+          data: [...clientValidation.data, ...siteValidation.data, ...contractValidation.data]
+        };
         break;
       default:
         result = { isValid: false, errors: [], warnings: [], data: [] };
@@ -181,7 +217,9 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
     setIsImporting(true);
     
     try {
-      if (fileType === 'csv' && onCSVImport && currentFile) {
+      if (type === 'unified' && onUnifiedImport && currentFile) {
+        await onUnifiedImport(currentFile, { mode: importMode });
+      } else if (fileType === 'csv' && onCSVImport && currentFile) {
         await onCSVImport(currentFile);
       } else {
         await onImport(parsedData);
@@ -205,17 +243,29 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
   };
   
   const downloadCSVTemplate = () => {
-    if (!getCSVTemplate) return;
-    
-    const csvContent = getCSVTemplate();
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${type}-template.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (type === 'unified') {
+      // For unified template
+      const csv = generateUnifiedImportTemplate();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `unified-import-template.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (getCSVTemplate) {
+      // For individual entity templates
+      const csvContent = getCSVTemplate();
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${type}-template.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
   
   return (
@@ -227,28 +277,40 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
               <CardTitle>{title}</CardTitle>
               <CardDescription>{description}</CardDescription>
             </div>
-            {getCSVTemplate && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Import Instructions</h4>
-                    <p className="text-sm text-muted-foreground">
-                      You can import {title.toLowerCase()} using CSV or JSON format.
-                      Download a template to see the required format.
-                    </p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Import Instructions</h4>
+                  <p className="text-sm text-muted-foreground">
+                    You can import {title.toLowerCase()} using CSV or JSON format.
+                    Download a template to see the required format.
+                  </p>
+                  {type === 'unified' ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Unified Import:</strong> This template allows you to import clients, sites, and contracts all in one file.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Incremental Mode:</strong> Only adds new records or updates specified ones.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Full Import Mode:</strong> Replaces all existing data with the imported data.
+                      </p>
+                    </>
+                  ) : (
                     <p className="text-sm text-muted-foreground">
                       <strong>Important:</strong> For site imports, make sure client_id matches existing clients.
                       For contract imports, ensure site_id matches existing sites.
                     </p>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
         <CardContent>
@@ -265,24 +327,33 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
                     variant="outline" 
                     className="w-full" 
                     onClick={handleExport}
-                    disabled={data.length === 0}
+                    disabled={type !== 'unified' && data.length === 0}
                   >
-                    <FileJson className="mr-2 h-4 w-4" />
-                    Export as JSON
+                    {type === 'unified' ? (
+                      <>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        Download Unified CSV Template
+                      </>
+                    ) : (
+                      <>
+                        <FileJson className="mr-2 h-4 w-4" />
+                        Export as JSON
+                      </>
+                    )}
                   </Button>
                 </div>
               </TabsContent>
               
               <TabsContent value="import">
                 <div className="py-2 space-y-4">
-                  {getCSVTemplate && (
+                  {(getCSVTemplate || type === 'unified') && (
                     <Button
                       variant="outline"
                       className="w-full"
                       onClick={downloadCSVTemplate}
                     >
                       <FileSpreadsheet className="mr-2 h-4 w-4" />
-                      Download CSV Template
+                      Download {type === 'unified' ? 'Unified' : ''} CSV Template
                     </Button>
                   )}
                   
@@ -294,7 +365,7 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
                       disabled={isImporting}
                     >
                       <FileUp className="mr-2 h-4 w-4" />
-                      Import {title} (CSV or JSON)
+                      Import {title} {type === 'unified' ? '(Unified CSV or JSON)' : '(CSV or JSON)'}
                     </Button>
                     <input
                       id={`import-${type}`}
@@ -343,6 +414,35 @@ export const ImportExportCard: React.FC<ImportExportCardProps> = ({
                     : "Data contains errors that must be fixed before importing"}
                 </span>
               </div>
+              
+              {type === 'unified' && (
+                <div className="space-y-2 border rounded-lg p-4">
+                  <h4 className="text-sm font-medium mb-2">Import Mode</h4>
+                  <RadioGroup value={importMode} onValueChange={(value) => setImportMode(value as 'full' | 'incremental')}>
+                    <div className="flex items-start space-x-2">
+                      <RadioGroupItem value="incremental" id="incremental" />
+                      <div className="grid gap-1">
+                        <Label htmlFor="incremental" className="font-medium">Incremental Import</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Only add new records or update existing ones identified by ID or custom_id.
+                          Existing records not in the import file will be kept.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-2 mt-2">
+                      <RadioGroupItem value="full" id="full" />
+                      <div className="grid gap-1">
+                        <Label htmlFor="full" className="font-medium">Full Import</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Replace all existing data with the imported data.
+                          This will delete any records not included in the import file.
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
               
               {validationResult.errors.length > 0 && (
                 <div>

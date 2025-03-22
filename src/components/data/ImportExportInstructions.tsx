@@ -1,225 +1,144 @@
 
 import React from 'react';
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { AlertCircle, FileDown, FileText } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, FileText, Table as TableIcon } from 'lucide-react';
 
 export const ImportExportInstructions: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Important</AlertTitle>
-        <AlertDescription>
-          Data must be imported in the correct order: Clients → Sites → Contracts. 
-          Make sure references like client_id and site_id match existing records.
-        </AlertDescription>
-      </Alert>
-      
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="clients">
-          <AccordionTrigger>Client Import Template Guide</AccordionTrigger>
-          <AccordionContent>
+    <Card>
+      <CardHeader>
+        <CardTitle>Import/Export Instructions</CardTitle>
+        <CardDescription>
+          Learn how to import and export data in your system
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="import">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="import">Import Instructions</TabsTrigger>
+            <TabsTrigger value="export">Export Instructions</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="import" className="space-y-4 pt-4">
+            <Alert variant="default">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Important Information</AlertTitle>
+              <AlertDescription>
+                Before importing data, ensure your CSV or JSON files follow the correct format.
+                Use the provided templates for guidance.
+              </AlertDescription>
+            </Alert>
+            
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                The client template includes the following fields:
-              </p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Import Options</h3>
+                <p className="text-sm text-muted-foreground">
+                  You can import data in two ways:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><strong>Unified Import:</strong> Import clients, sites, and contracts all in one file</li>
+                  <li><strong>Individual Import:</strong> Import each data type separately</li>
+                </ul>
+              </div>
               
-              <div className="text-sm space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="font-semibold">Field</div>
-                  <div className="font-semibold">Description</div>
-                  
-                  <div>name*</div>
-                  <div>Client company name (required)</div>
-                  
-                  <div>contact_name*</div>
-                  <div>Primary contact person (required)</div>
-                  
-                  <div>email</div>
-                  <div>Contact email address</div>
-                  
-                  <div>phone</div>
-                  <div>Contact phone number</div>
-                  
-                  <div>address</div>
-                  <div>Street address</div>
-                  
-                  <div>city</div>
-                  <div>City</div>
-                  
-                  <div>state</div>
-                  <div>State or province</div>
-                  
-                  <div>postcode</div>
-                  <div>Postal or ZIP code</div>
-                  
-                  <div>status</div>
-                  <div>Client status (active, inactive, pending)</div>
-                  
-                  <div>notes</div>
-                  <div>Additional notes</div>
-                  
-                  <div>custom_id</div>
-                  <div>Your custom identifier</div>
-                </div>
-                
-                <p className="text-xs italic mt-2">* Required fields</p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Unified Import</h3>
+                <p className="text-sm text-muted-foreground">
+                  The unified import allows you to import all data types in a single operation:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>Download the unified template to see the required format</li>
+                  <li>Each row specifies a record type (client, site, or contract)</li>
+                  <li>You can use the 'action' column to specify create, update, or delete operations</li>
+                  <li>Choose between incremental import (adding/updating records) or full import (replacing all data)</li>
+                  <li>You can reference records by custom_id with "custom:" prefix (e.g., "custom:CL001")</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">CSV vs JSON Format</h3>
+                <p className="text-sm text-muted-foreground">
+                  For both individual and unified imports, you can use either CSV or JSON format:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><strong>CSV:</strong> Easier to edit in spreadsheet applications like Excel</li>
+                  <li><strong>JSON:</strong> Better for complex nested data and programmatic use</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Field Relationships</h3>
+                <p className="text-sm text-muted-foreground">
+                  Ensure you maintain proper relationships between data types:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>Sites must reference valid client_ids</li>
+                  <li>Contracts must reference valid site_ids</li>
+                  <li>You can use custom_ids to create these relationships (with "custom:" prefix)</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Validation</h3>
+                <p className="text-sm text-muted-foreground">
+                  Before importing, the system will validate your data and show:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><strong>Errors:</strong> Must be fixed before import can proceed</li>
+                  <li><strong>Warnings:</strong> Potential issues that won't block import</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Test Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  You can use the "Create Test Data" button to generate sample data with correct relationships for testing purposes.
+                </p>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="sites">
-          <AccordionTrigger>Site Import Template Guide</AccordionTrigger>
-          <AccordionContent>
+          </TabsContent>
+          
+          <TabsContent value="export" className="space-y-4 pt-4">
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                The site template includes the following fields:
-              </p>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Export Options</h3>
+                <p className="text-sm text-muted-foreground">
+                  You can export your data in different formats:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><strong>Individual Exports:</strong> Export clients, sites, or contracts separately</li>
+                  <li><strong>Unified Template:</strong> Download a template for unified imports</li>
+                </ul>
+              </div>
               
-              <div className="text-sm space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="font-semibold">Field</div>
-                  <div className="font-semibold">Description</div>
-                  
-                  <div>name*</div>
-                  <div>Site name (required)</div>
-                  
-                  <div>address*</div>
-                  <div>Site address (required)</div>
-                  
-                  <div>city*</div>
-                  <div>City (required)</div>
-                  
-                  <div>state*</div>
-                  <div>State or province (required)</div>
-                  
-                  <div>postcode*</div>
-                  <div>Postal or ZIP code (required)</div>
-                  
-                  <div>status</div>
-                  <div>Site status (active, inactive, pending)</div>
-                  
-                  <div>representative*</div>
-                  <div>Site representative (required)</div>
-                  
-                  <div>phone</div>
-                  <div>Site contact phone</div>
-                  
-                  <div>email</div>
-                  <div>Site contact email</div>
-                  
-                  <div>client_id*</div>
-                  <div>ID of client this site belongs to (required)</div>
-                  
-                  <div>custom_id</div>
-                  <div>Your custom identifier</div>
-                  
-                  <div>monthly_cost</div>
-                  <div>Monthly cost (numeric)</div>
-                  
-                  <div>monthly_revenue</div>
-                  <div>Monthly revenue (numeric)</div>
-                </div>
-                
-                <p className="text-xs italic mt-2">* Required fields</p>
-                
-                <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
-                  <p className="text-sm font-medium text-amber-800">Important Note</p>
-                  <p className="text-xs text-amber-700">
-                    Make sure the client_id field references existing clients in the system.
-                    You must import clients before importing sites.
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Export Format</h3>
+                <p className="text-sm text-muted-foreground">
+                  Data can be exported in different formats:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li><strong>JSON:</strong> Contains all data fields including nested information</li>
+                  <li><strong>CSV Templates:</strong> Provide structure for data entry in spreadsheet applications</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">Data Backup</h3>
+                <p className="text-sm text-muted-foreground">
+                  Regular exports are recommended for:
+                </p>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <li>Backup purposes</li>
+                  <li>Data analysis in other tools</li>
+                  <li>Creating templates for bulk additions</li>
+                </ul>
               </div>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="contracts">
-          <AccordionTrigger>Contract Import Template Guide</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                The contract template includes the following fields:
-              </p>
-              
-              <div className="text-sm space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="font-semibold">Field</div>
-                  <div className="font-semibold">Description</div>
-                  
-                  <div>site_id*</div>
-                  <div>ID of the site for this contract (required)</div>
-                  
-                  <div>start_date</div>
-                  <div>Contract start date (YYYY-MM-DD format)</div>
-                  
-                  <div>end_date</div>
-                  <div>Contract end date (YYYY-MM-DD format)</div>
-                  
-                  <div>contract_number</div>
-                  <div>Contract reference number</div>
-                  
-                  <div>renewal_terms</div>
-                  <div>Terms for contract renewal</div>
-                  
-                  <div>termination_period</div>
-                  <div>Notice period for termination</div>
-                  
-                  <div>notes</div>
-                  <div>Additional contract notes</div>
-                </div>
-                
-                <p className="text-xs italic mt-2">* Required fields</p>
-                
-                <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
-                  <p className="text-sm font-medium text-amber-800">Important Note</p>
-                  <p className="text-xs text-amber-700">
-                    Make sure the site_id field references existing sites in the system.
-                    You must import sites before importing contracts.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="process">
-          <AccordionTrigger>Import Process Overview</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Follow these steps for a successful import:
-              </p>
-              
-              <ol className="list-decimal pl-5 text-sm space-y-2">
-                <li>Download the appropriate template for the data you want to import</li>
-                <li>Fill in the template with your data</li>
-                <li>Save as CSV or create a JSON file in the matching format</li>
-                <li>Upload your file using the import button</li>
-                <li>Review the validation results before confirming the import</li>
-                <li>Fix any errors and reupload if necessary</li>
-              </ol>
-              
-              <div className="p-3 bg-blue-50 rounded border border-blue-200">
-                <p className="text-sm font-medium text-blue-800">Recommended Import Order</p>
-                <ol className="list-decimal pl-5 text-xs text-blue-700">
-                  <li>Import Clients first</li>
-                  <li>Import Sites next (requires client_id references)</li>
-                  <li>Import Contracts last (requires site_id references)</li>
-                </ol>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
