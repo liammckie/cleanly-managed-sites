@@ -4,25 +4,11 @@ import { useBusinessDetails } from '@/hooks/useBusinessDetails';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-} from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Building2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { LogoUpload } from './LogoUpload';
-import { BusinessInfoFields } from './BusinessInfoFields';
-import { AddressFields } from './AddressFields';
-import { ContactFields } from './ContactFields';
-import { SocialMediaFields } from './SocialMediaFields';
+import { BusinessDetailsCard } from './BusinessDetailsCard';
+import { BusinessDetailsFormContent } from './BusinessDetailsFormContent';
 import { BusinessFormValues, mapBusinessDetailsToFormValues } from './types';
 
 // Form validation schema
@@ -130,74 +116,22 @@ export const BusinessDetailsForm = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          My Business Details
-        </CardTitle>
-        <CardDescription>
-          Update your business information and logo. This information will appear on invoices, reports, and client communications.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8">
-          {/* Logo Section */}
-          <LogoUpload 
-            logoUrl={businessDetails?.logo_url || null}
-            isUploading={isUploading}
-            onUpload={handleLogoUpload}
-          />
-          
-          {/* Form Section */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <BusinessInfoFields form={form} />
-              
-              <Separator className="my-4" />
-              
-              <AddressFields form={form} />
-              
-              <Separator className="my-4" />
-              
-              <ContactFields form={form} />
-              
-              <Separator className="my-4" />
-              
-              <FormField
-                control={form.control}
-                name="social_media"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="text-base">Social Media</FormLabel>
-                    <SocialMediaFields form={form} />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  className="mt-4"
-                  disabled={form.formState.isSubmitting || isUploading}
-                >
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <LoadingSpinner size="sm" />
-                      <span className="ml-2">Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Details
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </CardContent>
-    </Card>
+    <BusinessDetailsCard>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8">
+        {/* Logo Section */}
+        <LogoUpload 
+          logoUrl={businessDetails?.logo_url || null}
+          isUploading={isUploading}
+          onUpload={handleLogoUpload}
+        />
+        
+        {/* Form Section */}
+        <BusinessDetailsFormContent
+          form={form}
+          onSubmit={onSubmit}
+          isUploading={isUploading}
+        />
+      </div>
+    </BusinessDetailsCard>
   );
 };
