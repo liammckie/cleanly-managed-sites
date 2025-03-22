@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export type Contractor = {
   id: string;
@@ -24,6 +25,7 @@ export type Contractor = {
   notes: string | null;
   rating: number | null;
   created_at: string;
+  user_id: string; // Add user_id to the type
 };
 
 export type ContractorDocument = {
@@ -53,6 +55,7 @@ export type ContractorCounts = {
 
 export function useContractors() {
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Get the current user
   
   // Fetch all contractors
   const contractorsQuery = useQuery({
@@ -159,10 +162,17 @@ export function useContractors() {
   
   // Create contractor mutation
   const createContractorMutation = useMutation({
-    mutationFn: async (newContractor: Omit<Contractor, 'id' | 'created_at'>) => {
+    mutationFn: async (newContractor: Omit<Contractor, 'id' | 'created_at' | 'user_id'>) => {
+      if (!user) throw new Error('User must be authenticated to create a contractor');
+      
+      const contractorWithUserId = {
+        ...newContractor,
+        user_id: user.id
+      };
+      
       const { data, error } = await supabase
         .from('contractors')
-        .insert(newContractor)
+        .insert(contractorWithUserId)
         .select()
         .single();
       
