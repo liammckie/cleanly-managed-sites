@@ -19,15 +19,21 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
   
   // Update preview when logoUrl changes
   useEffect(() => {
-    setLogoPreview(logoUrl);
+    if (logoUrl) {
+      console.log('Setting logo preview from URL:', logoUrl);
+      setLogoPreview(logoUrl);
+    }
   }, [logoUrl]);
   
   const handleFileButtonClick = () => {
     if (isUploading) return;
+    
     // Manually trigger file input click
     if (fileInputRef.current) {
       console.log('Triggering file input click');
       fileInputRef.current.click();
+    } else {
+      console.error('File input reference is not available');
     }
   };
   
@@ -57,16 +63,19 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
     }
     
     // Create a preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogoPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    
     try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        console.log('Preview created for file');
+        setLogoPreview(result);
+      };
+      reader.readAsDataURL(file);
+      
       // Upload the file
       console.log('Uploading file...');
       await onUpload(file);
+      console.log('Upload completed successfully');
       
       // Reset the file input so the same file can be selected again if needed
       if (fileInputRef.current) {

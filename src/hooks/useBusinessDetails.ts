@@ -43,11 +43,14 @@ export const useBusinessDetails = () => {
   const uploadLogo = async (file: File) => {
     if (!file) {
       console.error('No file provided to uploadLogo function');
+      toast.error('No file selected');
       return null;
     }
     
     try {
       setIsUploading(true);
+      toast.loading('Uploading logo...');
+      
       console.log('Uploading logo file:', file.name, file.size, 'type:', file.type);
       
       // Upload the file to Supabase storage
@@ -56,15 +59,23 @@ export const useBusinessDetails = () => {
       
       if (logoUrl) {
         // Update business details with the new logo URL
+        console.log('Updating business details with new logo URL');
         await updateDetailsMutation.mutateAsync({ logo_url: logoUrl });
         console.log('Business details updated with new logo URL');
+        
+        toast.dismiss();
         toast.success('Logo uploaded successfully');
+        
+        // Invalidate the business details query to refresh data
+        await queryClient.invalidateQueries({ queryKey: ['businessDetails'] });
+        
         return logoUrl;
       } else {
         throw new Error('No logo URL returned from upload');
       }
     } catch (error) {
       console.error('Failed to upload logo:', error);
+      toast.dismiss();
       toast.error('Failed to upload logo');
       throw error;
     } finally {

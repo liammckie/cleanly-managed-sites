@@ -115,11 +115,14 @@ export const BusinessDetailsForm = () => {
     }
     
     try {
-      console.log('Logo upload initiated with file:', file.name);
+      console.log('Logo upload initiated with file:', file.name, 'size:', file.size, 'type:', file.type);
       const result = await uploadLogo(file);
       console.log('Upload result:', result);
-      // Refetch business details to update the UI with the new logo
+      
+      // Important: Refetch business details to update the UI with the new logo
       await refetch();
+      
+      // No need for an explicit success message as the uploadLogo function already shows one
     } catch (error) {
       console.error('Error in handleLogoUpload:', error);
       toast.error('Failed to upload logo');
