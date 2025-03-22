@@ -9,9 +9,9 @@ export const contractHistoryApi = {
   ): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Note: The version_number is automatically set via a database trigger
-    // This was previously causing an error because our code was trying to set a field
-    // that's automatically set by the database
+    // Even though the version_number is automatically set by a database trigger,
+    // the TypeScript type requires us to provide it. We'll set it to 0 as a placeholder
+    // and the database trigger will override it with the correct value.
     const { error } = await supabase
       .from('site_contract_history')
       .insert({
@@ -19,7 +19,7 @@ export const contractHistoryApi = {
         contract_details: contractDetails,
         notes: notes,
         created_by: user?.id,
-        // The version_number is omitted as it's auto-set by a database trigger
+        version_number: 0  // This value will be overridden by the database trigger
       });
 
     if (error) {
