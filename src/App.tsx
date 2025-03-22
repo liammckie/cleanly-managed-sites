@@ -24,7 +24,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/hooks/auth/AuthProvider';
 import './App.css';
 
-// Create a client
+// Create a client 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -36,95 +36,97 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/clients/create" element={
-              <ProtectedRoute>
-                <CreateClient />
-              </ProtectedRoute>
-            } />
-            <Route path="/clients/:id/edit" element={
-              <ProtectedRoute>
-                <EditClient />
-              </ProtectedRoute>
-            } />
-            <Route path="/clients/:id" element={
-              <ProtectedRoute>
-                <ClientDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/sites" element={
-              <ProtectedRoute>
-                <Sites />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/sites/create" element={
-              <ProtectedRoute>
-                <CreateSite />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/sites/:id" element={
-              <ProtectedRoute>
-                <SiteDetail />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/sites/:id/edit" element={
-              <ProtectedRoute>
-                <EditSite />
-              </ProtectedRoute>
-            } />
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/clients/create" element={
+                <ProtectedRoute>
+                  <CreateClient />
+                </ProtectedRoute>
+              } />
+              <Route path="/clients/:id/edit" element={
+                <ProtectedRoute>
+                  <EditClient />
+                </ProtectedRoute>
+              } />
+              <Route path="/clients/:id" element={
+                <ProtectedRoute>
+                  <ClientDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/sites" element={
+                <ProtectedRoute>
+                  <Sites />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/sites/create" element={
+                <ProtectedRoute>
+                  <CreateSite />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/sites/:id" element={
+                <ProtectedRoute>
+                  <SiteDetail />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/sites/:id/edit" element={
+                <ProtectedRoute>
+                  <EditSite />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/contracts" element={
-              <ProtectedRoute>
-                <Contracts />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/clients" element={
-              <ProtectedRoute>
-                <Clients />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/workorders" element={
-              <ProtectedRoute>
-                <WorkOrders />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/integrations" element={
-              <ProtectedRoute>
-                <Integrations />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-          <Toaster />
-        </AuthProvider>
-      </Router>
-    </QueryClientProvider>
+              <Route path="/contracts" element={
+                <ProtectedRoute>
+                  <Contracts />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/clients" element={
+                <ProtectedRoute>
+                  <Clients />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/workorders" element={
+                <ProtectedRoute>
+                  <WorkOrders />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/integrations" element={
+                <ProtectedRoute>
+                  <Integrations />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
+            <Toaster />
+          </AuthProvider>
+        </Router>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 }
 

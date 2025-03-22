@@ -1,6 +1,5 @@
 
-// Re-export the auth provider and hooks from the auth folder
-// This simplifies imports and ensures consistent auth handling
-import { AuthProvider, useAuth } from './auth';
+import { useAuth as useAuthHook } from './auth';
 
-export { AuthProvider, useAuth };
+// Re-export the useAuth hook to maintain backward compatibility
+export { useAuthHook as useAuth };
