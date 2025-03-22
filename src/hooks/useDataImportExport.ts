@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -137,12 +136,12 @@ const importContracts = async (importedContracts: Partial<ContractHistoryEntry>[
 };
 
 const insertContractsAndUpdateSites = async (
-  importedContracts: ContractHistoryEntry[], 
+  importedContracts: Partial<ContractHistoryEntry>[], 
   userId: string,
   siteIds: string[]
 ) => {
   const preparedContracts = importedContracts.map(contract => ({
-    site_id: contract.site_id,
+    site_id: contract.site_id as string,
     contract_details: contract.contract_details,
     notes: contract.notes || 'Imported contract',
     created_by: userId,
@@ -164,23 +163,30 @@ const insertContractsAndUpdateSites = async (
 };
 
 const updateSiteContractDetails = async (
-  importedContracts: ContractHistoryEntry[], 
+  importedContracts: Partial<ContractHistoryEntry>[], 
   siteIds: string[]
 ) => {
   for (const siteId of siteIds) {
-    const latestContract = importedContracts
-      .filter(c => c.site_id === siteId)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    const siteContracts = importedContracts.filter(c => c.site_id === siteId);
     
-    if (latestContract) {
-      const { error } = await supabase
-        .from('sites')
-        .update({ contract_details: latestContract.contract_details })
-        .eq('id', siteId);
+    if (siteContracts.length > 0) {
+      const latestContract = siteContracts
+        .filter(c => c.created_at)
+        .sort((a, b) => {
+          if (!a.created_at || !b.created_at) return 0;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        })[0] || siteContracts[0];
       
-      if (error) {
-        console.error('Error updating site contract details:', error);
-        toast.error(`Failed to update contract details for site: ${error.message}`);
+      if (latestContract && latestContract.contract_details) {
+        const { error } = await supabase
+          .from('sites')
+          .update({ contract_details: latestContract.contract_details })
+          .eq('id', siteId);
+        
+        if (error) {
+          console.error('Error updating site contract details:', error);
+          toast.error(`Failed to update contract details for site: ${error.message}`);
+        }
       }
     }
   }
@@ -201,7 +207,6 @@ const parseCSV = async (file: File): Promise<any[]> => {
   });
 };
 
-// Create type-compatible conversion functions
 const convertCSVToClientFormat = (csvData: any[]): Partial<ClientRecord>[] => {
   return csvData.map(row => ({
     name: row.name || '',
@@ -283,7 +288,6 @@ export function useDataImportExport() {
       data = convertCSVToClientFormat(data);
     }
     
-    // Cast to Partial<ClientRecord>[] to satisfy TypeScript
     const clientData = data as Partial<ClientRecord>[];
     await importClients(clientData);
   };
@@ -293,7 +297,6 @@ export function useDataImportExport() {
       data = convertCSVToSiteFormat(data);
     }
     
-    // Cast to Partial<SiteRecord>[] to satisfy TypeScript
     const siteData = data as Partial<SiteRecord>[];
     await importSites(siteData);
   };
@@ -303,7 +306,6 @@ export function useDataImportExport() {
       data = convertCSVToContractFormat(data);
     }
     
-    // Cast to Partial<ContractHistoryEntry>[] to satisfy TypeScript
     const contractData = data as Partial<ContractHistoryEntry>[];
     await importContracts(contractData);
   };
