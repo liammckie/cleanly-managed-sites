@@ -1,110 +1,78 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useContractors } from '@/hooks/useContractors';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Briefcase, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useContractors } from "@/hooks/useContractors";
+import { Building2, ChevronRight, FileCheck, UserCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function ContractorsDashboard() {
-  const { contractors, isLoading, error, contractorCounts, expiringDocuments } = useContractors();
-  
+  const { contractorCounts, isLoading } = useContractors();
+
   if (isLoading) {
     return (
-      <Card className="col-span-1 h-[350px] flex items-center justify-center">
+      <div className="flex justify-center items-center h-24">
         <LoadingSpinner />
-      </Card>
+      </div>
     );
   }
-  
-  if (error) {
-    return (
-      <Card className="col-span-1">
-        <CardHeader>
-          <CardTitle className="text-lg font-medium text-destructive flex items-center">
-            <AlertTriangle className="mr-2 h-5 w-5" />
-            Error Loading Contractors
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>There was an error loading the contractor information.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  const hasContractors = contractors && contractors.length > 0;
+
+  // Define default values in case properties don't exist
+  const totalContractors = contractorCounts?.totalContractors || 0;
+  const activeContractors = contractorCounts?.activeContractors || 0;
+  const expiringDocuments = contractorCounts?.expiringDocuments || 0;
   
   return (
-    <Card className="col-span-1">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-primary" />
-          Contractors & Suppliers
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="pb-2">
-        {hasContractors ? (
-          <>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="glass-card p-3 text-center">
-                <p className="text-2xl font-bold">{contractorCounts?.activeContractors || 0}</p>
-                <p className="text-xs text-muted-foreground">Active Contractors</p>
-              </div>
-              <div className="glass-card p-3 text-center">
-                <p className="text-2xl font-bold">{contractorCounts?.activeSites || 0}</p>
-                <p className="text-xs text-muted-foreground">Sites with Contractors</p>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <Link to="/contractors?status=all">
+        <Card className="cursor-pointer hover:bg-accent/5 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Contractors</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{totalContractors}</div>
+              <div className="text-xs text-muted-foreground flex items-center">
+                View All <ChevronRight className="h-3 w-3 ml-1" />
               </div>
             </div>
-            
-            {expiringDocuments && expiringDocuments.length > 0 ? (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium flex items-center gap-1">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  Expiring Documents
-                </h4>
-                <div className="max-h-[120px] overflow-y-auto space-y-2">
-                  {expiringDocuments.slice(0, 3).map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded">
-                      <div>
-                        <p className="font-medium">{doc.name}</p>
-                        <p className="text-xs text-muted-foreground">{doc.business_name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-amber-600 font-medium">Expires {new Date(doc.expiry_date).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link to="/contractors?status=active">
+        <Card className="cursor-pointer hover:bg-accent/5 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Contractors</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{activeContractors}</div>
+              <div className="text-xs text-muted-foreground flex items-center">
+                View Active <ChevronRight className="h-3 w-3 ml-1" />
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-3 rounded">
-                <CheckCircle className="h-4 w-4" />
-                <span>All contractor documents are up to date!</span>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link to="/contractors/documents/expiring">
+        <Card className="cursor-pointer hover:bg-accent/5 transition-colors">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expiring Documents</CardTitle>
+            <FileCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{expiringDocuments}</div>
+              <div className="text-xs text-muted-foreground flex items-center">
+                View Expiring <ChevronRight className="h-3 w-3 ml-1" />
               </div>
-            )}
-          </>
-        ) : (
-          <div className="py-8 text-center">
-            <Briefcase className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-            <h3 className="text-lg font-medium">No Contractors Yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Add contractors to manage your workforce and suppliers
-            </p>
-            <Button variant="outline" asChild>
-              <Link to="/contractors/create">Add Your First Contractor</Link>
-            </Button>
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-2">
-        <Button variant="link" className="w-full" asChild>
-          <Link to="/contractors">View All Contractors</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </div>
   );
 }

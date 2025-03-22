@@ -151,43 +151,48 @@ export const contractorsApi = {
     }
     
     // Check if contractor_history table exists
-    const { data: tableInfo, error: tableError } = await supabase
-      .rpc('get_table_definition', { table_name: 'contractor_history' });
-    
-    const tableExists = tableInfo && tableInfo.length > 0;
+    try {
+      const { data: tableInfo } = await supabase
+        .rpc('get_table_definition', { table_name: 'contractor_history' });
       
-    // If the table exists, create a history entry
-    if (tableExists) {
-      try {
-        // Get the current version number
-        const { data: versionData } = await supabase
-          .from('contractor_history')
-          .select('version_number')
-          .eq('contractor_id', id)
-          .order('version_number', { ascending: false })
-          .limit(1);
+      const tableExists = tableInfo && tableInfo.length > 0;
         
-        const currentVersion = versionData && versionData.length > 0 ? versionData[0].version_number : 0;
-        
-        // Create history entry
-        const historyEntry = {
-          contractor_id: id,
-          contractor_data: currentContractor,
-          created_by: user.id,
-          version_number: currentVersion + 1,
-          notes: 'Contractor details updated'
-        };
-        
-        await supabase
-          .from('contractor_history')
-          .insert(historyEntry);
-      } catch (historyError) {
-        console.error('Error creating contractor history entry:', historyError);
-        // We don't throw this error as it should not prevent the update operation
-        console.warn('Contractor updated but history creation failed');
+      // If the table exists, create a history entry
+      if (tableExists) {
+        try {
+          // Get the current version number
+          const { data: versionData } = await supabase
+            .from('contractor_history')
+            .select('version_number')
+            .eq('contractor_id', id)
+            .order('version_number', { ascending: false })
+            .limit(1);
+          
+          const currentVersion = versionData && versionData.length > 0 ? versionData[0].version_number : 0;
+          
+          // Create history entry
+          const historyEntry = {
+            contractor_id: id,
+            contractor_data: currentContractor,
+            created_by: user.id,
+            version_number: currentVersion + 1,
+            notes: 'Contractor details updated'
+          };
+          
+          await supabase
+            .from('contractor_history')
+            .insert(historyEntry);
+        } catch (historyError) {
+          console.error('Error creating contractor history entry:', historyError);
+          // We don't throw this error as it should not prevent the update operation
+          console.warn('Contractor updated but history creation failed');
+        }
+      } else {
+        console.log('contractor_history table does not exist yet, skipping history recording');
       }
-    } else {
-      console.log('contractor_history table does not exist yet, skipping history recording');
+    } catch (tableError) {
+      console.error('Error checking for contractor_history table:', tableError);
+      console.warn('Continuing with contractor update despite history table check failure');
     }
     
     return updatedContractor as ContractorRecord;
@@ -195,23 +200,27 @@ export const contractorsApi = {
   
   // Delete a contractor
   async deleteContractor(id: string): Promise<void> {
-    // Check if contractor_history table exists
-    const { data: tableInfo } = await supabase
-      .rpc('get_table_definition', { table_name: 'contractor_history' });
-    
-    const tableExists = tableInfo && tableInfo.length > 0;
-    
-    // Delete any history entries first if the table exists
-    if (tableExists) {
-      try {
-        await supabase
-          .from('contractor_history')
-          .delete()
-          .eq('contractor_id', id);
-      } catch (historyError) {
-        console.error(`Error deleting history entries for contractor with ID ${id}:`, historyError);
-        // We continue with the deletion of the contractor even if history deletion fails
+    try {
+      // Check if contractor_history table exists
+      const { data: tableInfo } = await supabase
+        .rpc('get_table_definition', { table_name: 'contractor_history' });
+      
+      const tableExists = tableInfo && tableInfo.length > 0;
+      
+      // Delete any history entries first if the table exists
+      if (tableExists) {
+        try {
+          await supabase
+            .from('contractor_history')
+            .delete()
+            .eq('contractor_id', id);
+        } catch (historyError) {
+          console.error(`Error deleting history entries for contractor with ID ${id}:`, historyError);
+          // We continue with the deletion of the contractor even if history deletion fails
+        }
       }
+    } catch (tableError) {
+      console.warn('Error checking for contractor_history table, continuing with contractor deletion:', tableError);
     }
     
     // Now delete the contractor
