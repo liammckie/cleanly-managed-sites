@@ -1,9 +1,8 @@
-
 import { supabase } from '../supabase';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 import { validateClientData, validateSiteData, validateContractData, checkExistingItems } from './dataValidation';
-import { ParsedImportData } from './types';
+import { ParsedImportData, InvoiceRecord } from './types';
 
 // Parse an imported file (JSON or CSV)
 export const parseImportedFile = async (file: File): Promise<any> => {
@@ -155,17 +154,17 @@ export const importContracts = async (contracts: Partial<ContractHistoryEntry>[]
 };
 
 // Import invoices
-export const importInvoices = async (invoices: any[]): Promise<void> => {
+export const importInvoices = async (invoices: InvoiceRecord[]): Promise<void> => {
   try {
     // We would do validation here similar to other import functions
     // For brevity, proceeding directly to import
     
     // Check for existing invoices by ID to avoid duplicates
     const invoicesWithIds = invoices.filter(invoice => invoice.id);
-    const existingIds = await checkExistingItems('invoices', invoicesWithIds.map(invoice => invoice.id));
+    const existingIds = await checkExistingItems('invoices', invoicesWithIds.map(invoice => invoice.id as string));
     
     const invoicesToInsert = invoices.filter(invoice => !invoice.id || !existingIds.includes(invoice.id));
-    const invoicesToUpdate = invoices.filter(invoice => invoice.id && existingIds.includes(invoice.id));
+    const invoicesToUpdate = invoices.filter(invoice => invoice.id && existingIds.includes(invoice.id as string));
     
     // Insert new invoices
     if (invoicesToInsert.length > 0) {
@@ -195,7 +194,7 @@ export const importInvoices = async (invoices: any[]): Promise<void> => {
     for (const invoice of invoices) {
       if (invoice.lineItems && Array.isArray(invoice.lineItems) && invoice.lineItems.length > 0) {
         // For each invoice, process its line items
-        await importInvoiceLineItems(invoice.id, invoice.lineItems);
+        await importInvoiceLineItems(invoice.id as string, invoice.lineItems);
       }
     }
     
