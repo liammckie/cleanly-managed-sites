@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useDataImportExport } from '@/hooks/useDataImportExport';
 import { ImportExportHeader } from './ImportExportHeader';
 import { ImportExportCardGrid } from './ImportExportCardGrid';
+import { ImportExportInstructions } from './ImportExportInstructions';
 
 export const ImportExportPage: React.FC = () => {
   const { clients, isLoading: isLoadingClients } = useClients();
@@ -15,7 +16,11 @@ export const ImportExportPage: React.FC = () => {
     isLoadingContracts,
     handleImportClients,
     handleImportSites,
-    handleImportContracts
+    handleImportContracts,
+    handleCSVImport,
+    getClientCSVTemplate,
+    getSiteCSVTemplate,
+    getContractCSVTemplate
   } = useDataImportExport();
   
   if (isLoadingClients || isLoadingSites || isLoadingContracts) {
@@ -26,9 +31,14 @@ export const ImportExportPage: React.FC = () => {
     );
   }
   
+  const handleCSVImportClients = (file: File) => handleCSVImport(file, 'clients');
+  const handleCSVImportSites = (file: File) => handleCSVImport(file, 'sites');
+  const handleCSVImportContracts = (file: File) => handleCSVImport(file, 'contracts');
+  
   return (
     <div className="space-y-8">
       <ImportExportHeader />
+      <ImportExportInstructions />
       <ImportExportCardGrid 
         clients={clients}
         sites={sites}
@@ -36,6 +46,12 @@ export const ImportExportPage: React.FC = () => {
         onImportClients={handleImportClients}
         onImportSites={handleImportSites}
         onImportContracts={handleImportContracts}
+        onCSVImportClients={handleCSVImportClients}
+        onCSVImportSites={handleCSVImportSites}
+        onCSVImportContracts={handleCSVImportContracts}
+        getClientCSVTemplate={getClientCSVTemplate}
+        getSiteCSVTemplate={getSiteCSVTemplate}
+        getContractCSVTemplate={getContractCSVTemplate}
       />
     </div>
   );
