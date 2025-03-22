@@ -89,7 +89,7 @@ export function Sidebar() {
       </div>
       
       <div className="flex-1 overflow-y-auto">
-        <nav className="space-y-1 px-2">
+        <nav className="space-y-1 px-2" role="navigation" aria-label="Main Navigation">
           {menuItems.map((item) => (
             <Link
               key={item.href}
@@ -99,6 +99,7 @@ export function Sidebar() {
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-primary/10'
               }`}
+              aria-current={item.active ? 'page' : undefined}
             >
               {item.icon}
               <span className="text-sm">{item.label}</span>
@@ -113,6 +114,7 @@ export function Sidebar() {
             variant="ghost" 
             className="w-full justify-start text-sm" 
             onClick={handleSignOut}
+            aria-label="Sign Out"
           >
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
