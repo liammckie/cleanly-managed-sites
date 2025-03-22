@@ -67,8 +67,8 @@ export const convertCSVToSiteFormat = (csvData: any[]): Partial<SiteRecord>[] =>
 export const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHistoryEntry>[] => {
   return csvData.map(row => ({
     site_id: row.site_id || '',
-    version_number: 0,
-    notes: row.notes || '',
+    version_number: Number(row.version_number) || 0,
+    notes: row.contract_notes || '',
     contract_details: {
       startDate: row.start_date || '',
       endDate: row.end_date || '',
@@ -95,16 +95,16 @@ export const parseUnifiedImport = async (
     switch (row.record_type.toLowerCase()) {
       case 'client': {
         const client = {
-          name: row.client_name || '',
-          contact_name: row.client_contact_name || '',
-          email: row.client_email || '',
-          phone: row.client_phone || '',
-          address: row.client_address || '',
-          city: row.client_city || '',
-          state: row.client_state || '',
-          postcode: row.client_postcode || '',
-          status: row.client_status || 'active',
-          notes: row.client_notes || '',
+          name: row.name || '',
+          contact_name: row.contact_name || '',
+          email: row.email || '',
+          phone: row.phone || '',
+          address: row.address || '',
+          city: row.city || '',
+          state: row.state || '',
+          postcode: row.postcode || '',
+          status: row.status || 'active',
+          notes: row.notes || '',
           custom_id: row.custom_id || '',
           id: row.id || undefined
         };
@@ -123,13 +123,13 @@ export const parseUnifiedImport = async (
           state: row.site_state || '',
           postcode: row.site_postcode || '',
           status: row.site_status || 'active',
-          representative: row.site_representative || '',
+          representative: row.representative || '',
           phone: row.site_phone || '',
           email: row.site_email || '',
-          client_id: row.site_client_id || '',
+          client_id: row.client_id || '',
           custom_id: row.custom_id || '',
-          monthly_cost: row.site_monthly_cost ? parseFloat(row.site_monthly_cost) : undefined,
-          monthly_revenue: row.site_monthly_revenue ? parseFloat(row.site_monthly_revenue) : undefined,
+          monthly_cost: row.monthly_cost ? parseFloat(row.monthly_cost) : undefined,
+          monthly_revenue: row.monthly_revenue ? parseFloat(row.monthly_revenue) : undefined,
           id: row.id || undefined
         };
         
@@ -141,15 +141,15 @@ export const parseUnifiedImport = async (
       
       case 'contract': {
         const contract = {
-          site_id: row.contract_site_id || '',
+          site_id: row.site_id || '',
           notes: row.contract_notes || '',
-          version_number: 0,
+          version_number: Number(row.version_number) || 0,
           contract_details: {
-            startDate: row.contract_start_date || '',
-            endDate: row.contract_end_date || '',
+            startDate: row.start_date || '',
+            endDate: row.end_date || '',
             contractNumber: row.contract_number || '',
-            renewalTerms: row.contract_renewal_terms || '',
-            terminationPeriod: row.contract_termination_period || '',
+            renewalTerms: row.renewal_terms || '',
+            terminationPeriod: row.termination_period || '',
             terms: []
           },
           id: row.id || undefined
@@ -165,3 +165,4 @@ export const parseUnifiedImport = async (
 
   return { clients, sites, contracts };
 };
+

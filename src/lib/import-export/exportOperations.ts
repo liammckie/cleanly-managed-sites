@@ -35,46 +35,48 @@ export const exportContracts = (contracts: ContractHistoryEntry[]): void => {
 
 // Generate a single unified import template
 export const generateUnifiedImportTemplate = (): string => {
+  // Define the headers with correct database field names
   const headers = [
     'record_type', // Type of record: client, site, or contract
     'action', // Action to take: create, update, or delete
     'id', // Database ID (blank for new records)
     'custom_id', // Custom identifier
     
-    // Client fields
-    'client_name',
-    'client_contact_name',
-    'client_email',
-    'client_phone',
-    'client_address',
-    'client_city',
-    'client_state',
-    'client_postcode',
-    'client_status',
-    'client_notes',
+    // Client fields - use exact database field names
+    'name', // client name
+    'contact_name',
+    'email',
+    'phone',
+    'address',
+    'city',
+    'state',
+    'postcode',
+    'status',
+    'notes',
     
-    // Site fields
-    'site_name',
-    'site_address',
-    'site_city',
-    'site_state',
-    'site_postcode',
-    'site_status',
-    'site_representative',
-    'site_phone',
-    'site_email',
-    'site_client_id', // Can be database ID or custom_id (prefixed with "custom:")
-    'site_monthly_cost',
-    'site_monthly_revenue',
+    // Site fields - use exact database field names 
+    'site_name', // special case - will be mapped to name in site table
+    'site_address', // special case - will be mapped to address in site table
+    'site_city', // special case - will be mapped to city in site table
+    'site_state', // special case - will be mapped to state in site table
+    'site_postcode', // special case - will be mapped to postcode in site table
+    'site_status', // special case - will be mapped to status in site table
+    'representative',
+    'site_phone', // special case - will be mapped to phone in site table
+    'site_email', // special case - will be mapped to email in site table
+    'client_id',
+    'monthly_cost',
+    'monthly_revenue',
     
     // Contract fields
-    'contract_site_id', // Can be database ID or custom_id (prefixed with "custom:")
-    'contract_start_date',
-    'contract_end_date',
-    'contract_number',
-    'contract_renewal_terms',
-    'contract_termination_period',
-    'contract_notes'
+    'site_id', // Site ID for contract
+    'version_number',
+    'contract_notes', // special case - will be mapped to notes in contract table
+    'start_date', // Will be mapped to contract_details.startDate
+    'end_date', // Will be mapped to contract_details.endDate
+    'contract_number', // Will be mapped to contract_details.contractNumber
+    'renewal_terms', // Will be mapped to contract_details.renewalTerms
+    'termination_period' // Will be mapped to contract_details.terminationPeriod
   ];
   
   // Sample data for clients
@@ -83,7 +85,7 @@ export const generateUnifiedImportTemplate = (): string => {
     'ACME Corporation', 'John Doe', 'john@acme.com', '123-456-7890',
     '123 Main St', 'New York', 'NY', '10001', 'active', 'New client',
     '', '', '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', '', ''
+    '', '', '', '', '', ''
   ];
   
   // Sample data for sites
@@ -100,7 +102,8 @@ export const generateUnifiedImportTemplate = (): string => {
     'contract', 'create', '', '',
     '', '', '', '', '', '', '', '', '', '',
     '', '', '', '', '', '', '', '', '', '', '', '',
-    'custom:ST001', '2023-01-01', '2024-01-01', 'CNT-001', '30 days automatic renewal', '60 days written notice', 'Standard service contract'
+    'custom:ST001', '1', 'Standard service contract', '2023-01-01', '2024-01-01', 'CNT-001', 
+    '30 days automatic renewal', '60 days written notice'
   ];
   
   // Combine the samples
@@ -108,3 +111,4 @@ export const generateUnifiedImportTemplate = (): string => {
   
   return Papa.unparse(samples, { header: true, columns: headers });
 };
+
