@@ -121,26 +121,26 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
 
   const fileExt = file.name.split('.').pop();
   const fileName = `logo-${user.user.id}-${Date.now()}.${fileExt}`;
-  const filePath = `business-logos/${fileName}`;
+  const filePath = `${fileName}`;
   
   console.log('Uploading logo:', filePath);
   
   try {
-    // Check if the bucket exists
+    // Check if the bucket exists and create it if it doesn't
     const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === 'business-assets');
+    const bucketName = 'business-assets';
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
-    // Create bucket if it doesn't exist
     if (!bucketExists) {
-      console.log('Creating bucket: business-assets');
+      console.log('Creating bucket:', bucketName);
       const { error: bucketError } = await supabase.storage
-        .createBucket('business-assets', {
+        .createBucket(bucketName, {
           public: true,
           fileSizeLimit: 5242880, // 5MB
           allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
         });
       
-      if (bucketError && !bucketError.message.includes('already exists')) {
+      if (bucketError) {
         console.error('Error creating storage bucket:', bucketError);
         throw new Error(`Error creating storage bucket: ${bucketError.message}`);
       }
@@ -149,7 +149,7 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
     // Upload the file
     console.log('Uploading file to storage');
     const { error: uploadError } = await supabase.storage
-      .from('business-assets')
+      .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
@@ -162,7 +162,7 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
 
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from('business-assets')
+      .from(bucketName)
       .getPublicUrl(filePath);
 
     console.log('File uploaded successfully, public URL:', urlData.publicUrl);

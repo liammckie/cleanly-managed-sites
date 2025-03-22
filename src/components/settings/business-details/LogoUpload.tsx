@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Upload, Building2, AlertCircle } from 'lucide-react';
@@ -13,14 +13,21 @@ interface LogoUploadProps {
 }
 
 export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) => {
-  const [logoPreview, setLogoPreview] = useState<string | null>(logoUrl);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Update preview when logoUrl changes
+  useEffect(() => {
+    setLogoPreview(logoUrl);
+  }, [logoUrl]);
   
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setUploadError(null);
     
     if (!file) return;
+    
+    console.log('File selected:', file.name, file.type, file.size);
     
     // Validate file type
     if (!isImageFile(file.name)) {
@@ -45,6 +52,7 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
     
     try {
       // Upload the file
+      console.log('Uploading file...');
       await onUpload(file);
     } catch (error) {
       console.error('Error uploading logo:', error);
