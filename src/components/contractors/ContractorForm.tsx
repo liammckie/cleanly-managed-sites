@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -89,16 +90,30 @@ export const ContractorForm = () => {
   // Handle form submission
   const onSubmit = async (values: ContractorFormValues) => {
     try {
-      // Convert string rates to numbers
+      // Convert string rates to numbers or null
       const hourlyRate = values.hourly_rate ? parseFloat(values.hourly_rate) : null;
       const dayRate = values.day_rate ? parseFloat(values.day_rate) : null;
 
       // Create contractor with processed values
+      // Ensure all required fields are properly defined (non-optional)
       await createContractor({
-        ...values,
+        business_name: values.business_name, // Required field
+        contact_name: values.contact_name, // Required field
+        email: values.email || null,
+        phone: values.phone || null,
+        address: values.address || null,
+        city: values.city || null,
+        state: values.state || null,
+        postcode: values.postcode || null,
+        status: values.status, // Required field
+        contractor_type: values.contractor_type, // Required field
         hourly_rate: hourlyRate,
         day_rate: dayRate,
-        rating: null, // Add the missing rating property, default to null
+        abn: values.abn || null,
+        tax_id: values.tax_id || null,
+        notes: values.notes || null,
+        specialty: values.specialty || null,
+        rating: null, // Required field, default to null
       });
 
       // Navigate back to contractors list on success
