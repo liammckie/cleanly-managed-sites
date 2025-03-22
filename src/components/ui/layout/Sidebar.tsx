@@ -11,7 +11,8 @@ import {
   LogOut, 
   FileText,
   Boxes,
-  Download
+  Download,
+  Briefcase
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,12 @@ export function Sidebar() {
       icon: <Users size={20} />,
       label: 'Clients',
       active: pathname.startsWith('/clients')
+    },
+    {
+      href: '/contractors',
+      icon: <Briefcase size={20} />,
+      label: 'Contractors',
+      active: pathname.startsWith('/contractors')
     },
     {
       href: '/workorders',

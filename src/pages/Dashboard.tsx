@@ -5,6 +5,7 @@ import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ClientDashboard } from '@/components/clients/ClientDashboard';
 import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
+import { ContractorsDashboard } from '@/components/contractors/ContractorsDashboard';
 
 const Dashboard = () => {
   return (
@@ -24,8 +25,9 @@ const Dashboard = () => {
             <div className="space-y-8">
               <ContractValueMetrics />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ClientDashboard />
+                <ContractorsDashboard />
               </div>
             </div>
           </div>

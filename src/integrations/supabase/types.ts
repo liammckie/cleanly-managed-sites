@@ -165,6 +165,255 @@ export type Database = {
         }
         Relationships: []
       }
+      contractor_documents: {
+        Row: {
+          contractor_id: string
+          created_at: string
+          document_type: string
+          expiry_date: string | null
+          file_path: string | null
+          id: string
+          issue_date: string | null
+          name: string
+          notes: string | null
+          reminder_days: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contractor_id: string
+          created_at?: string
+          document_type: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          issue_date?: string | null
+          name: string
+          notes?: string | null
+          reminder_days?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contractor_id?: string
+          created_at?: string
+          document_type?: string
+          expiry_date?: string | null
+          file_path?: string | null
+          id?: string
+          issue_date?: string | null
+          name?: string
+          notes?: string | null
+          reminder_days?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_documents_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractor_payments: {
+        Row: {
+          amount: number
+          contractor_id: string
+          created_at: string
+          id: string
+          invoice_number: string | null
+          notes: string | null
+          payment_date: string
+          payment_method: string | null
+          payment_status: string
+          site_id: string | null
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          amount: number
+          contractor_id: string
+          created_at?: string
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date: string
+          payment_method?: string | null
+          payment_status?: string
+          site_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          amount?: number
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          invoice_number?: string | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          payment_status?: string
+          site_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_payments_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_payments_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_payments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractor_site_assignments: {
+        Row: {
+          contract_value: number | null
+          contractor_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          payment_status: string | null
+          payment_terms: string | null
+          role: string
+          site_id: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          contract_value?: number | null
+          contractor_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_status?: string | null
+          payment_terms?: string | null
+          role: string
+          site_id: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contract_value?: number | null
+          contractor_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_status?: string | null
+          payment_terms?: string | null
+          role?: string
+          site_id?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_site_assignments_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contractor_site_assignments_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractors: {
+        Row: {
+          abn: string | null
+          address: string | null
+          business_name: string
+          city: string | null
+          contact_name: string
+          contractor_type: string
+          created_at: string
+          day_rate: number | null
+          email: string | null
+          hourly_rate: number | null
+          id: string
+          notes: string | null
+          phone: string | null
+          postcode: string | null
+          rating: number | null
+          specialty: string[] | null
+          state: string | null
+          status: string
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abn?: string | null
+          address?: string | null
+          business_name: string
+          city?: string | null
+          contact_name: string
+          contractor_type: string
+          created_at?: string
+          day_rate?: number | null
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          rating?: number | null
+          specialty?: string[] | null
+          state?: string | null
+          status?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abn?: string | null
+          address?: string | null
+          business_name?: string
+          city?: string | null
+          contact_name?: string
+          contractor_type?: string
+          created_at?: string
+          day_rate?: number | null
+          email?: string | null
+          hourly_rate?: number | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          postcode?: string | null
+          rating?: number | null
+          specialty?: string[] | null
+          state?: string | null
+          status?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -425,6 +674,7 @@ export type Database = {
         Row: {
           business_name: string
           contact_name: string
+          contractor_id: string | null
           created_at: string
           email: string | null
           id: string
@@ -436,6 +686,7 @@ export type Database = {
         Insert: {
           business_name: string
           contact_name: string
+          contractor_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -447,6 +698,7 @@ export type Database = {
         Update: {
           business_name?: string
           contact_name?: string
+          contractor_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -456,6 +708,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "subcontractors_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subcontractors_site_id_fkey"
             columns: ["site_id"]
