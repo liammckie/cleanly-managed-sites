@@ -6,19 +6,7 @@ export const contractorHistoryApi = {
   // Get history entries for a contractor
   async getContractorHistory(contractorId: string): Promise<ContractorVersionHistoryEntry[]> {
     try {
-      // First check if the table exists
-      const { data: tableInfo } = await supabase
-        .rpc('get_table_definition', { table_name: 'contractor_history' });
-      
-      const tableExists = tableInfo && tableInfo.length > 0;
-      
-      if (!tableExists) {
-        console.log('Contractor history table does not exist yet');
-        return [];
-      }
-      
-      // Use a raw query to select from the table, which avoids TypeScript errors
-      // since the table might not be in the TypeScript definition
+      // Since we've now created the contractor_history table, we can query it directly
       const { data, error } = await supabase
         .from('contractor_history')
         .select('*')
@@ -30,8 +18,16 @@ export const contractorHistoryApi = {
         throw error;
       }
       
-      // Explicitly convert to the expected type
-      return (data || []) as ContractorVersionHistoryEntry[];
+      // Process the data to match the ContractorVersionHistoryEntry type
+      return (data || []).map(entry => ({
+        id: entry.id,
+        contractor_id: entry.contractor_id,
+        contractor_data: entry.contractor_data,
+        version_number: entry.version_number,
+        notes: entry.notes || '',
+        created_at: entry.created_at,
+        created_by: entry.created_by
+      })) as ContractorVersionHistoryEntry[];
     } catch (error) {
       console.error(`Error in getContractorHistory for ID ${contractorId}:`, error);
       // Return empty array instead of throwing to make the UI more resilient

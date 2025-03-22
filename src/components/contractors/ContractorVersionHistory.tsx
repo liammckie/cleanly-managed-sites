@@ -5,11 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { ContractorVersionHistoryEntry } from '@/lib/types';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ContractorRecord } from '@/lib/types';
 
 export interface ContractorVersionHistoryProps {
   history: ContractorVersionHistoryEntry[];
   isLoading: boolean;
-  currentContractor: any;
+  currentContractor: ContractorRecord;
 }
 
 export function ContractorVersionHistory({ history, isLoading, currentContractor }: ContractorVersionHistoryProps) {

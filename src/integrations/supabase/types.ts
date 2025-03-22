@@ -218,6 +218,44 @@ export type Database = {
           },
         ]
       }
+      contractor_history: {
+        Row: {
+          contractor_data: Json
+          contractor_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          version_number: number
+        }
+        Insert: {
+          contractor_data: Json
+          contractor_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          version_number: number
+        }
+        Update: {
+          contractor_data?: Json
+          contractor_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_history_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_payments: {
         Row: {
           amount: number
