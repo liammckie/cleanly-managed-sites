@@ -31,9 +31,18 @@ export const ImportExportPage: React.FC = () => {
     );
   }
   
-  const handleCSVImportClients = (file: File) => handleCSVImport(file, 'clients');
-  const handleCSVImportSites = (file: File) => handleCSVImport(file, 'sites');
-  const handleCSVImportContracts = (file: File) => handleCSVImport(file, 'contracts');
+  // Create wrapper functions to convert return type from Promise<boolean> to Promise<void>
+  const handleCSVImportClients = async (file: File) => {
+    await handleCSVImport(file, 'clients');
+  };
+  
+  const handleCSVImportSites = async (file: File) => {
+    await handleCSVImport(file, 'sites');
+  };
+  
+  const handleCSVImportContracts = async (file: File) => {
+    await handleCSVImport(file, 'contracts');
+  };
   
   return (
     <div className="space-y-8">
