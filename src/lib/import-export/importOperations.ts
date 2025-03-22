@@ -2,173 +2,154 @@
 import { supabase } from '../supabase';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { toast } from 'sonner';
+import { validateClientData, validateSiteData, validateContractData, checkExistingItems } from './dataValidation';
+import { ParsedImportData } from './types';
 
-// Parse imported JSON file
+// Parse an imported file (JSON or CSV)
 export const parseImportedFile = async (file: File): Promise<any> => {
   try {
-    const fileContent = await file.text();
-    return JSON.parse(fileContent);
+    const text = await file.text();
+    return JSON.parse(text);
   } catch (error) {
     console.error('Error parsing imported file:', error);
-    throw new Error('Invalid file format. Please upload a valid JSON file.');
+    throw new Error('Invalid file format. Please ensure the file is valid JSON.');
   }
 };
 
-// Client import function
-export const importClients = async (importedClients: Partial<ClientRecord>[]): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
+// Import clients
+export const importClients = async (clients: Partial<ClientRecord>[]): Promise<void> => {
+  // Validate client data
+  const { isValid, errors, data: validData } = validateClientData(clients);
   
-  if (!user) {
-    throw new Error('You must be logged in to import clients');
+  if (!isValid) {
+    console.error('Invalid client data:', errors);
+    throw new Error(`Invalid client data. Please check your import file. ${errors.map(e => e.message).join(', ')}`);
   }
   
-  const preparedClients = importedClients.map(client => ({
-    name: client.name || '',
-    contact_name: client.contact_name || '',
-    email: client.email,
-    phone: client.phone,
-    address: client.address,
-    city: client.city,
-    state: client.state,
-    postcode: client.postcode,
-    status: client.status || 'active',
-    notes: client.notes,
-    custom_id: client.custom_id,
-    user_id: user.id
-  }));
+  // Check for existing clients by ID to avoid duplicates
+  const clientsWithIds = validData.filter(client => client.id);
+  const existingIds = await checkExistingItems('clients', clientsWithIds.map(client => client.id as string));
   
-  const { error } = await supabase
-    .from('clients')
-    .insert(preparedClients);
+  const clientsToInsert = validData.filter(client => !client.id || !existingIds.includes(client.id));
+  const clientsToUpdate = validData.filter(client => client.id && existingIds.includes(client.id));
   
-  if (error) {
-    console.error('Error importing clients:', error);
-    throw new Error('Failed to import clients: ' + error.message);
-  }
-};
-
-// Site import function
-export const importSites = async (importedSites: Partial<SiteRecord>[]): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('You must be logged in to import sites');
-  }
-  
-  const preparedSites = importedSites.map(site => ({
-    name: site.name || '',
-    address: site.address || '',
-    city: site.city || '',
-    state: site.state || '',
-    postcode: site.postcode || '',
-    status: site.status || 'active',
-    representative: site.representative || '',
-    phone: site.phone,
-    email: site.email,
-    client_id: site.client_id || '',
-    monthly_cost: site.monthly_cost,
-    monthly_revenue: site.monthly_revenue,
-    custom_id: site.custom_id,
-    security_details: site.security_details || {},
-    job_specifications: site.job_specifications || {},
-    periodicals: site.periodicals || {},
-    replenishables: site.replenishables || {},
-    contract_details: site.contract_details || {},
-    billing_details: site.billing_details || {},
-    has_subcontractors: site.subcontractors ? true : false,
-    user_id: user.id
-  }));
-  
-  const { error } = await supabase
-    .from('sites')
-    .insert(preparedSites);
-  
-  if (error) {
-    console.error('Error importing sites:', error);
-    throw new Error('Failed to import sites: ' + error.message);
-  }
-};
-
-// Contract import function
-export const importContracts = async (importedContracts: Partial<ContractHistoryEntry>[]): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('You must be logged in to import contracts');
-  }
-  
-  const siteIds = [...new Set(importedContracts.map(contract => contract.site_id))].filter(id => id) as string[];
-  
-  if (siteIds.length === 0) {
-    throw new Error('No valid site IDs found in the contracts');
-  }
-  
-  const { data: existingSites } = await supabase
-    .from('sites')
-    .select('id')
-    .in('id', siteIds);
-  
-  if (!existingSites || existingSites.length !== siteIds.length) {
-    throw new Error('Some site IDs in the imported contracts do not exist');
-  }
-  
-  await insertContractsAndUpdateSites(importedContracts, user.id, siteIds);
-};
-
-const insertContractsAndUpdateSites = async (
-  importedContracts: Partial<ContractHistoryEntry>[], 
-  userId: string,
-  siteIds: string[]
-): Promise<void> => {
-  const preparedContracts = importedContracts.map(contract => ({
-    site_id: contract.site_id as string,
-    contract_details: contract.contract_details || {},
-    notes: contract.notes || 'Imported contract',
-    created_by: userId,
-    version_number: 0
-  }));
-  
-  for (const contract of preparedContracts) {
-    const { error } = await supabase
-      .from('site_contract_history')
-      .insert(contract);
+  // Insert new clients
+  if (clientsToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from('clients')
+      .insert(clientsToInsert);
     
-    if (error) {
-      console.error('Error importing contract:', error);
-      throw new Error('Failed to import contracts: ' + error.message);
+    if (insertError) {
+      console.error('Error inserting clients:', insertError);
+      throw new Error(`Failed to import clients: ${insertError.message}`);
     }
   }
   
-  await updateSiteContractDetails(importedContracts, siteIds);
+  // Update existing clients
+  for (const client of clientsToUpdate) {
+    const { error: updateError } = await supabase
+      .from('clients')
+      .update(client)
+      .eq('id', client.id);
+    
+    if (updateError) {
+      console.error(`Error updating client ${client.id}:`, updateError);
+    }
+  }
 };
 
-const updateSiteContractDetails = async (
-  importedContracts: Partial<ContractHistoryEntry>[], 
-  siteIds: string[]
-): Promise<void> => {
-  for (const siteId of siteIds) {
-    const siteContracts = importedContracts.filter(c => c.site_id === siteId);
+// Import sites
+export const importSites = async (sites: Partial<SiteRecord>[]): Promise<void> => {
+  // Validate site data
+  const { isValid, errors, data: validData } = validateSiteData(sites);
+  
+  if (!isValid) {
+    console.error('Invalid site data:', errors);
+    throw new Error(`Invalid site data. Please check your import file. ${errors.map(e => e.message).join(', ')}`);
+  }
+  
+  // Check for existing sites by ID to avoid duplicates
+  const sitesWithIds = validData.filter(site => site.id);
+  const existingIds = await checkExistingItems('sites', sitesWithIds.map(site => site.id as string));
+  
+  const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id));
+  const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id));
+  
+  // Insert new sites
+  if (sitesToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from('sites')
+      .insert(sitesToInsert);
     
-    if (siteContracts.length > 0) {
-      const latestContract = siteContracts
-        .filter(c => c.created_at)
-        .sort((a, b) => {
-          if (!a.created_at || !b.created_at) return 0;
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        })[0] || siteContracts[0];
-      
-      if (latestContract && latestContract.contract_details) {
-        const { error } = await supabase
-          .from('sites')
-          .update({ contract_details: latestContract.contract_details })
-          .eq('id', siteId);
-        
-        if (error) {
-          console.error('Error updating site contract details:', error);
-          toast.error(`Failed to update contract details for site: ${error.message}`);
-        }
-      }
+    if (insertError) {
+      console.error('Error inserting sites:', insertError);
+      throw new Error(`Failed to import sites: ${insertError.message}`);
+    }
+  }
+  
+  // Update existing sites
+  for (const site of sitesToUpdate) {
+    const { error: updateError } = await supabase
+      .from('sites')
+      .update(site)
+      .eq('id', site.id);
+    
+    if (updateError) {
+      console.error(`Error updating site ${site.id}:`, updateError);
+    }
+  }
+};
+
+// Import contracts
+export const importContracts = async (contracts: Partial<ContractHistoryEntry>[]): Promise<void> => {
+  // Validate contract data
+  const { isValid, errors, data: validData } = validateContractData(contracts);
+  
+  if (!isValid) {
+    console.error('Invalid contract data:', errors);
+    throw new Error(`Invalid contract data. Please check your import file. ${errors.map(e => e.message).join(', ')}`);
+  }
+  
+  // Check for existing contracts by ID to avoid duplicates
+  const contractsWithIds = validData.filter(contract => contract.id);
+  const existingIds = await checkExistingItems('site_contract_history', contractsWithIds.map(contract => contract.id as string));
+  
+  const contractsToInsert = validData.filter(contract => !contract.id || !existingIds.includes(contract.id));
+  const contractsToUpdate = validData.filter(contract => contract.id && existingIds.includes(contract.id));
+  
+  // Insert new contracts
+  if (contractsToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from('site_contract_history')
+      .insert(contractsToInsert.map(contract => ({
+        site_id: contract.site_id,
+        contract_details: contract.contract_details,
+        notes: contract.notes || '',
+        version_number: 0 // This will be set by the database trigger
+      })));
+    
+    if (insertError) {
+      console.error('Error inserting contracts:', insertError);
+      throw new Error(`Failed to import contracts: ${insertError.message}`);
+    }
+  }
+  
+  // Update existing contracts
+  for (const contract of contractsToUpdate) {
+    // For site_contract_history, updates might not be appropriate since they're versioned
+    // You might want to insert a new version instead of updating
+    console.warn('Updating existing contract histories is not recommended. Consider inserting a new version instead.');
+    
+    const { error: updateError } = await supabase
+      .from('site_contract_history')
+      .update({
+        contract_details: contract.contract_details,
+        notes: contract.notes || ''
+      })
+      .eq('id', contract.id);
+    
+    if (updateError) {
+      console.error(`Error updating contract ${contract.id}:`, updateError);
     }
   }
 };

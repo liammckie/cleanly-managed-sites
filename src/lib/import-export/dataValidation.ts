@@ -19,7 +19,7 @@ export type ValidationResult = {
 };
 
 // Check if items already exist in the database
-export const checkExistingItems = async (type: 'clients' | 'sites' | 'contracts', ids: string[]): Promise<string[]> => {
+export const checkExistingItems = async (type: 'clients' | 'sites' | 'site_contract_history', ids: string[]): Promise<string[]> => {
   if (ids.length === 0) return [];
   
   try {
