@@ -98,7 +98,8 @@ export const ImportExportPage: React.FC = () => {
       replenishables: site.replenishables,
       contract_details: site.contract_details,
       billing_details: site.billing_details,
-      has_subcontractors: site.has_subcontractors,
+      // Fixed: Changed from has_subcontractors to check if subcontractors array exists
+      has_subcontractors: site.subcontractors ? true : false,
       user_id: user.id
     }));
     
@@ -137,7 +138,9 @@ export const ImportExportPage: React.FC = () => {
       contract_details: contract.contract_details,
       notes: contract.notes || 'Imported contract',
       created_by: user.id,
-      // We don't set version_number as it's managed by a database trigger
+      // Add version_number field with a placeholder value of 0
+      // The database trigger will override this with the correct value
+      version_number: 0
     }));
     
     // Insert contracts
