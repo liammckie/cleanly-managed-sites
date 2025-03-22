@@ -58,18 +58,39 @@ export const BusinessDetailsForm = () => {
   
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
-    defaultValues: mapBusinessDetailsToFormValues(businessDetails)
+    defaultValues: {
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postcode: '',
+      phone: '',
+      email: '',
+      website: '',
+      tax_id: '',
+      industry: '',
+      description: '',
+      business_hours: '',
+      social_media: {
+        facebook: '',
+        instagram: '',
+        linkedin: '',
+        twitter: ''
+      }
+    }
   });
   
   // Update form values when business details are loaded
   React.useEffect(() => {
     if (businessDetails) {
+      console.log('Setting form values from business details:', businessDetails);
       form.reset(mapBusinessDetailsToFormValues(businessDetails));
     }
   }, [businessDetails, form]);
   
   const onSubmit = async (data: BusinessFormValues) => {
     try {
+      console.log('Submitting form data:', data);
       await updateBusinessDetails(data);
       toast.success('Business details updated successfully');
     } catch (error) {
@@ -86,6 +107,15 @@ export const BusinessDetailsForm = () => {
     );
   }
   
+  const handleLogoUpload = async (file: File) => {
+    try {
+      console.log('Logo upload initiated with file:', file.name);
+      await uploadLogo(file);
+    } catch (error) {
+      console.error('Error in handleLogoUpload:', error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -103,7 +133,7 @@ export const BusinessDetailsForm = () => {
           <LogoUpload 
             logoUrl={businessDetails?.logo_url || null}
             isUploading={isUploading}
-            onUpload={uploadLogo}
+            onUpload={handleLogoUpload}
           />
           
           {/* Form Section */}

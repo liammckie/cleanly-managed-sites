@@ -21,7 +21,10 @@ export const useBusinessDetails = () => {
     refetch
   } = useQuery({
     queryKey: ['businessDetails'],
-    queryFn: getBusinessDetails
+    queryFn: getBusinessDetails,
+    // Don't throw error if no business details yet
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
   
   // Update business details
@@ -43,7 +46,9 @@ export const useBusinessDetails = () => {
     
     try {
       setIsUploading(true);
+      console.log('Uploading logo file:', file.name, file.size);
       const logoUrl = await uploadBusinessLogo(file);
+      console.log('Logo uploaded, received URL:', logoUrl);
       
       if (logoUrl) {
         // Update business details with the new logo URL
@@ -53,6 +58,7 @@ export const useBusinessDetails = () => {
     } catch (error) {
       console.error('Failed to upload logo:', error);
       toast.error('Failed to upload logo');
+      throw error;
     } finally {
       setIsUploading(false);
     }

@@ -35,18 +35,23 @@ export const getBusinessDetails = async (): Promise<BusinessDetails | null> => {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) return null;
 
-  const { data, error } = await supabase
-    .from('business_details')
-    .select('*')
-    .eq('user_id', user.user.id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('business_details')
+      .select('*')
+      .eq('user_id', user.user.id)
+      .maybeSingle();
 
-  if (error) {
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching business details:', error);
+      return null;
+    }
+
+    return data as BusinessDetails;
+  } catch (error) {
     console.error('Error fetching business details:', error);
     return null;
   }
-
-  return data as BusinessDetails;
 };
 
 /**
@@ -61,7 +66,7 @@ export const updateBusinessDetails = async (details: Partial<BusinessDetails>): 
     .from('business_details')
     .select('*')
     .eq('user_id', user.user.id)
-    .single();
+    .maybeSingle();
 
   let result;
   
@@ -118,34 +123,52 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
   const fileName = `logo-${user.user.id}-${Date.now()}.${fileExt}`;
   const filePath = `business-logos/${fileName}`;
   
-  // Create business-assets bucket if it doesn't exist
-  const { error: bucketError } = await supabase.storage
-    .createBucket('business-assets', {
-      public: true,
-      fileSizeLimit: 5242880, // 5MB
-      allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-    });
+  console.log('Uploading logo:', filePath);
   
-  if (bucketError && !bucketError.message.includes('already exists')) {
-    console.error('Error creating storage bucket:', bucketError);
-    throw new Error(`Error creating storage bucket: ${bucketError.message}`);
+  try {
+    // Check if the bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'business-assets');
+    
+    // Create bucket if it doesn't exist
+    if (!bucketExists) {
+      console.log('Creating bucket: business-assets');
+      const { error: bucketError } = await supabase.storage
+        .createBucket('business-assets', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+        });
+      
+      if (bucketError && !bucketError.message.includes('already exists')) {
+        console.error('Error creating storage bucket:', bucketError);
+        throw new Error(`Error creating storage bucket: ${bucketError.message}`);
+      }
+    }
+    
+    // Upload the file
+    console.log('Uploading file to storage');
+    const { error: uploadError } = await supabase.storage
+      .from('business-assets')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error('Error uploading logo:', uploadError);
+      throw new Error(`Error uploading logo: ${uploadError.message}`);
+    }
+
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from('business-assets')
+      .getPublicUrl(filePath);
+
+    console.log('File uploaded successfully, public URL:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Error in uploadBusinessLogo:', error);
+    throw error;
   }
-  
-  const { error: uploadError } = await supabase.storage
-    .from('business-assets')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: true
-    });
-
-  if (uploadError) {
-    console.error('Error uploading logo:', uploadError);
-    throw new Error(`Error uploading logo: ${uploadError.message}`);
-  }
-
-  const { data: urlData } = supabase.storage
-    .from('business-assets')
-    .getPublicUrl(filePath);
-
-  return urlData.publicUrl;
 };
