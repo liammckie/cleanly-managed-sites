@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,6 +7,7 @@ import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Sites from '@/pages/Sites';
 import Clients from '@/pages/Clients';
+import Contractors from '@/pages/Contractors';
 import CreateClient from '@/pages/CreateClient';
 import EditClient from '@/pages/EditClient';
 import CreateSite from '@/pages/CreateSite';
@@ -99,6 +101,12 @@ function App() {
               <Route path="/clients" element={
                 <ProtectedRoute>
                   <Clients />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/contractors" element={
+                <ProtectedRoute>
+                  <Contractors />
                 </ProtectedRoute>
               } />
               
