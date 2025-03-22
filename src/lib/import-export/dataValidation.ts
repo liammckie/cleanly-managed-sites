@@ -1,7 +1,7 @@
 import { supabase } from '../supabase';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { ParsedImportData } from './types';
+import { ParsedImportData, InvoiceRecord, InvoiceLineItemRecord } from './types';
 
 export type ValidationMessage = {
   row: number;
@@ -46,6 +46,7 @@ export const mergeImportData = async (
   const clientsMap = new Map(existingData.clients.map(client => [client.id, client]));
   const sitesMap = new Map(existingData.sites.map(site => [site.id, site]));
   const contractsMap = new Map(existingData.contracts.map(contract => [contract.id, contract]));
+  const invoicesMap = new Map((existingData.invoices || []).map(invoice => [invoice.id, invoice]));
   
   // Helper function to merge objects, where import values override existing values if present
   const mergeObjects = (existing: any, imported: any) => {
@@ -108,10 +109,29 @@ export const mergeImportData = async (
     }
   }
   
+  // Process invoices
+  const mergedInvoices = [...(existingData.invoices || [])];
+  if (importData.invoices) {
+    for (const importedInvoice of importData.invoices) {
+      if (importedInvoice.id && invoicesMap.has(importedInvoice.id)) {
+        // Update existing invoice
+        const existingInvoice = invoicesMap.get(importedInvoice.id);
+        if (existingInvoice) {
+          const index = mergedInvoices.findIndex(i => i.id === importedInvoice.id);
+          mergedInvoices[index] = mergeObjects(existingInvoice, importedInvoice);
+        }
+      } else {
+        // Add new invoice
+        mergedInvoices.push(importedInvoice);
+      }
+    }
+  }
+  
   return {
     clients: mergedClients,
     sites: mergedSites,
-    contracts: mergedContracts
+    contracts: mergedContracts,
+    invoices: mergedInvoices
   };
 };
 
@@ -230,6 +250,146 @@ export const validateContractData = (data: any[]): ValidationResult => {
     // Add the row to validData if it has all required fields
     if (row.site_id) {
       // Add to valid data even with warnings
+      validData.push(row);
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    data: validData
+  };
+};
+
+// Validate invoice data
+export const validateInvoiceData = (data: any[]): ValidationResult => {
+  const errors: ValidationMessage[] = [];
+  const warnings: ValidationMessage[] = [];
+  const validData: Partial<InvoiceRecord>[] = [];
+  
+  data.forEach((row, index) => {
+    if (!row.client_id) {
+      errors.push({
+        row: index + 1,
+        field: 'client_id',
+        message: 'Client ID is required',
+        value: row.client_id
+      });
+    }
+    
+    if (!row.invoice_date) {
+      errors.push({
+        row: index + 1,
+        field: 'invoice_date',
+        message: 'Invoice date is required',
+        value: row.invoice_date
+      });
+    }
+    
+    if (!row.amount && row.amount !== 0) {
+      errors.push({
+        row: index + 1,
+        field: 'amount',
+        message: 'Invoice amount is required',
+        value: row.amount
+      });
+    }
+    
+    if (!row.status) {
+      warnings.push({
+        row: index + 1,
+        field: 'status',
+        message: 'Invoice status is missing, will default to "draft"',
+        value: row.status
+      });
+    } else if (!['draft', 'sent', 'paid', 'overdue', 'void'].includes(row.status)) {
+      warnings.push({
+        row: index + 1,
+        field: 'status',
+        message: 'Invoice status should be one of: draft, sent, paid, overdue, void',
+        value: row.status
+      });
+    }
+    
+    // Check date formats
+    if (row.invoice_date && !/^\d{4}-\d{2}-\d{2}$/.test(row.invoice_date)) {
+      warnings.push({
+        row: index + 1,
+        field: 'invoice_date',
+        message: 'Invoice date should be in YYYY-MM-DD format',
+        value: row.invoice_date
+      });
+    }
+    
+    if (row.due_date && !/^\d{4}-\d{2}-\d{2}$/.test(row.due_date)) {
+      warnings.push({
+        row: index + 1,
+        field: 'due_date',
+        message: 'Due date should be in YYYY-MM-DD format',
+        value: row.due_date
+      });
+    }
+    
+    // Add the row to validData if it has all required fields
+    if (row.client_id && row.invoice_date && (row.amount !== undefined)) {
+      validData.push(row);
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    data: validData
+  };
+};
+
+// Validate invoice line item data
+export const validateInvoiceLineItemData = (data: any[]): ValidationResult => {
+  const errors: ValidationMessage[] = [];
+  const warnings: ValidationMessage[] = [];
+  const validData: Partial<InvoiceLineItemRecord>[] = [];
+  
+  data.forEach((row, index) => {
+    if (!row.invoice_id) {
+      errors.push({
+        row: index + 1,
+        field: 'invoice_id',
+        message: 'Invoice ID is required',
+        value: row.invoice_id
+      });
+    }
+    
+    if (!row.description) {
+      errors.push({
+        row: index + 1,
+        field: 'description',
+        message: 'Line item description is required',
+        value: row.description
+      });
+    }
+    
+    if (row.quantity === undefined || row.quantity === null) {
+      warnings.push({
+        row: index + 1,
+        field: 'quantity',
+        message: 'Line item quantity is missing, will default to 1',
+        value: row.quantity
+      });
+    }
+    
+    if (row.unit_price === undefined || row.unit_price === null) {
+      errors.push({
+        row: index + 1,
+        field: 'unit_price',
+        message: 'Line item unit price is required',
+        value: row.unit_price
+      });
+    }
+    
+    // Add the row to validData if it has all required fields
+    if (row.invoice_id && row.description && row.unit_price !== undefined) {
       validData.push(row);
     }
   });

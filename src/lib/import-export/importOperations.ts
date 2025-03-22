@@ -1,7 +1,8 @@
+
 import { supabase } from '../supabase';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { validateClientData, validateSiteData, validateContractData, checkExistingItems } from './dataValidation';
+import { validateClientData, validateSiteData, validateContractData, validateInvoiceData, checkExistingItems } from './dataValidation';
 import { ParsedImportData, InvoiceRecord } from './types';
 
 // Parse an imported file (JSON or CSV)
@@ -156,15 +157,20 @@ export const importContracts = async (contracts: Partial<ContractHistoryEntry>[]
 // Import invoices
 export const importInvoices = async (invoices: InvoiceRecord[]): Promise<void> => {
   try {
-    // We would do validation here similar to other import functions
-    // For brevity, proceeding directly to import
+    // Validate invoice data
+    const { isValid, errors, data: validData } = validateInvoiceData(invoices);
+    
+    if (!isValid) {
+      console.error('Invalid invoice data:', errors);
+      throw new Error(`Invalid invoice data. Please check your import file. ${errors.map(e => e.message).join(', ')}`);
+    }
     
     // Check for existing invoices by ID to avoid duplicates
-    const invoicesWithIds = invoices.filter(invoice => invoice.id);
+    const invoicesWithIds = validData.filter(invoice => invoice.id);
     const existingIds = await checkExistingItems('invoices', invoicesWithIds.map(invoice => invoice.id as string));
     
-    const invoicesToInsert = invoices.filter(invoice => !invoice.id || !existingIds.includes(invoice.id));
-    const invoicesToUpdate = invoices.filter(invoice => invoice.id && existingIds.includes(invoice.id as string));
+    const invoicesToInsert = validData.filter(invoice => !invoice.id || !existingIds.includes(invoice.id as string));
+    const invoicesToUpdate = validData.filter(invoice => invoice.id && existingIds.includes(invoice.id as string));
     
     // Insert new invoices
     if (invoicesToInsert.length > 0) {
@@ -207,6 +213,16 @@ export const importInvoices = async (invoices: InvoiceRecord[]): Promise<void> =
 // Helper function to import invoice line items
 const importInvoiceLineItems = async (invoiceId: string, lineItems: any[]): Promise<void> => {
   try {
+    // Validate line items
+    const { isValid, errors, data: validItems } = validateInvoiceLineItemData(
+      lineItems.map(item => ({ ...item, invoice_id: invoiceId }))
+    );
+    
+    if (!isValid) {
+      console.error(`Invalid line items for invoice ${invoiceId}:`, errors);
+      return;
+    }
+    
     // First, get existing line items for this invoice
     const { data: existingLineItems, error: fetchError } = await supabase
       .from('invoice_line_items')
@@ -221,8 +237,8 @@ const importInvoiceLineItems = async (invoiceId: string, lineItems: any[]): Prom
     const existingIds = existingLineItems?.map(item => item.id) || [];
     
     // Filter items to insert vs update
-    const itemsToInsert = lineItems.filter(item => !item.id || !existingIds.includes(item.id));
-    const itemsToUpdate = lineItems.filter(item => item.id && existingIds.includes(item.id));
+    const itemsToInsert = validItems.filter(item => !item.id || !existingIds.includes(item.id as string));
+    const itemsToUpdate = validItems.filter(item => item.id && existingIds.includes(item.id as string));
     
     // Insert new items
     if (itemsToInsert.length > 0) {

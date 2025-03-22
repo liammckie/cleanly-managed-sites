@@ -2,7 +2,7 @@
 import { parseCSV, parseUnifiedImport, convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat } from './csvParser';
 import { exportToJson, exportToCSV, exportClients, exportSites, exportContracts, generateUnifiedImportTemplate } from './exportOperations';
 import { parseImportedFile, importClients, importSites, importContracts, importInvoices } from './importOperations';
-import { checkExistingItems, mergeImportData, validateClientData, validateSiteData, validateContractData } from './dataValidation';
+import { checkExistingItems, mergeImportData, validateClientData, validateSiteData, validateContractData, validateInvoiceData, validateInvoiceLineItemData } from './dataValidation';
 import { generateTestData, setupTestData } from './testData';
 import { ParsedImportData, ImportOptions, InvoiceRecord, InvoiceLineItemRecord } from './types';
 
@@ -64,6 +64,8 @@ export {
   validateClientData,
   validateSiteData,
   validateContractData,
+  validateInvoiceData,
+  validateInvoiceLineItemData,
   
   // Test data
   generateTestData,
