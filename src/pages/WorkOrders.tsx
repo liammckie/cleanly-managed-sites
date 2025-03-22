@@ -16,13 +16,17 @@ import {
 } from '@/components/ui/select';
 import { WorkOrderStatus, WorkOrderPriority } from '@/lib/api/workorders/types';
 import { PlusCircle, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useSites } from '@/hooks/useSites';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { NewWorkOrderDialog } from '@/components/workorders/NewWorkOrderDialog';
 
 const WorkOrders = () => {
   const { workOrders, isLoadingWorkOrders, workOrdersError, refetchWorkOrders } = useWorkOrders();
+  const { sites } = useSites();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<WorkOrderPriority | 'all'>('all');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const filteredWorkOrders = workOrders.filter(workOrder => {
     // Filter by search term
@@ -40,6 +44,11 @@ const WorkOrders = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
+  const handleWorkOrderCreated = () => {
+    setCreateDialogOpen(false);
+    refetchWorkOrders();
+  };
+
   return (
     <SidebarProvider>
       <div className="flex h-screen">
@@ -52,11 +61,9 @@ const WorkOrders = () => {
             <div className="max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Work Orders</h1>
-                <Button asChild>
-                  <Link to="/sites">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    New Work Order
-                  </Link>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Work Order
                 </Button>
               </div>
               
@@ -121,6 +128,18 @@ const WorkOrders = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Create Work Order</DialogTitle>
+          </DialogHeader>
+          <NewWorkOrderDialog 
+            sites={sites} 
+            onSuccess={handleWorkOrderCreated} 
+          />
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
