@@ -121,34 +121,18 @@ export const uploadBusinessLogo = async (file: File): Promise<string | null> => 
 
   const fileExt = file.name.split('.').pop();
   const fileName = `logo-${user.user.id}-${Date.now()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  
+  // Store in root of the bucket, not in a subfolder
+  const filePath = fileName;
   
   console.log('Uploading logo:', filePath);
   
   try {
-    // Check if the bucket exists and create it if it doesn't
-    const { data: buckets } = await supabase.storage.listBuckets();
     const bucketName = 'business-assets';
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
-    if (!bucketExists) {
-      console.log('Creating bucket:', bucketName);
-      const { error: bucketError } = await supabase.storage
-        .createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-        });
-      
-      if (bucketError) {
-        console.error('Error creating storage bucket:', bucketError);
-        throw new Error(`Error creating storage bucket: ${bucketError.message}`);
-      }
-    }
-    
-    // Upload the file
-    console.log('Uploading file to storage');
-    const { error: uploadError } = await supabase.storage
+    // Upload the file (bucket should already exist from our SQL migration)
+    console.log('Uploading file to storage bucket:', bucketName);
+    const { error: uploadError, data } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
