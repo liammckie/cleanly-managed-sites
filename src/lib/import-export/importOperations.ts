@@ -2,7 +2,7 @@
 import { supabase } from '../supabase';
 import { ClientRecord, SiteRecord } from '../types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { validateClientData, validateSiteData, validateContractData, validateInvoiceData, checkExistingItems } from './dataValidation';
+import { validateClientData, validateSiteData, validateContractData, validateInvoiceData, validateInvoiceLineItemData, checkExistingItems } from './dataValidation';
 import { ParsedImportData, InvoiceRecord } from './types';
 
 // Parse an imported file (JSON or CSV)
