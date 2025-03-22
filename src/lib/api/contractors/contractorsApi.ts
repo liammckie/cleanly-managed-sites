@@ -152,15 +152,16 @@ export const contractorsApi = {
     
     // Create a history entry
     try {
-      // Create history entry - explicitly omitting the version_number since it's handled by a trigger
+      // Create history entry - explicitly adding version_number: 0 
+      // The DB trigger will override this value
       const historyEntry = {
         contractor_id: id,
         contractor_data: currentContractor,
         created_by: user.id,
-        notes: 'Contractor details updated'
+        notes: 'Contractor details updated',
+        version_number: 0 // Add this default value that will be overridden by the trigger
       };
       
-      // The DB trigger will handle the version_number
       await supabase
         .from('contractor_history')
         .insert(historyEntry);
