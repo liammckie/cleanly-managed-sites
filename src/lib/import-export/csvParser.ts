@@ -88,12 +88,18 @@ export const parseUnifiedImport = async (
   const clients: any[] = [];
   const sites: any[] = [];
   const contracts: any[] = [];
+  
+  console.log('Parsing unified import with', csvData.length, 'rows');
 
-  csvData.forEach(row => {
-    if (!row.record_type) return;
+  csvData.forEach((row, index) => {
+    if (!row.record_type) {
+      console.warn(`Row ${index + 1} missing record_type, skipping`);
+      return;
+    }
 
     switch (row.record_type.toLowerCase()) {
       case 'client': {
+        // For client records, map fields directly
         const client = {
           name: row.name || '',
           contact_name: row.contact_name || '',
@@ -106,40 +112,51 @@ export const parseUnifiedImport = async (
           status: row.status || 'active',
           notes: row.notes || '',
           custom_id: row.custom_id || '',
-          id: row.id || undefined
+          id: row.id || undefined,
+          action: row.action || 'create'
         };
         
         if (client.name && client.contact_name) {
           clients.push(client);
+          console.log(`Added client: ${client.name}`);
+        } else {
+          console.warn(`Row ${index + 1}: Client missing required fields (name, contact_name), skipping`);
         }
         break;
       }
       
       case 'site': {
+        // For site records, map prefixed fields to the correct properties
         const site = {
-          name: row.site_name || '',
-          address: row.site_address || '',
-          city: row.site_city || '',
-          state: row.site_state || '',
-          postcode: row.site_postcode || '',
-          status: row.site_status || 'active',
+          // If site_name exists, use it, otherwise fall back to name
+          name: row.site_name || row.name || '',
+          address: row.site_address || row.address || '',
+          city: row.site_city || row.city || '',
+          state: row.site_state || row.state || '',
+          postcode: row.site_postcode || row.postcode || '',
+          status: row.site_status || row.status || 'active',
           representative: row.representative || '',
-          phone: row.site_phone || '',
-          email: row.site_email || '',
+          phone: row.site_phone || row.phone || '',
+          email: row.site_email || row.email || '',
           client_id: row.client_id || '',
           custom_id: row.custom_id || '',
           monthly_cost: row.monthly_cost ? parseFloat(row.monthly_cost) : undefined,
           monthly_revenue: row.monthly_revenue ? parseFloat(row.monthly_revenue) : undefined,
-          id: row.id || undefined
+          id: row.id || undefined,
+          action: row.action || 'create'
         };
         
         if (site.name && site.address && site.client_id) {
           sites.push(site);
+          console.log(`Added site: ${site.name}`);
+        } else {
+          console.warn(`Row ${index + 1}: Site missing required fields (name, address, client_id), skipping`);
         }
         break;
       }
       
       case 'contract': {
+        // For contract records, extract contract-specific fields
         const contract = {
           site_id: row.site_id || '',
           notes: row.contract_notes || '',
@@ -152,17 +169,24 @@ export const parseUnifiedImport = async (
             terminationPeriod: row.termination_period || '',
             terms: []
           },
-          id: row.id || undefined
+          id: row.id || undefined,
+          action: row.action || 'create'
         };
         
         if (contract.site_id) {
           contracts.push(contract);
+          console.log(`Added contract for site: ${contract.site_id}`);
+        } else {
+          console.warn(`Row ${index + 1}: Contract missing required field (site_id), skipping`);
         }
         break;
       }
+      
+      default:
+        console.warn(`Row ${index + 1}: Unknown record_type: ${row.record_type}, skipping`);
     }
   });
 
+  console.log(`Parsed: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts`);
   return { clients, sites, contracts };
 };
-

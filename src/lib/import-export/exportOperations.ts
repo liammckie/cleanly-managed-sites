@@ -54,16 +54,16 @@ export const generateUnifiedImportTemplate = (): string => {
     'status',
     'notes',
     
-    // Site fields - use exact database field names 
-    'site_name', // special case - will be mapped to name in site table
-    'site_address', // special case - will be mapped to address in site table
-    'site_city', // special case - will be mapped to city in site table
-    'site_state', // special case - will be mapped to state in site table
-    'site_postcode', // special case - will be mapped to postcode in site table
-    'site_status', // special case - will be mapped to status in site table
+    // Site fields - use exact database field names with prefix for mapping
+    'site_name', // mapped to name in site table
+    'site_address', // mapped to address in site table
+    'site_city', // mapped to city in site table
+    'site_state', // mapped to state in site table
+    'site_postcode', // mapped to postcode in site table
+    'site_status', // mapped to status in site table
     'representative',
-    'site_phone', // special case - will be mapped to phone in site table
-    'site_email', // special case - will be mapped to email in site table
+    'site_phone', // mapped to phone in site table
+    'site_email', // mapped to email in site table
     'client_id',
     'monthly_cost',
     'monthly_revenue',
@@ -71,7 +71,7 @@ export const generateUnifiedImportTemplate = (): string => {
     // Contract fields
     'site_id', // Site ID for contract
     'version_number',
-    'contract_notes', // special case - will be mapped to notes in contract table
+    'contract_notes', // mapped to notes in contract table
     'start_date', // Will be mapped to contract_details.startDate
     'end_date', // Will be mapped to contract_details.endDate
     'contract_number', // Will be mapped to contract_details.contractNumber
@@ -80,35 +80,91 @@ export const generateUnifiedImportTemplate = (): string => {
   ];
   
   // Sample data for clients
-  const clientSample = [
-    'client', 'create', '', 'CL001', // Record type, action, id, custom_id
-    'ACME Corporation', 'John Doe', 'john@acme.com', '123-456-7890',
-    '123 Main St', 'New York', 'NY', '10001', 'active', 'New client',
-    '', '', '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', ''
-  ];
+  const clientSample = {
+    'record_type': 'client',
+    'action': 'create',
+    'id': '',
+    'custom_id': 'CL001',
+    'name': 'ACME Corporation',
+    'contact_name': 'John Doe',
+    'email': 'john@acme.com',
+    'phone': '123-456-7890',
+    'address': '123 Main St',
+    'city': 'New York',
+    'state': 'NY',
+    'postcode': '10001',
+    'status': 'active',
+    'notes': 'New client'
+  };
   
   // Sample data for sites
-  const siteSample = [
-    'site', 'create', '', 'ST001',
-    '', '', '', '', '', '', '', '', '', '',
-    'Main Office', '456 Business Ave', 'Chicago', 'IL', '60601', 'active',
-    'Jane Smith', '987-654-3210', 'jane@acme.com', 'custom:CL001', '1000', '1500',
-    '', '', '', '', '', '', ''
-  ];
+  const siteSample = {
+    'record_type': 'site',
+    'action': 'create',
+    'id': '',
+    'custom_id': 'ST001',
+    'name': '',
+    'contact_name': '',
+    'email': '',
+    'phone': '',
+    'address': '',
+    'city': '',
+    'state': '',
+    'postcode': '',
+    'status': '',
+    'notes': '',
+    'site_name': 'Main Office',
+    'site_address': '456 Business Ave',
+    'site_city': 'Chicago',
+    'site_state': 'IL',
+    'site_postcode': '60601',
+    'site_status': 'active',
+    'representative': 'Jane Smith',
+    'site_phone': '987-654-3210',
+    'site_email': 'jane@acme.com',
+    'client_id': 'custom:CL001',
+    'monthly_cost': '1000',
+    'monthly_revenue': '1500'
+  };
   
   // Sample data for contracts
-  const contractSample = [
-    'contract', 'create', '', '',
-    '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '',
-    'custom:ST001', '1', 'Standard service contract', '2023-01-01', '2024-01-01', 'CNT-001', 
-    '30 days automatic renewal', '60 days written notice'
-  ];
+  const contractSample = {
+    'record_type': 'contract',
+    'action': 'create',
+    'id': '',
+    'custom_id': '',
+    'name': '',
+    'contact_name': '',
+    'email': '',
+    'phone': '',
+    'address': '',
+    'city': '',
+    'state': '',
+    'postcode': '',
+    'status': '',
+    'notes': '',
+    'site_name': '',
+    'site_address': '',
+    'site_city': '',
+    'site_state': '',
+    'site_postcode': '',
+    'site_status': '',
+    'representative': '',
+    'site_phone': '',
+    'site_email': '',
+    'client_id': '',
+    'monthly_cost': '',
+    'monthly_revenue': '',
+    'site_id': 'custom:ST001',
+    'version_number': '1',
+    'contract_notes': 'Standard service contract',
+    'start_date': '2023-01-01',
+    'end_date': '2024-01-01',
+    'contract_number': 'CNT-001',
+    'renewal_terms': '30 days automatic renewal',
+    'termination_period': '60 days written notice'
+  };
   
-  // Combine the samples
-  const samples = [clientSample, siteSample, contractSample];
-  
-  return Papa.unparse(samples, { header: true, columns: headers });
+  // Create one row for each record type so the user can see examples of each
+  return Papa.unparse([clientSample, siteSample, contractSample], { header: true });
 };
-
