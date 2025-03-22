@@ -1,7 +1,8 @@
 
 import { supabase } from '../supabase';
 import { SiteRecord } from '../types';
-import { validateSiteData, checkExistingItems } from './dataValidation';
+import { validateSiteData } from './validation/siteValidation';
+import { checkExistingItems } from './validation/commonValidation';
 
 // Import sites
 export const importSites = async (sites: Partial<SiteRecord>[]): Promise<void> => {
@@ -17,8 +18,8 @@ export const importSites = async (sites: Partial<SiteRecord>[]): Promise<void> =
   const sitesWithIds = validData.filter(site => site.id);
   const existingIds = await checkExistingItems('sites', sitesWithIds.map(site => site.id as string));
   
-  const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id));
-  const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id));
+  const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id as string));
+  const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id as string));
   
   // Insert new sites
   if (sitesToInsert.length > 0) {

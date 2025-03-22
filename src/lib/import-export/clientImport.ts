@@ -1,7 +1,8 @@
 
 import { supabase } from '../supabase';
 import { ClientRecord } from '../types';
-import { validateClientData, checkExistingItems } from './dataValidation';
+import { validateClientData } from './validation/clientValidation';
+import { checkExistingItems } from './validation/commonValidation';
 
 // Import clients
 export const importClients = async (clients: Partial<ClientRecord>[]): Promise<void> => {

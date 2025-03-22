@@ -1,7 +1,8 @@
 
 import { supabase } from '../supabase';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { validateContractData, checkExistingItems } from './dataValidation';
+import { validateContractData } from './validation/contractValidation';
+import { checkExistingItems } from './validation/commonValidation';
 
 // Import contracts
 export const importContracts = async (contracts: Partial<ContractHistoryEntry>[]): Promise<void> => {

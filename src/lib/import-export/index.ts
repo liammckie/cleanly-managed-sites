@@ -1,7 +1,11 @@
 
 import { parseCSV, parseUnifiedImport, convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat } from './csvParser';
 import { exportToJson, exportToCSV, exportClients, exportSites, exportContracts, generateUnifiedImportTemplate } from './exportOperations';
-import { parseImportedFile, importClients, importSites, importContracts, importInvoices } from './importOperations';
+import { parseImportedFile } from './importUtils';
+import { importClients } from './clientImport';
+import { importSites } from './siteImport';
+import { importContracts } from './contractImport';
+import { importInvoices } from './invoiceImport';
 import { 
   checkExistingItems, 
   mergeImportData, 
@@ -10,9 +14,9 @@ import {
   validateContractData, 
   validateInvoiceData,
   validateInvoiceLineItemData
-} from './dataValidation';
+} from './validation';
 import { generateTestData, setupTestData } from './testData';
-import { ParsedImportData, ImportOptions, InvoiceRecord, InvoiceLineItemRecord } from './types';
+import { ParsedImportData, ImportOptions, InvoiceRecord, InvoiceLineItemRecord, ValidationMessage, ValidationResult } from './types';
 
 // Handle unified import of data
 export const handleUnifiedImport = async (file: File, options: ImportOptions): Promise<void> => {
@@ -80,6 +84,8 @@ export {
   setupTestData,
   
   // Types
+  type ValidationMessage,
+  type ValidationResult,
   type InvoiceRecord,
   type InvoiceLineItemRecord
 };

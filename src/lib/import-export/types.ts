@@ -42,3 +42,17 @@ export interface InvoiceLineItemRecord {
   tax_type?: string;
   xero_account_code?: string;
 }
+
+export type ValidationMessage = {
+  row: number;
+  field: string;
+  message: string;
+  value: any;
+};
+
+export type ValidationResult = {
+  isValid: boolean;
+  errors: ValidationMessage[];
+  warnings: ValidationMessage[];
+  data: any[];
+};

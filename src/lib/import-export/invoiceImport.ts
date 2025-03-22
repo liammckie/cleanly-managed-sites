@@ -1,7 +1,8 @@
 
 import { supabase } from '../supabase';
 import { InvoiceRecord } from './types';
-import { validateInvoiceData, validateInvoiceLineItemData, checkExistingItems } from './dataValidation';
+import { validateInvoiceData, validateInvoiceLineItemData } from './validation/invoiceValidation';
+import { checkExistingItems } from './validation/commonValidation';
 
 // Import invoices
 export const importInvoices = async (invoices: InvoiceRecord[]): Promise<void> => {
