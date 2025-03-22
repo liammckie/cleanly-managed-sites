@@ -108,11 +108,17 @@ export const BusinessDetailsForm = () => {
   }
   
   const handleLogoUpload = async (file: File) => {
+    if (!file) {
+      console.error('No file provided for upload');
+      return;
+    }
+    
     try {
       console.log('Logo upload initiated with file:', file.name);
       await uploadLogo(file);
     } catch (error) {
       console.error('Error in handleLogoUpload:', error);
+      toast.error('Failed to upload logo');
     }
   };
 

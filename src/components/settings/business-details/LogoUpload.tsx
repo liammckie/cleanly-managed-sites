@@ -25,7 +25,10 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
     const file = event.target.files?.[0];
     setUploadError(null);
     
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
     
     console.log('File selected:', file.name, file.type, file.size);
     
@@ -57,6 +60,7 @@ export const LogoUpload = ({ logoUrl, isUploading, onUpload }: LogoUploadProps) 
     } catch (error) {
       console.error('Error uploading logo:', error);
       setUploadError('Failed to upload logo');
+      // Preview will still show but upload failed
       toast.error('Failed to upload logo');
     }
   };

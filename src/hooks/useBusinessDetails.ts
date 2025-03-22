@@ -41,7 +41,10 @@ export const useBusinessDetails = () => {
 
   // Upload logo
   const uploadLogo = async (file: File) => {
-    if (!file) return;
+    if (!file) {
+      console.error('No file provided to uploadLogo function');
+      return null;
+    }
     
     try {
       setIsUploading(true);
@@ -57,6 +60,8 @@ export const useBusinessDetails = () => {
         console.log('Business details updated with new logo URL');
         toast.success('Logo uploaded successfully');
         return logoUrl;
+      } else {
+        throw new Error('No logo URL returned from upload');
       }
     } catch (error) {
       console.error('Failed to upload logo:', error);
