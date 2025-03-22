@@ -98,7 +98,7 @@ export const ImportExportPage: React.FC = () => {
       replenishables: site.replenishables,
       contract_details: site.contract_details,
       billing_details: site.billing_details,
-      // Fixed: Changed from has_subcontractors to check if subcontractors array exists
+      // Fixed: Check if subcontractors array exists rather than using has_subcontractors
       has_subcontractors: site.subcontractors ? true : false,
       user_id: user.id
     }));

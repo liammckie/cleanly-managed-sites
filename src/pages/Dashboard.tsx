@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImportExportPage } from '@/components/data/ImportExportPage';
+import { ClientDashboard } from '@/components/clients/ClientDashboard';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -30,6 +32,7 @@ const Dashboard = () => {
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <ClientDashboard />
                 </div>
               </TabsContent>
               
