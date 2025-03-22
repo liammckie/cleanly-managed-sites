@@ -7,6 +7,7 @@ import {
   FileJson, HelpCircle, CheckCircle, AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Papa from 'papaparse';
 import { 
   exportClients, 
   exportSites, 
