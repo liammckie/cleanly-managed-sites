@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteCard } from './SiteCard';
-import { Plus, Search, LayoutGrid, List } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List, X } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -31,13 +31,25 @@ import {
 import { useSites } from '@/hooks/useSites';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SiteRecord } from '@/lib/types';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export function SitesList() {
   const { sites, isLoading, isError, error } = useSites();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [cityFilter, setCityFilter] = useState<string>('all');
-  const [clientFilter, setClientFilter] = useState<string>('all');
+  
+  // Replace single selection filters with multi-selection arrays
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [cityFilters, setCityFilters] = useState<string[]>([]);
+  const [clientFilters, setClientFilters] = useState<string[]>([]);
+  
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9; // For grid view
@@ -46,7 +58,7 @@ export function SitesList() {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, cityFilter, clientFilter]);
+  }, [searchTerm, statusFilters, cityFilters, clientFilters]);
   
   // Get unique cities and clients for filters
   const cities = Array.from(new Set(sites.map(site => site.city))).sort();
@@ -62,22 +74,56 @@ export function SitesList() {
   };
   
   const clients = Array.from(new Set(sites.map(site => getClientName(site)))).sort();
+  const statuses = ['active', 'inactive', 'pending'];
+  
+  // Helper to toggle an item in a filter array
+  const toggleFilter = (filters: string[], setFilters: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    setFilters(prev => 
+      prev.includes(value) 
+        ? prev.filter(item => item !== value) 
+        : [...prev, value]
+    );
+  };
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    setStatusFilters([]);
+    setCityFilters([]);
+    setClientFilters([]);
+    setSearchTerm('');
+  };
+  
+  // Remove a single filter tag
+  const removeFilter = (type: 'status' | 'city' | 'client', value: string) => {
+    switch(type) {
+      case 'status':
+        setStatusFilters(prev => prev.filter(item => item !== value));
+        break;
+      case 'city':
+        setCityFilters(prev => prev.filter(item => item !== value));
+        break;
+      case 'client':
+        setClientFilters(prev => prev.filter(item => item !== value));
+        break;
+    }
+  };
   
   const filteredSites = sites.filter(site => {
     // Filter by search term
-    const matchesSearch = site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = searchTerm === '' || 
+                         site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          (site.address && site.address.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (site.representative && site.representative.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filter by status
-    const matchesStatus = statusFilter === 'all' || site.status === statusFilter;
+    // Filter by status (if any status filters are selected)
+    const matchesStatus = statusFilters.length === 0 || statusFilters.includes(site.status);
     
-    // Filter by city
-    const matchesCity = cityFilter === 'all' || site.city === cityFilter;
+    // Filter by city (if any city filters are selected)
+    const matchesCity = cityFilters.length === 0 || cityFilters.includes(site.city);
     
-    // Filter by client
+    // Filter by client (if any client filters are selected)
     const clientName = getClientName(site);
-    const matchesClient = clientFilter === 'all' || clientName === clientFilter;
+    const matchesClient = clientFilters.length === 0 || clientFilters.includes(clientName);
     
     return matchesSearch && matchesStatus && matchesCity && matchesClient;
   });
@@ -178,6 +224,9 @@ export function SitesList() {
       </div>
     );
   }
+  
+  // Count active filters
+  const totalActiveFilters = statusFilters.length + cityFilters.length + clientFilters.length + (searchTerm ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -205,41 +254,71 @@ export function SitesList() {
           </div>
           
           <div className="flex flex-wrap gap-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Status Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  Status {statusFilters.length > 0 && <Badge className="ml-1">{statusFilters.length}</Badge>}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {statuses.map(status => (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={statusFilters.includes(status)}
+                    onCheckedChange={() => toggleFilter(statusFilters, setStatusFilters, status)}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
-            <Select value={cityFilter} onValueChange={setCityFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="City" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Cities</SelectItem>
+            {/* City Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  City {cityFilters.length > 0 && <Badge className="ml-1">{cityFilters.length}</Badge>}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px] max-h-[300px] overflow-y-auto">
+                <DropdownMenuLabel>Filter by City</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {cities.map(city => (
-                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                  <DropdownMenuCheckboxItem
+                    key={city}
+                    checked={cityFilters.includes(city)}
+                    onCheckedChange={() => toggleFilter(cityFilters, setCityFilters, city)}
+                  >
+                    {city}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
-            <Select value={clientFilter} onValueChange={setClientFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Client" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Clients</SelectItem>
+            {/* Client Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  Client {clientFilters.length > 0 && <Badge className="ml-1">{clientFilters.length}</Badge>}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px] max-h-[300px] overflow-y-auto">
+                <DropdownMenuLabel>Filter by Client</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {clients.map(client => (
-                  <SelectItem key={client} value={client}>{client}</SelectItem>
+                  <DropdownMenuCheckboxItem
+                    key={client}
+                    checked={clientFilters.includes(client)}
+                    onCheckedChange={() => toggleFilter(clientFilters, setClientFilters, client)}
+                  >
+                    {client}
+                  </DropdownMenuCheckboxItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <div className="flex border rounded-md overflow-hidden">
               <Button 
@@ -261,6 +340,63 @@ export function SitesList() {
             </div>
           </div>
         </div>
+        
+        {/* Active Filters Display */}
+        {totalActiveFilters > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-muted-foreground">Active filters:</span>
+            
+            {/* Search term tag */}
+            {searchTerm && (
+              <Badge variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
+                <span>Search: {searchTerm}</span>
+                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => setSearchTerm('')}>
+                  <X size={12} />
+                </Button>
+              </Badge>
+            )}
+            
+            {/* Status tags */}
+            {statusFilters.map(status => (
+              <Badge key={`status-${status}`} variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
+                <span>Status: {status}</span>
+                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removeFilter('status', status)}>
+                  <X size={12} />
+                </Button>
+              </Badge>
+            ))}
+            
+            {/* City tags */}
+            {cityFilters.map(city => (
+              <Badge key={`city-${city}`} variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
+                <span>City: {city}</span>
+                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removeFilter('city', city)}>
+                  <X size={12} />
+                </Button>
+              </Badge>
+            ))}
+            
+            {/* Client tags */}
+            {clientFilters.map(client => (
+              <Badge key={`client-${client}`} variant="secondary" className="flex items-center gap-1 pl-2 pr-1">
+                <span>Client: {client}</span>
+                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removeFilter('client', client)}>
+                  <X size={12} />
+                </Button>
+              </Badge>
+            ))}
+            
+            {/* Clear all button */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs h-7"
+              onClick={clearAllFilters}
+            >
+              Clear all
+            </Button>
+          </div>
+        )}
       </div>
       
       {filteredSites.length > 0 ? (
