@@ -1,3 +1,4 @@
+
 // Types for database records
 export interface SiteRecord {
   id: string;
@@ -103,6 +104,9 @@ export interface UserRole {
   permissions: string[];
   description?: string;
 }
+
+// Import the PermissionsMap type from the permissions file
+import { PermissionsMap } from '@/types/permissions';
 
 export interface SystemUser {
   id: string;
