@@ -9,7 +9,8 @@ import {
   Subcontractor, 
   ContractDetails, 
   BillingDetails, 
-  AdHocWorkAuthorization 
+  AdHocWorkAuthorization,
+  ContractType
 } from './types/index';
 import { SiteContact, BillingContact } from './types/contactTypes';
 
@@ -34,6 +35,8 @@ export interface SiteFormData {
   // Optional financial fields
   monthlyCost?: number;
   monthlyRevenue?: number;
+  weeklyRevenue?: number;
+  annualRevenue?: number;
   
   // Client data integration flag
   useClientInfo: boolean;
@@ -50,6 +53,9 @@ export interface SiteFormData {
   // Related entities
   contacts: SiteContact[];
   subcontractors: Subcontractor[];
+  
+  // Additional contracts
+  additionalContracts?: ContractDetails[];
 }
 
 // Function to get initial form data
@@ -65,6 +71,9 @@ export const getInitialFormData = (): SiteFormData => ({
   email: '',
   clientId: '',
   customId: '', // Initialize empty custom ID
+  weeklyRevenue: undefined,
+  monthlyRevenue: undefined,
+  annualRevenue: undefined,
   useClientInfo: false,
   
   // Initialize JSON objects with default values
@@ -131,7 +140,7 @@ export const getInitialFormData = (): SiteFormData => ({
     contractValue: '',
     paymentTerms: '',
     paymentFrequency: 'monthly',
-    contractType: 'ongoing',
+    contractType: 'cleaning', // Updated to use a valid ContractType
     noticePeriod: '',
     notes: '',
     terms: [], // Initialize with empty terms array
@@ -198,6 +207,7 @@ export const getInitialFormData = (): SiteFormData => ({
   
   contacts: [],
   subcontractors: [],
+  additionalContracts: [], // Initialize with empty array
 });
 
 export interface SiteFormValidationErrors {

@@ -80,9 +80,12 @@ export function ContractDetailsStep({
     }
 
     // Update revenue fields on the site record
-    handleNestedChange('weeklyRevenue', '', weekly);
-    handleNestedChange('monthlyRevenue', '', monthly);
-    handleNestedChange('annualRevenue', '', annual);
+    setFormData && setFormData(prev => ({
+      ...prev,
+      weeklyRevenue: weekly,
+      monthlyRevenue: monthly,
+      annualRevenue: annual
+    }));
   }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
 
   // Calculate annual direct cost based on weekly budget
