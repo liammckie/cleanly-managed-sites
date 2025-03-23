@@ -99,7 +99,7 @@ export type SiteRecord = {
   contract_details?: any;
   billing_details?: any;
   subcontractors?: any[];
-  contacts?: ContactRecord[];
+  contacts?: any[];
   billingLines?: any[]; // Add billingLines property
   additional_contracts?: any[]; // Add additional_contracts property
 };

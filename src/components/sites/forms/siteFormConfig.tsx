@@ -1,4 +1,3 @@
-
 import React, { ReactNode, ChangeEvent } from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps/ContactsStep';
@@ -11,6 +10,7 @@ import { SubcontractorsStep } from './steps/SubcontractorsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { SiteFormData } from './siteFormTypes';
+import { SiteStatus } from '../SiteCard';
 
 export type StepConfig = {
   id: string;
@@ -51,6 +51,16 @@ export const getSiteFormSteps = (
     handleChange(e.target.name, e.target.value);
   };
 
+  // Create a handler for status changes
+  const handleStatusChange = (value: SiteStatus) => {
+    handleChange('status', value);
+  };
+  
+  // Create a handler for client changes
+  const handleClientChange = (clientId: string) => {
+    handleChange('clientId', clientId);
+  };
+
   return [
     {
       id: 'basic-info',
@@ -59,7 +69,11 @@ export const getSiteFormSteps = (
       component: (
         <BasicInformationStep
           formData={formData}
+          errors={{}}
           handleChange={handleFieldChangeEvent}
+          handleStatusChange={handleStatusChange}
+          handleClientChange={handleClientChange}
+          setFormData={() => {}} // Empty function as a placeholder, will be handled through handlers
         />
       ),
     },

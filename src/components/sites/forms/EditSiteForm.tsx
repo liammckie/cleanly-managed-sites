@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,10 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   };
   
   // Define fallback functions for all potentially missing handlers
-  const updateSubcontractor = siteForm.updateSubcontractor || noopWithParams;
+  const updateSubcontractor = siteForm.updateSubcontractor || ((index: number, field: string, value: any) => {
+    console.log(`Updating subcontractor ${index} field ${field}:`, value);
+  });
+  
   const addSubcontractor = siteForm.addSubcontractor || noop;
   const removeSubcontractor = siteForm.removeSubcontractor || noopWithParams;
   
@@ -125,16 +127,16 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         state: site.state || '',
         postcode: site.postcode || '',
         status: site.status || 'active',
-        // Set contract type from contract_details if available
+        // Set contract details if available
         contractDetails: {
           ...formData.contractDetails,
-          contractType: site.contract_details?.type || 'cleaning'
+          contractType: site.contract_details?.contractType || 'cleaning'
         }
       };
       
       // Add billing lines with unique IDs if available
-      if (site.billing_details?.billingLines && site.billing_details.billingLines.length > 0) {
-        const formattedBillingLines: BillingLine[] = site.billing_details.billingLines.map((line: any) => ({
+      if (site.billingLines && site.billingLines.length > 0) {
+        const formattedBillingLines: BillingLine[] = site.billingLines.map((line: any) => ({
           id: uuidv4(), // Generate unique ID for each line
           description: line.description || '',
           amount: line.amount || 0,

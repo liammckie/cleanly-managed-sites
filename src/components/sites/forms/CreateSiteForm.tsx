@@ -56,7 +56,10 @@ export function CreateSiteForm() {
   };
   
   // Define fallback functions for all potentially missing handlers
-  const updateSubcontractor = formHandlers.updateSubcontractor || noopWithParams;
+  const updateSubcontractor = formHandlers.updateSubcontractor || ((index: number, field: string, value: any) => {
+    console.log(`Updating subcontractor ${index} field ${field}:`, value);
+  });
+  
   const addSubcontractor = formHandlers.addSubcontractor || noop;
   const removeSubcontractor = formHandlers.removeSubcontractor || noopWithParams;
   
