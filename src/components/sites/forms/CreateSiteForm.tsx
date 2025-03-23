@@ -2,17 +2,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { Form } from "@/components/ui/form";
+import { Form, FormProvider } from "@/components/ui/form";
 import { SiteFormStep } from './SiteFormStep';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { getStepsConfig } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi } from '@/lib/api';
+import { useForm } from 'react-hook-form';
+import { SiteFormData, getInitialFormData } from './siteFormTypes';
 
 export function CreateSiteForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize form with react-hook-form
+  const formMethods = useForm<SiteFormData>({
+    defaultValues: getInitialFormData()
+  });
   
   // Use the custom hooks
   const formHandlers = useSiteForm();
@@ -49,28 +56,30 @@ export function CreateSiteForm() {
   };
 
   return (
-    <Form {...formHandlers.form}>
-      <form>
-        <div className="max-w-4xl mx-auto">
-          <FormProgressBar 
-            currentStep={stepper.currentStep}
-            totalSteps={stepper.totalSteps}
-            progress={stepper.progress}
-          />
-          
-          <SiteFormStep
-            title={steps[stepper.currentStep].title}
-            description={steps[stepper.currentStep].description}
-            onNext={() => stepper.handleNext(handleSubmit)}
-            onBack={stepper.handleBack}
-            isSubmitting={isSubmitting}
-            isLastStep={stepper.isLastStep}
-            isFirstStep={stepper.isFirstStep}
-          >
-            {steps[stepper.currentStep].component}
-          </SiteFormStep>
-        </div>
-      </form>
-    </Form>
+    <FormProvider {...formMethods}>
+      <Form {...formHandlers.form}>
+        <form>
+          <div className="max-w-4xl mx-auto">
+            <FormProgressBar 
+              currentStep={stepper.currentStep}
+              totalSteps={stepper.totalSteps}
+              progress={stepper.progress}
+            />
+            
+            <SiteFormStep
+              title={steps[stepper.currentStep].title}
+              description={steps[stepper.currentStep].description}
+              onNext={() => stepper.handleNext(handleSubmit)}
+              onBack={stepper.handleBack}
+              isSubmitting={isSubmitting}
+              isLastStep={stepper.isLastStep}
+              isFirstStep={stepper.isFirstStep}
+            >
+              {steps[stepper.currentStep].component}
+            </SiteFormStep>
+          </div>
+        </form>
+      </Form>
+    </FormProvider>
   );
 }
