@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,6 +29,7 @@ import ContractorDetail from '@/pages/ContractorDetail';
 import Users from '@/pages/Users';
 import UserDetail from '@/pages/UserDetail';
 import Profile from '@/pages/Profile';
+import Contacts from '@/pages/Contacts';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -161,7 +163,17 @@ function App() {
               </ProtectedRoute>
             } />
             
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/contacts" element={
+              <ProtectedRoute>
+                <Contacts />
+              </ProtectedRoute>
+            } />
             
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />

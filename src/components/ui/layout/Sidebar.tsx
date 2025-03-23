@@ -13,7 +13,8 @@ import {
   Boxes,
   Download,
   Briefcase,
-  ShieldCheck
+  ShieldCheck,
+  Contact
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,12 @@ export function Sidebar() {
       icon: <Briefcase size={20} />,
       label: 'Contractors',
       active: pathname.startsWith('/contractors')
+    },
+    {
+      href: '/contacts',
+      icon: <Contact size={20} />,
+      label: 'Contacts',
+      active: pathname.startsWith('/contacts')
     },
     {
       href: '/workorders',
