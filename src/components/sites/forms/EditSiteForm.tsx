@@ -14,6 +14,10 @@ import { SiteFormData } from './siteFormTypes';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from './types/billingTypes';
 
+// Define fallback functions for missing handlers
+const noop = () => {};
+const noopWithParams = (...args: any[]) => {};
+
 interface EditSiteFormProps {
   site: any; // Using any to avoid the SiteRecord import issue
 }
@@ -51,6 +55,27 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     console.log(`Removing file ${fileName} from ${field}`);
   };
   
+  // Define fallback functions for all potentially missing handlers
+  const updateSubcontractor = siteForm.updateSubcontractor || noopWithParams;
+  const addSubcontractor = siteForm.addSubcontractor || noop;
+  const removeSubcontractor = siteForm.removeSubcontractor || noopWithParams;
+  
+  const addReplenishable = siteForm.addReplenishable || noop;
+  const updateReplenishable = siteForm.updateReplenishable || noopWithParams;
+  const removeReplenishable = siteForm.removeReplenishable || noopWithParams;
+  
+  const addBillingLine = siteForm.addBillingLine || noop;
+  const updateBillingLine = siteForm.updateBillingLine || noopWithParams;
+  const removeBillingLine = siteForm.removeBillingLine || noopWithParams;
+  
+  const addContractTerm = siteForm.addContractTerm || noop;
+  const updateContractTerm = siteForm.updateContractTerm || noopWithParams;
+  const removeContractTerm = siteForm.removeContractTerm || noopWithParams;
+  
+  const addAdditionalContract = siteForm.addAdditionalContract || noop;
+  const updateAdditionalContract = siteForm.updateAdditionalContract || noopWithParams;
+  const removeAdditionalContract = siteForm.removeAdditionalContract || noopWithParams;
+  
   // Initialize the stepper
   const steps = getSiteFormSteps(
     formData,
@@ -61,21 +86,21 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     siteForm.handleDoubleNestedChange,
     addArrayItem,
     removeArrayItem,
-    siteForm.addSubcontractor || (() => {}),
-    siteForm.updateSubcontractor || ((index: number, field: string, value: any) => {}),
-    siteForm.removeSubcontractor || ((index: number) => {}),
-    siteForm.addReplenishable || (() => {}),
-    siteForm.updateReplenishable || ((index: number, field: string, value: any) => {}),
-    siteForm.removeReplenishable || ((index: number) => {}),
-    siteForm.addBillingLine || (() => {}),
-    siteForm.updateBillingLine || ((id: string, field: string, value: any) => {}),
-    siteForm.removeBillingLine || ((id: string) => {}),
-    siteForm.addContractTerm || (() => {}),
-    siteForm.updateContractTerm || ((index: number, field: string, value: any) => {}),
-    siteForm.removeContractTerm || ((index: number) => {}),
-    siteForm.addAdditionalContract || (() => {}),
-    siteForm.updateAdditionalContract || ((index: number, field: string, value: any) => {}),
-    siteForm.removeAdditionalContract || ((index: number) => {}),
+    addSubcontractor,
+    updateSubcontractor,
+    removeSubcontractor,
+    addReplenishable,
+    updateReplenishable,
+    removeReplenishable,
+    addBillingLine,
+    updateBillingLine,
+    removeBillingLine,
+    addContractTerm,
+    updateContractTerm,
+    removeContractTerm,
+    addAdditionalContract,
+    updateAdditionalContract,
+    removeAdditionalContract,
     handleFileUpload,
     handleFileRemove
   );
@@ -99,7 +124,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         state: site.state || '',
         postcode: site.postcode || '',
         status: site.status || 'active',
-        notes: site.notes || '',
+        // Remove the notes field as it's not in SiteFormData type
         contractType: 'cleaning', // Default type
         // Add other fields from site as needed
       };

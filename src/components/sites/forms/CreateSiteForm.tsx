@@ -14,6 +14,10 @@ import { SiteFormData, getInitialFormData } from './siteFormTypes';
 import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContractsApi';
 import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
 
+// Define fallback functions for missing handlers
+const noop = () => {};
+const noopWithParams = (...args: any[]) => {};
+
 export function CreateSiteForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,26 +55,26 @@ export function CreateSiteForm() {
     console.log(`Removing file ${fileName} from ${field}`);
   };
   
-  // Fallback handlers for any missing functions
-  const addSubcontractor = formHandlers.addSubcontractor || (() => {});
-  const updateSubcontractor = formHandlers.updateSubcontractor || ((index: number, field: string, value: any) => {});
-  const removeSubcontractor = formHandlers.removeSubcontractor || ((index: number) => {});
+  // Define fallback functions for all potentially missing handlers
+  const updateSubcontractor = formHandlers.updateSubcontractor || noopWithParams;
+  const addSubcontractor = formHandlers.addSubcontractor || noop;
+  const removeSubcontractor = formHandlers.removeSubcontractor || noopWithParams;
   
-  const addReplenishable = formHandlers.addReplenishable || (() => {});
-  const updateReplenishable = formHandlers.updateReplenishable || ((index: number, field: string, value: any) => {});
-  const removeReplenishable = formHandlers.removeReplenishable || ((index: number) => {});
+  const addReplenishable = formHandlers.addReplenishable || noop;
+  const updateReplenishable = formHandlers.updateReplenishable || noopWithParams;
+  const removeReplenishable = formHandlers.removeReplenishable || noopWithParams;
   
-  const addBillingLine = formHandlers.addBillingLine || (() => {});
-  const updateBillingLine = formHandlers.updateBillingLine || ((id: string, field: string, value: any) => {});
-  const removeBillingLine = formHandlers.removeBillingLine || ((id: string) => {});
+  const addBillingLine = formHandlers.addBillingLine || noop;
+  const updateBillingLine = formHandlers.updateBillingLine || noopWithParams;
+  const removeBillingLine = formHandlers.removeBillingLine || noopWithParams;
   
-  const addContractTerm = formHandlers.addContractTerm || (() => {});
-  const updateContractTerm = formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {});
-  const removeContractTerm = formHandlers.removeContractTerm || ((index: number) => {});
+  const addContractTerm = formHandlers.addContractTerm || noop;
+  const updateContractTerm = formHandlers.updateContractTerm || noopWithParams;
+  const removeContractTerm = formHandlers.removeContractTerm || noopWithParams;
   
-  const addAdditionalContract = formHandlers.addAdditionalContract || (() => {});
-  const updateAdditionalContract = formHandlers.updateAdditionalContract || ((index: number, field: string, value: any) => {});
-  const removeAdditionalContract = formHandlers.removeAdditionalContract || ((index: number) => {});
+  const addAdditionalContract = formHandlers.addAdditionalContract || noop;
+  const updateAdditionalContract = formHandlers.updateAdditionalContract || noopWithParams;
+  const removeAdditionalContract = formHandlers.removeAdditionalContract || noopWithParams;
   
   // Get steps configuration with defined handlers
   const steps = getSiteFormSteps(

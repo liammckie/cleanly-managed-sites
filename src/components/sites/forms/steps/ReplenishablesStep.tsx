@@ -9,14 +9,14 @@ import { SiteFormData } from '../siteFormTypes';
 
 interface ReplenishablesStepProps {
   formData: SiteFormData;
-  handleStockChange: (index: number, value: string) => void;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  handleStockChange: (index: number, value: string) => void;
 }
 
 export function ReplenishablesStep({ 
   formData, 
-  handleStockChange, 
-  handleNestedChange 
+  handleNestedChange,
+  handleStockChange
 }: ReplenishablesStepProps) {
   const [newStockItem, setNewStockItem] = useState('');
 
