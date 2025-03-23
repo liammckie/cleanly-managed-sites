@@ -1,8 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ContactRecord } from '@/lib/types';
+import { contactSchema, ContactFormValues } from './contactSchema';
 import {
   Form,
   FormControl,
@@ -11,46 +16,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { ContactRecord } from '@/lib/types';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useContacts } from '@/hooks/useContacts';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Loader2 } from 'lucide-react';
-import { CommandInput, CommandGroup, CommandItem, CommandList, Command } from '@/components/ui/command';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SERVICE_OPTIONS } from '@/components/sites/forms/types/subcontractorTypes';
 
-const formSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  role: z.string().min(2, 'Role is required'),
-  department: z.string().optional(),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  notes: z.string().optional(),
-  is_primary: z.boolean().optional(),
-  entity_type: z.union([
-    z.literal('client'),
-    z.literal('site'),
-    z.literal('supplier'),
-    z.literal('internal')
-  ]).optional(),
-  entity_id: z.string().optional(),
-  services: z.array(z.string()).optional(),
-  monthly_cost: z.number().optional().nullable(),
-  is_flat_rate: z.boolean().optional(),
-});
-
-type ContactFormValues = z.infer<typeof formSchema>;
-
-interface ContactFormProps {
+export interface ContactFormProps {
   contact?: ContactRecord;
-  entityType?: string;
-  entityId?: string;
-  onSubmit: (data: Partial<ContactRecord>) => void;
+  entityType: 'site' | 'client' | 'supplier' | 'internal';
+  entityId: string;
+  onSubmit: (values: Partial<ContactRecord>) => Promise<void>;
   onCancel?: () => void;
   isSubmitting?: boolean;
 }
@@ -61,17 +32,10 @@ export function ContactForm({
   entityId,
   onSubmit,
   onCancel,
-  isSubmitting = false
+  isSubmitting = false,
 }: ContactFormProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [showServices, setShowServices] = useState<boolean>(false);
-  const { searchEntities } = useContacts();
-
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       name: contact?.name || '',
       role: contact?.role || '',
@@ -80,148 +44,53 @@ export function ContactForm({
       phone: contact?.phone || '',
       notes: contact?.notes || '',
       is_primary: contact?.is_primary || false,
-      entity_type: (contact?.entity_type as 'client' | 'site' | 'supplier' | 'internal') || 
-                  (entityType as 'client' | 'site' | 'supplier' | 'internal') || 
-                  'client',
-      entity_id: contact?.entity_id || entityId || '',
-      services: contact?.services || [],
-      monthly_cost: contact?.monthly_cost || null,
-      is_flat_rate: contact?.is_flat_rate !== undefined ? contact.is_flat_rate : true,
     },
   });
 
-  useEffect(() => {
-    // Check if this is a supplier/subcontractor contact
-    const currentEntityType = form.getValues('entity_type');
-    setShowServices(currentEntityType === 'supplier');
-    
-    // Update form when entityId or entityType props change
-    if (entityId && entityType) {
-      form.setValue('entity_id', entityId);
-      form.setValue('entity_type', entityType as any);
-    }
-  }, [entityId, entityType, form]);
-
-  const handleSubmit = (data: ContactFormValues) => {
-    const contactData: Partial<ContactRecord> = {
-      ...data,
-      entity_type: data.entity_type as 'client' | 'site' | 'supplier' | 'internal',
-    };
-    onSubmit(contactData);
-  };
-
-  const searchForEntities = async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setIsSearching(true);
+  const handleSubmit = async (values: ContactFormValues) => {
     try {
-      const selectedEntityType = form.getValues('entity_type');
-      const results = await searchEntities(query, selectedEntityType);
-      setSearchResults(Array.isArray(results) ? results : []);
+      await onSubmit({
+        ...values,
+        entity_id: entityId,
+        entity_type: entityType,
+        ...(contact?.id ? { id: contact.id } : {}),
+      });
     } catch (error) {
-      console.error('Error searching entities:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    searchForEntities(value);
-  };
-
-  const selectEntity = (entity: any) => {
-    form.setValue('entity_id', entity.id);
-    form.setValue('entity_type', entity.type as any);
-    setOpen(false);
-  };
-
-  const handleEntityTypeChange = (value: string) => {
-    form.setValue('entity_type', value as any);
-    form.setValue('entity_id', ''); // Reset entity_id when type changes
-    
-    // Show services section if supplier type is selected
-    setShowServices(value === 'supplier');
-  };
-
-  const toggleService = (service: string) => {
-    const currentServices = form.getValues('services') || [];
-    const isSelected = currentServices.includes(service);
-    
-    if (isSelected) {
-      form.setValue('services', currentServices.filter(s => s !== service));
-    } else {
-      form.setValue('services', [...currentServices, service]);
+      console.error('Error saving contact:', error);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role</FormLabel>
-                <FormControl>
-                  <Input placeholder="Facility Manager" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="john.doe@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input placeholder="+1 (555) 123-4567" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Contact name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <FormControl>
+                <Input placeholder="Contact role" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <FormField
           control={form.control}
           name="department"
@@ -229,178 +98,43 @@ export function ContactForm({
             <FormItem>
               <FormLabel>Department</FormLabel>
               <FormControl>
-                <Input placeholder="Maintenance" {...field} />
+                <Input placeholder="Department (optional)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="entity_type"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Type</FormLabel>
-                <Select
-                  onValueChange={handleEntityTypeChange}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a contact type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="site">Site</SelectItem>
-                    <SelectItem value="supplier">Supplier/Subcontractor</SelectItem>
-                    <SelectItem value="internal">Internal</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="Email address" type="email" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
-            name="entity_id"
+            name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Link to Entity</FormLabel>
-                <div className="flex space-x-2">
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        type="button"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <Search className="mr-2 h-4 w-4" />
-                        {field.value ? "Entity Selected" : "Search for entity..."}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start" side="bottom" avoidCollisions={false} style={{ width: '300px' }}>
-                      <Command>
-                        <CommandInput
-                          placeholder="Search by name..." 
-                          value={searchQuery}
-                          onValueChange={handleSearch}
-                        />
-                        <CommandList>
-                          {isSearching ? (
-                            <div className="flex items-center justify-center p-4">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            </div>
-                          ) : (
-                            <>
-                              {searchResults && searchResults.length > 0 ? (
-                                <CommandGroup>
-                                  {searchResults.map((entity) => (
-                                    <CommandItem
-                                      key={`${entity.type}-${entity.id}`}
-                                      value={entity.id}
-                                      onSelect={() => selectEntity(entity)}
-                                    >
-                                      <div className="flex flex-col">
-                                        <span>{entity.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                          {entity.type.charAt(0).toUpperCase() + entity.type.slice(1)} 
-                                          {entity.identifier ? ` • ${entity.identifier}` : ''}
-                                        </span>
-                                      </div>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              ) : searchQuery.length > 0 ? (
-                                <div className="py-6 text-center text-sm">No results found.</div>
-                              ) : (
-                                <div className="py-6 text-center text-sm">Type at least 2 characters to search</div>
-                              )}
-                            </>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <Input
-                    type="hidden"
-                    {...field}
-                  />
-                </div>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="Phone number" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
-        {showServices && (
-          <div className="space-y-4 border rounded-md p-4">
-            <h3 className="font-medium">Services Provided</h3>
-            
-            <div className="grid grid-cols-2 gap-2">
-              {SERVICE_OPTIONS.map((service) => (
-                <div key={service.value} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`service-${service.value}`}
-                    checked={(form.getValues('services') || []).includes(service.value)}
-                    onCheckedChange={() => toggleService(service.value)}
-                  />
-                  <label 
-                    htmlFor={`service-${service.value}`}
-                    className="text-sm cursor-pointer"
-                  >
-                    {service.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <FormField
-                control={form.control}
-                name="monthly_cost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Cost</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        {...field}
-                        value={field.value === null ? '' : field.value}
-                        onChange={(e) => {
-                          const value = e.target.value === '' ? null : parseFloat(e.target.value);
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="is_flat_rate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-end space-x-2 mt-8">
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>Flat Rate</FormLabel>
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        )}
-
+        
         <FormField
           control={form.control}
           name="notes"
@@ -408,34 +142,34 @@ export function ContactForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea placeholder="Additional information about this contact" {...field} />
+                <Textarea placeholder="Additional notes" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <FormField
           control={form.control}
           name="is_primary"
           render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Primary Contact</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Set this as the primary contact for this entity
-                </p>
-              </div>
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <Switch
+                <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>Primary Contact</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Set this as the primary contact for this {entityType}
+                </p>
+              </div>
             </FormItem>
           )}
         />
-
+        
         <div className="flex justify-end gap-2 pt-2">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>

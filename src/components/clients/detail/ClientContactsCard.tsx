@@ -1,196 +1,152 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Star, UserPlus, Pencil, Trash2 } from 'lucide-react';
-import { useClientContacts } from '@/hooks/useClientContacts';
-import { ContactRecord } from '@/lib/types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
+import { contactsApi } from '@/lib/api';
+import { ContactRecord } from '@/lib/types';
+import { Mail, Phone, Star, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ClientContactsCardProps {
-  clientId: string;
+  clientId: string;  // Add this prop to fix the type error
 }
 
 export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
-  const {
-    contacts,
-    isLoading,
-    isError,
-    addContact,
-    updateContact,
-    deleteContact,
-    setPrimaryContact,
-    isAdding,
-    isUpdating,
-    isDeleting,
-  } = useClientContacts(clientId);
-  
-  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  
-  const handleSaveContact = async (contactData: Partial<ContactRecord>) => {
-    if (editingContact) {
-      await updateContact({ id: editingContact.id, contactData });
-      setEditingContact(null);
-    } else {
-      await addContact(contactData);
+  const [contacts, setContacts] = useState<ContactRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const clientContacts = await contactsApi.getContactsByEntityId(clientId, 'client');
+        setContacts(clientContacts);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load contacts');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContacts();
+  }, [clientId, refreshKey]);
+
+  const handleContactSubmit = async (data: Partial<ContactRecord>): Promise<void> => {
+    try {
+      if (data.id) {
+        await contactsApi.updateContact(data.id, data);
+      } else {
+        await contactsApi.createContact({ ...data, entity_id: clientId, entity_type: 'client' } as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
+      }
+      
+      toast.success('Contact saved successfully');
+      refreshContacts();
+    } catch (error) {
+      console.error('Error saving contact:', error);
+      toast.error('Failed to save contact');
+      throw error;
     }
-    setDialogOpen(false);
   };
-  
-  const handleEditContact = (contact: ContactRecord) => {
-    setEditingContact(contact);
-    setDialogOpen(true);
+
+  const refreshContacts = () => {
+    setRefreshKey(prev => prev + 1);
   };
-  
-  const handleDeleteContact = (contactId: string) => {
-    if (window.confirm('Are you sure you want to delete this contact?')) {
-      deleteContact(contactId);
-    }
-  };
-  
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Contacts</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center h-32">
-            <p>Loading contacts...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (isError) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Contacts</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-red-500">Error loading contacts</div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
+
+  const primaryContact = contacts.find(contact => contact.is_primary);
+  const otherContacts = contacts.filter(contact => !contact.is_primary);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Contacts</span>
-          <Button 
-            size="sm" 
-            onClick={() => {
-              setEditingContact(null);
-              setDialogOpen(true);
-            }}
-            disabled={isAdding}
-            className="flex items-center gap-1"
-          >
-            <UserPlus className="h-4 w-4" />
-            Add Contact
-          </Button>
-        </CardTitle>
+        <CardTitle>Contacts</CardTitle>
+        <CardDescription>
+          Manage contacts associated with this client.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {contacts.length > 0 ? (
-          <div className="space-y-4">
-            {contacts.map((contact) => (
-              <div 
-                key={contact.id} 
-                className="p-4 border rounded-md flex flex-col md:flex-row justify-between"
-              >
+      <CardContent className="grid gap-4">
+        {isLoading ? (
+          <p>Loading contacts...</p>
+        ) : error ? (
+          <p className="text-destructive">Error: {error}</p>
+        ) : (
+          <>
+            {primaryContact && (
+              <div className="grid grid-cols-[100px_1fr] items-start gap-4">
+                <Avatar>
+                  <AvatarImage src={`https://avatar.vercel.sh/${primaryContact.email}.png`} />
+                  <AvatarFallback>{primaryContact.name.charAt(0)}</AvatarFallback>
+                </Avatar>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium">{contact.name}</h3>
-                    {contact.is_primary && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-500" />
-                        Primary
-                      </Badge>
-                    )}
-                    {contact.role && (
-                      <Badge variant="outline" className="text-xs">
-                        {contact.role}
-                      </Badge>
-                    )}
+                  <div className="flex items-center space-x-2">
+                    <CardTitle className="m-0 flex items-center">
+                      {primaryContact.name}
+                      <Star className="ml-2 h-4 w-4 fill-yellow-500 text-yellow-500" />
+                    </CardTitle>
                   </div>
+                  <CardDescription>
+                    {primaryContact.role}
+                  </CardDescription>
                   <div className="text-sm text-muted-foreground">
-                    {contact.email && (
-                      <p>Email: <a href={`mailto:${contact.email}`} className="text-primary">{contact.email}</a></p>
+                    {primaryContact.email && (
+                      <p className="flex items-center"><Mail className="mr-2 h-4 w-4" />{primaryContact.email}</p>
                     )}
-                    {contact.phone && (
-                      <p>Phone: <a href={`tel:${contact.phone}`} className="text-primary">{contact.phone}</a></p>
+                    {primaryContact.phone && (
+                      <p className="flex items-center"><Phone className="mr-2 h-4 w-4" />{primaryContact.phone}</p>
                     )}
-                    {contact.department && <p>Department: {contact.department}</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-2 md:mt-0">
-                  {!contact.is_primary && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setPrimaryContact(contact.id)}
-                      disabled={isUpdating}
-                      className="text-xs"
-                    >
-                      <Star className="h-3 w-3 mr-1" />
-                      Make Primary
-                    </Button>
-                  )}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleEditContact(contact)}
-                    disabled={isUpdating}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleDeleteContact(contact.id)}
-                    disabled={isDeleting}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              </div>
+            )}
+            {otherContacts.map(contact => (
+              <div key={contact.id} className="grid grid-cols-[100px_1fr] items-start gap-4">
+                <Avatar>
+                  <AvatarImage src={`https://avatar.vercel.sh/${contact.email}.png`} />
+                  <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <CardTitle className="m-0">{contact.name}</CardTitle>
+                  <CardDescription>
+                    {contact.role}
+                  </CardDescription>
+                  <div className="text-sm text-muted-foreground">
+                    {contact.email && (
+                      <p className="flex items-center"><Mail className="mr-2 h-4 w-4" />{contact.email}</p>
+                    )}
+                    {contact.phone && (
+                      <p className="flex items-center"><Phone className="mr-2 h-4 w-4" />{contact.phone}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="text-center p-8 border border-dashed rounded-md bg-muted/50">
-            <p className="text-muted-foreground mb-4">No contacts added yet.</p>
-            <Button 
-              variant="outline" 
-              onClick={() => setDialogOpen(true)}
-              className="flex items-center gap-1"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add First Contact
-            </Button>
-          </div>
+          </>
         )}
       </CardContent>
-      
-      <ContactDialog 
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        contact={editingContact || undefined}
-        entityType="client"
-        entityId={clientId}
-        onSubmit={handleSaveContact}
-      />
+      <CardFooter>
+        <ContactDialog
+          entityType="client"
+          entityId={clientId}
+          onSubmit={handleContactSubmit}
+          onSuccess={refreshContacts}
+          trigger={
+            <Button variant="default" size="sm" className="gap-1">
+              <UserPlus size={16} />
+              <span>Add Contact</span>
+            </Button>
+          }
+        />
+      </CardFooter>
     </Card>
   );
 }
