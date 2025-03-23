@@ -43,6 +43,15 @@ export function ContactDialog({
         data.services = [data.services as unknown as string];
       }
       
+      // Automatically set entity_type and entity_id if provided as props
+      if (entityType && !data.entity_type) {
+        data.entity_type = entityType as 'site' | 'client' | 'supplier' | 'internal';
+      }
+      
+      if (entityId && !data.entity_id) {
+        data.entity_id = entityId;
+      }
+      
       await onSubmit(data);
       setOpen(false);
       
