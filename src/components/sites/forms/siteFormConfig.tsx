@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteFormData } from './siteFormTypes';
 import { BasicInformationStep } from './steps/BasicInformationStep';
@@ -110,6 +109,7 @@ export const getStepsConfig = ({
         addContractTerm={addContractTerm}
         removeContractTerm={removeContractTerm}
         updateContractTerm={updateContractTerm}
+        setFormData={setFormData}
       />
     )
   },

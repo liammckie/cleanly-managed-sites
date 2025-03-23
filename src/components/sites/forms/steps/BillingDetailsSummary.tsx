@@ -3,15 +3,16 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BillingDetails } from '../types/billingTypes';
 import { isSiteBillingOnHold } from '@/lib/utils/billingCalculations';
-import { PauseCircle, UserCheck, Users } from 'lucide-react';
+import { PauseCircle, UserCheck, Users, Briefcase } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface BillingDetailsSummaryProps {
   billingDetails: BillingDetails;
+  contractType?: string;
 }
 
-export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryProps) {
+export function BillingDetailsSummary({ billingDetails, contractType = 'cleaning' }: BillingDetailsSummaryProps) {
   const isBillingOnHold = isSiteBillingOnHold(
     billingDetails.billingOnHold,
     billingDetails.billingHoldStartDate,
@@ -22,6 +23,22 @@ export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryP
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     return format(new Date(dateString), 'dd/MM/yyyy');
+  };
+
+  // Map contract type to display name
+  const getContractTypeDisplay = (type?: string) => {
+    const contractTypes: Record<string, string> = {
+      'cleaning': 'Cleaning',
+      'pest': 'Pest Control',
+      'grounds': 'Grounds Maintenance',
+      'waste': 'Waste Management',
+      'hygiene': 'Hygiene Services',
+      'gardening': 'Gardening',
+      'security': 'Security',
+      'other': 'Other'
+    };
+    
+    return contractTypes[type || 'cleaning'] || 'Cleaning';
   };
 
   return (
@@ -38,7 +55,7 @@ export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryP
           </div>
         )}
 
-        <div className="flex items-center mb-3">
+        <div className="flex items-center gap-2 mb-3">
           <div className={`px-3 py-1 rounded text-sm font-medium flex items-center ${
             billingDetails.serviceDeliveryType === 'contractor' 
               ? 'bg-orange-100 text-orange-800' 
@@ -55,6 +72,11 @@ export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryP
                 <span>Direct Delivery</span>
               </>
             )}
+          </div>
+          
+          <div className="px-3 py-1 rounded text-sm font-medium flex items-center bg-blue-100 text-blue-800">
+            <Briefcase size={14} className="mr-1" />
+            <span>{getContractTypeDisplay(contractType)}</span>
           </div>
         </div>
 

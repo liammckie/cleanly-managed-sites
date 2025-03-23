@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteFormData } from '../../siteFormTypes';
+import { ContractType } from '../../types/contractTypes';
 
 interface PrimaryContractInformationProps {
   formData: SiteFormData;
@@ -24,6 +25,17 @@ export function PrimaryContractInformation({
   handleNestedChange,
   annualValue
 }: PrimaryContractInformationProps) {
+  // Calculate weekly value from contract value
+  const weeklyValue = formData.contractDetails.value 
+    ? (formData.contractDetails.billingCycle === 'weekly' 
+      ? formData.contractDetails.value 
+      : formData.contractDetails.billingCycle === 'monthly' 
+        ? formData.contractDetails.value / 4.33
+        : formData.contractDetails.billingCycle === 'quarterly'
+          ? formData.contractDetails.value / 13
+          : formData.contractDetails.value / 52)
+    : 0;
+
   return (
     <div className="glass-card p-6 space-y-4">
       <div className="flex items-center justify-between mb-2">
@@ -43,6 +55,28 @@ export function PrimaryContractInformation({
             onChange={(e) => handleNestedChange('contractDetails', 'contractNumber', e.target.value)}
             className="glass-input"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="contract-type">Contract Type</Label>
+          <Select 
+            value={formData.contractDetails.contractType || 'cleaning'}
+            onValueChange={(value) => handleNestedChange('contractDetails', 'contractType', value as ContractType)}
+          >
+            <SelectTrigger id="contract-type" className="glass-input">
+              <SelectValue placeholder="Select contract type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cleaning">Cleaning</SelectItem>
+              <SelectItem value="pest">Pest Control</SelectItem>
+              <SelectItem value="grounds">Grounds Maintenance</SelectItem>
+              <SelectItem value="waste">Waste Management</SelectItem>
+              <SelectItem value="hygiene">Hygiene Services</SelectItem>
+              <SelectItem value="gardening">Gardening</SelectItem>
+              <SelectItem value="security">Security</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -79,7 +113,7 @@ export function PrimaryContractInformation({
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-2">
           <Label htmlFor="contract-value">Contract Value ($)</Label>
           <Input
@@ -108,6 +142,14 @@ export function PrimaryContractInformation({
               <SelectItem value="annually">Annually</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Weekly Value</Label>
+          <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+            <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
+            ${weeklyValue.toFixed(2)}
+          </div>
         </div>
         
         <div className="space-y-2">

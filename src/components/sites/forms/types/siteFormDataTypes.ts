@@ -9,7 +9,8 @@ import {
   Subcontractor, 
   ContractDetails, 
   BillingDetails, 
-  AdHocWorkAuthorization 
+  AdHocWorkAuthorization,
+  ContractType
 } from './index';
 
 export type SiteFormData = {
@@ -26,6 +27,8 @@ export type SiteFormData = {
   customId?: string;
   monthlyCost?: number;
   monthlyRevenue?: number;
+  weeklyRevenue?: number; // Add weekly revenue
+  annualRevenue?: number; // Add annual revenue
   useClientInfo: boolean;
   subcontractors: Subcontractor[];
   periodicals: Periodicals;
@@ -36,6 +39,8 @@ export type SiteFormData = {
   billingDetails: BillingDetails;
   adHocWorkAuthorization: AdHocWorkAuthorization;
   contacts: ContactRecord[];
+  // Add support for multiple contracts
+  additionalContracts?: ContractDetails[];
 }
 
 export const getInitialFormData = (): SiteFormData => ({
@@ -52,6 +57,8 @@ export const getInitialFormData = (): SiteFormData => ({
   customId: '',
   monthlyCost: undefined,
   monthlyRevenue: undefined,
+  weeklyRevenue: undefined,
+  annualRevenue: undefined,
   useClientInfo: false,
   
   subcontractors: [
@@ -124,6 +131,7 @@ export const getInitialFormData = (): SiteFormData => ({
     contractNumber: '',
     renewalTerms: '',
     terminationPeriod: '',
+    contractType: 'cleaning', // Default to cleaning
     terms: []
   },
   
@@ -171,5 +179,8 @@ export const getInitialFormData = (): SiteFormData => ({
     requirePurchaseOrder: true
   },
   
-  contacts: []
+  contacts: [],
+  
+  // Initialize with empty additional contracts array
+  additionalContracts: []
 });

@@ -1,6 +1,8 @@
 
 import { BillingFrequency } from './billingTypes';
 
+export type ContractType = 'cleaning' | 'pest' | 'grounds' | 'waste' | 'hygiene' | 'gardening' | 'security' | 'other';
+
 export interface ContractTerm {
   name: string;
   description: string;
@@ -21,7 +23,7 @@ export interface ContractDetails {
   contractValue?: string;
   paymentTerms?: string;
   paymentFrequency?: string;
-  contractType?: string;
+  contractType?: ContractType;
   noticePeriod?: string;
   notes?: string;
   terms?: ContractTerm[];
