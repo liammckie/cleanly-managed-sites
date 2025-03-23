@@ -1,36 +1,21 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useClientDetails, useClients } from '@/hooks/useClients';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useClientDetails } from '@/hooks/useClients';
 import { ClientHeader } from './ClientHeader';
 import { ClientInfoCard } from './ClientInfoCard';
 import { ClientNotesCard } from './ClientNotesCard';
 import { ClientSitesCard } from './ClientSitesCard';
-import { ClientErrorState } from './ClientErrorState';
+import { ClientContactsCard } from './ClientContactsCard';
 import { ClientNotFoundState } from './ClientNotFoundState';
+import { ClientErrorState } from './ClientErrorState';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-interface ClientDetailProps {
-  clientId: string;
-}
-
-export function ClientDetail({ clientId }: ClientDetailProps) {
-  const navigate = useNavigate();
+export function ClientDetail({ clientId }: { clientId: string }) {
   const { client, sites, isLoading, isError, error } = useClientDetails(clientId);
-  const { deleteClient, isDeleting } = useClients();
-  
-  // Handle delete
-  const handleDelete = () => {
-    deleteClient(clientId, {
-      onSuccess: () => {
-        navigate('/clients');
-      },
-    });
-  };
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-60">
+      <div className="flex justify-center items-center h-96">
         <LoadingSpinner />
       </div>
     );
@@ -41,27 +26,21 @@ export function ClientDetail({ clientId }: ClientDetailProps) {
   }
   
   if (!client) {
-    return <ClientNotFoundState />;
+    return <ClientNotFoundState clientId={clientId} />;
   }
   
   return (
     <div className="space-y-6">
-      <ClientHeader 
-        client={client} 
-        onDelete={handleDelete} 
-        isDeleting={isDeleting} 
-      />
+      <ClientHeader client={client} />
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <ClientInfoCard client={client} />
-          <ClientNotesCard notes={client.notes} />
-        </div>
-        
-        <div className="lg:col-span-2">
-          <ClientSitesCard clientId={clientId} sites={sites} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ClientInfoCard client={client} />
+        <ClientNotesCard client={client} />
       </div>
+      
+      <ClientContactsCard clientId={clientId} />
+      
+      <ClientSitesCard sites={sites} clientId={clientId} />
     </div>
   );
 }

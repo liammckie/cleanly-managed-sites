@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ClientRecord, SiteRecord } from '../types';
+import { ClientRecord, SiteRecord, ContactRecord } from '../types';
 
 // Client API functions
 export const clientsApi = {
@@ -15,7 +15,26 @@ export const clientsApi = {
       throw error;
     }
     
-    return clients as ClientRecord[] || [];
+    // Fetch contacts for all clients
+    const clientIds = clients.map(client => client.id);
+    const { data: contacts, error: contactsError } = await supabase
+      .from('contacts')
+      .select('*')
+      .in('entity_id', clientIds)
+      .eq('entity_type', 'client');
+    
+    if (contactsError) {
+      console.error('Error fetching client contacts:', contactsError);
+      throw contactsError;
+    }
+    
+    // Associate contacts with their clients
+    const clientsWithContacts = clients.map(client => ({
+      ...client,
+      contacts: contacts.filter(contact => contact.entity_id === client.id)
+    }));
+    
+    return clientsWithContacts as ClientRecord[] || [];
   },
   
   // Get client count by status
@@ -57,7 +76,25 @@ export const clientsApi = {
       throw error;
     }
     
-    return data as ClientRecord;
+    // Fetch contacts for this client
+    const { data: contacts, error: contactsError } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('entity_id', id)
+      .eq('entity_type', 'client');
+    
+    if (contactsError) {
+      console.error(`Error fetching contacts for client ${id}:`, contactsError);
+      throw contactsError;
+    }
+    
+    // Add contacts to the client data
+    const clientWithContacts = {
+      ...data,
+      contacts: contacts
+    };
+    
+    return clientWithContacts as ClientRecord;
   },
   
   // Create a new client
@@ -158,6 +195,13 @@ export const clientsApi = {
         .eq('client_id', id);
     }
     
+    // Delete any contacts associated with this client
+    await supabase
+      .from('contacts')
+      .delete()
+      .eq('entity_id', id)
+      .eq('entity_type', 'client');
+    
     // Now delete the client
     const { error } = await supabase
       .from('clients')
@@ -198,5 +242,74 @@ export const clientsApi = {
     }
     
     return count || 0;
+  },
+  
+  // Add contact to client
+  async addClientContact(clientId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
+    // Prepare contact data
+    const contact = {
+      ...contactData,
+      entity_id: clientId,
+      entity_type: 'client',
+    };
+    
+    const { data, error } = await supabase
+      .from('contacts')
+      .insert(contact)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding contact to client:', error);
+      throw error;
+    }
+    
+    return data as ContactRecord;
+  },
+  
+  // Update client contact
+  async updateClientContact(contactId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
+    const { data, error } = await supabase
+      .from('contacts')
+      .update(contactData)
+      .eq('id', contactId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating client contact:', error);
+      throw error;
+    }
+    
+    return data as ContactRecord;
+  },
+  
+  // Delete client contact
+  async deleteClientContact(contactId: string): Promise<void> {
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', contactId);
+    
+    if (error) {
+      console.error('Error deleting client contact:', error);
+      throw error;
+    }
+  },
+  
+  // Get client contacts
+  async getClientContacts(clientId: string): Promise<ContactRecord[]> {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('entity_id', clientId)
+      .eq('entity_type', 'client');
+    
+    if (error) {
+      console.error('Error fetching client contacts:', error);
+      throw error;
+    }
+    
+    return data as ContactRecord[];
   }
 };
