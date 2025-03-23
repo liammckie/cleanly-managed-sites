@@ -161,24 +161,28 @@ export const contactsApi = {
 
     // Search clients
     if (!entityType || entityType === 'client') {
-      const { data: clients, error: clientError } = await supabase
-        .from('clients')
-        .select('id, name, custom_id')
-        .ilike('name', `%${query}%`)
-        .limit(5);
+      try {
+        const { data: clients, error: clientError } = await supabase
+          .from('clients')
+          .select('id, name, custom_id')
+          .ilike('name', `%${query}%`)
+          .limit(5);
 
-      if (clientError) {
-        console.error('Error searching clients:', clientError);
-      } else if (clients) {
-        results = [
-          ...results,
-          ...clients.map(client => ({
-            id: client.id,
-            name: client.name,
-            identifier: client.custom_id,
-            type: 'client'
-          }))
-        ];
+        if (clientError) {
+          console.error('Error searching clients:', clientError);
+        } else if (clients) {
+          results = [
+            ...results,
+            ...clients.map(client => ({
+              id: client.id,
+              name: client.name,
+              identifier: client.custom_id,
+              type: 'client'
+            }))
+          ];
+        }
+      } catch (error) {
+        console.error('Error in client search:', error);
       }
     }
 
@@ -187,7 +191,7 @@ export const contactsApi = {
       try {
         const { data: sites, error: siteError } = await supabase
           .from('sites')
-          .select('id, name, client_id, site_code')
+          .select('id, name, client_id, custom_id')
           .ilike('name', `%${query}%`)
           .limit(5);
 
@@ -199,7 +203,7 @@ export const contactsApi = {
             ...sites.map(site => ({
               id: site.id,
               name: site.name,
-              identifier: site.site_code || '',
+              identifier: site.custom_id || '',
               type: 'site',
               parent_id: site.client_id
             }))
@@ -210,30 +214,30 @@ export const contactsApi = {
       }
     }
 
-    // Search suppliers - check if the table exists first
+    // Search contractors (as a fallback for suppliers)
     if (!entityType || entityType === 'supplier') {
       try {
-        const { data: suppliers, error: supplierError } = await supabase
-          .from('suppliers')
-          .select('id, name, supplier_code')
-          .ilike('name', `%${query}%`)
+        const { data: contractors, error: contractorError } = await supabase
+          .from('contractors')
+          .select('id, business_name, custom_id')
+          .ilike('business_name', `%${query}%`)
           .limit(5);
 
-        if (supplierError) {
-          console.error('Error searching suppliers:', supplierError);
-        } else if (suppliers) {
+        if (contractorError) {
+          console.error('Error searching contractors:', contractorError);
+        } else if (contractors) {
           results = [
             ...results,
-            ...suppliers.map(supplier => ({
-              id: supplier.id,
-              name: supplier.name,
-              identifier: supplier.supplier_code || '',
+            ...contractors.map(contractor => ({
+              id: contractor.id,
+              name: contractor.business_name,
+              identifier: contractor.custom_id || '',
               type: 'supplier'
             }))
           ];
         }
       } catch (error) {
-        console.error('Error in supplier search:', error);
+        console.error('Error in contractor search:', error);
       }
     }
 

@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ContactRecord } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { contactsApi } from '@/lib/api';
+import { contactsApi } from '@/lib/api/contactsApi';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Loader2 } from 'lucide-react';
 import { CommandInput, CommandGroup, CommandItem, CommandList, Command } from '@/components/ui/command';
@@ -237,7 +237,7 @@ export function ContactForm({
                         {field.value ? "Entity Selected" : "Search for entity..."}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start" side="bottom" avoidCollisions={false} className="w-[300px] p-0">
+                    <PopoverContent className="p-0" align="start" side="bottom" avoidCollisions={false} style={{ width: '300px' }}>
                       <Command>
                         <CommandInput
                           placeholder="Search by name..." 
