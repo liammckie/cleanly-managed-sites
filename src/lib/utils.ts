@@ -24,6 +24,17 @@ export function formatDate(dateString: string, formatStr: string = 'PPP'): strin
 }
 
 /**
+ * Format a currency value
+ */
+export function formatCurrency(amount: number | null | undefined, currency: string = 'AUD'): string | null {
+  if (amount === null || amount === undefined) return null;
+  return new Intl.NumberFormat('en-AU', { 
+    style: 'currency', 
+    currency: currency 
+  }).format(amount);
+}
+
+/**
  * Safely parse JSON with error handling
  */
 export const safeJsonParse = <T>(json: string, fallback: T): T => {
