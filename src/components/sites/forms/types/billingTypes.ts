@@ -1,7 +1,7 @@
 
 import { BillingContact } from './contactTypes';
 
-export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
+export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
 export type BillingLine = {
   id?: string;
@@ -30,6 +30,7 @@ export type BillingDetails = {
   xeroContactId: string;
   notes: string;
   billingLines: BillingLine[];  // Multiple billing lines per site
+  annualForecast?: string;  // Calculated annual forecast
   
   // Add legacy properties for compatibility
   billingContact?: string;

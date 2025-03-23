@@ -4,13 +4,12 @@ export type JobSpecifications = {
   hoursPerDay: number;
   directEmployees: boolean;
   notes: string;
-  workingDays?: {
-    [key: string]: boolean;
-  };
-  
-  // Add legacy properties for compatibility
   requiresSpecialEquipment?: boolean;
   equipmentDetails?: string;
   cleaningInstructions?: string;
-  areas?: any[];
+  areas?: string[];
+  workingDays?: Record<string, boolean>;
+  serviceDeliveryType?: 'direct' | 'contractor';
+  annualContractorCost?: number;
+  contractorInvoiceFrequency?: 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 }

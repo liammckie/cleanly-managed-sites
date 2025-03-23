@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { SiteFormData } from '../siteFormTypes';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface JobSpecificationsStepProps {
   formData: SiteFormData;
@@ -35,10 +36,71 @@ export function JobSpecificationsStep({ formData, handleNestedChange }: JobSpeci
     handleNestedChange('jobSpecifications', 'daysPerWeek', selectedDaysCount);
   };
 
+  const handleServiceDeliveryChange = (value: string) => {
+    const isDirectService = value === 'direct';
+    handleNestedChange('jobSpecifications', 'serviceDeliveryType', value);
+    handleNestedChange('jobSpecifications', 'directEmployees', isDirectService);
+  };
+
   return (
     <div className="space-y-6">
       <div className="glass-card p-6 space-y-4">
-        <h3 className="text-lg font-medium">Cleaning Schedule</h3>
+        <h3 className="text-lg font-medium">Service Delivery Options</h3>
+        
+        <Card className="p-4 border border-muted">
+          <Label className="mb-2 block">How will services be delivered?</Label>
+          <RadioGroup 
+            value={formData.jobSpecifications.serviceDeliveryType || 'direct'} 
+            onValueChange={handleServiceDeliveryChange}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          >
+            <div className="flex items-center space-x-2 border p-3 rounded-md">
+              <RadioGroupItem value="direct" id="direct" />
+              <Label htmlFor="direct" className="cursor-pointer">Direct Employees</Label>
+            </div>
+            <div className="flex items-center space-x-2 border p-3 rounded-md">
+              <RadioGroupItem value="contractor" id="contractor" />
+              <Label htmlFor="contractor" className="cursor-pointer">Through Contractors</Label>
+            </div>
+          </RadioGroup>
+        </Card>
+
+        {formData.jobSpecifications.serviceDeliveryType === 'contractor' && (
+          <Card className="p-4 border border-muted mt-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="annual-contractor-cost">Annual Contractor Cost</Label>
+                <Input
+                  id="annual-contractor-cost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter annual cost"
+                  value={formData.jobSpecifications.annualContractorCost || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'annualContractorCost', parseFloat(e.target.value))}
+                  className="glass-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contractor-invoice-frequency">Contractor Invoice Frequency</Label>
+                <select
+                  id="contractor-invoice-frequency"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 glass-input"
+                  value={formData.jobSpecifications.contractorInvoiceFrequency || 'monthly'}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'contractorInvoiceFrequency', e.target.value)}
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="fortnightly">Fortnightly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="annually">Annually</option>
+                </select>
+              </div>
+            </div>
+          </Card>
+        )}
+        
+        <h3 className="text-lg font-medium mt-6">Cleaning Schedule</h3>
         
         <Card className="p-4 border border-muted">
           <div className="space-y-2">
@@ -88,22 +150,6 @@ export function JobSpecificationsStep({ formData, handleNestedChange }: JobSpeci
               onChange={(e) => handleNestedChange('jobSpecifications', 'hoursPerDay', parseInt(e.target.value))}
               className="glass-input"
             />
-          </div>
-        </div>
-        
-        <div className="space-y-2 mt-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="direct-employees" 
-              checked={formData.jobSpecifications.directEmployees}
-              onCheckedChange={(checked) => handleNestedChange('jobSpecifications', 'directEmployees', !!checked)}
-            />
-            <label
-              htmlFor="direct-employees"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Direct Employees (unchecked if subcontractors)
-            </label>
           </div>
         </div>
       </div>

@@ -1,14 +1,17 @@
 
-import { SiteRecord, ContactRecord, ClientRecord } from '@/lib/types';
-import { SecurityDetails } from './types/securityTypes';
-import { JobSpecifications } from './types/jobSpecificationTypes';
-import { Periodicals } from './types/periodicalTypes';
-import { Replenishables } from './types/replenishableTypes';
-import { ContractDetails, ContractTerm } from './types/contractTypes';
-import { BillingDetails, AdHocWorkAuthorization, BillingLine, BillingFrequency } from './types/billingTypes';
+import { SiteStatus } from '../../sites/SiteCard';
+import { ContactRecord } from '@/lib/types';
+import { 
+  Periodicals, 
+  JobSpecifications, 
+  Replenishables, 
+  SecurityDetails, 
+  Subcontractor, 
+  ContractDetails, 
+  BillingDetails, 
+  AdHocWorkAuthorization 
+} from './types/index';
 import { SiteContact, BillingContact } from './types/contactTypes';
-import { Subcontractor } from './types/subcontractorTypes';
-import { SiteStatus } from '@/components/sites/SiteCard';
 
 // Export BillingContact for use in other modules
 export type { BillingContact };
@@ -81,12 +84,22 @@ export const getInitialFormData = (): SiteFormData => ({
   jobSpecifications: {
     daysPerWeek: 5,
     hoursPerDay: 3,
-    directEmployees: false,
+    directEmployees: true,
+    serviceDeliveryType: 'direct',
     notes: '',
     requiresSpecialEquipment: false,
     equipmentDetails: '',
     cleaningInstructions: '',
-    areas: []
+    areas: [],
+    workingDays: {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: false,
+      sunday: false
+    }
   },
   
   periodicals: {
@@ -145,7 +158,14 @@ export const getInitialFormData = (): SiteFormData => ({
     notes: '',
     billingContact: '',
     billingPhone: '',
-    billingLines: [], // Initialize with empty billing lines array
+    annualForecast: '',
+    billingLines: [{
+      id: crypto.randomUUID(),
+      description: 'General Contract Cleaning',
+      amount: 0,
+      frequency: 'monthly',
+      isRecurring: true
+    }], // Initialize with default general cleaning line
   },
   
   adHocWorkAuthorization: {
