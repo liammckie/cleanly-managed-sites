@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -26,6 +25,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/hooks/auth/AuthProvider';
 import CreateContractor from '@/pages/CreateContractor';
 import ContractorDetail from '@/pages/ContractorDetail';
+import Users from '@/pages/Users';
+import UserDetail from '@/pages/UserDetail';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -145,6 +146,18 @@ function App() {
               <Route path="/integrations" element={
                 <ProtectedRoute>
                   <Integrations />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/users" element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/users/:id" element={
+                <ProtectedRoute>
+                  <UserDetail />
                 </ProtectedRoute>
               } />
               

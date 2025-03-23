@@ -96,3 +96,22 @@ export interface ContractorVersionHistoryEntry {
   created_at: string;
   created_by?: string;
 }
+
+export interface UserRole {
+  id: string;
+  name: string;
+  permissions: string[];
+  description?: string;
+}
+
+export interface SystemUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  status: 'active' | 'inactive' | 'pending';
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+  avatar_url?: string;
+}

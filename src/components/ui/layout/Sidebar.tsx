@@ -12,7 +12,8 @@ import {
   FileText,
   Boxes,
   Download,
-  Briefcase
+  Briefcase,
+  ShieldCheck
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,12 @@ export function Sidebar() {
       icon: <ClipboardList size={20} />,
       label: 'Work Orders',
       active: pathname.startsWith('/workorders')
+    },
+    {
+      href: '/users',
+      icon: <ShieldCheck size={20} />,
+      label: 'Users & Permissions',
+      active: pathname.startsWith('/users')
     },
     {
       href: '/import-export',
