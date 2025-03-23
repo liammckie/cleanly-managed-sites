@@ -217,21 +217,23 @@ export const contactsApi = {
     // Search contractors (as a fallback for suppliers)
     if (!entityType || entityType === 'supplier') {
       try {
+        // First check what columns are available in the contractors table
         const { data: contractors, error: contractorError } = await supabase
           .from('contractors')
-          .select('id, business_name, custom_id')
+          .select('id, business_name, abn, custom_id')
           .ilike('business_name', `%${query}%`)
           .limit(5);
 
         if (contractorError) {
           console.error('Error searching contractors:', contractorError);
-        } else if (contractors) {
+        } else if (contractors && Array.isArray(contractors)) {
           results = [
             ...results,
             ...contractors.map(contractor => ({
               id: contractor.id,
               name: contractor.business_name,
-              identifier: contractor.custom_id || '',
+              // Use ABN as an identifier if custom_id is not available
+              identifier: contractor.custom_id || contractor.abn || '',
               type: 'supplier'
             }))
           ];
