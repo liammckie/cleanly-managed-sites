@@ -2,7 +2,7 @@
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
 export interface BillingLine {
-  id?: string;
+  id: string; // Changed from optional to required
   description: string;
   amount: number;
   frequency: BillingFrequency;

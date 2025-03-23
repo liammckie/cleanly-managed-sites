@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
 // Get billing lines for a site
 export async function getSiteBillingLines(siteId: string) {
@@ -20,13 +21,18 @@ export async function getSiteBillingLines(siteId: string) {
 // Handle creating/updating site billing lines
 export async function handleSiteBillingLines(
   siteId: string, 
-  billingLines: any[]
+  billingLines: BillingLine[]
 ) {
   // First, delete existing billing lines for this site
-  await supabase
+  const { error: deleteError } = await supabase
     .from('site_billing_lines')
     .delete()
     .eq('site_id', siteId);
+  
+  if (deleteError) {
+    console.error(`Error deleting billing lines for site ${siteId}:`, deleteError);
+    throw deleteError;
+  }
   
   // Then insert the new ones if there are any
   if (billingLines && billingLines.length > 0) {
@@ -48,7 +54,7 @@ export async function handleSiteBillingLines(
     
     if (error) {
       console.error('Error handling site billing lines:', error);
-      // We won't throw here to avoid rolling back other operations
+      throw error;
     }
   }
 }

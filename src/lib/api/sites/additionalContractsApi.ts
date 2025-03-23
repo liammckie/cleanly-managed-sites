@@ -25,10 +25,15 @@ export async function handleSiteAdditionalContracts(
   userId: string | undefined
 ) {
   // First, delete existing additional contracts for this site
-  await supabase
+  const { error: deleteError } = await supabase
     .from('site_additional_contracts')
     .delete()
     .eq('site_id', siteId);
+  
+  if (deleteError) {
+    console.error(`Error deleting additional contracts for site ${siteId}:`, deleteError);
+    throw deleteError;
+  }
   
   // Then insert the new ones if there are any
   if (additionalContracts && additionalContracts.length > 0) {
@@ -53,7 +58,7 @@ export async function handleSiteAdditionalContracts(
     
     if (error) {
       console.error('Error handling site additional contracts:', error);
-      // We won't throw here to avoid rolling back other operations
+      throw error;
     }
   }
 }

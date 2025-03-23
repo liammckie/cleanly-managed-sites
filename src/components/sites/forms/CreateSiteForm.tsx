@@ -11,6 +11,8 @@ import { getStepsConfig } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi } from '@/lib/api';
 import { SiteFormData, getInitialFormData } from './siteFormTypes';
+import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContractsApi';
+import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
 
 export function CreateSiteForm() {
   const navigate = useNavigate();
@@ -44,7 +46,28 @@ export function CreateSiteForm() {
     
     try {
       // Use the actual API to create the site
-      await sitesApi.createSite(formHandlers.formData);
+      const createdSite = await sitesApi.createSite(formHandlers.formData);
+      
+      // Handle additional contracts if they exist
+      if (formHandlers.formData.additionalContracts && 
+          formHandlers.formData.additionalContracts.length > 0) {
+        await handleSiteAdditionalContracts(
+          createdSite.id, 
+          formHandlers.formData.additionalContracts,
+          createdSite.user_id
+        );
+      }
+      
+      // Handle billing lines if they exist
+      if (formHandlers.formData.billingDetails && 
+          formHandlers.formData.billingDetails.billingLines && 
+          formHandlers.formData.billingDetails.billingLines.length > 0) {
+        await handleSiteBillingLines(
+          createdSite.id, 
+          formHandlers.formData.billingDetails.billingLines
+        );
+      }
+      
       toast.success("Site has been created successfully!");
       navigate('/sites');
     } catch (error) {

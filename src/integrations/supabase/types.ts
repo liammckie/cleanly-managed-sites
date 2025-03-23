@@ -587,6 +587,121 @@ export type Database = {
           },
         ]
       }
+      site_additional_contracts: {
+        Row: {
+          auto_renew: boolean | null
+          billing_cycle: string | null
+          contract_number: string | null
+          contract_type: string
+          created_at: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          renewal_terms: string | null
+          site_id: string | null
+          start_date: string | null
+          termination_period: string | null
+          updated_at: string | null
+          user_id: string | null
+          value: number | null
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          contract_number?: string | null
+          contract_type: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          renewal_terms?: string | null
+          site_id?: string | null
+          start_date?: string | null
+          termination_period?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          contract_number?: string | null
+          contract_type?: string
+          created_at?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          renewal_terms?: string | null
+          site_id?: string | null
+          start_date?: string | null
+          termination_period?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_additional_contracts_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_billing_lines: {
+        Row: {
+          amount: number
+          annual_amount: number | null
+          created_at: string | null
+          description: string
+          frequency: string | null
+          id: string
+          is_recurring: boolean | null
+          monthly_amount: number | null
+          on_hold: boolean | null
+          site_id: string | null
+          updated_at: string | null
+          weekly_amount: number | null
+        }
+        Insert: {
+          amount?: number
+          annual_amount?: number | null
+          created_at?: string | null
+          description: string
+          frequency?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          monthly_amount?: number | null
+          on_hold?: boolean | null
+          site_id?: string | null
+          updated_at?: string | null
+          weekly_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          annual_amount?: number | null
+          created_at?: string | null
+          description?: string
+          frequency?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          monthly_amount?: number | null
+          on_hold?: boolean | null
+          site_id?: string | null
+          updated_at?: string | null
+          weekly_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_billing_lines_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_contract_history: {
         Row: {
           contract_details: Json
@@ -628,7 +743,11 @@ export type Database = {
       sites: {
         Row: {
           address: string
+          annual_revenue: number | null
           billing_details: Json | null
+          billing_hold_end_date: string | null
+          billing_hold_start_date: string | null
+          billing_on_hold: boolean | null
           city: string
           client_id: string
           contract_details: Json | null
@@ -652,10 +771,15 @@ export type Database = {
           subcontractors: Json | null
           updated_at: string
           user_id: string
+          weekly_revenue: number | null
         }
         Insert: {
           address: string
+          annual_revenue?: number | null
           billing_details?: Json | null
+          billing_hold_end_date?: string | null
+          billing_hold_start_date?: string | null
+          billing_on_hold?: boolean | null
           city: string
           client_id: string
           contract_details?: Json | null
@@ -679,10 +803,15 @@ export type Database = {
           subcontractors?: Json | null
           updated_at?: string
           user_id: string
+          weekly_revenue?: number | null
         }
         Update: {
           address?: string
+          annual_revenue?: number | null
           billing_details?: Json | null
+          billing_hold_end_date?: string | null
+          billing_hold_start_date?: string | null
+          billing_on_hold?: boolean | null
           city?: string
           client_id?: string
           contract_details?: Json | null
@@ -706,6 +835,7 @@ export type Database = {
           subcontractors?: Json | null
           updated_at?: string
           user_id?: string
+          weekly_revenue?: number | null
         }
         Relationships: [
           {
@@ -723,9 +853,13 @@ export type Database = {
           contact_name: string
           contractor_id: string | null
           created_at: string
+          custom_services: string | null
           email: string | null
           id: string
+          is_flat_rate: boolean | null
+          monthly_cost: number | null
           phone: string | null
+          services: Json | null
           site_id: string
           updated_at: string
           user_id: string | null
@@ -735,9 +869,13 @@ export type Database = {
           contact_name: string
           contractor_id?: string | null
           created_at?: string
+          custom_services?: string | null
           email?: string | null
           id?: string
+          is_flat_rate?: boolean | null
+          monthly_cost?: number | null
           phone?: string | null
+          services?: Json | null
           site_id: string
           updated_at?: string
           user_id?: string | null
@@ -747,9 +885,13 @@ export type Database = {
           contact_name?: string
           contractor_id?: string | null
           created_at?: string
+          custom_services?: string | null
           email?: string | null
           id?: string
+          is_flat_rate?: boolean | null
+          monthly_cost?: number | null
           phone?: string | null
+          services?: Json | null
           site_id?: string
           updated_at?: string
           user_id?: string | null

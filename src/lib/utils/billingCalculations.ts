@@ -1,35 +1,23 @@
 
-// Check if site billing is on hold
-export const isSiteBillingOnHold = (
-  billingOnHold?: boolean,
-  startDate?: string,
-  endDate?: string
-): boolean => {
-  if (!billingOnHold) return false;
-  
-  const now = new Date();
-  let isInHoldPeriod = true;
-  
-  // Check if we're after the start date (if specified)
-  if (startDate) {
-    const holdStartDate = new Date(startDate);
-    if (now < holdStartDate) {
-      isInHoldPeriod = false;
-    }
+// Convert weekly amount to other frequencies
+export const convertWeeklyToFrequency = (weeklyAmount: number, frequency: string): number => {
+  switch (frequency) {
+    case 'weekly':
+      return weeklyAmount;
+    case 'fortnightly':
+      return weeklyAmount * 2;
+    case 'monthly':
+      return weeklyAmount * 4.33; // Average weeks in a month
+    case 'quarterly':
+      return weeklyAmount * 13; // 13 weeks in a quarter
+    case 'annually':
+      return weeklyAmount * 52; // 52 weeks in a year
+    default:
+      return weeklyAmount;
   }
-  
-  // Check if we're before the end date (if specified)
-  if (endDate) {
-    const holdEndDate = new Date(endDate);
-    if (now > holdEndDate) {
-      isInHoldPeriod = false;
-    }
-  }
-  
-  return isInHoldPeriod;
 };
 
-// Calculate weekly amount from a value based on frequency
+// Calculate weekly amount based on a value and frequency
 export const calculateWeeklyAmount = (value: number, frequency: string): number => {
   switch (frequency) {
     case 'weekly':
@@ -43,11 +31,11 @@ export const calculateWeeklyAmount = (value: number, frequency: string): number 
     case 'annually':
       return value / 52; // 52 weeks in a year
     default:
-      return 0;
+      return value;
   }
 };
 
-// Calculate monthly amount from a value based on frequency
+// Calculate monthly amount based on a value and frequency
 export const calculateMonthlyAmount = (value: number, frequency: string): number => {
   switch (frequency) {
     case 'weekly':
@@ -61,11 +49,11 @@ export const calculateMonthlyAmount = (value: number, frequency: string): number
     case 'annually':
       return value / 12; // 12 months in a year
     default:
-      return 0;
+      return value;
   }
 };
 
-// Calculate annual amount from a value based on frequency
+// Calculate annual amount based on a value and frequency
 export const calculateAnnualAmount = (value: number, frequency: string): number => {
   switch (frequency) {
     case 'weekly':
@@ -79,7 +67,7 @@ export const calculateAnnualAmount = (value: number, frequency: string): number 
     case 'annually':
       return value;
     default:
-      return 0;
+      return value;
   }
 };
 

@@ -13,6 +13,8 @@ import { sitesApi, SiteRecord } from '@/lib/api';
 import { getInitialFormData } from './siteFormTypes';
 import { convertContactRecordToSiteContact } from './types/contactTypes';
 import { History } from 'lucide-react';
+import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContractsApi';
+import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
 
 interface EditSiteFormProps {
   site: SiteRecord;
@@ -52,6 +54,10 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         // Handle optional fields with fallbacks
         phone: site.phone || baseFormData.phone,
         email: site.email || baseFormData.email,
+        // Add weekly and annual revenue
+        weeklyRevenue: site.weekly_revenue,
+        monthlyRevenue: site.monthly_revenue,
+        annualRevenue: site.annual_revenue,
         // Merge JSON fields with defaults
         securityDetails: site.security_details || baseFormData.securityDetails,
         jobSpecifications: site.job_specifications || baseFormData.jobSpecifications,
@@ -61,7 +67,9 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         billingDetails: site.billing_details || baseFormData.billingDetails,
         subcontractors: site.subcontractors || baseFormData.subcontractors,
         // Convert ContactRecord[] to SiteContact[]
-        contacts: site.contacts ? site.contacts.map(contact => convertContactRecordToSiteContact(contact)) : []
+        contacts: site.contacts ? site.contacts.map(contact => convertContactRecordToSiteContact(contact)) : [],
+        // Include additional contracts
+        additionalContracts: site.additionalContracts || []
       };
       
       formHandlers.setFormData(formData);
@@ -117,7 +125,27 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     
     try {
       // Use the API to update the site
-      await sitesApi.updateSite(site.id, formHandlers.formData);
+      const updatedSite = await sitesApi.updateSite(site.id, formHandlers.formData);
+      
+      // Handle additional contracts if they exist
+      if (formHandlers.formData.additionalContracts && 
+          formHandlers.formData.additionalContracts.length > 0) {
+        await handleSiteAdditionalContracts(
+          site.id, 
+          formHandlers.formData.additionalContracts,
+          site.user_id
+        );
+      }
+      
+      // Handle billing lines if they exist
+      if (formHandlers.formData.billingDetails && 
+          formHandlers.formData.billingDetails.billingLines && 
+          formHandlers.formData.billingDetails.billingLines.length > 0) {
+        await handleSiteBillingLines(
+          site.id, 
+          formHandlers.formData.billingDetails.billingLines
+        );
+      }
       
       if (isContractVariation) {
         toast.success("Contract variation completed successfully!");

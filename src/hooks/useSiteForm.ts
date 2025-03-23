@@ -30,7 +30,7 @@ export const useSiteForm = () => {
   const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData, errors, setErrors);
   const replenishableHandlers = useSiteFormReplenishables(formData, setFormData);
   const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData, errors, setErrors);
-  const billingLineHandlers = useSiteFormBillingLines(formData, setFormData, errors, setErrors);
+  const billingLineHandlers = useSiteFormBillingLines(formData.billingDetails?.billingLines || []);
   const contractTermHandlers = useSiteFormContractTerms(formData, setFormData, errors, setErrors);
   const contactHandlers = useSiteFormContacts();
   
@@ -50,6 +50,22 @@ export const useSiteForm = () => {
   // Add effect to sync contacts whenever they change
   if (contactHandlers.contacts !== formData.contacts) {
     updateFormContacts();
+  }
+  
+  // Update billing lines in form data when they change
+  const updateBillingLines = () => {
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails!,
+        billingLines: billingLineHandlers.billingLines
+      }
+    }));
+  };
+  
+  // Sync billing lines when they change
+  if (billingLineHandlers.billingLines !== formData.billingDetails?.billingLines) {
+    updateBillingLines();
   }
   
   return {

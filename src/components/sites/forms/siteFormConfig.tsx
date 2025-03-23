@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SiteFormData } from './siteFormTypes';
 import { BasicInformationStep } from './steps/BasicInformationStep';
@@ -12,6 +13,7 @@ import { ContactsStep } from './steps/ContactsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { SiteStatus } from '../SiteCard';
 import { ContactRecord } from '@/lib/types';
+import { BillingLine } from '@/hooks/useSiteFormBillingLines';
 
 export type StepConfigItem = {
   title: string;
@@ -38,8 +40,8 @@ export type GetStepsConfigProps = {
   addExistingContact?: (contactId: string) => void;
   // Billing lines handlers
   addBillingLine?: () => void;
-  removeBillingLine?: (index: number) => void;
-  updateBillingLine?: (index: number, field: string, value: any) => void;
+  removeBillingLine?: (id: string) => void; // Changed from index to id
+  updateBillingLine?: (id: string, field: string, value: any) => void; // Changed from index to id
   // Contract terms handlers
   addContractTerm?: () => void;
   removeContractTerm?: (index: number) => void;
