@@ -35,6 +35,8 @@ import {
 const Contacts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
   
   const { 
     contacts, 
@@ -80,6 +82,25 @@ const Contacts = () => {
     }
   };
 
+  const handleOpenDialog = (contact?: ContactRecord) => {
+    setEditingContact(contact || null);
+    setDialogOpen(true);
+  };
+
+  const handleSubmitContact = async (contactData: Partial<ContactRecord>): Promise<void> => {
+    try {
+      if (contactData.id) {
+        await updateContact(contactData.id, contactData);
+      } else {
+        await addContact(contactData as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
+      }
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Error handling contact:', error);
+      throw error;
+    }
+  };
+
   const filteredContacts = React.useMemo(() => {
     let filtered = [...contacts];
     
@@ -115,11 +136,13 @@ const Contacts = () => {
                 Manage your business contacts
               </p>
             </div>
-            <ContactDialog
-              onSubmit={handleAddContact}
-              isSubmitting={isLoading}
-              title="Add New Contact"
-            />
+            <Button 
+              onClick={() => handleOpenDialog()}
+              className="flex items-center gap-1"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add New Contact
+            </Button>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -214,15 +237,9 @@ const Contacts = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <ContactDialog
-                                  contact={contact}
-                                  onSubmit={(data) => handleUpdateContact(contact.id, data)}
-                                  trigger={
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                      Edit Contact
-                                    </DropdownMenuItem>
-                                  }
-                                />
+                                <DropdownMenuItem onClick={() => handleOpenDialog(contact)}>
+                                  Edit Contact
+                                </DropdownMenuItem>
                                 {!contact.is_primary && contact.entity_id && (
                                   <DropdownMenuItem onSelect={() => handleSetPrimary(contact)}>
                                     Set as Primary
@@ -247,6 +264,17 @@ const Contacts = () => {
           </div>
         </div>
       </div>
+      
+      <ContactDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        contact={editingContact || undefined}
+        entityType={editingContact?.entity_type || 'client'}
+        entityId={editingContact?.entity_id || ''}
+        onSubmit={handleSubmitContact}
+        isSubmitting={isLoading}
+        title="Contact"
+      />
     </PageLayout>
   );
 };

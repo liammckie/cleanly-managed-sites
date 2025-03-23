@@ -41,21 +41,30 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   const navigate = useNavigate();
   const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
   
-  const handleContactSubmit = async (data: any) => {
-    // Add entity_id and entity_type if not already set
-    if (!data.entity_id) {
-      data.entity_id = site.id;
-    }
-    if (!data.entity_type) {
-      data.entity_type = 'site';
-    }
-    
-    if (data.id) {
-      // Update existing contact
-      return contactsApi.updateContact(data.id, data);
-    } else {
-      // Create new contact
-      return contactsApi.createContact(data);
+  const handleContactSubmit = async (data: Partial<any>): Promise<void> => {
+    try {
+      // Add entity_id and entity_type if not already set
+      if (!data.entity_id) {
+        data.entity_id = site.id;
+      }
+      if (!data.entity_type) {
+        data.entity_type = 'site';
+      }
+      
+      if (data.id) {
+        // Update existing contact
+        await contactsApi.updateContact(data.id, data);
+      } else {
+        // Create new contact
+        await contactsApi.createContact(data);
+      }
+      
+      toast.success('Contact saved successfully');
+      refreshTabs();
+    } catch (error) {
+      console.error('Error saving contact:', error);
+      toast.error('Failed to save contact');
+      throw error;
     }
   };
 

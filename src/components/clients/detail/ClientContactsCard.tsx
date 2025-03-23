@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,8 +29,14 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   
-  const handleAddContact = async (contactData: Partial<ContactRecord>) => {
-    await addContact(contactData);
+  const handleSaveContact = async (contactData: Partial<ContactRecord>) => {
+    if (editingContact) {
+      await updateContact({ id: editingContact.id, contactData });
+      setEditingContact(null);
+    } else {
+      await addContact(contactData);
+    }
+    setDialogOpen(false);
   };
   
   const handleEditContact = (contact: ContactRecord) => {
@@ -41,16 +48,6 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
     if (window.confirm('Are you sure you want to delete this contact?')) {
       deleteContact(contactId);
     }
-  };
-  
-  const handleSaveContact = async (contactData: Partial<ContactRecord>) => {
-    if (editingContact) {
-      await updateContact({ id: editingContact.id, contactData });
-      setEditingContact(null);
-    } else {
-      await addContact(contactData);
-    }
-    setDialogOpen(false);
   };
   
   if (isLoading) {
@@ -176,7 +173,7 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
             <p className="text-muted-foreground mb-4">No contacts added yet.</p>
             <Button 
               variant="outline" 
-              onClick={() => setEditingContact(null)}
+              onClick={() => setDialogOpen(true)}
               className="flex items-center gap-1"
             >
               <UserPlus className="h-4 w-4" />
@@ -190,9 +187,9 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         contact={editingContact || undefined}
-        onSave={handleSaveContact}
         entityType="client"
         entityId={clientId}
+        onSubmit={handleSaveContact}
       />
     </Card>
   );

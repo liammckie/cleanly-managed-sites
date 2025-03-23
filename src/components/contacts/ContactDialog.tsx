@@ -30,16 +30,18 @@ const contactSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactSchema>;
 
-interface ContactDialogProps {
+export interface ContactDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   contact?: ContactRecord;
   onSave?: (contactData: Partial<ContactRecord>) => void;
-  entityType: string;
+  entityType: 'site' | 'client' | 'supplier' | 'internal';
   entityId: string;
   isSubmitting?: boolean;
   title?: string;
   onSubmit: (contactData: Partial<ContactRecord>) => Promise<void>;
+  trigger?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
 export function ContactDialog({
@@ -52,6 +54,8 @@ export function ContactDialog({
   isSubmitting = false,
   title = 'Contact',
   onSubmit,
+  trigger,
+  onSuccess,
 }: ContactDialogProps) {
   const [isOpen, setIsOpen] = useState(open || false);
 
@@ -113,14 +117,159 @@ export function ContactDialog({
         ...values,
         entity_id: entityId,
         entity_type: entityType,
+        ...(contact?.id ? { id: contact.id } : {}),
       });
       
       handleOpenChange(false);
       form.reset();
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error saving contact:', error);
     }
   };
+
+  // If trigger is provided, return custom trigger with dialog
+  if (trigger) {
+    return (
+      <>
+        <div onClick={() => handleOpenChange(true)}>{trigger}</div>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{contact ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Contact name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Contact role" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Department (optional)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Email address" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Phone number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Additional notes" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="is_primary"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Primary Contact</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Set this as the primary contact for this {entityType}
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => handleOpenChange(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : 'Save Contact'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
