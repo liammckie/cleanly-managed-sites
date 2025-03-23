@@ -29,5 +29,47 @@ export const authApi = {
       console.error('Error signing out:', error);
       throw error;
     }
+  },
+  
+  // Create new user (admin only function)
+  async createUser(email: string, password: string, fullName: string, roleId: string) {
+    // First create the auth user
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+      }
+    });
+    
+    if (authError) {
+      console.error('Error creating user with admin API:', authError);
+      throw authError;
+    }
+    
+    // Then create the profile
+    if (authData.user) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          role_id: roleId,
+          status: 'active',
+        })
+        .select()
+        .single();
+      
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        throw profileError;
+      }
+      
+      return profileData;
+    }
+    
+    throw new Error('Failed to create user');
   }
 };

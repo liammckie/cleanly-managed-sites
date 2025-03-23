@@ -982,6 +982,12 @@ export type Database = {
         }
         Returns: string
       }
+      is_user_accessing_own_profile: {
+        Args: {
+          profile_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

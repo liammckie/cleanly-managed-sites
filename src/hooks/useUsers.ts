@@ -101,8 +101,9 @@ const createUserFn = async (userData: {
       throw new Error('Failed to create user');
     }
     
-    // Create user profile using the admin API endpoint - this will be handled by server 
-    // rather than directly inserting due to RLS policies
+    // Create user profile using the service role if needed
+    // For now, let's try to create it using the current user's permissions
+    // and the proper RLS policies should handle it
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .insert({
