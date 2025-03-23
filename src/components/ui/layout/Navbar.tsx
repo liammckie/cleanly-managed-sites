@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/auth'; // Fix the import path
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +13,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Bell, Search, HelpCircle, User, Settings, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   
   // Get initial letters for avatar fallback
@@ -46,7 +48,22 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
-    await signOut();
+    try {
+      await signOut();
+      toast.success("Logged out successfully");
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
+    }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/settings?tab=user');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -85,16 +102,16 @@ export function Navbar() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2">
+            <DropdownMenuItem onClick={handleProfileClick} className="gap-2 cursor-pointer">
               <User size={16} />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2">
+            <DropdownMenuItem onClick={handleSettingsClick} className="gap-2 cursor-pointer">
               <Settings size={16} />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive focus:text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive focus:text-destructive cursor-pointer">
               <LogOut size={16} />
               <span>Log out</span>
             </DropdownMenuItem>

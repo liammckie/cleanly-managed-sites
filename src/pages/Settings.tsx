@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Tabs, 
   TabsContent, 
@@ -14,9 +14,12 @@ import { useAuth } from '@/hooks/auth';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useSearchParams } from 'react-router-dom';
 
 const Settings = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'business';
   
   if (!user) {
     return <div>Loading...</div>;
@@ -43,7 +46,7 @@ const Settings = () => {
                 </div>
               </div>
               
-              <Tabs defaultValue="business" className="space-y-6">
+              <Tabs defaultValue={defaultTab} className="space-y-6">
                 <TabsList className="bg-card border">
                   <TabsTrigger value="business" className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
