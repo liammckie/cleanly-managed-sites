@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteRecord } from '@/lib/api';
@@ -28,6 +27,7 @@ import { toast } from 'sonner';
 import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
 import { ContractHistoryTable } from '../contract/ContractHistoryTable';
 import { useContractHistory } from '@/hooks/useContractHistory';
+import { ContactRecord } from '@/lib/types';
 
 interface SiteDetailTabsProps {
   site: SiteRecord;
@@ -41,22 +41,18 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   const navigate = useNavigate();
   const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
   
-  const handleContactSubmit = async (data: Partial<any>): Promise<void> => {
+  const handleContactSubmit = async (data: Partial<ContactRecord>): Promise<void> => {
     try {
-      // Add entity_id and entity_type if not already set
-      if (!data.entity_id) {
-        data.entity_id = site.id;
-      }
-      if (!data.entity_type) {
-        data.entity_type = 'site';
-      }
+      const contactData: Partial<ContactRecord> = {
+        ...data,
+        entity_id: data.entity_id || site.id,
+        entity_type: data.entity_type || 'site',
+      };
       
       if (data.id) {
-        // Update existing contact
-        await contactsApi.updateContact(data.id, data);
+        await contactsApi.updateContact(data.id, contactData);
       } else {
-        // Create new contact
-        await contactsApi.createContact(data);
+        await contactsApi.createContact(contactData as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
       }
       
       toast.success('Contact saved successfully');
@@ -78,12 +74,10 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   
   const startContractVariation = async () => {
     try {
-      // Only save if we have contract details to save
       if (site.contract_details) {
         await contractHistoryApi.saveContractVersion(site.id, site.contract_details, "Contract variation initiated");
         toast.success("Contract version saved. Redirecting to edit contract...");
         
-        // Navigate to edit site with contract tab selected
         navigate(`/sites/${site.id}/edit?tab=contract&variation=true`);
       } else {
         toast.error("No contract details available to modify");
@@ -96,7 +90,6 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   
   return (
     <div className="space-y-6" key={refreshKey}>
-      {/* Functional Action Buttons */}
       <div className="flex flex-wrap gap-2 mt-4">
         <ContactDialog
           entityType="site"
@@ -142,7 +135,6 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
         </Button>
       </div>
       
-      {/* Contract History Dialog */}
       <Dialog open={contractHistoryOpen} onOpenChange={setContractHistoryOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>

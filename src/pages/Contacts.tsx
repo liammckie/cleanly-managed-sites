@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { 
@@ -104,12 +103,10 @@ const Contacts = () => {
   const filteredContacts = React.useMemo(() => {
     let filtered = [...contacts];
     
-    // Filter by tab (entity type)
     if (activeTab !== 'all') {
       filtered = filtered.filter(contact => contact.entity_type === activeTab);
     }
     
-    // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(contact => {

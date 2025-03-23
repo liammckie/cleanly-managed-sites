@@ -72,7 +72,6 @@ export function ContactDialog({
     },
   });
 
-  // Update form values when contact changes
   useEffect(() => {
     if (contact) {
       form.reset({
@@ -97,7 +96,6 @@ export function ContactDialog({
     }
   }, [contact, form]);
 
-  // Sync internal state with external state
   useEffect(() => {
     if (open !== undefined) {
       setIsOpen(open);
@@ -131,7 +129,6 @@ export function ContactDialog({
     }
   };
 
-  // If trigger is provided, return custom trigger with dialog
   if (trigger) {
     return (
       <>
