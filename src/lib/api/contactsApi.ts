@@ -159,6 +159,10 @@ export const contactsApi = {
   async searchEntities(query: string, entityType?: string): Promise<any[]> {
     let results: any[] = [];
 
+    if (!query || query.length < 2) {
+      return results;
+    }
+
     // Search clients
     if (!entityType || entityType === 'client') {
       try {

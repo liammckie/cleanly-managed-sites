@@ -88,10 +88,11 @@ export function useContacts() {
 
   // Search for entities to link contacts to
   const searchEntities = async (query: string, entityType?: string) => {
-    if (query.length < 2) return [];
+    if (!query || query.length < 2) return [];
     
     try {
-      return await contactsApi.searchEntities(query, entityType);
+      const results = await contactsApi.searchEntities(query, entityType);
+      return results || [];
     } catch (error) {
       console.error('Error searching entities:', error);
       toast.error('Failed to search entities');

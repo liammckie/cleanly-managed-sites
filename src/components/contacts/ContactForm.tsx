@@ -89,15 +89,19 @@ export function ContactForm({
   };
 
   const searchEntities = async (query: string) => {
-    if (query.length < 2) return;
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
     
     setIsSearching(true);
     try {
       const selectedEntityType = form.getValues('entity_type');
       const results = await contactsApi.searchEntities(query, selectedEntityType);
-      setSearchResults(results);
+      setSearchResults(results || []);
     } catch (error) {
       console.error('Error searching entities:', error);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -244,35 +248,37 @@ export function ContactForm({
                           value={searchQuery}
                           onValueChange={handleSearch}
                         />
-                        {isSearching ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          </div>
-                        ) : (
-                          <CommandList>
-                            {searchResults.length > 0 ? (
-                              <CommandGroup>
-                                {searchResults.map((entity) => (
-                                  <CommandItem
-                                    key={`${entity.type}-${entity.id}`}
-                                    value={entity.id}
-                                    onSelect={() => selectEntity(entity)}
-                                  >
-                                    <div className="flex flex-col">
-                                      <span>{entity.name}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {entity.type.charAt(0).toUpperCase() + entity.type.slice(1)} 
-                                        {entity.identifier ? ` • ${entity.identifier}` : ''}
-                                      </span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            ) : searchQuery.length > 0 ? (
-                              <p className="py-6 text-center text-sm">No results found.</p>
-                            ) : null}
-                          </CommandList>
-                        )}
+                        <CommandList>
+                          {isSearching ? (
+                            <div className="flex items-center justify-center p-4">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            </div>
+                          ) : (
+                            <>
+                              {searchResults && searchResults.length > 0 ? (
+                                <CommandGroup>
+                                  {searchResults.map((entity) => (
+                                    <CommandItem
+                                      key={`${entity.type}-${entity.id}`}
+                                      value={entity.id}
+                                      onSelect={() => selectEntity(entity)}
+                                    >
+                                      <div className="flex flex-col">
+                                        <span>{entity.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {entity.type.charAt(0).toUpperCase() + entity.type.slice(1)} 
+                                          {entity.identifier ? ` • ${entity.identifier}` : ''}
+                                        </span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              ) : searchQuery.length > 0 ? (
+                                <div className="py-6 text-center text-sm">No results found.</div>
+                              ) : null}
+                            </>
+                          )}
+                        </CommandList>
                       </Command>
                     </PopoverContent>
                   </Popover>
