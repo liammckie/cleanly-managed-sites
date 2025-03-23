@@ -1,9 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ClientRecord, SiteRecord, ContactRecord } from '../types';
 
-// Client API functions
 export const clientsApi = {
-  // Get all clients for the current user
   async getClients(): Promise<ClientRecord[]> {
     const { data: clients, error } = await supabase
       .from('clients')
@@ -15,7 +13,6 @@ export const clientsApi = {
       throw error;
     }
     
-    // Fetch contacts for all clients
     const clientIds = clients.map(client => client.id);
     const { data: contacts, error: contactsError } = await supabase
       .from('contacts')
@@ -28,7 +25,6 @@ export const clientsApi = {
       throw contactsError;
     }
     
-    // Associate contacts with their clients
     const clientsWithContacts = clients.map(client => ({
       ...client,
       contacts: contacts.filter(contact => contact.entity_id === client.id)
@@ -37,7 +33,6 @@ export const clientsApi = {
     return clientsWithContacts as ClientRecord[] || [];
   },
   
-  // Get client count by status
   async getClientCountByStatus(): Promise<Record<string, number>> {
     const { data: clients, error } = await supabase
       .from('clients')
@@ -63,7 +58,6 @@ export const clientsApi = {
     return statusCount;
   },
   
-  // Get a single client by ID
   async getClientById(id: string): Promise<ClientRecord | null> {
     const { data, error } = await supabase
       .from('clients')
@@ -76,7 +70,6 @@ export const clientsApi = {
       throw error;
     }
     
-    // Fetch contacts for this client
     const { data: contacts, error: contactsError } = await supabase
       .from('contacts')
       .select('*')
@@ -88,7 +81,6 @@ export const clientsApi = {
       throw contactsError;
     }
     
-    // Add contacts to the client data
     const clientWithContacts = {
       ...data,
       contacts: contacts
@@ -97,23 +89,19 @@ export const clientsApi = {
     return clientWithContacts as ClientRecord;
   },
   
-  // Create a new client
   async createClient(clientData: Partial<ClientRecord> & { custom_id?: string }): Promise<ClientRecord> {
     console.log('Creating client with data:', clientData);
     
-    // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error('User not authenticated');
     }
     
-    // Make sure required fields are present
     if (!clientData.name || !clientData.contact_name || !clientData.status) {
       throw new Error('Missing required client data: name, contact_name, and status are required');
     }
     
-    // Prepare the client data for insertion
     const clientRecord = {
       name: clientData.name,
       contact_name: clientData.contact_name,
@@ -123,10 +111,9 @@ export const clientsApi = {
       city: clientData.city || null,
       state: clientData.state || null,
       postcode: clientData.postcode || null,
-      status: clientData.status as string, // Cast to string to match Supabase expectations
+      status: clientData.status as string,
       notes: clientData.notes || null,
       user_id: user.id,
-      // If custom_id exists and is not empty, use it
       ...(clientData.custom_id && clientData.custom_id.trim() !== '' ? { custom_id: clientData.custom_id } : {})
     };
     
@@ -144,12 +131,9 @@ export const clientsApi = {
     return data as ClientRecord;
   },
   
-  // Update an existing client
   async updateClient({ id, data }: { id: string; data: Partial<ClientRecord> & { custom_id?: string } }): Promise<ClientRecord> {
-    // Create update object
     const updateData = {
       ...data,
-      // Only include custom_id if it exists and isn't empty
       ...(data.custom_id !== undefined ? 
         (data.custom_id.trim() !== '' ? { custom_id: data.custom_id } : { custom_id: null }) 
         : {})
@@ -170,39 +154,32 @@ export const clientsApi = {
     return responseData as ClientRecord;
   },
   
-  // Delete a client
   async deleteClient(id: string): Promise<void> {
-    // First, check if the client has any sites
     const { data: sites } = await supabase
       .from('sites')
       .select('id')
       .eq('client_id', id);
     
     if (sites && sites.length > 0) {
-      // Delete all sites associated with this client
       for (const site of sites) {
-        // Delete any subcontractors for each site
         await supabase
           .from('subcontractors')
           .delete()
           .eq('site_id', site.id);
       }
       
-      // Delete all sites
       await supabase
         .from('sites')
         .delete()
         .eq('client_id', id);
     }
     
-    // Delete any contacts associated with this client
     await supabase
       .from('contacts')
       .delete()
       .eq('entity_id', id)
       .eq('entity_type', 'client');
     
-    // Now delete the client
     const { error } = await supabase
       .from('clients')
       .delete()
@@ -214,7 +191,6 @@ export const clientsApi = {
     }
   },
   
-  // Get sites for a client
   async getClientSites(clientId: string): Promise<SiteRecord[]> {
     const { data, error } = await supabase
       .from('sites')
@@ -230,7 +206,6 @@ export const clientsApi = {
     return data as SiteRecord[] || [];
   },
   
-  // Get total count of clients
   async getClientsTotalCount(): Promise<number> {
     const { count, error } = await supabase
       .from('clients')
@@ -244,11 +219,15 @@ export const clientsApi = {
     return count || 0;
   },
   
-  // Add contact to client
   async addClientContact(clientId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
-    // Prepare contact data
+    if (!contactData.name || !contactData.role) {
+      throw new Error('Contact name and role are required fields');
+    }
+    
     const contact = {
       ...contactData,
+      name: contactData.name,
+      role: contactData.role,
       entity_id: clientId,
       entity_type: 'client',
     };
@@ -267,7 +246,6 @@ export const clientsApi = {
     return data as ContactRecord;
   },
   
-  // Update client contact
   async updateClientContact(contactId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
     const { data, error } = await supabase
       .from('contacts')
@@ -284,7 +262,6 @@ export const clientsApi = {
     return data as ContactRecord;
   },
   
-  // Delete client contact
   async deleteClientContact(contactId: string): Promise<void> {
     const { error } = await supabase
       .from('contacts')
@@ -297,7 +274,6 @@ export const clientsApi = {
     }
   },
   
-  // Get client contacts
   async getClientContacts(clientId: string): Promise<ContactRecord[]> {
     const { data, error } = await supabase
       .from('contacts')

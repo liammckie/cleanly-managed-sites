@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ContactDialogProps {
+export interface ContactDialogProps {
   contact?: ContactRecord;
   entityType?: string;
   entityId?: string;

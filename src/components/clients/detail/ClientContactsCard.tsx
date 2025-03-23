@@ -180,12 +180,14 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
         )}
       </CardContent>
       
-      <ContactDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        contact={editingContact}
-        onSave={handleSaveContact}
+      <ContactDialog 
+        trigger={null}
+        contact={editingContact || undefined}
         entityType="client"
+        entityId={clientId}
+        onSubmit={handleSaveContact}
+        isSubmitting={isAdding || isUpdating}
+        title={editingContact ? "Edit Contact" : "Add Contact"}
       />
     </Card>
   );
