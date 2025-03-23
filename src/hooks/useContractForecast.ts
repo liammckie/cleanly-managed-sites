@@ -25,7 +25,8 @@ export const useContractForecast = (siteIdOrSites?: string | SiteRecord[]) => {
         siteId = siteIdOrSites[0]?.id;
       }
       
-      if (!siteId) return;
+      // Only proceed if we have a siteId or sites array
+      if (!siteId && !Array.isArray(siteIdOrSites)) return;
       
       setIsForecastLoading(true);
       // Fetch forecast data logic would go here
@@ -36,20 +37,9 @@ export const useContractForecast = (siteIdOrSites?: string | SiteRecord[]) => {
     };
 
     const fetchSummaryData = async () => {
-      let siteId: string | undefined;
-      
-      if (typeof siteIdOrSites === 'string') {
-        siteId = siteIdOrSites;
-      } else if (Array.isArray(siteIdOrSites) && siteIdOrSites.length > 0) {
-        // Use the first site's ID as a reference or handle aggregated data
-        siteId = siteIdOrSites[0]?.id;
-      }
-      
-      if (!siteId && !Array.isArray(siteIdOrSites)) return;
-      
       setIsSummaryLoading(true);
-      // Fetch summary data logic would go here
-      // For now, using mock data
+      
+      // Generate a base summary with default values
       const mockSummary = generateMockSummaryData();
       
       // If sites array is provided, calculate aggregate values
@@ -90,6 +80,11 @@ export const useContractForecast = (siteIdOrSites?: string | SiteRecord[]) => {
         }, 0);
         
         mockSummary.avgContractValue = mockSummary.totalValue / Math.max(1, siteIdOrSites.length);
+      } else if (typeof siteIdOrSites === 'string') {
+        // If a single siteId is provided, we'd fetch data for that site
+        // For now we'll just use the mock data
+      } else {
+        // If no sites are provided, we'll use the default mock data
       }
       
       setSummaryData(mockSummary);

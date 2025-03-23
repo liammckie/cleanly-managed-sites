@@ -22,11 +22,15 @@ export function ContractDashboard({ sites, isLoading }: ContractDashboardProps) 
   );
   
   const { history, isLoading: isLoadingHistory } = useContractHistory(selectedSiteId);
-  const { forecast, summary, forecastData, summaryData } = useContractForecast(selectedSiteId);
+  const { forecast, summary, forecastData, summaryData, isForecastLoading, isSummaryLoading } = useContractForecast(selectedSiteId);
   
   const selectedSite = useMemo(() => {
     return sites?.find(site => site.id === selectedSiteId);
   }, [sites, selectedSiteId]);
+
+  const isDataLoading = isLoading || isForecastLoading || isSummaryLoading;
+  const contractSummary = summary || summaryData;
+  const contractForecast = forecast || forecastData;
 
   return (
     <div className="space-y-6">
@@ -54,7 +58,7 @@ export function ContractDashboard({ sites, isLoading }: ContractDashboardProps) 
         </TabsList>
         
         <TabsContent value="summary" className="space-y-6">
-          <ContractSummaryCards summary={summary || summaryData} isLoading={isLoading} />
+          <ContractSummaryCards summary={contractSummary} isLoading={isDataLoading} />
         </TabsContent>
         
         <TabsContent value="history" className="space-y-6">
@@ -68,7 +72,7 @@ export function ContractDashboard({ sites, isLoading }: ContractDashboardProps) 
         </TabsContent>
         
         <TabsContent value="forecast" className="space-y-6">
-          <ContractForecastChart forecast={forecast || forecastData} isLoading={isLoading} />
+          <ContractForecastChart forecast={contractForecast} isLoading={isDataLoading} />
         </TabsContent>
         
         <TabsContent value="expiry" className="space-y-6">
