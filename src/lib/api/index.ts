@@ -1,9 +1,13 @@
 
 import { clientsApi } from './clientsApi';
 import { sitesApi } from './sites';
-import { workOrdersApi } from './workorders';
+import { workOrdersApi } from './workorders/workOrdersApi';
 import { authApi } from './authApi';
-import { businessDetailsApi, uploadBusinessLogo } from './businessDetails/businessDetailsApi';
+import { 
+  getBusinessDetails, 
+  updateBusinessDetails, 
+  uploadBusinessLogo 
+} from './businessDetails/businessDetailsApi';
 import { contractorsApi } from './contractors';
 import { contactsApi } from './contactsApi';
 
@@ -13,7 +17,8 @@ export {
   sitesApi,
   workOrdersApi,
   authApi,
-  businessDetailsApi,
+  getBusinessDetails,
+  updateBusinessDetails,
   uploadBusinessLogo,
   contractorsApi,
   contactsApi

@@ -1,10 +1,8 @@
 
-import React, { useState } from 'react';
-import { z } from 'zod';
-import { toast } from 'sonner';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
+import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -14,38 +12,37 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ContactRecord } from '@/lib/types';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Define the form schema
-const contactFormSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  role: z.string().min(2, { message: 'Role must be at least 2 characters' }),
+const formSchema = z.object({
+  name: z.string().min(2, 'Name is required'),
+  role: z.string().min(2, 'Role is required'),
   department: z.string().optional(),
-  email: z.string().email({ message: 'Invalid email address' }).optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
   notes: z.string().optional(),
-  is_primary: z.boolean().default(false),
-  entity_type: z.string(),
-  entity_id: z.string().uuid()
+  is_primary: z.boolean().optional(),
+  entity_type: z.union([
+    z.literal('client'),
+    z.literal('site'),
+    z.literal('supplier'),
+    z.literal('internal')
+  ]).optional(),
+  entity_id: z.string().optional(),
 });
 
-type ContactFormValues = z.infer<typeof contactFormSchema>;
+type ContactFormValues = z.infer<typeof formSchema>;
 
 interface ContactFormProps {
   contact?: ContactRecord;
   entityType?: string;
   entityId?: string;
   onSubmit: (data: Partial<ContactRecord>) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   isSubmitting?: boolean;
 }
 
@@ -57,33 +54,29 @@ export function ContactForm({
   onCancel,
   isSubmitting = false
 }: ContactFormProps) {
-  // Set default values from contact or props
-  const defaultValues: Partial<ContactFormValues> = {
-    name: contact?.name || '',
-    role: contact?.role || '',
-    department: contact?.department || '',
-    email: contact?.email || '',
-    phone: contact?.phone || '',
-    notes: contact?.notes || '',
-    is_primary: contact?.is_primary || false,
-    entity_type: contact?.entity_type || entityType || 'client',
-    entity_id: contact?.entity_id || entityId || '',
-  };
-
-  // Initialize form
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues,
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: contact?.name || '',
+      role: contact?.role || '',
+      department: contact?.department || '',
+      email: contact?.email || '',
+      phone: contact?.phone || '',
+      notes: contact?.notes || '',
+      is_primary: contact?.is_primary || false,
+      entity_type: (contact?.entity_type as 'client' | 'site' | 'supplier' | 'internal') || 
+                  (entityType as 'client' | 'site' | 'supplier' | 'internal') || 
+                  'client',
+      entity_id: contact?.entity_id || entityId || '',
+    },
   });
 
-  // Handle form submission
-  const handleSubmit = async (values: ContactFormValues) => {
-    try {
-      await onSubmit(values);
-    } catch (error) {
-      toast.error('Failed to save contact');
-      console.error(error);
-    }
+  const handleSubmit = (data: ContactFormValues) => {
+    const contactData: Partial<ContactRecord> = {
+      ...data,
+      entity_type: data.entity_type as 'client' | 'site' | 'supplier' | 'internal',
+    };
+    onSubmit(contactData);
   };
 
   return (
@@ -97,7 +90,7 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Contact name" {...field} />
+                  <Input placeholder="John Doe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -111,27 +104,15 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Role</FormLabel>
                 <FormControl>
-                  <Input placeholder="Contact role" {...field} />
+                  <Input placeholder="Facility Manager" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        </div>
 
-          <FormField
-            control={form.control}
-            name="department"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department</FormLabel>
-                <FormControl>
-                  <Input placeholder="Department (optional)" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="email"
@@ -139,7 +120,7 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="Email (optional)" {...field} />
+                  <Input type="email" placeholder="john.doe@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -153,14 +134,30 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="Phone number (optional)" {...field} />
+                  <Input placeholder="+1 (555) 123-4567" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        </div>
 
-          {!entityType && (
+        <FormField
+          control={form.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Department</FormLabel>
+              <FormControl>
+                <Input placeholder="Maintenance" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {!entityType && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="entity_type"
@@ -168,12 +165,12 @@ export function ContactForm({
                 <FormItem>
                   <FormLabel>Contact Type</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => field.onChange(value as 'client' | 'site' | 'supplier' | 'internal')}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select contact type" />
+                        <SelectValue placeholder="Select a contact type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -187,28 +184,22 @@ export function ContactForm({
                 </FormItem>
               )}
             />
-          )}
 
-          {/* Entity ID field would usually be a lookup/search component depending on entity type */}
-          {!entityId && (
             <FormField
               control={form.control}
               name="entity_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Associated Entity ID</FormLabel>
+                  <FormLabel>Entity ID</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Entity ID" 
-                      {...field} 
-                    />
+                    <Input placeholder="Entity ID" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         <FormField
           control={form.control}
@@ -217,11 +208,7 @@ export function ContactForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Additional notes about this contact (optional)" 
-                  rows={3} 
-                  {...field} 
-                />
+                <Textarea placeholder="Additional information about this contact" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -232,29 +219,31 @@ export function ContactForm({
           control={form.control}
           name="is_primary"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Primary Contact</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Set this as the primary contact for this entity
+                </p>
+              </div>
               <FormControl>
-                <Checkbox
+                <Switch
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Primary Contact</FormLabel>
-                <p className="text-sm text-muted-foreground">
-                  Mark this as the primary contact for the entity
-                </p>
-              </div>
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onCancel}>
-            Cancel
-          </Button>
+        <div className="flex justify-end gap-2 pt-2">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : (contact ? 'Update' : 'Create')}
+            {isSubmitting ? 'Saving...' : (contact ? 'Update Contact' : 'Add Contact')}
           </Button>
         </div>
       </form>
