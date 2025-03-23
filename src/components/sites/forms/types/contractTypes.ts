@@ -1,4 +1,6 @@
 
+import { BillingFrequency } from './billingTypes';
+
 export interface ContractTerm {
   name: string;
   description: string;
@@ -29,4 +31,27 @@ export interface ContractDetails {
   cpiApplied?: boolean;
   cpiApplicationDate?: string;
   nextReviewDate?: string;
+}
+
+// Add these missing types that are referenced elsewhere
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: ContractDetails;
+  version_number: number;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
+}
+
+export interface ContractForecast {
+  month: string;
+  value: number;
+}
+
+export interface ContractSummary {
+  totalValue: number;
+  activeContracts: number;
+  expiringContracts: number;
+  avgContractValue: number;
 }

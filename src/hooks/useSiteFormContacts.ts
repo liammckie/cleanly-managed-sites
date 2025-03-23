@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ContactRecord } from '@/lib/types';
@@ -28,7 +27,10 @@ export const useSiteFormContacts = () => {
       name: '',
       role: 'operations', // Default role
       entity_type: 'site',
-      is_primary: contacts.length === 0 // First contact is primary by default
+      entity_id: '', // Will be set when saving
+      is_primary: contacts.length === 0, // First contact is primary by default
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setContacts(prev => [...prev, newContact]);
@@ -41,7 +43,10 @@ export const useSiteFormContacts = () => {
       ...contact,
       id: newId,
       entity_type: 'site',
-      is_primary: contact.is_primary || contacts.length === 0 // First contact is primary by default
+      entity_id: '', // Will be set when saving
+      is_primary: contact.is_primary || contacts.length === 0, // First contact is primary by default
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setContacts(prev => [...prev, newContact]);

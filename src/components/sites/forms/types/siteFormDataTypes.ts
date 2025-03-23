@@ -23,7 +23,7 @@ export type SiteFormData = {
   phone: string;
   email: string;
   clientId: string;
-  customId?: string; // Add custom ID field
+  customId?: string;
   monthlyCost?: number;
   monthlyRevenue?: number;
   useClientInfo: boolean;
@@ -49,7 +49,7 @@ export const getInitialFormData = (): SiteFormData => ({
   phone: '',
   email: '',
   clientId: '',
-  customId: '', // Initialize empty custom ID
+  customId: '',
   monthlyCost: undefined,
   monthlyRevenue: undefined,
   useClientInfo: false,
@@ -73,26 +73,49 @@ export const getInitialFormData = (): SiteFormData => ({
       charges: '',
       frequency: 'semi-annually',
       lastCompleted: ''
-    }
+    },
+    tasks: []
   },
   
   jobSpecifications: {
     daysPerWeek: 5,
     hoursPerDay: 3,
-    directEmployees: false,
-    notes: ''
+    directEmployees: true,
+    notes: '',
+    requiresSpecialEquipment: false,
+    equipmentDetails: '',
+    cleaningInstructions: '',
+    areas: [],
+    workingDays: {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: false,
+      sunday: false
+    },
+    serviceDeliveryType: 'direct', // Add service delivery type
+    annualContractorCost: 0 // Add annual contractor cost
   },
   
   replenishables: {
     stock: ['', '', '', '', ''],
-    contactDetails: ''
+    contactDetails: '',
+    supplies: []
   },
   
   securityDetails: {
     accessCode: '',
     alarmCode: '',
     keyLocation: '',
-    outOfHoursAccess: false
+    outOfHoursAccess: false,
+    needsAlarmCode: false,
+    needsKey: false,
+    hasSecurity: false,
+    securityNotes: '',
+    hasCamera: false,
+    cameraDetails: ''
   },
   
   contractDetails: {
@@ -101,7 +124,7 @@ export const getInitialFormData = (): SiteFormData => ({
     contractNumber: '',
     renewalTerms: '',
     terminationPeriod: '',
-    terms: [] // Initialize with empty terms array
+    terms: []
   },
   
   billingDetails: {
@@ -122,7 +145,22 @@ export const getInitialFormData = (): SiteFormData => ({
     taxId: '',
     xeroContactId: '',
     notes: '',
-    billingLines: [] // Initialize with empty billing lines array
+    billingLines: [],
+    weeklyBudget: 0,
+    laborPlan: {
+      workingDays: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+      },
+      shiftStartTime: '',
+      shiftEndTime: '',
+      notes: ''
+    }
   },
   
   adHocWorkAuthorization: {

@@ -9,6 +9,11 @@ export interface WorkingDays {
   sunday: boolean;
 }
 
+export interface AreaSpecification {
+  name: string;
+  details: string;
+}
+
 export interface JobSpecifications {
   daysPerWeek: number;
   hoursPerDay: number;
@@ -17,6 +22,8 @@ export interface JobSpecifications {
   requiresSpecialEquipment?: boolean;
   equipmentDetails?: string;
   cleaningInstructions?: string;
-  areas?: string[];
+  areas?: AreaSpecification[];
   workingDays?: WorkingDays;
+  serviceDeliveryType?: 'direct' | 'contractor'; // Added property
+  annualContractorCost?: number; // Added property
 }

@@ -21,3 +21,20 @@ export function convertContactRecordToSiteContact(contact: ContactRecord): SiteC
     role: ''
   };
 }
+
+export function convertSiteContactToContactRecord(contact: SiteContact, entityId: string): ContactRecord {
+  return {
+    id: contact.id,
+    name: contact.name,
+    role: contact.role || '',
+    department: contact.department || null,
+    email: contact.email || null,
+    phone: contact.phone || null,
+    is_primary: contact.isPrimary || false,
+    notes: contact.notes || null,
+    entity_id: entityId,
+    entity_type: 'site',
+    created_at: contact.created_at || new Date().toISOString(),
+    updated_at: contact.updated_at || new Date().toISOString()
+  };
+}

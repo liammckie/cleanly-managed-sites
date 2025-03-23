@@ -1,5 +1,5 @@
 
-export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
+export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
 export interface BillingLine {
   id?: string;
