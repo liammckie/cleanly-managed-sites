@@ -39,6 +39,19 @@ export const useSiteForm = () => {
     return validation.validateStep(formData, stepIndex, errors, setErrors);
   };
   
+  // Update the contacts from the useSiteFormContacts hook
+  const updateFormContacts = () => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: contactHandlers.contacts
+    }));
+  };
+  
+  // Add effect to sync contacts whenever they change
+  if (contactHandlers.contacts !== formData.contacts) {
+    updateFormContacts();
+  }
+  
   return {
     formData,
     setFormData,

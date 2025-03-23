@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
+import { FormProvider } from "react-hook-form";
 import { SiteFormStep } from './SiteFormStep';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
@@ -39,6 +40,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         postcode: site.postcode,
         status: site.status,
         representative: site.representative,
+        clientId: site.client_id, // Ensure clientId is set
         // Handle optional fields with fallbacks
         phone: site.phone || baseFormData.phone,
         email: site.email || baseFormData.email,
@@ -50,9 +52,15 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         contractDetails: site.contract_details || baseFormData.contractDetails,
         billingDetails: site.billing_details || baseFormData.billingDetails,
         subcontractors: site.subcontractors || baseFormData.subcontractors,
+        contacts: site.contacts || []
       };
       
       formHandlers.setFormData(formData);
+      
+      // Set the contacts in the contacts handler
+      if (site.contacts && site.contacts.length > 0) {
+        formHandlers.setContacts(site.contacts);
+      }
     }
   }, [site]);
   
@@ -88,30 +96,32 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   };
 
   return (
-    <Form {...formHandlers.form}>
-      <form>
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">Edit Site: {site.name}</h1>
-          
-          <FormProgressBar 
-            currentStep={stepper.currentStep}
-            totalSteps={stepper.totalSteps}
-            progress={stepper.progress}
-          />
-          
-          <SiteFormStep
-            title={steps[stepper.currentStep].title}
-            description={steps[stepper.currentStep].description}
-            onNext={() => stepper.handleNext(handleSubmit)}
-            onBack={stepper.handleBack}
-            isSubmitting={isSubmitting}
-            isLastStep={stepper.isLastStep}
-            isFirstStep={stepper.isFirstStep}
-          >
-            {steps[stepper.currentStep].component}
-          </SiteFormStep>
-        </div>
-      </form>
-    </Form>
+    <FormProvider {...formHandlers.form.formState}>
+      <Form {...formHandlers.form}>
+        <form>
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl font-bold mb-6">Edit Site: {site.name}</h1>
+            
+            <FormProgressBar 
+              currentStep={stepper.currentStep}
+              totalSteps={stepper.totalSteps}
+              progress={stepper.progress}
+            />
+            
+            <SiteFormStep
+              title={steps[stepper.currentStep].title}
+              description={steps[stepper.currentStep].description}
+              onNext={() => stepper.handleNext(handleSubmit)}
+              onBack={stepper.handleBack}
+              isSubmitting={isSubmitting}
+              isLastStep={stepper.isLastStep}
+              isFirstStep={stepper.isFirstStep}
+            >
+              {steps[stepper.currentStep].component}
+            </SiteFormStep>
+          </div>
+        </form>
+      </Form>
+    </FormProvider>
   );
 }

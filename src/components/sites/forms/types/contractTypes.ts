@@ -21,6 +21,8 @@ export type ContractDetails = {
   billingCycle?: string; // Monthly, quarterly, annually
   autoRenew?: boolean;
   nextReviewDate?: string;
+  cpiApplied?: boolean; // Whether CPI can be applied automatically
+  cpiApplicationDate?: string; // Date when CPI should be applied
   terms: ContractTerm[];  // Multiple contract terms per site
   
   // Add legacy properties for compatibility

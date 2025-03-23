@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ContactRecord } from '@/lib/types';
 import { SiteContact } from '@/components/sites/forms/types/contactTypes';
+import { useContacts } from './useContacts';
 
 // Type for the site contact form data
 export type SiteContactFormData = {
@@ -18,6 +19,7 @@ export type SiteContactFormData = {
 // Create a hook for handling contacts in the site form
 export const useSiteFormContacts = () => {
   const [contacts, setContacts] = useState<SiteContact[]>([]);
+  const { contacts: existingContacts } = useContacts();
   
   // Simple function to add a new empty contact
   const addContact = useCallback(() => {
@@ -43,6 +45,26 @@ export const useSiteFormContacts = () => {
     setContacts(prev => [...prev, newContact]);
     return newId;
   }, [contacts]);
+  
+  // Add an existing contact
+  const addExistingContact = useCallback((contactId: string) => {
+    const contactToAdd = existingContacts.find(c => c.id === contactId);
+    
+    if (contactToAdd) {
+      const newContact: SiteContact = {
+        id: contactToAdd.id,
+        name: contactToAdd.name,
+        role: contactToAdd.role,
+        department: contactToAdd.department,
+        email: contactToAdd.email,
+        phone: contactToAdd.phone,
+        is_primary: contacts.length === 0, // First contact is primary by default
+        notes: contactToAdd.notes
+      };
+      
+      setContacts(prev => [...prev, newContact]);
+    }
+  }, [existingContacts, contacts]);
   
   // Update an existing contact in the form
   const updateContact = useCallback((index: number, data: Partial<SiteContactFormData>) => {
@@ -121,6 +143,7 @@ export const useSiteFormContacts = () => {
     setContacts,
     addContact,
     addContactWithData,
+    addExistingContact,
     updateContact,
     removeContact,
     setAsPrimary,

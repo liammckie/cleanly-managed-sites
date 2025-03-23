@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SiteFormData } from '../siteFormTypes';
-import { History, Plus, Trash2 } from 'lucide-react';
+import { History, Plus, Trash2, Calculator } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ContractDetailsStepProps {
@@ -31,6 +31,44 @@ export function ContractDetailsStep({
   removeContractTerm,
   updateContractTerm
 }: ContractDetailsStepProps) {
+  const [annualValue, setAnnualValue] = useState<number>(0);
+
+  // Calculate annual value based on billing cycle and contract value
+  useEffect(() => {
+    const value = formData.contractDetails.value || 0;
+    const cycle = formData.contractDetails.billingCycle || 'monthly';
+    
+    let annual = 0;
+    switch (cycle) {
+      case 'weekly':
+        annual = value * 52;
+        break;
+      case 'monthly':
+        annual = value * 12;
+        break;
+      case 'quarterly':
+        annual = value * 4;
+        break;
+      case 'annually':
+        annual = value;
+        break;
+      default:
+        annual = 0;
+    }
+    
+    setAnnualValue(annual);
+    
+    // Add a billing line automatically if a value is set
+    if (value > 0 && formData.billingDetails.billingLines.length === 0) {
+      handleNestedChange('billingDetails', 'billingLines', [{
+        description: 'Contract payment',
+        amount: value,
+        frequency: cycle,
+        isRecurring: true
+      }]);
+    }
+  }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
+
   return (
     <div className="space-y-6">
       <div className="glass-card p-6 space-y-4">
@@ -89,7 +127,7 @@ export function ContractDetailsStep({
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="contract-value">Monthly Value ($)</Label>
+            <Label htmlFor="contract-value">Contract Value ($)</Label>
             <Input
               id="contract-value"
               type="number"
@@ -118,7 +156,17 @@ export function ContractDetailsStep({
             </Select>
           </div>
           
-          <div className="flex items-center space-x-2 pt-8">
+          <div className="space-y-2">
+            <Label>Annual Value Forecast</Label>
+            <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+              <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
+              ${annualValue.toFixed(2)}
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="flex items-center space-x-2">
             <Checkbox 
               id="auto-renew" 
               checked={formData.contractDetails.autoRenew || false}
@@ -126,12 +174,34 @@ export function ContractDetailsStep({
             />
             <Label htmlFor="auto-renew">Auto-renew contract</Label>
           </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="cpi-applied" 
+              checked={formData.contractDetails.cpiApplied || false}
+              onCheckedChange={(checked) => handleNestedChange('contractDetails', 'cpiApplied', checked)}
+            />
+            <Label htmlFor="cpi-applied">CPI can be applied automatically</Label>
+          </div>
         </div>
+        
+        {formData.contractDetails.cpiApplied && (
+          <div className="space-y-2 mt-2">
+            <Label htmlFor="cpi-application-date">CPI Application Date</Label>
+            <Input
+              id="cpi-application-date"
+              type="date"
+              value={formData.contractDetails.cpiApplicationDate || ''}
+              onChange={(e) => handleNestedChange('contractDetails', 'cpiApplicationDate', e.target.value)}
+              className="glass-input"
+            />
+          </div>
+        )}
       </div>
       
       <div className="glass-card p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Contract Terms</h3>
+          <h3 className="text-lg font-medium">Special Conditions and Contract Terms</h3>
           {addContractTerm && (
             <Button 
               type="button" 
@@ -243,7 +313,7 @@ export function ContractDetailsStep({
           </div>
         ) : (
           <div className="text-center py-4 text-muted-foreground">
-            No contract terms added. Click "Add Term" to create a new contract term.
+            No special conditions or terms added. Click "Add Term" to create a new condition or term.
           </div>
         )}
         

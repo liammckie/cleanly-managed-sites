@@ -4,6 +4,9 @@ export type JobSpecifications = {
   hoursPerDay: number;
   directEmployees: boolean;
   notes: string;
+  workingDays?: {
+    [key: string]: boolean;
+  };
   
   // Add legacy properties for compatibility
   requiresSpecialEquipment?: boolean;

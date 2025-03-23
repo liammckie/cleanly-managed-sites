@@ -36,6 +36,7 @@ export type GetStepsConfigProps = {
   handleContactChange: (index: number, field: keyof ContactRecord, value: any) => void;
   addContact: () => void;
   removeContact: (index: number) => void;
+  addExistingContact?: (contactId: string) => void;
   // Billing lines handlers
   addBillingLine?: () => void;
   removeBillingLine?: (index: number) => void;
@@ -62,6 +63,7 @@ export const getStepsConfig = ({
   handleContactChange,
   addContact,
   removeContact,
+  addExistingContact,
   addBillingLine,
   removeBillingLine,
   updateBillingLine,
@@ -94,6 +96,7 @@ export const getStepsConfig = ({
         handleContactChange={handleContactChange}
         addContact={addContact}
         removeContact={removeContact}
+        addExistingContact={addExistingContact}
       />
     )
   },
