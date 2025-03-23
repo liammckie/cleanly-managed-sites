@@ -16,6 +16,8 @@ import { useClients } from '@/hooks/useClients';
 import { ClientRecord } from '@/lib/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ClientDashboard } from './ClientDashboard';
+import { ViewToggle } from '@/components/ui/data-table/ViewToggle';
+import { TabulatorView } from '@/components/ui/data-table/TabulatorView';
 
 export function ClientList() {
   const { clients, isLoading, isError, error } = useClients();
@@ -23,6 +25,7 @@ export function ClientList() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
+  const [view, setView] = useState<'grid' | 'table'>('grid');
   
   // Update status filter when URL params change
   useEffect(() => {
@@ -62,6 +65,25 @@ export function ClientList() {
     return matchesSearch && matchesStatus;
   });
 
+  // Table columns for tabulator
+  const tabulatorColumns = [
+    { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
+    { title: "Contact", field: "contact_name", headerFilter: true },
+    { title: "Email", field: "email", headerFilter: true },
+    { title: "Phone", field: "phone" },
+    { title: "City", field: "city", headerFilter: true },
+    { title: "Status", field: "status", headerFilter: "list", headerFilterParams: { values: { active: "Active", inactive: "Inactive", pending: "Pending" } } },
+    { 
+      title: "Actions", 
+      formatter: "html", 
+      width: 120,
+      formatterParams: {
+        // Using a data-attribute to store the client ID for event handling
+        html: (cell: any) => `<a href="/clients/${cell.getData().id}" class="text-primary hover:underline">View</a>`
+      }
+    }
+  ];
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-60">
@@ -96,7 +118,7 @@ export function ClientList() {
       <ClientDashboard />
       
       <div className="border border-border rounded-lg bg-card p-4">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -108,36 +130,51 @@ export function ClientList() {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-3">
+            <Select value={statusFilter} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <ViewToggle view={view} onViewChange={setView} />
+          </div>
         </div>
       </div>
       
       {filteredClients.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClients.map(client => (
-            <ClientCard 
-              key={client.id} 
-              id={client.id}
-              name={client.name}
-              contact_name={client.contact_name}
-              email={client.email}
-              phone={client.phone}
-              address={client.address}
-              city={client.city}
-              status={client.status as any}
-            />
-          ))}
-        </div>
+        view === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClients.map(client => (
+              <ClientCard 
+                key={client.id} 
+                id={client.id}
+                name={client.name}
+                contact_name={client.contact_name}
+                email={client.email}
+                phone={client.phone}
+                address={client.address}
+                city={client.city}
+                status={client.status as any}
+              />
+            ))}
+          </div>
+        ) : (
+          <TabulatorView 
+            data={filteredClients}
+            columns={tabulatorColumns}
+            title="Client List"
+            initialSort={[{ column: "name", dir: "asc" }]}
+            groupBy={["status", "city"]}
+            filename="clients-export"
+          />
+        )
       ) : (
         <div className="rounded-lg p-8 text-center border border-border bg-card">
           <p className="text-lg text-muted-foreground">No clients found matching your criteria.</p>
