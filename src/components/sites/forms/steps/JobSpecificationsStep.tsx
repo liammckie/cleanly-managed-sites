@@ -24,7 +24,7 @@ export function JobSpecificationsStep({ formData, handleNestedChange }: JobSpeci
   ];
 
   const handleWeekdayChange = (day: string, checked: boolean) => {
-    const currentDays = { ...formData.jobSpecifications.workingDays } || {};
+    const currentDays = formData.jobSpecifications.workingDays || {};
     currentDays[day] = checked;
     
     // Count selected days

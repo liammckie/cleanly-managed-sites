@@ -11,6 +11,7 @@ import { getStepsConfig } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi, SiteRecord } from '@/lib/api';
 import { getInitialFormData } from './siteFormTypes';
+import { convertContactRecordToSiteContact } from './types/contactTypes';
 
 interface EditSiteFormProps {
   site: SiteRecord;
@@ -52,14 +53,15 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         contractDetails: site.contract_details || baseFormData.contractDetails,
         billingDetails: site.billing_details || baseFormData.billingDetails,
         subcontractors: site.subcontractors || baseFormData.subcontractors,
-        contacts: site.contacts || []
+        // Convert ContactRecord[] to SiteContact[]
+        contacts: site.contacts ? site.contacts.map(contact => convertContactRecordToSiteContact(contact)) : []
       };
       
       formHandlers.setFormData(formData);
       
-      // Set the contacts in the contacts handler
+      // Set the contacts in the contacts handler (also converted to the right type)
       if (site.contacts && site.contacts.length > 0) {
-        formHandlers.setContacts(site.contacts);
+        formHandlers.setContacts(site.contacts.map(contact => convertContactRecordToSiteContact(contact)));
       }
     }
   }, [site]);
@@ -96,7 +98,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   };
 
   return (
-    <FormProvider {...formHandlers.form.formState}>
+    <FormProvider {...formHandlers.form}>
       <Form {...formHandlers.form}>
         <form>
           <div className="max-w-4xl mx-auto">

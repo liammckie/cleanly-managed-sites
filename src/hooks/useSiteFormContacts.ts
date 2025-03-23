@@ -2,7 +2,7 @@
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ContactRecord } from '@/lib/types';
-import { SiteContact } from '@/components/sites/forms/types/contactTypes';
+import { SiteContact, convertContactRecordToSiteContact } from '@/components/sites/forms/types/contactTypes';
 import { useContacts } from './useContacts';
 
 // Type for the site contact form data
@@ -27,6 +27,7 @@ export const useSiteFormContacts = () => {
       id: uuidv4(),
       name: '',
       role: 'operations', // Default role
+      entity_type: 'site',
       is_primary: contacts.length === 0 // First contact is primary by default
     };
     
@@ -39,6 +40,7 @@ export const useSiteFormContacts = () => {
     const newContact: SiteContact = {
       ...contact,
       id: newId,
+      entity_type: 'site',
       is_primary: contact.is_primary || contacts.length === 0 // First contact is primary by default
     };
     
@@ -51,16 +53,13 @@ export const useSiteFormContacts = () => {
     const contactToAdd = existingContacts.find(c => c.id === contactId);
     
     if (contactToAdd) {
-      const newContact: SiteContact = {
-        id: contactToAdd.id,
-        name: contactToAdd.name,
-        role: contactToAdd.role,
-        department: contactToAdd.department,
-        email: contactToAdd.email,
-        phone: contactToAdd.phone,
-        is_primary: contacts.length === 0, // First contact is primary by default
-        notes: contactToAdd.notes
-      };
+      const newContact: SiteContact = convertContactRecordToSiteContact(contactToAdd);
+      // Ensure the contact is marked as a site contact regardless of its original entity_type
+      newContact.entity_type = 'site';
+      // Make it primary if it's the first contact
+      if (contacts.length === 0) {
+        newContact.is_primary = true;
+      }
       
       setContacts(prev => [...prev, newContact]);
     }
