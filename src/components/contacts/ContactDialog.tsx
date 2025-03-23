@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -37,6 +38,11 @@ export function ContactDialog({
 
   const handleSubmit = async (data: Partial<ContactRecord>) => {
     try {
+      // Ensure services is properly formatted as an array
+      if (data.services && !Array.isArray(data.services)) {
+        data.services = [data.services as unknown as string];
+      }
+      
       await onSubmit(data);
       setOpen(false);
       

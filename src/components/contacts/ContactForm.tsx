@@ -21,6 +21,8 @@ import { useContacts } from '@/hooks/useContacts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Loader2 } from 'lucide-react';
 import { CommandInput, CommandGroup, CommandItem, CommandList, Command } from '@/components/ui/command';
+import { Checkbox } from '@/components/ui/checkbox';
+import { SERVICE_OPTIONS } from '@/components/sites/forms/types/subcontractorTypes';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -37,6 +39,9 @@ const formSchema = z.object({
     z.literal('internal')
   ]).optional(),
   entity_id: z.string().optional(),
+  services: z.array(z.string()).optional(),
+  monthly_cost: z.number().optional().nullable(),
+  is_flat_rate: z.boolean().optional(),
 });
 
 type ContactFormValues = z.infer<typeof formSchema>;
@@ -62,6 +67,7 @@ export function ContactForm({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showServices, setShowServices] = useState<boolean>(false);
   const { searchEntities } = useContacts();
 
   const form = useForm<ContactFormValues>({
@@ -78,10 +84,17 @@ export function ContactForm({
                   (entityType as 'client' | 'site' | 'supplier' | 'internal') || 
                   'client',
       entity_id: contact?.entity_id || entityId || '',
+      services: contact?.services || [],
+      monthly_cost: contact?.monthly_cost || null,
+      is_flat_rate: contact?.is_flat_rate !== undefined ? contact.is_flat_rate : true,
     },
   });
 
   useEffect(() => {
+    // Check if this is a supplier/subcontractor contact
+    const currentEntityType = form.getValues('entity_type');
+    setShowServices(currentEntityType === 'supplier');
+    
     // Update form when entityId or entityType props change
     if (entityId && entityType) {
       form.setValue('entity_id', entityId);
@@ -125,6 +138,25 @@ export function ContactForm({
     form.setValue('entity_id', entity.id);
     form.setValue('entity_type', entity.type as any);
     setOpen(false);
+  };
+
+  const handleEntityTypeChange = (value: string) => {
+    form.setValue('entity_type', value as any);
+    form.setValue('entity_id', ''); // Reset entity_id when type changes
+    
+    // Show services section if supplier type is selected
+    setShowServices(value === 'supplier');
+  };
+
+  const toggleService = (service: string) => {
+    const currentServices = form.getValues('services') || [];
+    const isSelected = currentServices.includes(service);
+    
+    if (isSelected) {
+      form.setValue('services', currentServices.filter(s => s !== service));
+    } else {
+      form.setValue('services', [...currentServices, service]);
+    }
   };
 
   return (
@@ -212,10 +244,7 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Contact Type</FormLabel>
                 <Select
-                  onValueChange={(value) => {
-                    field.onChange(value as 'client' | 'site' | 'supplier' | 'internal');
-                    form.setValue('entity_id', ''); // Reset entity_id when type changes
-                  }}
+                  onValueChange={handleEntityTypeChange}
                   value={field.value}
                 >
                   <FormControl>
@@ -226,7 +255,7 @@ export function ContactForm({
                   <SelectContent>
                     <SelectItem value="client">Client</SelectItem>
                     <SelectItem value="site">Site</SelectItem>
-                    <SelectItem value="supplier">Supplier</SelectItem>
+                    <SelectItem value="supplier">Supplier/Subcontractor</SelectItem>
                     <SelectItem value="internal">Internal</SelectItem>
                   </SelectContent>
                 </Select>
@@ -306,6 +335,71 @@ export function ContactForm({
             )}
           />
         </div>
+
+        {showServices && (
+          <div className="space-y-4 border rounded-md p-4">
+            <h3 className="font-medium">Services Provided</h3>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {SERVICE_OPTIONS.map((service) => (
+                <div key={service.value} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`service-${service.value}`}
+                    checked={(form.getValues('services') || []).includes(service.value)}
+                    onCheckedChange={() => toggleService(service.value)}
+                  />
+                  <label 
+                    htmlFor={`service-${service.value}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {service.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="monthly_cost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monthly Cost</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        {...field}
+                        value={field.value === null ? '' : field.value}
+                        onChange={(e) => {
+                          const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                          field.onChange(value);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="is_flat_rate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-end space-x-2 mt-8">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Flat Rate</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        )}
 
         <FormField
           control={form.control}

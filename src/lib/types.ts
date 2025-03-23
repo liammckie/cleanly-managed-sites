@@ -1,4 +1,3 @@
-
 import { PermissionsMap } from '@/types/permissions';
 
 // User and Auth related types
@@ -65,6 +64,9 @@ export type ContactRecord = {
   user_id?: string;
   created_at: string;
   updated_at: string;
+  services?: string[];
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
 };
 
 // Site related types

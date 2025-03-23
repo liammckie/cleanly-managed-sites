@@ -21,6 +21,9 @@ export type SiteContact = {
   id?: string; // Add id field for existing contacts
   created_at?: string;
   updated_at?: string;
+  services?: string[];
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
 }
 
 // Helper function to convert SiteContact to ContactRecord
@@ -40,7 +43,10 @@ export const convertSiteContactToContactRecord = (
     entity_id: entityId,
     entity_type: 'site',  // Hardcode to 'site' for this converter
     created_at: contact.created_at,
-    updated_at: contact.updated_at
+    updated_at: contact.updated_at,
+    services: contact.services,
+    monthly_cost: contact.monthly_cost,
+    is_flat_rate: contact.is_flat_rate
   };
 };
 
@@ -62,6 +68,9 @@ export const convertContactRecordToSiteContact = (
       ? 'site'  // Convert non-compatible types to 'site'
       : contact.entity_type as 'site' | 'client',
     created_at: contact.created_at,
-    updated_at: contact.updated_at
+    updated_at: contact.updated_at,
+    services: contact.services,
+    monthly_cost: contact.monthly_cost,
+    is_flat_rate: contact.is_flat_rate
   };
 };

@@ -52,17 +52,20 @@ export const contactsApi = {
       throw new Error('Missing required contact data: name and role are required');
     }
     
-    // If entity_id is missing or empty, use null instead of a placeholder
-    // This will be better handled by the database
-    const contactRecord = {
+    // Prepare services field as JSON
+    const preparedContactData = {
       ...contactData,
+      // If entity_id is missing or empty, use null
       entity_id: contactData.entity_id && contactData.entity_id.trim() !== '' ? contactData.entity_id : null,
       user_id: user?.id, // This will be null if no user, but the RLS policies will handle this
+      services: contactData.services || null,
+      monthly_cost: contactData.monthly_cost || null,
+      is_flat_rate: contactData.is_flat_rate !== undefined ? contactData.is_flat_rate : true
     };
     
     const { data, error } = await supabase
       .from('contacts')
-      .insert(contactRecord)
+      .insert(preparedContactData)
       .select()
       .single();
     
@@ -76,9 +79,17 @@ export const contactsApi = {
   
   // Update an existing contact
   async updateContact(id: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
+    // Ensure services is properly handled
+    const preparedData = {
+      ...contactData,
+      services: contactData.services || null,
+      monthly_cost: contactData.monthly_cost || null,
+      is_flat_rate: contactData.is_flat_rate !== undefined ? contactData.is_flat_rate : true
+    };
+
     const { data, error } = await supabase
       .from('contacts')
-      .update(contactData)
+      .update(preparedData)
       .eq('id', id)
       .select()
       .single();
@@ -204,7 +215,7 @@ export const contactsApi = {
         }
       }
 
-      // Search contractors (as a fallback for suppliers)
+      // Search contractors (for suppliers)
       if (!entityType || entityType === 'supplier') {
         try {
           const { data: contractors, error: contractorError } = await supabase

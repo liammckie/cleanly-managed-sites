@@ -125,11 +125,14 @@ export type Database = {
           entity_id: string
           entity_type: string
           id: string
+          is_flat_rate: boolean | null
           is_primary: boolean | null
+          monthly_cost: number | null
           name: string
           notes: string | null
           phone: string | null
           role: string
+          services: Json | null
           updated_at: string
           user_id: string | null
         }
@@ -140,11 +143,14 @@ export type Database = {
           entity_id: string
           entity_type: string
           id?: string
+          is_flat_rate?: boolean | null
           is_primary?: boolean | null
+          monthly_cost?: number | null
           name: string
           notes?: string | null
           phone?: string | null
           role: string
+          services?: Json | null
           updated_at?: string
           user_id?: string | null
         }
@@ -155,11 +161,14 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: string
+          is_flat_rate?: boolean | null
           is_primary?: boolean | null
+          monthly_cost?: number | null
           name?: string
           notes?: string | null
           phone?: string | null
           role?: string
+          services?: Json | null
           updated_at?: string
           user_id?: string | null
         }
