@@ -61,7 +61,7 @@ export function AddressInformation({
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Select a state</SelectItem>
+              <SelectItem value="select-state">Select a state</SelectItem>
               <SelectItem value="NSW">New South Wales</SelectItem>
               <SelectItem value="VIC">Victoria</SelectItem>
               <SelectItem value="QLD">Queensland</SelectItem>

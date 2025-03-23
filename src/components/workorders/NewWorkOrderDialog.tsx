@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -77,7 +78,7 @@ export const NewWorkOrderDialog = ({ sites, onSuccess }: NewWorkOrderDialogProps
               <FormItem>
                 <FormLabel>Select a site for this work order</FormLabel>
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a site..." />
                     </SelectTrigger>

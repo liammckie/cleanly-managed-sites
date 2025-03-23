@@ -119,7 +119,7 @@ export const PriorityAndAssignmentFields = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
                 {subcontractors.map((sub) => (
                   <SelectItem key={sub.id} value={sub.id}>
                     {sub.business_name}

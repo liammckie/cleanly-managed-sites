@@ -50,7 +50,7 @@ export function ClientSelect({ value, onChange, error }: ClientSelectProps) {
                 </SelectItem>
               ))
             ) : (
-              <SelectItem value="none" disabled>No clients found</SelectItem>
+              <SelectItem value="no-clients" disabled>No clients found</SelectItem>
             )}
           </SelectContent>
         </Select>
