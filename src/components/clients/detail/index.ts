@@ -6,4 +6,4 @@ export * from './ClientNotesCard';
 export * from './ClientSitesCard';
 export * from './ClientErrorState';
 export * from './ClientNotFoundState';
-export { ClientContactsCard } from './ClientContactsCard';
+export * from './ClientContactsCard';
