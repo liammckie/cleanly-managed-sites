@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,7 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
   } = useClientContacts(clientId);
   
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   
   const handleAddContact = async (contactData: Partial<ContactRecord>) => {
     await addContact(contactData);
@@ -34,6 +34,7 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
   
   const handleEditContact = (contact: ContactRecord) => {
     setEditingContact(contact);
+    setDialogOpen(true);
   };
   
   const handleDeleteContact = (contactId: string) => {
@@ -49,6 +50,7 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
     } else {
       await addContact(contactData);
     }
+    setDialogOpen(false);
   };
   
   if (isLoading) {
@@ -90,7 +92,10 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
           <span>Contacts</span>
           <Button 
             size="sm" 
-            onClick={() => setEditingContact(null)}
+            onClick={() => {
+              setEditingContact(null);
+              setDialogOpen(true);
+            }}
             disabled={isAdding}
             className="flex items-center gap-1"
           >
@@ -182,12 +187,12 @@ export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
       </CardContent>
       
       <ContactDialog 
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
         contact={editingContact || undefined}
+        onSave={handleSaveContact}
         entityType="client"
         entityId={clientId}
-        onSubmit={handleSaveContact}
-        isSubmitting={isAdding || isUpdating}
-        title={editingContact ? "Edit Contact" : "Add Contact"}
       />
     </Card>
   );
