@@ -8,7 +8,10 @@ import { DollarSign, Calendar, TrendingUp } from 'lucide-react';
 
 export function ContractValueMetrics() {
   const { sites, isLoading: sitesLoading } = useSites();
-  const { summary } = useContractForecast(sites);
+  const { summary, summaryData } = useContractForecast(sites);
+  
+  // Use the correct data from the hook (summary or summaryData)
+  const contractSummary = summary || summaryData;
   
   if (sitesLoading) {
     return (
@@ -19,12 +22,12 @@ export function ContractValueMetrics() {
   }
   
   // Calculate weekly, monthly and annual values
-  const weeklyRevenue = (summary.totalValue / 4.33).toFixed(2);
-  const weeklyProfit = ((summary.totalValue - (sites?.reduce((sum, site) => sum + (site.monthly_cost || 0), 0) || 0)) / 4.33).toFixed(2);
-  const monthlyRevenue = summary.totalValue.toFixed(2);
+  const weeklyRevenue = (contractSummary.totalValue / 4.33).toFixed(2);
+  const weeklyProfit = ((contractSummary.totalValue - (sites?.reduce((sum, site) => sum + (site.monthly_cost || 0), 0) || 0)) / 4.33).toFixed(2);
+  const monthlyRevenue = contractSummary.totalValue.toFixed(2);
   const monthlyCost = (sites?.reduce((sum, site) => sum + (site.monthly_cost || 0), 0) || 0).toFixed(2);
-  const monthlyProfit = (summary.totalValue - parseFloat(monthlyCost)).toFixed(2);
-  const annualRevenue = (summary.totalValue * 12).toFixed(2);
+  const monthlyProfit = (contractSummary.totalValue - parseFloat(monthlyCost)).toFixed(2);
+  const annualRevenue = (contractSummary.totalValue * 12).toFixed(2);
   const annualCost = (parseFloat(monthlyCost) * 12).toFixed(2);
   const annualProfit = (parseFloat(monthlyProfit) * 12).toFixed(2);
   
