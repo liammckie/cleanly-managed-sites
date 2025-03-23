@@ -7,20 +7,20 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
-import { BillingLine } from '@/hooks/useSiteFormBillingLines';
+import { BillingLine, BillingFrequency } from './types/billingTypes';
 
 interface BillingLineItemProps {
   line: BillingLine;
-  onUpdate: (id: string, field: keyof BillingLine, value: any) => void;
-  onRemove: (id: string) => void;
-  isRemovable?: boolean;
+  updateLine: (id: string, field: string, value: any) => void;
+  removeLine: (id: string) => void;
+  isFirst?: boolean;
 }
 
 export const BillingLineItem: React.FC<BillingLineItemProps> = ({
   line,
-  onUpdate,
-  onRemove,
-  isRemovable = true
+  updateLine,
+  removeLine,
+  isFirst = false
 }) => {
   // Calculate derived amounts when amount or frequency changes
   useEffect(() => {
@@ -32,18 +32,18 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
       
       // Only update if values have changed
       if (line.weeklyAmount !== weeklyAmount) {
-        onUpdate(line.id, 'weeklyAmount', weeklyAmount);
+        updateLine(line.id, 'weeklyAmount', weeklyAmount);
       }
       
       if (line.monthlyAmount !== monthlyAmount) {
-        onUpdate(line.id, 'monthlyAmount', monthlyAmount);
+        updateLine(line.id, 'monthlyAmount', monthlyAmount);
       }
       
       if (line.annualAmount !== annualAmount) {
-        onUpdate(line.id, 'annualAmount', annualAmount);
+        updateLine(line.id, 'annualAmount', annualAmount);
       }
     }
-  }, [line.amount, line.frequency, line.id, onUpdate]);
+  }, [line.amount, line.frequency, line.id, updateLine]);
 
   return (
     <div className="grid grid-cols-12 gap-4 items-start mb-4 p-3 bg-slate-50 rounded-md border border-slate-200">
@@ -54,7 +54,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
         <Input
           id={`description-${line.id}`}
           value={line.description}
-          onChange={(e) => onUpdate(line.id, 'description', e.target.value)}
+          onChange={(e) => updateLine(line.id, 'description', e.target.value)}
           placeholder="Service description"
         />
       </div>
@@ -67,7 +67,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
           id={`amount-${line.id}`}
           type="number"
           value={line.amount === 0 ? '' : line.amount}
-          onChange={(e) => onUpdate(line.id, 'amount', parseFloat(e.target.value) || 0)}
+          onChange={(e) => updateLine(line.id, 'amount', parseFloat(e.target.value) || 0)}
           placeholder="0.00"
         />
       </div>
@@ -78,7 +78,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
         </Label>
         <Select
           value={line.frequency}
-          onValueChange={(value) => onUpdate(line.id, 'frequency', value)}
+          onValueChange={(value: BillingFrequency) => updateLine(line.id, 'frequency', value)}
         >
           <SelectTrigger id={`frequency-${line.id}`}>
             <SelectValue placeholder="Select frequency" />
@@ -98,7 +98,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
           <Switch
             id={`recurring-${line.id}`}
             checked={line.isRecurring}
-            onCheckedChange={(checked) => onUpdate(line.id, 'isRecurring', checked)}
+            onCheckedChange={(checked) => updateLine(line.id, 'isRecurring', checked)}
           />
           <Label htmlFor={`recurring-${line.id}`} className="text-xs">
             Recurring
@@ -107,12 +107,12 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
       </div>
       
       <div className="col-span-3 md:col-span-1 flex items-end justify-end">
-        {isRemovable && (
+        {!isFirst && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => onRemove(line.id)}
+            onClick={() => removeLine(line.id)}
             className="h-9 w-9 mt-6"
           >
             <Trash2 className="h-4 w-4 text-destructive" />
@@ -121,4 +121,4 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
       </div>
     </div>
   );
-};
+}

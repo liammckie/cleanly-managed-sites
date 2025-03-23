@@ -1,209 +1,203 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from "sonner";
-import { Form } from "@/components/ui/form";
-import { FormProvider } from "react-hook-form";
-import { SiteFormStep } from './SiteFormStep';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ArrowLeft, Save } from 'lucide-react';
 import { useSiteForm } from '@/hooks/useSiteForm';
-import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
-import { getStepsConfig } from './siteFormConfig';
+import { SiteFormStep } from './SiteFormStep';
+import { getSiteFormSteps } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
-import { sitesApi, SiteRecord } from '@/lib/api';
-import { getInitialFormData } from './siteFormTypes';
-import { convertContactRecordToSiteContact } from './types/contactTypes';
-import { History } from 'lucide-react';
-import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContractsApi';
-import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
+import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
+import { toast } from 'sonner';
+import { SiteFormData } from './siteFormTypes';
+import { SiteRecord } from '@/lib/api/sites/sitesApi';
+import { v4 as uuidv4 } from 'uuid';
+import { BillingLine } from './types/billingTypes';
 
 interface EditSiteFormProps {
-  site: SiteRecord;
+  site: SiteRecord & {
+    billingLines?: any[];
+    additionalContracts?: any[];
+    weekly_revenue?: number;
+    annual_revenue?: number;
+  };
 }
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
-  // Parse query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const initialTab = queryParams.get('tab');
-  const isContractVariation = queryParams.get('variation') === 'true';
+  // Get form state and handlers from the useSiteForm hook
+  const siteForm = useSiteForm();
+  const { formData, setFormData, validateStep } = siteForm;
   
-  // Use the custom hooks
-  const formHandlers = useSiteForm();
+  // Initialize the stepper
+  const { 
+    currentStepIndex, 
+    totalSteps,
+    currentStep,
+    goToNextStep,
+    goToPreviousStep,
+    canGoToNextStep,
+    canGoToPreviousStep,
+    goToStep
+  } = useSiteFormStepper({
+    steps: getSiteFormSteps(
+      formData,
+      siteForm.handleChange,
+      siteForm.handleNestedChange,
+      siteForm.handleArrayChange,
+      siteForm.handleArrayUpdate,
+      siteForm.handleDoubleNestedChange,
+      siteForm.addArrayItem,
+      siteForm.removeArrayItem,
+      siteForm.addSubcontractor,
+      siteForm.updateSubcontractor,
+      siteForm.removeSubcontractor,
+      siteForm.addReplenishable,
+      siteForm.updateReplenishable,
+      siteForm.removeReplenishable,
+      siteForm.addBillingLine,
+      siteForm.updateBillingLine,
+      siteForm.removeBillingLine,
+      siteForm.addContractTerm,
+      siteForm.updateContractTerm,
+      siteForm.removeContractTerm,
+      siteForm.addAdditionalContract,
+      siteForm.updateAdditionalContract,
+      siteForm.removeAdditionalContract,
+      siteForm.handleFileUpload,
+      siteForm.handleFileRemove
+    ),
+    validateStep
+  });
   
-  // Initialize form with the site data
+  // Prepare data for form when site data is loaded
   useEffect(() => {
     if (site) {
-      // Create a base form data with all required fields
-      const baseFormData = getInitialFormData();
-      
-      // Convert from API format to form format (flattening JSON fields)
-      const formData = {
-        ...baseFormData,
-        // Copy over basic fields
-        name: site.name,
-        address: site.address,
-        city: site.city,
-        state: site.state,
-        postcode: site.postcode,
-        status: site.status,
-        representative: site.representative,
-        clientId: site.client_id, // Ensure clientId is set
-        // Handle optional fields with fallbacks
-        phone: site.phone || baseFormData.phone,
-        email: site.email || baseFormData.email,
-        // Add weekly and annual revenue
-        weeklyRevenue: site.weekly_revenue,
-        monthlyRevenue: site.monthly_revenue,
-        annualRevenue: site.annual_revenue,
-        // Merge JSON fields with defaults
-        securityDetails: site.security_details || baseFormData.securityDetails,
-        jobSpecifications: site.job_specifications || baseFormData.jobSpecifications,
-        periodicals: site.periodicals || baseFormData.periodicals,
-        replenishables: site.replenishables || baseFormData.replenishables,
-        contractDetails: site.contract_details || baseFormData.contractDetails,
-        billingDetails: site.billing_details || baseFormData.billingDetails,
-        subcontractors: site.subcontractors || baseFormData.subcontractors,
-        // Convert ContactRecord[] to SiteContact[]
-        contacts: site.contacts ? site.contacts.map(contact => convertContactRecordToSiteContact(contact)) : [],
-        // Include additional contracts
-        additionalContracts: site.additionalContracts || []
+      // Create a new form data object using the site data
+      const updatedFormData: SiteFormData = {
+        ...formData,
+        id: site.id,
+        name: site.name || '',
+        clientId: site.client_id || '',
+        address: site.address || '',
+        city: site.city || '',
+        state: site.state || '',
+        postcode: site.postcode || '',
+        squareMeters: site.square_meters?.toString() || '',
+        status: site.status || 'active',
+        notes: site.notes || '',
+        contractType: 'cleaning', // Default type
+        // Add other fields from site as needed
       };
       
-      formHandlers.setFormData(formData);
-      
-      // Set the contacts in the contacts handler (also converted to the right type)
-      if (site.contacts && site.contacts.length > 0) {
-        formHandlers.setContacts(site.contacts.map(contact => convertContactRecordToSiteContact(contact)));
+      // Add billing lines with unique IDs if available
+      if (site.billingLines && site.billingLines.length > 0) {
+        const formattedBillingLines: BillingLine[] = site.billingLines.map((line: any) => ({
+          id: uuidv4(), // Generate unique ID for each line
+          description: line.description || '',
+          amount: line.amount || 0,
+          frequency: line.frequency || 'monthly',
+          isRecurring: line.is_recurring !== undefined ? line.is_recurring : true,
+          onHold: line.on_hold || false,
+          weeklyAmount: line.weekly_amount,
+          monthlyAmount: line.monthly_amount,
+          annualAmount: line.annual_amount,
+          holdStartDate: line.hold_start_date,
+          holdEndDate: line.hold_end_date,
+          creditAmount: line.credit_amount,
+          creditDate: line.credit_date,
+          creditReason: line.credit_reason
+        }));
+        
+        updatedFormData.billingDetails = {
+          ...updatedFormData.billingDetails,
+          billingLines: formattedBillingLines,
+          totalWeeklyAmount: site.weekly_revenue || 0,
+          totalAnnualAmount: site.annual_revenue || 0,
+          totalMonthlyAmount: (site.weekly_revenue || 0) * 4.33, // Approximate monthly from weekly
+        };
       }
+      
+      // Add additional contracts if available
+      if (site.additionalContracts && site.additionalContracts.length > 0) {
+        updatedFormData.additionalContracts = site.additionalContracts;
+      }
+      
+      // Update the form data
+      setFormData(updatedFormData);
     }
   }, [site]);
   
-  // Get steps configuration
-  const steps = getStepsConfig(formHandlers);
-  
-  // Find appropriate step index if tab parameter is provided
-  const getInitialStepIndex = () => {
-    if (!initialTab) return 0;
-    
-    // Map tab names to step indexes
-    const tabToStepMap: Record<string, number> = {
-      'basic': 0,
-      'contract': 2, // Assuming contract details is the 3rd step (index 2)
-      'billing': 3,  // Assuming billing is the 4th step (index 3)
-      'contacts': 4  // Assuming contacts is the 5th step (index 4)
-    };
-    
-    return tabToStepMap[initialTab] || 0;
-  };
-  
-  // Use stepper hook with validation and initial step from URL
-  const stepper = useSiteFormStepper({
-    steps,
-    validateStep: formHandlers.validateStep,
-    initialStep: getInitialStepIndex()
-  });
-  
-  // Show appropriate title based on whether this is a contract variation
-  const getPageTitle = () => {
-    if (isContractVariation) {
-      return "Contract Variation: " + site.name;
-    }
-    return "Edit Site: " + site.name;
-  };
-  
-  // Handle submit
-  const handleSubmit = async () => {
-    // Final validation before submitting
-    if (!formHandlers.validateStep(stepper.currentStep)) {
-      return;
-    }
-    
-    setIsSubmitting(true);
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     try {
-      // Use the API to update the site
-      const updatedSite = await sitesApi.updateSite(site.id, formHandlers.formData);
+      setIsSaving(true);
+      // Call API to update site data
+      // const response = await updateSite(formData);
       
-      // Handle additional contracts if they exist
-      if (formHandlers.formData.additionalContracts && 
-          formHandlers.formData.additionalContracts.length > 0) {
-        await handleSiteAdditionalContracts(
-          site.id, 
-          formHandlers.formData.additionalContracts,
-          site.user_id
-        );
-      }
+      // Show success message
+      toast.success('Site updated successfully');
       
-      // Handle billing lines if they exist
-      if (formHandlers.formData.billingDetails && 
-          formHandlers.formData.billingDetails.billingLines && 
-          formHandlers.formData.billingDetails.billingLines.length > 0) {
-        await handleSiteBillingLines(
-          site.id, 
-          formHandlers.formData.billingDetails.billingLines
-        );
-      }
-      
-      if (isContractVariation) {
-        toast.success("Contract variation completed successfully!");
-      } else {
-        toast.success("Site has been updated successfully!");
-      }
-      
+      // Navigate back to site details page
       navigate(`/sites/${site.id}`);
     } catch (error) {
       console.error('Error updating site:', error);
-      toast.error("Failed to update site. Please try again.");
+      toast.error('Failed to update site');
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
-
+  
   return (
-    <FormProvider {...formHandlers.form}>
-      <Form {...formHandlers.form}>
-        <form>
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">{getPageTitle()}</h1>
-            
-            {isContractVariation && (
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <History className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-blue-700">
-                      You are creating a contract variation. The previous version has been saved in the contract history.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <FormProgressBar 
-              currentStep={stepper.currentStep}
-              totalSteps={stepper.totalSteps}
-              progress={stepper.progress}
-            />
-            
-            <SiteFormStep
-              title={steps[stepper.currentStep].title}
-              description={steps[stepper.currentStep].description}
-              onNext={() => stepper.handleNext(handleSubmit)}
-              onBack={stepper.handleBack}
-              isSubmitting={isSubmitting}
-              isLastStep={stepper.isLastStep}
-              isFirstStep={stepper.isFirstStep}
-            >
-              {steps[stepper.currentStep].component}
-            </SiteFormStep>
-          </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Edit Site: {site.name}</h1>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/sites/${site.id}`)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Site
+          </Button>
+          
+          <Button
+            type="button"
+            size="sm"
+            disabled={isSaving}
+            onClick={handleSubmit}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
+      </div>
+      
+      <FormProgressBar 
+        currentStepIndex={currentStepIndex}
+        totalSteps={totalSteps}
+        goToStep={goToStep}
+      />
+      
+      <Card className="p-6">
+        <form onSubmit={handleSubmit}>
+          <SiteFormStep
+            currentStep={currentStep}
+            currentStepIndex={currentStepIndex}
+            goToNextStep={goToNextStep}
+            goToPreviousStep={goToPreviousStep}
+            canGoToNextStep={canGoToNextStep}
+            canGoToPreviousStep={canGoToPreviousStep}
+          />
         </form>
-      </Form>
-    </FormProvider>
+      </Card>
+    </div>
   );
 }

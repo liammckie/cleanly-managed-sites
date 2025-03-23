@@ -17,14 +17,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { BillingLine } from '../types/billingTypes';
 
 interface BillingDetailsStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
   handleDoubleNestedChange: (section: keyof SiteFormData, subsection: string, field: string, value: any) => void;
   addBillingLine?: () => void;
-  removeBillingLine?: (index: number) => void;
-  updateBillingLine?: (index: number, field: string, value: any) => void;
+  removeBillingLine?: (id: string) => void;
+  updateBillingLine?: (id: string, field: string, value: any) => void;
 }
 
 export function BillingDetailsStep({ 
@@ -357,14 +358,13 @@ export function BillingDetailsStep({
         </div>
         
         <div className="space-y-4">
-          {formData.billingDetails.billingLines && formData.billingDetails.billingLines.map((line, index) => (
+          {formData.billingDetails.billingLines && formData.billingDetails.billingLines.map((line: BillingLine) => (
             <BillingLineItem
-              key={line.id || index}
+              key={line.id}
               line={line}
-              index={index}
               updateLine={updateBillingLine!}
               removeLine={removeBillingLine!}
-              isFirst={index === 0}
+              isFirst={formData.billingDetails.billingLines.indexOf(line) === 0}
             />
           ))}
         </div>

@@ -1,65 +1,69 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { sitesApi } from '@/lib/api/sites/sitesApi';
-import { getSiteAdditionalContracts, convertDbContractsToContractDetails } from '@/lib/api/sites/additionalContractsApi';
+import { getSiteById } from '@/lib/api/sites/sitesApi';
 import { getSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
+import { getSiteAdditionalContracts, convertDbContractsToContractDetails } from '@/lib/api/sites/additionalContractsApi';
 
-export function useSite(siteId: string | undefined) {
-  const query = useQuery({
+export const useSite = (siteId?: string) => {
+  const { data: site, isLoading: siteLoading, error: siteError } = useQuery({
     queryKey: ['site', siteId],
-    queryFn: async () => {
-      if (!siteId) return null;
-      
-      // Get basic site data
-      const site = await sitesApi.getSiteById(siteId);
-      
-      if (!site) return null;
-
-      try {
-        // Get additional contracts
-        const additionalContractsData = await getSiteAdditionalContracts(siteId);
-        if (additionalContractsData && additionalContractsData.length > 0) {
-          site.additionalContracts = convertDbContractsToContractDetails(additionalContractsData);
-        } else {
-          site.additionalContracts = [];
-        }
-        
-        // Get billing lines if not already included
-        if (site.billing_details && 
-            (!site.billing_details.billingLines || site.billing_details.billingLines.length === 0)) {
-          const billingLinesData = await getSiteBillingLines(siteId);
-          if (billingLinesData && billingLinesData.length > 0) {
-            // Ensure billing_details is an object
-            site.billing_details = site.billing_details || {};
-            
-            // Convert DB format to app format
-            site.billing_details.billingLines = billingLinesData.map(line => ({
-              id: line.id,
-              description: line.description,
-              amount: line.amount,
-              frequency: line.frequency,
-              isRecurring: line.is_recurring,
-              onHold: line.on_hold,
-              weeklyAmount: line.weekly_amount,
-              monthlyAmount: line.monthly_amount,
-              annualAmount: line.annual_amount
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching additional site data:", error);
-        // Don't fail the whole query if these additional fetches fail
-      }
-      
-      return site;
-    },
-    enabled: !!siteId
+    queryFn: () => getSiteById(siteId as string),
+    enabled: !!siteId,
   });
 
-  return {
-    site: query.data,
-    isLoading: query.isLoading,
-    error: query.error,
-    isError: query.isError,
+  // Fetch billing lines for the site
+  const { data: billingLines, isLoading: billingLinesLoading } = useQuery({
+    queryKey: ['site-billing-lines', siteId],
+    queryFn: () => getSiteBillingLines(siteId as string),
+    enabled: !!siteId,
+  });
+
+  // Fetch additional contracts for the site
+  const { data: additionalContractsData, isLoading: additionalContractsLoading } = useQuery({
+    queryKey: ['site-additional-contracts', siteId],
+    queryFn: () => getSiteAdditionalContracts(siteId as string),
+    enabled: !!siteId,
+  });
+
+  // Convert additional contracts from DB format to app format
+  const additionalContracts = additionalContractsData 
+    ? convertDbContractsToContractDetails(additionalContractsData)
+    : [];
+
+  // Calculate total revenue
+  const calculateRevenue = () => {
+    if (!billingLines) return { weekly: 0, annual: 0 };
+    
+    let weeklyTotal = 0;
+    let annualTotal = 0;
+    
+    billingLines.forEach((line: any) => {
+      if (!line.on_hold) {
+        weeklyTotal += line.weekly_amount || 0;
+        annualTotal += line.annual_amount || 0;
+      }
+    });
+    
+    return {
+      weekly: weeklyTotal,
+      annual: annualTotal
+    };
   };
-}
+
+  const revenue = calculateRevenue();
+
+  // Enhance the site data with the billing lines and revenue data
+  const enhancedSite = site ? {
+    ...site,
+    billingLines,
+    additionalContracts,
+    weekly_revenue: revenue.weekly,
+    annual_revenue: revenue.annual,
+  } : null;
+
+  return {
+    site: enhancedSite,
+    isLoading: siteLoading || billingLinesLoading || additionalContractsLoading,
+    error: siteError,
+  };
+};

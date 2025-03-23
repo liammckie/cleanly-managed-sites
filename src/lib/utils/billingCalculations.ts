@@ -106,3 +106,28 @@ export const calculateTotalBillingAmounts = (billingLines: any[]) => {
   
   return totals;
 };
+
+// Check if a site's billing is on hold based on hold dates
+export const isSiteBillingOnHold = (
+  onHold?: boolean,
+  holdStartDate?: string,
+  holdEndDate?: string
+): boolean => {
+  if (!onHold) {
+    return false;
+  }
+  
+  const now = new Date();
+  const startDate = holdStartDate ? new Date(holdStartDate) : null;
+  const endDate = holdEndDate ? new Date(holdEndDate) : null;
+  
+  // If on hold with no start date or start date is in the past
+  if (!startDate || startDate <= now) {
+    // If no end date or end date is in the future
+    if (!endDate || endDate > now) {
+      return true;
+    }
+  }
+  
+  return false;
+};
