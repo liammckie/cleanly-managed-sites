@@ -19,18 +19,34 @@ const Contracts = () => {
     .filter(site => site.contract_details)
     .map(site => {
       const contractDetails = site.contract_details || {};
+      
+      let serviceDeliveryType = 'direct';
+      if (site.billing_details) {
+        try {
+          const billingDetails = typeof site.billing_details === 'string' 
+            ? JSON.parse(site.billing_details) 
+            : site.billing_details;
+            
+          serviceDeliveryType = billingDetails.serviceDeliveryType || 'direct';
+        } catch (e) {
+          // Default to direct if parsing fails
+        }
+      }
+      
       return {
         id: site.id,
         site_name: site.name,
         client_id: site.client_id,
         client_name: site.client_name,
+        service_delivery_type: serviceDeliveryType,
         contract_start: contractDetails.start_date,
         contract_end: contractDetails.end_date,
         contract_number: contractDetails.contract_number,
         contract_type: contractDetails.contract_type || 'Unknown',
         renewal_type: contractDetails.renewal_type || 'Unknown',
-        contract_value: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
+        weekly_value: site.monthly_revenue ? site.monthly_revenue / 4.33 : 0,
         monthly_value: site.monthly_revenue || 0,
+        contract_value: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
         contract_status: contractDetails.status || 'Unknown',
         notice_period: contractDetails.notice_period || 'Unknown',
         auto_renewal: contractDetails.auto_renewal || false,
@@ -45,6 +61,12 @@ const Contracts = () => {
   const tabulatorColumns = [
     { title: "Site Name", field: "site_name", headerFilter: true, sorter: "string", width: 180 },
     { title: "Client", field: "client_name", headerFilter: true, sorter: "string" },
+    { 
+      title: "Service Type", 
+      field: "service_delivery_type", 
+      headerFilter: "list", 
+      headerFilterParams: { values: { direct: "Direct", contractor: "Contractor" } }
+    },
     { 
       title: "Contract Type", 
       field: "contract_type", 
@@ -83,6 +105,21 @@ const Contracts = () => {
     { 
       title: "Notice Period", 
       field: "notice_period"
+    },
+    { 
+      title: "Weekly Revenue", 
+      field: "weekly_value", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      headerFilter: "number",
+      headerFilterPlaceholder: "Filter...",
+      topCalc: "sum",
+      topCalcFormatter: "money",
+      topCalcFormatterParams: { precision: 2, symbol: "$" },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
     },
     { 
       title: "Monthly Revenue", 

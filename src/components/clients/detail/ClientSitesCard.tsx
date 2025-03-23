@@ -53,20 +53,54 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
   };
 
   // Prepare site data for tabulator
-  const enhancedSiteData = sites.map(site => ({
-    ...site,
-    annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
-    profit_margin: site.monthly_revenue && site.monthly_cost ? 
-      ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
-  }));
+  const enhancedSiteData = sites.map(site => {
+    let serviceDeliveryType = 'direct';
+    if (site.billing_details) {
+      try {
+        const billingDetails = typeof site.billing_details === 'string' 
+          ? JSON.parse(site.billing_details) 
+          : site.billing_details;
+          
+        serviceDeliveryType = billingDetails.serviceDeliveryType || 'direct';
+      } catch (e) {
+        // Default to direct if parsing fails
+      }
+    }
+    
+    return {
+      ...site,
+      annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
+      weekly_revenue: site.monthly_revenue ? site.monthly_revenue / 4.33 : 0,
+      service_delivery_type: serviceDeliveryType,
+      profit_margin: site.monthly_revenue && site.monthly_cost ? 
+        ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
+    };
+  });
 
   // Tabulator columns
   const tabulatorColumns = [
     { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
+    { 
+      title: "Service Type", 
+      field: "service_delivery_type", 
+      headerFilter: "list", 
+      headerFilterParams: { values: { direct: "Direct", contractor: "Contractor" } },
+      formatter: "text"
+    },
     { title: "Address", field: "address", headerFilter: true },
     { title: "City", field: "city", headerFilter: true },
     { title: "State", field: "state" },
     { title: "Representative", field: "representative", headerFilter: true },
+    { 
+      title: "Weekly Revenue", 
+      field: "weekly_revenue", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
+    },
     { 
       title: "Monthly Revenue", 
       field: "monthly_revenue", 

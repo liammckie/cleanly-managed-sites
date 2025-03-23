@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,15 +46,56 @@ export function SitesList() {
     return site.monthly_revenue * 12;
   };
 
+  // Get service delivery type from billing details
+  const getServiceDeliveryType = (site: SiteRecord) => {
+    if (site.billing_details && typeof site.billing_details === 'string') {
+      try {
+        const billingDetails = JSON.parse(site.billing_details);
+        return billingDetails.serviceDeliveryType || 'direct';
+      } catch (e) {
+        return 'direct';
+      }
+    }
+    return 'direct';
+  };
+
   // Table columns for tabulator
   const tabulatorColumns = [
     { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
     { title: "Client", field: "client_name", headerFilter: true, sorter: "string" },
+    { 
+      title: "Service Type", 
+      field: "service_delivery_type", 
+      headerFilter: "list", 
+      headerFilterParams: { values: { direct: "Direct", contractor: "Contractor" } },
+      formatter: "text",
+      mutator: function(value: any, data: any) {
+        return data.service_delivery_type || 'direct';
+      }
+    },
     { title: "Address", field: "address", headerFilter: true },
     { title: "City", field: "city", headerFilter: true },
     { title: "State", field: "state", headerFilter: true },
     { title: "Postcode", field: "postcode", headerFilter: true },
     { title: "Representative", field: "representative", headerFilter: true },
+    { 
+      title: "Weekly Revenue", 
+      field: "weekly_revenue", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      headerFilter: "number",
+      headerFilterPlaceholder: "Filter...",
+      topCalc: "sum",
+      topCalcFormatter: "money",
+      topCalcFormatterParams: { precision: 2, symbol: "$" },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" },
+      mutator: function(value: any, data: any) {
+        return data.monthly_revenue ? data.monthly_revenue / 4.33 : 0;
+      }
+    },
     { 
       title: "Monthly Revenue", 
       field: "monthly_revenue", 
@@ -154,13 +194,30 @@ export function SitesList() {
     );
   }
 
-  // Add annual revenue data for the table view
-  const enhancedSiteData = filteredSites.map(site => ({
-    ...site,
-    annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
-    profit_margin: site.monthly_revenue && site.monthly_cost ? 
-      ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
-  }));
+  // Add service delivery type data for the table view
+  const enhancedSiteData = filteredSites.map(site => {
+    let serviceDeliveryType = 'direct';
+    if (site.billing_details) {
+      try {
+        const billingDetails = typeof site.billing_details === 'string' 
+          ? JSON.parse(site.billing_details) 
+          : site.billing_details;
+          
+        serviceDeliveryType = billingDetails.serviceDeliveryType || 'direct';
+      } catch (e) {
+        // Default to direct if parsing fails
+      }
+    }
+    
+    return {
+      ...site,
+      annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
+      weekly_revenue: site.monthly_revenue ? site.monthly_revenue / 4.33 : 0,
+      service_delivery_type: serviceDeliveryType,
+      profit_margin: site.monthly_revenue && site.monthly_cost ? 
+        ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -228,7 +285,7 @@ export function SitesList() {
             columns={tabulatorColumns}
             title="Site List"
             initialSort={[{ column: "name", dir: "asc" }]}
-            groupBy={["client_name", "status", "city", "state"]}
+            groupBy={["client_name", "service_delivery_type", "status", "city", "state"]}
             filename="sites-export"
           />
         )

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BillingDetails } from '../types/billingTypes';
 import { isSiteBillingOnHold } from '@/lib/utils/billingCalculations';
-import { PauseCircle } from 'lucide-react';
+import { PauseCircle, UserCheck, Users } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -37,6 +37,26 @@ export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryP
             </span>
           </div>
         )}
+
+        <div className="flex items-center mb-3">
+          <div className={`px-3 py-1 rounded text-sm font-medium flex items-center ${
+            billingDetails.serviceDeliveryType === 'contractor' 
+              ? 'bg-orange-100 text-orange-800' 
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {billingDetails.serviceDeliveryType === 'contractor' ? (
+              <>
+                <Users size={14} className="mr-1" />
+                <span>Contractor Delivery</span>
+              </>
+            ) : (
+              <>
+                <UserCheck size={14} className="mr-1" />
+                <span>Direct Delivery</span>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="space-y-2">
