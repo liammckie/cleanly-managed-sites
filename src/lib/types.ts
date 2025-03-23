@@ -77,6 +77,7 @@ export type SiteRecord = {
   phone?: string;
   email?: string;
   client_id: string;
+  client_name?: string; // Add client_name property for join results
   custom_id?: string;
   monthly_cost?: number;
   monthly_revenue?: number;
@@ -91,6 +92,7 @@ export type SiteRecord = {
   contract_details?: any;
   billing_details?: any;
   subcontractors?: any[];
+  contacts?: ContactRecord[];
 };
 
 // Contractor related types

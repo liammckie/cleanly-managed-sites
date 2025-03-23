@@ -71,6 +71,11 @@ export const useSiteFormContacts = () => {
     setValue(`contacts.${index}.is_primary`, true);
   }, [contacts, setValue]);
   
+  // Handle contact change for compatibility with siteFormConfig
+  const handleContactChange = useCallback((index: number, field: keyof ContactRecord, value: any) => {
+    setValue(`contacts.${index}.${field}`, value);
+  }, [setValue]);
+  
   // Convert contacts to the format needed for the API
   const prepareContactsForSubmission = useCallback((siteId: string) => {
     return getValues('contacts').map((contact: any) => ({
@@ -83,7 +88,7 @@ export const useSiteFormContacts = () => {
       notes: contact.notes,
       entity_id: siteId,
       entity_type: 'site',
-      // Convert any Symbol to string with String()
+      // Convert any Symbol to string with String() if it exists
       ...(contact.id ? { id: String(contact.id) } : {}),
     }));
   }, [getValues]);
@@ -94,6 +99,7 @@ export const useSiteFormContacts = () => {
     updateContact,
     removeContact,
     setAsPrimary,
+    handleContactChange,
     prepareContactsForSubmission,
   };
 };
