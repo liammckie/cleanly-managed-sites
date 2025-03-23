@@ -1,43 +1,57 @@
-
 import { useState } from 'react';
-import { StepConfigItem } from '@/components/sites/forms/siteFormConfig';
+import { StepConfig } from '@/components/sites/forms/siteFormConfig';
 
 type UseSiteFormStepperProps = {
-  steps: StepConfigItem[];
-  validateStep: (stepIndex: number) => boolean;
-  initialStep?: number;
-}
+  steps: StepConfig[];
+  validateStep?: (stepIndex: number) => boolean;
+};
 
-export function useSiteFormStepper({ steps, validateStep, initialStep = 0 }: UseSiteFormStepperProps) {
-  const [currentStep, setCurrentStep] = useState(initialStep);
-  
+export const useSiteFormStepper = ({ steps, validateStep }: UseSiteFormStepperProps) => {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === steps.length - 1;
+  const totalSteps = steps.length;
+
+  // Calculate progress (0-100)
+  const progress = totalSteps > 1 
+    ? Math.round(((currentStep + 1) / totalSteps) * 100) 
+    : 100;
+
+  // Handle moving to the next step
   const handleNext = (onSubmit?: () => void) => {
-    // Validate the current step before proceeding
-    if (!validateStep(currentStep)) {
+    // If validation function is provided, validate the current step
+    if (validateStep && !validateStep(currentStep)) {
       return;
     }
-    
-    if (currentStep === steps.length - 1) {
-      onSubmit?.();
+
+    if (isLastStep) {
+      // If this is the last step and submit callback is provided, call it
+      if (onSubmit) {
+        onSubmit();
+      }
       return;
     }
-    
-    setCurrentStep(prevStep => prevStep + 1);
-    window.scrollTo(0, 0);
+
+    // Otherwise, move to the next step
+    setCurrentStep(prev => prev + 1);
   };
-  
+
+  // Handle moving to the previous step
   const handleBack = () => {
-    setCurrentStep(prevStep => prevStep - 1);
-    window.scrollTo(0, 0);
+    if (!isFirstStep) {
+      setCurrentStep(prev => prev - 1);
+    }
   };
 
   return {
     currentStep,
-    isFirstStep: currentStep === 0,
-    isLastStep: currentStep === steps.length - 1,
-    totalSteps: steps.length,
-    progress: Math.round(((currentStep + 1) / steps.length) * 100),
+    isFirstStep,
+    isLastStep,
+    totalSteps,
+    progress,
     handleNext,
-    handleBack
+    handleBack,
+    steps
   };
-}
+};

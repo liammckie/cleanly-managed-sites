@@ -7,7 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { SiteFormStep } from './SiteFormStep';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
-import { getStepsConfig } from './siteFormConfig';
+import { getSiteFormSteps } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi } from '@/lib/api';
 import { SiteFormData, getInitialFormData } from './siteFormTypes';
@@ -27,7 +27,33 @@ export function CreateSiteForm() {
   const formHandlers = useSiteForm();
   
   // Get steps configuration
-  const steps = getStepsConfig(formHandlers);
+  const steps = getSiteFormSteps(
+    formHandlers.formData,
+    formHandlers.handleChange,
+    formHandlers.handleNestedChange,
+    formHandlers.handleArrayChange || (() => {}),
+    formHandlers.handleArrayUpdate || (() => {}),
+    formHandlers.handleDoubleNestedChange,
+    formHandlers.addArrayItem || (() => {}),
+    formHandlers.removeArrayItem || (() => {}),
+    formHandlers.addSubcontractor,
+    formHandlers.updateSubcontractor,
+    formHandlers.removeSubcontractor,
+    formHandlers.addReplenishable,
+    formHandlers.updateReplenishable,
+    formHandlers.removeReplenishable,
+    formHandlers.addBillingLine,
+    formHandlers.updateBillingLine,
+    formHandlers.removeBillingLine,
+    formHandlers.addContractTerm,
+    formHandlers.updateContractTerm,
+    formHandlers.removeContractTerm,
+    formHandlers.addAdditionalContract,
+    formHandlers.updateAdditionalContract,
+    formHandlers.removeAdditionalContract,
+    formHandlers.handleFileUpload,
+    formHandlers.handleFileRemove
+  );
   
   // Use stepper hook with validation
   const stepper = useSiteFormStepper({

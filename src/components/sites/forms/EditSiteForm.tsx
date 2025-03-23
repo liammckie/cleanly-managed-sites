@@ -11,17 +11,11 @@ import { FormProgressBar } from './FormProgressBar';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { toast } from 'sonner';
 import { SiteFormData } from './siteFormTypes';
-import { SiteRecord } from '@/lib/api/sites/sitesApi';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from './types/billingTypes';
 
 interface EditSiteFormProps {
-  site: SiteRecord & {
-    billingLines?: any[];
-    additionalContracts?: any[];
-    weekly_revenue?: number;
-    annual_revenue?: number;
-  };
+  site: any; // Using any to avoid the SiteRecord import issue
 }
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
@@ -33,25 +27,16 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   const { formData, setFormData, validateStep } = siteForm;
   
   // Initialize the stepper
-  const { 
-    currentStepIndex, 
-    totalSteps,
-    currentStep,
-    goToNextStep,
-    goToPreviousStep,
-    canGoToNextStep,
-    canGoToPreviousStep,
-    goToStep
-  } = useSiteFormStepper({
+  const stepper = useSiteFormStepper({
     steps: getSiteFormSteps(
       formData,
       siteForm.handleChange,
       siteForm.handleNestedChange,
-      siteForm.handleArrayChange,
-      siteForm.handleArrayUpdate,
+      siteForm.handleArrayChange || (() => {}),
+      siteForm.handleArrayUpdate || (() => {}),
       siteForm.handleDoubleNestedChange,
-      siteForm.addArrayItem,
-      siteForm.removeArrayItem,
+      siteForm.addArrayItem || (() => {}),
+      siteForm.removeArrayItem || (() => {}),
       siteForm.addSubcontractor,
       siteForm.updateSubcontractor,
       siteForm.removeSubcontractor,
@@ -67,8 +52,8 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       siteForm.addAdditionalContract,
       siteForm.updateAdditionalContract,
       siteForm.removeAdditionalContract,
-      siteForm.handleFileUpload,
-      siteForm.handleFileRemove
+      siteForm.handleFileUpload || (() => {}),
+      siteForm.handleFileRemove || (() => {})
     ),
     validateStep
   });
@@ -79,7 +64,6 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       // Create a new form data object using the site data
       const updatedFormData: SiteFormData = {
         ...formData,
-        id: site.id,
         name: site.name || '',
         clientId: site.client_id || '',
         address: site.address || '',
@@ -181,21 +165,24 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       </div>
       
       <FormProgressBar 
-        currentStepIndex={currentStepIndex}
-        totalSteps={totalSteps}
-        goToStep={goToStep}
+        currentStep={stepper.currentStep}
+        totalSteps={stepper.totalSteps}
+        progress={stepper.progress}
       />
       
       <Card className="p-6">
         <form onSubmit={handleSubmit}>
           <SiteFormStep
-            currentStep={currentStep}
-            currentStepIndex={currentStepIndex}
-            goToNextStep={goToNextStep}
-            goToPreviousStep={goToPreviousStep}
-            canGoToNextStep={canGoToNextStep}
-            canGoToPreviousStep={canGoToPreviousStep}
-          />
+            title={stepper.steps[stepper.currentStep].title}
+            description={stepper.steps[stepper.currentStep].description}
+            onNext={() => stepper.handleNext()}
+            onBack={stepper.handleBack}
+            isSubmitting={isSaving}
+            isLastStep={stepper.isLastStep}
+            isFirstStep={stepper.isFirstStep}
+          >
+            {stepper.steps[stepper.currentStep].component}
+          </SiteFormStep>
         </form>
       </Card>
     </div>

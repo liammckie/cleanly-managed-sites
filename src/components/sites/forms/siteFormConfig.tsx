@@ -1,17 +1,14 @@
-
 import React from 'react';
-import { 
-  BasicInformationStep, 
-  ContactsStep, 
-  ContractDetailsStep, 
-  JobSpecificationsStep,
-  PeriodicalsStep,
-  ReplenishablesStep,
-  SecurityStep,
-  SubcontractorsStep,
-  ReviewStep,
-  BillingDetailsStep
-} from './steps';
+import { BasicInformationStep } from './steps/BasicInformationStep';
+import { ContactsStep } from './steps/ContactsStep';
+import { ContractDetailsStep } from './steps/ContractDetailsStep';
+import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
+import { PeriodicalsStep } from './steps/PeriodicalsStep';
+import { ReplenishablesStep } from './steps/ReplenishablesStep';
+import { SecurityStep } from './steps/SecurityStep';
+import { SubcontractorsStep } from './steps/SubcontractorsStep';
+import { ReviewStep } from './steps/ReviewStep';
+import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { SiteFormData } from './siteFormTypes';
 
 export type StepConfig = {
