@@ -12,6 +12,7 @@ import { FormProgressBar } from './FormProgressBar';
 import { sitesApi, SiteRecord } from '@/lib/api';
 import { getInitialFormData } from './siteFormTypes';
 import { convertContactRecordToSiteContact } from './types/contactTypes';
+import { History } from 'lucide-react';
 
 interface EditSiteFormProps {
   site: SiteRecord;
