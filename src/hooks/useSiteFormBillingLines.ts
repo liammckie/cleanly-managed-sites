@@ -1,6 +1,8 @@
 
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 import { BillingLine, BillingFrequency } from '@/components/sites/forms/types/billingTypes';
+import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useSiteFormBillingLines = (
   formData: SiteFormData,
@@ -11,10 +13,14 @@ export const useSiteFormBillingLines = (
   // Add new billing line
   const addBillingLine = () => {
     const newBillingLine: BillingLine = {
+      id: uuidv4(),
       description: '',
       amount: 0,
       frequency: 'monthly',
-      isRecurring: true
+      isRecurring: true,
+      weeklyAmount: 0,
+      monthlyAmount: 0,
+      annualAmount: 0
     };
     
     const updatedBillingLines = [...(formData.billingDetails.billingLines || []), newBillingLine];
@@ -59,6 +65,18 @@ export const useSiteFormBillingLines = (
       ...updatedBillingLines[index],
       [field]: value
     };
+    
+    // If amount or frequency is updated, recalculate the weekly, monthly and annual amounts
+    if (field === 'amount' || field === 'frequency') {
+      const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
+        typeof value === 'number' && field === 'amount' ? value : updatedBillingLines[index].amount,
+        field === 'frequency' ? value as BillingFrequency : updatedBillingLines[index].frequency as BillingFrequency
+      );
+      
+      updatedBillingLines[index].weeklyAmount = weeklyAmount;
+      updatedBillingLines[index].monthlyAmount = monthlyAmount;
+      updatedBillingLines[index].annualAmount = annualAmount;
+    }
     
     setFormData(prev => ({
       ...prev,

@@ -7,6 +7,15 @@ export interface BillingLine {
   amount: number;
   frequency: BillingFrequency;
   isRecurring: boolean;
+  weeklyAmount?: number;   // Calculated weekly amount
+  monthlyAmount?: number;  // Calculated monthly amount
+  annualAmount?: number;   // Calculated annual amount
+  onHold?: boolean;        // Flag to indicate if billing line is on hold
+  holdStartDate?: string;  // When the hold started
+  holdEndDate?: string;    // When the hold will end
+  creditAmount?: number;   // Amount credited
+  creditDate?: string;     // Date of credit
+  creditReason?: string;   // Reason for the credit
 }
 
 export interface LaborPlan {
@@ -47,11 +56,18 @@ export interface BillingDetails {
   annualForecast?: string;
   serviceDeliveryType?: 'direct' | 'contractor';
   annualContractorCost?: number;
-  weeklyContractorCost?: number; // Added property
-  monthlyContractorCost?: number; // Added property
-  contractorCostFrequency?: 'weekly' | 'monthly' | 'annually'; // Added property
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  contractorCostFrequency?: 'weekly' | 'monthly' | 'annually';
   contractorInvoiceFrequency?: 'weekly' | 'monthly' | 'quarterly';
   weeklyBudget?: number;
   laborPlan?: LaborPlan;
   billingLines: BillingLine[];
+  billingOnHold?: boolean;       // Flag to indicate if all billing is on hold
+  billingHoldStartDate?: string; // When the hold started
+  billingHoldEndDate?: string;   // When the hold will end
+  billingHoldReason?: string;    // Reason for the hold
+  totalWeeklyAmount?: number;    // Total weekly amount across all billing lines
+  totalMonthlyAmount?: number;   // Total monthly amount across all billing lines
+  totalAnnualAmount?: number;    // Total annual amount across all billing lines
 }
