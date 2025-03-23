@@ -16,7 +16,7 @@ import { ContactRecord } from '@/lib/types';
 import { Mail, Phone, Star, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ClientContactsCardProps {
+export interface ClientContactsCardProps {
   clientId: string;
 }
 
