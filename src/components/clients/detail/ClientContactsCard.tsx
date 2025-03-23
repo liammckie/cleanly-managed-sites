@@ -8,7 +8,11 @@ import { useClientContacts } from '@/hooks/useClientContacts';
 import { ContactRecord } from '@/lib/types';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 
-export function ClientContactsCard({ clientId }: { clientId: string }) {
+interface ClientContactsCardProps {
+  clientId: string;
+}
+
+export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
   const {
     contacts,
     isLoading,
@@ -22,17 +26,14 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
     isDeleting,
   } = useClientContacts(clientId);
   
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
   
-  const handleAddContact = () => {
-    setEditingContact(null);
-    setIsDialogOpen(true);
+  const handleAddContact = async (contactData: Partial<ContactRecord>) => {
+    await addContact(contactData);
   };
   
   const handleEditContact = (contact: ContactRecord) => {
     setEditingContact(contact);
-    setIsDialogOpen(true);
   };
   
   const handleDeleteContact = (contactId: string) => {
@@ -41,13 +42,13 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
     }
   };
   
-  const handleSaveContact = (contactData: Partial<ContactRecord>) => {
+  const handleSaveContact = async (contactData: Partial<ContactRecord>) => {
     if (editingContact) {
-      updateContact({ id: editingContact.id, contactData });
+      await updateContact({ id: editingContact.id, contactData });
+      setEditingContact(null);
     } else {
-      addContact(contactData);
+      await addContact(contactData);
     }
-    setIsDialogOpen(false);
   };
   
   if (isLoading) {
@@ -89,7 +90,7 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
           <span>Contacts</span>
           <Button 
             size="sm" 
-            onClick={handleAddContact} 
+            onClick={() => setEditingContact(null)}
             disabled={isAdding}
             className="flex items-center gap-1"
           >
@@ -170,7 +171,7 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
             <p className="text-muted-foreground mb-4">No contacts added yet.</p>
             <Button 
               variant="outline" 
-              onClick={handleAddContact}
+              onClick={() => setEditingContact(null)}
               className="flex items-center gap-1"
             >
               <UserPlus className="h-4 w-4" />
@@ -181,7 +182,6 @@ export function ClientContactsCard({ clientId }: { clientId: string }) {
       </CardContent>
       
       <ContactDialog 
-        trigger={null}
         contact={editingContact || undefined}
         entityType="client"
         entityId={clientId}
