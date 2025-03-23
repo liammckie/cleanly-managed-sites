@@ -73,63 +73,6 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
   }
 };
 
-// Function to create a user - now delegates to authApi
-const createUserFn = async (userData: {
-  email: string;
-  full_name: string;
-  role_id: string;
-  password: string;
-}): Promise<SystemUser> => {
-  try {
-    console.log("Creating user via authApi:", userData.email);
-    // Use the authApi to handle the user creation
-    const profileData = await authApi.createUser(
-      userData.email,
-      userData.password,
-      userData.full_name,
-      userData.role_id
-    );
-    
-    // Fetch the role
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('id', userData.role_id)
-      .single();
-    
-    if (roleError) {
-      console.error('Error fetching role:', roleError);
-      throw roleError;
-    }
-    
-    // Return a proper SystemUser object
-    return {
-      id: profileData.id,
-      email: profileData.email,
-      full_name: profileData.full_name,
-      role: {
-        id: roleData.id,
-        name: roleData.name,
-        permissions: Object.keys(roleData.permissions).filter(key => 
-          roleData.permissions[key] === true
-        ),
-        description: roleData.description
-      },
-      status: profileData.status as 'active' | 'inactive' | 'pending',
-      created_at: profileData.created_at,
-      updated_at: profileData.updated_at,
-      avatar_url: profileData.avatar_url,
-      phone: profileData.phone,
-      custom_id: profileData.custom_id,
-      note: profileData.notes,
-      territories: profileData.territories
-    };
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
-  }
-};
-
 export function useUsers() {
   const { data: users, isLoading, error } = useQuery({
     queryKey: ['users'],
@@ -155,18 +98,63 @@ export function useCreateUser() {
   }) => {
     try {
       setIsLoading(true);
-      const newUser = await createUserFn(userData);
+      console.log("Starting user creation process for:", userData.email);
+      
+      // Use the authApi to handle the user creation
+      const newUserProfile = await authApi.createUser(
+        userData.email,
+        userData.password,
+        userData.full_name,
+        userData.role_id
+      );
       
       // Update local cache with new user
       queryClient.setQueryData(['users'], (oldData: SystemUser[] = []) => {
-        return [...oldData, newUser];
+        // Get role info for the new user
+        return [...oldData, {
+          id: newUserProfile.id,
+          email: newUserProfile.email,
+          full_name: newUserProfile.full_name,
+          role: {
+            id: userData.role_id,
+            name: '', // This will be populated when the query refreshes
+            permissions: []
+          },
+          status: newUserProfile.status as 'active' | 'inactive' | 'pending',
+          created_at: newUserProfile.created_at,
+          updated_at: newUserProfile.updated_at,
+          avatar_url: newUserProfile.avatar_url,
+          phone: newUserProfile.phone,
+          custom_id: newUserProfile.custom_id,
+          note: newUserProfile.notes,
+          territories: newUserProfile.territories
+        }];
       });
       
+      // Invalidate the users query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
       toast.success('User created successfully. Check your email for confirmation link.');
-      return newUser;
+      return newUserProfile;
     } catch (error: any) {
       console.error('Failed to create user:', error);
-      toast.error(`Failed to create user: ${error.message}`);
+      
+      // Provide more specific error messages based on the error
+      let errorMessage = 'Failed to create user';
+      if (error.message) {
+        errorMessage = error.message;
+        
+        // Handle specific error types
+        if (error.message.includes('duplicate key')) {
+          errorMessage = 'A user with this email already exists';
+        } else if (error.message.includes('permission denied')) {
+          errorMessage = 'Permission denied. You may not have admin rights';
+        } else if (error.message.includes('infinite recursion')) {
+          errorMessage = 'Database policy error. Try logging out and back in';
+        }
+      }
+      
+      toast.error(`Failed to create user: ${errorMessage}`);
       throw error;
     } finally {
       setIsLoading(false);

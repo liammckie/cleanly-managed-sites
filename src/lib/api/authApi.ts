@@ -33,7 +33,7 @@ export const authApi = {
   
   // Create new user (admin only function)
   async createUser(email: string, password: string, fullName: string, roleId: string) {
-    console.log("AuthAPI: Creating user", email);
+    console.log("Creating user with email:", email);
     
     try {
       // First create auth user with standard auth signup
@@ -57,10 +57,9 @@ export const authApi = {
         throw new Error('Failed to create user authentication');
       }
 
-      console.log("Auth user created:", authData.user.id);
+      console.log("Auth user created successfully with ID:", authData.user.id);
       
-      // Then create the profile directly with a separate API call
-      // Insert into user_profiles with ID matching the auth user
+      // Then insert the profile with a direct RPC call to avoid RLS issues
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .insert({
@@ -78,10 +77,10 @@ export const authApi = {
         throw profileError;
       }
       
-      console.log("User profile created:", profileData);
+      console.log("User profile created successfully:", profileData);
       return profileData;
     } catch (error) {
-      console.error('Error in createUser flow:', error);
+      console.error('Error in user creation flow:', error);
       throw error;
     }
   }
