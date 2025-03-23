@@ -36,7 +36,18 @@ export const useContacts = () => {
   };
 
   // Add a new contact
-  const addContact = async (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => {
+  const addContact = async (contact: {
+    name: string;
+    role: string;
+    entity_id: string;
+    entity_type: 'site' | 'client';
+    email?: string;
+    phone?: string;
+    department?: string;
+    is_primary?: boolean;
+    notes?: string;
+    user_id?: string;
+  }) => {
     setIsLoading(true);
     setError(null);
     

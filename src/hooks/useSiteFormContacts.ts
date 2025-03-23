@@ -1,92 +1,99 @@
 
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { useCallback } from 'react';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { ContactRecord } from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';
 
-export const useSiteFormContacts = (
-  formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>,
-  errors: Record<string, string>,
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
-) => {
-  // Add a new contact
-  const addContact = () => {
-    const newContact: ContactRecord = {
-      name: '',
-      role: '',
-      department: '',
-      email: '',
-      phone: '',
-      is_primary: false,
-      notes: '',
-      entity_id: '',
-      entity_type: 'site'
-    };
+// Type for the site contact form data
+export type SiteContactFormData = {
+  name: string;
+  role: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  is_primary?: boolean;
+  notes?: string;
+};
+
+// Create a hook for handling contacts in the site form
+export const useSiteFormContacts = () => {
+  const { control, setValue, getValues } = useFormContext();
+  
+  // Use the useFieldArray hook to manage the contacts array in the form
+  const {
+    fields: contacts,
+    append,
+    remove,
+    update
+  } = useFieldArray({
+    control,
+    name: 'contacts',
+  });
+  
+  // Add a new contact to the form
+  const addContact = useCallback((contact: SiteContactFormData) => {
+    // Create a temporary ID for the new contact
+    const tempId = uuidv4();
     
-    setFormData(prev => ({
-      ...prev,
-      contacts: [...prev.contacts, newContact]
+    // Add the contact to the form state
+    append({
+      ...contact,
+      id: tempId,
+      entity_type: 'site',
+    });
+    
+    return tempId;
+  }, [append]);
+  
+  // Update an existing contact in the form
+  const updateContact = useCallback((index: number, data: Partial<SiteContactFormData>) => {
+    const currentContact = getValues(`contacts.${index}`);
+    
+    update(index, {
+      ...currentContact,
+      ...data,
+    });
+  }, [getValues, update]);
+  
+  // Remove a contact from the form
+  const removeContact = useCallback((index: number) => {
+    remove(index);
+  }, [remove]);
+  
+  // Set a contact as primary (and unset others)
+  const setAsPrimary = useCallback((index: number) => {
+    // First, unset all contacts as primary
+    contacts.forEach((_, i) => {
+      setValue(`contacts.${i}.is_primary`, false);
+    });
+    
+    // Then set the selected contact as primary
+    setValue(`contacts.${index}.is_primary`, true);
+  }, [contacts, setValue]);
+  
+  // Convert contacts to the format needed for the API
+  const prepareContactsForSubmission = useCallback((siteId: string) => {
+    return getValues('contacts').map((contact: any) => ({
+      name: contact.name,
+      role: contact.role,
+      department: contact.department,
+      email: contact.email,
+      phone: contact.phone,
+      is_primary: contact.is_primary,
+      notes: contact.notes,
+      entity_id: siteId,
+      entity_type: 'site',
+      // Convert any Symbol to string with String()
+      ...(contact.id ? { id: String(contact.id) } : {}),
     }));
-  };
-  
-  // Remove a contact
-  const removeContact = (index: number) => {
-    setFormData(prev => {
-      const updatedContacts = [...prev.contacts];
-      updatedContacts.splice(index, 1);
-      
-      return {
-        ...prev,
-        contacts: updatedContacts
-      };
-    });
-    
-    // Remove any errors related to this contact
-    const updatedErrors = { ...errors };
-    Object.keys(updatedErrors).forEach(key => {
-      if (key.startsWith(`contacts[${index}]`)) {
-        delete updatedErrors[key];
-      }
-    });
-    setErrors(updatedErrors);
-  };
-  
-  // Update contact field
-  const handleContactChange = (index: number, field: keyof ContactRecord, value: any) => {
-    setFormData(prev => {
-      const updatedContacts = [...prev.contacts];
-      
-      updatedContacts[index] = {
-        ...updatedContacts[index],
-        [field]: value
-      };
-      
-      // If this contact is marked as primary, ensure no other contacts are primary
-      if (field === 'is_primary' && value === true) {
-        updatedContacts.forEach((contact, i) => {
-          if (i !== index) {
-            contact.is_primary = false;
-          }
-        });
-      }
-      
-      return {
-        ...prev,
-        contacts: updatedContacts
-      };
-    });
-    
-    // Clear error when field is filled
-    const errorKey = `contacts[${index}].${field}`;
-    if (errors[errorKey] && value && typeof value === 'string' && value.trim()) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[errorKey];
-      setErrors(updatedErrors);
-    }
-  };
+  }, [getValues]);
   
   return {
+    contacts,
     addContact,
+    updateContact,
     removeContact,
-    handleContactChange
+    setAsPrimary,
+    prepareContactsForSubmission,
   };
 };
