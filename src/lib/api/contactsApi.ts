@@ -157,7 +157,7 @@ export const contactsApi = {
 
   // Search for entities to link contacts to (cross-system linking)
   async searchEntities(query: string, entityType?: string): Promise<any[]> {
-    let results = [];
+    let results: any[] = [];
 
     // Search clients
     if (!entityType || entityType === 'client') {
@@ -184,48 +184,56 @@ export const contactsApi = {
 
     // Search sites
     if (!entityType || entityType === 'site') {
-      const { data: sites, error: siteError } = await supabase
-        .from('sites')
-        .select('id, name, client_id, site_code')
-        .ilike('name', `%${query}%`)
-        .limit(5);
+      try {
+        const { data: sites, error: siteError } = await supabase
+          .from('sites')
+          .select('id, name, client_id, site_code')
+          .ilike('name', `%${query}%`)
+          .limit(5);
 
-      if (siteError) {
-        console.error('Error searching sites:', siteError);
-      } else if (sites) {
-        results = [
-          ...results,
-          ...sites.map(site => ({
-            id: site.id,
-            name: site.name,
-            identifier: site.site_code,
-            type: 'site',
-            parent_id: site.client_id
-          }))
-        ];
+        if (siteError) {
+          console.error('Error searching sites:', siteError);
+        } else if (sites) {
+          results = [
+            ...results,
+            ...sites.map(site => ({
+              id: site.id,
+              name: site.name,
+              identifier: site.site_code || '',
+              type: 'site',
+              parent_id: site.client_id
+            }))
+          ];
+        }
+      } catch (error) {
+        console.error('Error in site search:', error);
       }
     }
 
-    // Search suppliers
+    // Search suppliers - check if the table exists first
     if (!entityType || entityType === 'supplier') {
-      const { data: suppliers, error: supplierError } = await supabase
-        .from('suppliers')
-        .select('id, name, supplier_code')
-        .ilike('name', `%${query}%`)
-        .limit(5);
+      try {
+        const { data: suppliers, error: supplierError } = await supabase
+          .from('suppliers')
+          .select('id, name, supplier_code')
+          .ilike('name', `%${query}%`)
+          .limit(5);
 
-      if (supplierError) {
-        console.error('Error searching suppliers:', supplierError);
-      } else if (suppliers) {
-        results = [
-          ...results,
-          ...suppliers.map(supplier => ({
-            id: supplier.id,
-            name: supplier.name,
-            identifier: supplier.supplier_code,
-            type: 'supplier'
-          }))
-        ];
+        if (supplierError) {
+          console.error('Error searching suppliers:', supplierError);
+        } else if (suppliers) {
+          results = [
+            ...results,
+            ...suppliers.map(supplier => ({
+              id: supplier.id,
+              name: supplier.name,
+              identifier: supplier.supplier_code || '',
+              type: 'supplier'
+            }))
+          ];
+        }
+      } catch (error) {
+        console.error('Error in supplier search:', error);
       }
     }
 

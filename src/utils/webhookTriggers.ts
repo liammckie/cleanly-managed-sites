@@ -1,23 +1,24 @@
 
-import { useZapierIntegration } from '@/hooks/useZapierIntegration';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 import { ClientFormData } from '@/components/clients/form/types';
 
-// Initialize the Zapier integration hook
-let zapierIntegration: ReturnType<typeof useZapierIntegration> | null = null;
+// Define a variable to hold the trigger functions
+let zapierTriggers: {
+  triggerEvent: (eventName: string, data: any) => void;
+} | null = null;
 
-// Initialize the integration
-export const initWebhookTriggers = () => {
-  if (!zapierIntegration) {
-    zapierIntegration = useZapierIntegration();
-  }
+// Set the triggers from a component
+export const setZapierTriggers = (triggers: { 
+  triggerEvent: (eventName: string, data: any) => void; 
+}) => {
+  zapierTriggers = triggers;
 };
 
 // Site webhooks
 export const triggerSiteCreated = (site: SiteFormData) => {
-  if (!zapierIntegration) return;
+  if (!zapierTriggers) return;
   
-  zapierIntegration.triggerEvent('site.created', {
+  zapierTriggers.triggerEvent('site.created', {
     site_name: site.name,
     site_address: site.address,
     site_city: site.city,
@@ -29,9 +30,9 @@ export const triggerSiteCreated = (site: SiteFormData) => {
 };
 
 export const triggerSiteUpdated = (site: SiteFormData) => {
-  if (!zapierIntegration) return;
+  if (!zapierTriggers) return;
   
-  zapierIntegration.triggerEvent('site.updated', {
+  zapierTriggers.triggerEvent('site.updated', {
     site_name: site.name,
     site_address: site.address,
     site_city: site.city,
@@ -44,9 +45,9 @@ export const triggerSiteUpdated = (site: SiteFormData) => {
 
 // Client webhooks
 export const triggerClientCreated = (client: ClientFormData) => {
-  if (!zapierIntegration) return;
+  if (!zapierTriggers) return;
   
-  zapierIntegration.triggerEvent('client.created', {
+  zapierTriggers.triggerEvent('client.created', {
     client_name: client.name,
     client_email: client.email,
     client_status: client.status,
@@ -56,9 +57,9 @@ export const triggerClientCreated = (client: ClientFormData) => {
 };
 
 export const triggerClientUpdated = (client: ClientFormData) => {
-  if (!zapierIntegration) return;
+  if (!zapierTriggers) return;
   
-  zapierIntegration.triggerEvent('client.updated', {
+  zapierTriggers.triggerEvent('client.updated', {
     client_name: client.name,
     client_email: client.email,
     client_status: client.status,
