@@ -4,8 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/lib/types';
 
+// Define an extended UserRole type with userCount
+interface UserRoleWithCount extends UserRole {
+  userCount?: number;
+}
+
 // Mock data for roles (replace with actual API calls)
-const mockRoles: (UserRole & { userCount?: number })[] = [
+const mockRoles: UserRoleWithCount[] = [
   {
     id: '1',
     name: 'Administrator',
@@ -49,7 +54,7 @@ const mockRoles: (UserRole & { userCount?: number })[] = [
 ];
 
 // Mock function to fetch roles
-const fetchRoles = async (): Promise<(UserRole & { userCount?: number })[]> => {
+const fetchRoles = async (): Promise<UserRoleWithCount[]> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 800));
   
@@ -66,7 +71,7 @@ const createRoleFn = async (roleData: {
   name: string;
   permissions: string[];
   description?: string;
-}): Promise<UserRole> => {
+}): Promise<UserRoleWithCount> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -78,13 +83,17 @@ const createRoleFn = async (roleData: {
   //   .single()
   
   // Mock created role
-  return {
+  const newRole: UserRoleWithCount = {
     id: Date.now().toString(),
     name: roleData.name,
     permissions: roleData.permissions,
     description: roleData.description,
     userCount: 0
   };
+  
+  mockRoles.push(newRole);
+  
+  return newRole;
 };
 
 // Mock function to update a role
@@ -95,7 +104,7 @@ const updateRoleFn = async (
     permissions?: string[];
     description?: string;
   }
-): Promise<UserRole> => {
+): Promise<UserRoleWithCount> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -111,9 +120,9 @@ const updateRoleFn = async (
   const role = mockRoles.find(r => r.id === roleId);
   if (!role) throw new Error('Role not found');
   
-  const updatedRole = {
+  const updatedRole: UserRoleWithCount = {
     ...role,
-    ...roleData
+    ...roleData,
   };
   
   // Update the mock data (in a real app, this would be done via the queryClient)
@@ -139,7 +148,7 @@ export function useUserRoles() {
 }
 
 export function useRole(id?: string) {
-  const { data: roles } = useUserRoles();
+  const { roles } = useUserRoles();
   const role = id ? roles?.find(r => r.id === id) : undefined;
   
   return { role };
@@ -159,7 +168,7 @@ export function useCreateRole() {
       const newRole = await createRoleFn(roleData);
       
       // Update local cache with new role
-      queryClient.setQueryData(['roles'], (oldData: UserRole[] = []) => {
+      queryClient.setQueryData<UserRoleWithCount[]>(['roles'], (oldData = []) => {
         return [...oldData, newRole];
       });
       
@@ -194,7 +203,7 @@ export function useUpdateRole() {
       const updatedRole = await updateRoleFn(roleId, roleData);
       
       // Update local cache with updated role
-      queryClient.setQueryData(['roles'], (oldData: UserRole[] = []) => {
+      queryClient.setQueryData<UserRoleWithCount[]>(['roles'], (oldData = []) => {
         return oldData.map(r => r.id === roleId ? updatedRole : r);
       });
       

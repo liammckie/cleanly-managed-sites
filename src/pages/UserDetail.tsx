@@ -2,105 +2,176 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
 import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
   ArrowLeft, 
   User, 
   Mail, 
-  Calendar, 
-  ShieldCheck, 
-  Edit, 
-  AlertTriangle, 
-  CheckCircle2 
+  Phone, 
+  Shield, 
+  MapPin,
+  Save, 
+  Plus,
+  X
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
-import { UserForm } from '@/components/users/UserForm';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { toast } from 'sonner';
+
+// Define form schema using zod
+const userFormSchema = z.object({
+  full_name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  role_id: z.string().min(1, { message: 'Please select a role' }),
+  phone: z.string().optional(),
+  custom_id: z.string().optional(),
+  note: z.string().optional(),
+  status: z.object({
+    active: z.boolean().default(true),
+    send_activation: z.boolean().default(false),
+    daily_summary: z.boolean().default(false)
+  }),
+  territories: z.array(z.string()).default([])
+});
+
+type UserFormValues = z.infer<typeof userFormSchema>;
 
 const UserDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isLoading, error, updateUser } = useUser(id);
-  const [isEditing, setIsEditing] = useState(false);
+  const { user, isLoading, updateUser } = useUser(id);
+  const { roles } = useUserRoles();
+  const [selectedTerritory, setSelectedTerritory] = useState('');
+  const [territories, setTerritories] = useState<string[]>(['All']);
+
+  const form = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      full_name: user?.full_name || '',
+      email: user?.email || '',
+      role_id: user?.role.id || '',
+      phone: '',
+      custom_id: '',
+      note: '',
+      status: {
+        active: user?.status === 'active',
+        send_activation: false,
+        daily_summary: false
+      },
+      territories: ['All']
+    }
+  });
+
+  React.useEffect(() => {
+    if (user) {
+      form.reset({
+        full_name: user.full_name,
+        email: user.email,
+        role_id: user.role.id,
+        phone: '',
+        custom_id: '',
+        note: '',
+        status: {
+          active: user.status === 'active',
+          send_activation: false,
+          daily_summary: false
+        },
+        territories: ['All']
+      });
+    }
+  }, [user, form]);
+
+  const onSubmit = async (data: UserFormValues) => {
+    try {
+      await updateUser({
+        full_name: data.full_name,
+        email: data.email,
+        role: roles?.find(r => r.id === data.role_id) || user?.role,
+        status: data.status.active ? 'active' : 'inactive'
+      });
+      
+      toast.success('User updated successfully');
+    } catch (error) {
+      toast.error('Failed to update user');
+      console.error(error);
+    }
+  };
+
+  const addTerritory = () => {
+    if (selectedTerritory && !territories.includes(selectedTerritory)) {
+      const newTerritories = [...territories, selectedTerritory];
+      setTerritories(newTerritories);
+      form.setValue('territories', newTerritories);
+      setSelectedTerritory('');
+    }
+  };
+
+  const removeTerritory = (territory: string) => {
+    const newTerritories = territories.filter(t => t !== territory);
+    setTerritories(newTerritories);
+    form.setValue('territories', newTerritories);
+  };
 
   if (isLoading) {
     return (
       <PageLayout>
         <div className="container px-4 py-6 mx-auto">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/users')}
-              className="mr-4"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Users
-            </Button>
-            <h1 className="text-2xl font-bold">Loading User...</h1>
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded-md w-1/4"></div>
+            <div className="h-32 bg-muted rounded-md w-full"></div>
+            <div className="h-64 bg-muted rounded-md w-full"></div>
           </div>
-          <div className="mt-6 h-64 animate-pulse bg-muted rounded-md"></div>
         </div>
       </PageLayout>
     );
   }
 
-  if (error || !user) {
+  if (!user) {
     return (
       <PageLayout>
         <div className="container px-4 py-6 mx-auto">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/users')}
-              className="mr-4"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <div className="text-center p-8">
+            <h2 className="text-xl font-semibold mb-2">User Not Found</h2>
+            <p className="mb-4">The user you're looking for doesn't exist or you don't have permission to view it.</p>
+            <Button onClick={() => navigate('/users')}>
               Back to Users
             </Button>
-            <h1 className="text-2xl font-bold">User Not Found</h1>
           </div>
-          <Card className="mt-6">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center justify-center py-6">
-                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-                <p className="text-lg font-medium mb-2">Error loading user</p>
-                <p className="text-muted-foreground text-center">
-                  {error?.message || 'The user could not be found or you do not have permission to view it.'}
-                </p>
-                <Button 
-                  onClick={() => navigate('/users')}
-                  className="mt-4"
-                >
-                  Return to Users List
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </PageLayout>
     );
   }
-
-  const handleStatusChange = async (newStatus: 'active' | 'inactive') => {
-    try {
-      await updateUser({ ...user, status: newStatus });
-      toast.success(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-    } catch (error) {
-      toast.error(`Failed to update user status: ${error.message}`);
-    }
-  };
 
   return (
     <PageLayout>
@@ -108,150 +179,431 @@ const UserDetail = () => {
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
+            size="sm" 
             onClick={() => navigate('/users')}
-            className="mr-4"
+            className="mr-2"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Users
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
-          <h1 className="text-2xl font-bold">User Details</h1>
+          <h1 className="text-2xl font-bold">{user.full_name}</h1>
         </div>
 
-        {isEditing ? (
-          <UserForm 
-            user={user} 
-            onCancel={() => setIsEditing(false)}
-            onSuccess={() => {
-              setIsEditing(false);
-              toast.success("User updated successfully");
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left column */}
+          <div className="col-span-2">
+            <Card>
               <CardHeader>
-                <div className="flex justify-between">
-                  <CardTitle>User Information</CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                </div>
-                <CardDescription>Manage user details and permissions</CardDescription>
+                <CardTitle>Profile</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-shrink-0 flex flex-col items-center">
-                    <Avatar className="h-24 w-24 mb-2">
-                      <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                      <AvatarFallback className="text-2xl">
-                        {user.full_name.split(' ').map(name => name[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Badge className={user.status === 'active' ? 'bg-green-600' : 'bg-red-600'}>
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                    </Badge>
-                  </div>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="flex justify-center mb-6">
+                      <div className="relative">
+                        <Avatar className="h-24 w-24">
+                          <AvatarImage src={user.avatar_url} alt={user.full_name} />
+                          <AvatarFallback className="text-xl">
+                            {user.full_name.split(' ').map(name => name[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="absolute bottom-0 right-0 rounded-full h-8 w-8 bg-white"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Name */}
+                    <FormField
+                      control={form.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Full name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Email */}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Custom ID */}
+                    <FormField
+                      control={form.control}
+                      name="custom_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter ID" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            If blank, an ID will be generated
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Role */}
+                    <FormField
+                      control={form.control}
+                      name="role_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Role*</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {roles?.map((role) => (
+                                <SelectItem key={role.id} value={role.id}>
+                                  {role.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Territory */}
+                    <FormItem>
+                      <FormLabel>Territory*</FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          placeholder="Enter territory" 
+                          value={selectedTerritory}
+                          onChange={(e) => setSelectedTerritory(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={addTerritory} 
+                          variant="secondary"
+                        >
+                          Add
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {territories.map((territory) => (
+                          <div 
+                            key={territory} 
+                            className="flex items-center bg-muted px-2 py-1 rounded-md text-sm"
+                          >
+                            {territory}
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 ml-1"
+                              onClick={() => removeTerritory(territory)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <FormDescription>
+                        Users cannot see activities and places outside their assigned territories on mobile and web.
+                      </FormDescription>
+                    </FormItem>
+                    
+                    {/* Phone */}
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Phone number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Note */}
+                    <div className="pt-6 border-t">
+                      <h3 className="text-lg font-medium mb-2">Note</h3>
+                      <FormField
+                        control={form.control}
+                        name="note"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Add a note" 
+                                className="min-h-32" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <Button type="submit">
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Right column */}
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="status.active"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div>
+                          <FormLabel>Active user</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                   
-                  <div className="flex-grow">
-                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-                      <div>
-                        <dt className="text-sm font-medium text-muted-foreground flex items-center">
-                          <User className="mr-2 h-4 w-4" />
-                          Full Name
-                        </dt>
-                        <dd className="mt-1 text-base">{user.full_name}</dd>
-                      </div>
-                      
-                      <div>
-                        <dt className="text-sm font-medium text-muted-foreground flex items-center">
-                          <Mail className="mr-2 h-4 w-4" />
-                          Email
-                        </dt>
-                        <dd className="mt-1 text-base">{user.email}</dd>
-                      </div>
-                      
-                      <div>
-                        <dt className="text-sm font-medium text-muted-foreground flex items-center">
-                          <ShieldCheck className="mr-2 h-4 w-4" />
-                          Role
-                        </dt>
-                        <dd className="mt-1 text-base">
-                          <Badge variant="outline" className="font-semibold">
-                            {user.role.name}
-                          </Badge>
-                        </dd>
-                      </div>
-                      
-                      <div>
-                        <dt className="text-sm font-medium text-muted-foreground flex items-center">
-                          <Calendar className="mr-2 h-4 w-4" />
-                          Last Login
-                        </dt>
-                        <dd className="mt-1 text-base">
-                          {user.last_login ? formatDate(user.last_login) : 'Never'}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="status.send_activation"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div>
+                          <FormLabel>Send activation email</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="status.daily_summary"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div>
+                          <FormLabel>Use daily summary email</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </CardContent>
-              <Separator />
-              <CardFooter className="flex justify-end gap-2 p-4">
-                {user.status === 'active' ? (
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => handleStatusChange('inactive')}
-                  >
-                    Deactivate User
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="default" 
-                    onClick={() => handleStatusChange('active')}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Activate User
-                  </Button>
-                )}
-              </CardFooter>
             </Card>
             
             <Card>
               <CardHeader>
-                <CardTitle>Permissions</CardTitle>
-                <CardDescription>User role and access rights</CardDescription>
+                <CardTitle>Admin permissions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium mb-2">Role: {user.role.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {user.role.description || 'No description available'}
-                    </p>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="data-admin" checked={true} />
+                      <label htmlFor="data-admin" className="text-sm font-medium">
+                        Data Administration
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="places" checked={true} />
+                      <label htmlFor="places" className="text-sm font-medium">
+                        Places
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="products" checked={true} />
+                      <label htmlFor="products" className="text-sm font-medium">
+                        Products
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="files" checked={true} />
+                      <label htmlFor="files" className="text-sm font-medium">
+                        Files
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="pricelists" checked={true} />
+                      <label htmlFor="pricelists" className="text-sm font-medium">
+                        Pricelists
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="forms" checked={true} />
+                      <label htmlFor="forms" className="text-sm font-medium">
+                        Forms
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="schedule" checked={true} />
+                      <label htmlFor="schedule" className="text-sm font-medium">
+                        Schedule
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="statuses" checked={true} />
+                      <label htmlFor="statuses" className="text-sm font-medium">
+                        Statuses
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="audits" checked={true} />
+                      <label htmlFor="audits" className="text-sm font-medium">
+                        Audits
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="tags" checked={true} />
+                      <label htmlFor="tags" className="text-sm font-medium">
+                        Tags
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="app-settings" checked={true} />
+                      <label htmlFor="app-settings" className="text-sm font-medium">
+                        Application settings
+                      </label>
+                    </div>
                   </div>
                   
-                  <div>
-                    <h3 className="font-medium mb-2">Permissions:</h3>
-                    <ul className="space-y-2">
-                      {user.role.permissions.map((permission, index) => (
-                        <li key={index} className="flex items-center">
-                          <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                          <span className="text-sm">{permission}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="data-analysis" checked={true} />
+                      <label htmlFor="data-analysis" className="text-sm font-medium">
+                        Data analysis
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="exports" checked={true} />
+                      <label htmlFor="exports" className="text-sm font-medium">
+                        Exports
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="public-link" checked={true} />
+                      <label htmlFor="public-link" className="text-sm font-medium">
+                        Public link
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="manage-org" />
+                      <label htmlFor="manage-org" className="text-sm font-medium">
+                        Manage Organization
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="representatives" />
+                      <label htmlFor="representatives" className="text-sm font-medium">
+                        Representatives
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="home-address" />
+                      <label htmlFor="home-address" className="text-sm font-medium">
+                        Home address
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="admins" />
+                      <label htmlFor="admins" className="text-sm font-medium">
+                        Admins
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="territories" />
+                      <label htmlFor="territories" className="text-sm font-medium">
+                        Territories
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="company-info" />
+                      <label htmlFor="company-info" className="text-sm font-medium">
+                        Company info
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="third-party" />
+                      <label htmlFor="third-party" className="text-sm font-medium">
+                        3rd party users
+                      </label>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+        </div>
       </div>
     </PageLayout>
   );

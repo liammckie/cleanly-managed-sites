@@ -87,7 +87,7 @@ export function UsersList({ users, isLoading, onUserClick }: UsersListProps) {
                   {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                 </Badge>
               </TableCell>
-              <TableCell>{user.last_login ? formatDate(user.last_login) : 'Never'}</TableCell>
+              <TableCell>{user.last_login ? formatDate(user.last_login, 'PP') : 'Never'}</TableCell>
             </TableRow>
           ))}
         </TableBody>

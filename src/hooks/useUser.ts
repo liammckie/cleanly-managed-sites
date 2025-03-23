@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SystemUser } from '@/lib/types';
+import { SystemUser, UserRole } from '@/lib/types';
 
 // This is the same mock data as in useUsers.ts
-const mockUsers = [
+const mockUsers: SystemUser[] = [
   {
     id: '1',
     email: 'admin@example.com',
@@ -107,9 +107,13 @@ const updateUserFn = async (userData: Partial<SystemUser> & { id: string }): Pro
   const user = mockUsers.find(u => u.id === userData.id);
   if (!user) throw new Error('User not found');
   
-  const updatedUser = {
+  // Ensure status is one of the allowed values
+  const status = userData.status as 'active' | 'inactive' | 'pending';
+  
+  const updatedUser: SystemUser = {
     ...user,
     ...userData,
+    status: status || user.status,
     updated_at: new Date().toISOString()
   };
   
