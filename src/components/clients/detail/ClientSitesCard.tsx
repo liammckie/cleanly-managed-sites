@@ -14,6 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TabulatorView } from '@/components/ui/data-table/TabulatorView';
+import { ViewToggle } from '@/components/ui/data-table/ViewToggle';
 
 interface ClientSitesCardProps {
   clientId: string;
@@ -21,7 +23,7 @@ interface ClientSitesCardProps {
 }
 
 export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table' | 'simple-table'>('grid');
 
   // Status badge component
   const StatusBadge = ({ status }: { status: string }) => {
@@ -50,6 +52,76 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
   };
 
+  // Prepare site data for tabulator
+  const enhancedSiteData = sites.map(site => ({
+    ...site,
+    annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
+    profit_margin: site.monthly_revenue && site.monthly_cost ? 
+      ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
+  }));
+
+  // Tabulator columns
+  const tabulatorColumns = [
+    { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
+    { title: "Address", field: "address", headerFilter: true },
+    { title: "City", field: "city", headerFilter: true },
+    { title: "State", field: "state" },
+    { title: "Representative", field: "representative", headerFilter: true },
+    { 
+      title: "Monthly Revenue", 
+      field: "monthly_revenue", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
+    },
+    { 
+      title: "Annual Revenue", 
+      field: "annual_revenue", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
+    },
+    { 
+      title: "Monthly Cost", 
+      field: "monthly_cost", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
+    },
+    { 
+      title: "Profit Margin", 
+      field: "profit_margin", 
+      formatter: "progress", 
+      formatterParams: {
+        min: 0,
+        max: 100,
+        color: ["red", "orange", "green"],
+        legendColor: "#000000",
+        legendAlign: "center",
+      },
+      sorter: "number"
+    },
+    { title: "Status", field: "status", headerFilter: "list", headerFilterParams: { values: { active: "Active", inactive: "Inactive", pending: "Pending" } } },
+    { 
+      title: "Actions", 
+      formatter: "html", 
+      width: 120,
+      headerSort: false,
+      formatterParams: {
+        html: (cell: any) => `<a href="/sites/${cell.getData().id}" class="text-primary hover:underline">View</a>`
+      }
+    }
+  ];
+
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -66,16 +138,27 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                 className="rounded-none border-0 h-8 w-8 p-0"
                 size="sm"
                 onClick={() => setViewMode('grid')}
+                title="Grid View"
               >
                 <LayoutGrid size={14} />
               </Button>
               <Button 
-                variant={viewMode === 'table' ? 'default' : 'outline'} 
+                variant={viewMode === 'simple-table' ? 'default' : 'outline'} 
                 className="rounded-none border-0 h-8 w-8 p-0"
                 size="sm"
-                onClick={() => setViewMode('table')}
+                onClick={() => setViewMode('simple-table')}
+                title="Simple Table"
               >
                 <List size={14} />
+              </Button>
+              <Button 
+                variant={viewMode === 'table' ? 'default' : 'outline'} 
+                className="rounded-none border-0 h-8 w-10 p-0 text-xs"
+                size="sm"
+                onClick={() => setViewMode('table')}
+                title="Advanced Table"
+              >
+                <span>Table+</span>
               </Button>
             </div>
           )}
@@ -107,7 +190,7 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                 />
               ))}
             </div>
-          ) : (
+          ) : viewMode === 'simple-table' ? (
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
@@ -144,6 +227,15 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                 </TableBody>
               </Table>
             </div>
+          ) : (
+            <TabulatorView 
+              data={enhancedSiteData}
+              columns={tabulatorColumns}
+              title="Client Sites"
+              initialSort={[{ column: "name", dir: "asc" }]}
+              groupBy={["status", "city", "state"]}
+              filename={`client-${clientId}-sites-export`}
+            />
           )
         ) : (
           <div className="text-center py-12">

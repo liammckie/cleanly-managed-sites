@@ -1,10 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ReactTabulator } from 'react-tabulator';
 import "react-tabulator/lib/styles.css";
 import "react-tabulator/lib/css/tabulator.min.css";
 import { Button } from '@/components/ui/button';
-import { Download, Group, Layers, SortAsc } from 'lucide-react';
+import { 
+  Download, 
+  Group, 
+  Layers, 
+  SortAsc, 
+  Columns,
+  RefreshCw
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface TabulatorViewProps {
   data: any[];
@@ -26,14 +39,27 @@ export function TabulatorView({
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableColumns, setTableColumns] = useState<any[]>([]);
   const [activeGroups, setActiveGroups] = useState<string[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
+  const tabulatorRef = useRef<any>(null);
 
   // Initialize table data and columns
   useEffect(() => {
     if (data && data.length > 0) {
       setTableData(data);
-      setTableColumns(columns);
+      
+      // Initialize visible columns
+      if (Object.keys(visibleColumns).length === 0) {
+        const initialVisibleColumns: Record<string, boolean> = {};
+        columns.forEach(col => {
+          initialVisibleColumns[col.field] = true;
+        });
+        setVisibleColumns(initialVisibleColumns);
+      }
+      
+      const filteredColumns = columns.filter(col => visibleColumns[col.field] !== false);
+      setTableColumns(filteredColumns);
     }
-  }, [data, columns]);
+  }, [data, columns, visibleColumns]);
 
   // Tabulator options
   const options = {
@@ -47,6 +73,11 @@ export function TabulatorView({
     groupBy: activeGroups,
     groupStartOpen: false,
     placeholder: "No Data Available",
+    movableRows: true,
+    columnHeaderVertAlign: "middle",
+    dataTree: false,
+    dataTreeStartExpanded: false,
+    footerElement: '<div class="tabulator-footer-contents"></div>',
   };
 
   // Toggle group by column
@@ -58,11 +89,29 @@ export function TabulatorView({
     }
   };
 
+  // Toggle column visibility
+  const toggleColumnVisibility = (field: string) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
   // Export as CSV
   const downloadCSV = () => {
-    if (window.tabulator) {
-      (window.tabulator as any).download("csv", `${filename}.csv`);
+    if (tabulatorRef.current) {
+      tabulatorRef.current.table.download("csv", `${filename}.csv`);
     }
+  };
+
+  // Reset columns to default
+  const resetColumns = () => {
+    const defaultVisibleColumns: Record<string, boolean> = {};
+    columns.forEach(col => {
+      defaultVisibleColumns[col.field] = true;
+    });
+    setVisibleColumns(defaultVisibleColumns);
+    setActiveGroups([]);
   };
 
   return (
@@ -71,6 +120,32 @@ export function TabulatorView({
         <h3 className="text-xl font-semibold">{title}</h3>
         
         <div className="flex flex-wrap gap-2">
+          {/* Column selector dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8"
+              >
+                <Columns className="mr-1 h-4 w-4" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto w-[200px]">
+              {columns.map(col => (
+                <DropdownMenuCheckboxItem
+                  key={col.field}
+                  checked={visibleColumns[col.field] !== false}
+                  onCheckedChange={() => toggleColumnVisibility(col.field)}
+                >
+                  {col.title}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Group by selector */}
           {groupBy.length > 0 && (
             <div className="flex gap-2 items-center border rounded-md p-1">
               <span className="text-xs text-muted-foreground px-2">Group by:</span>
@@ -89,6 +164,18 @@ export function TabulatorView({
             </div>
           )}
           
+          {/* Reset columns button */}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8"
+            onClick={resetColumns}
+          >
+            <RefreshCw className="mr-1 h-4 w-4" />
+            Reset
+          </Button>
+          
+          {/* Export CSV button */}
           <Button
             size="sm"
             variant="outline"
@@ -104,6 +191,7 @@ export function TabulatorView({
       <div className="border rounded-md overflow-hidden">
         {tableData.length > 0 && (
           <ReactTabulator
+            ref={tabulatorRef}
             data={tableData}
             columns={tableColumns}
             options={options}

@@ -17,12 +17,13 @@ import { Plus, Search } from 'lucide-react';
 import { SiteRecord } from '@/lib/types';
 import { ViewToggle } from '@/components/ui/data-table/ViewToggle';
 import { TabulatorView } from '@/components/ui/data-table/TabulatorView';
+import { formatCurrency } from '@/lib/utils';
 
 export function SitesList() {
   const { sites, isLoading, error } = useSites();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'table'>('table');
 
   // Filter sites based on search and status
   const filteredSites = sites.filter(site => {
@@ -31,7 +32,8 @@ export function SitesList() {
       site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       site.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       site.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (site.representative && site.representative.toLowerCase().includes(searchTerm.toLowerCase()));
+      (site.representative && site.representative.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (site.client_name && site.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Filter by status
     const matchesStatus = statusFilter === 'all' || site.status === statusFilter;
@@ -39,12 +41,20 @@ export function SitesList() {
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate annual billing amount
+  const getAnnualBilling = (site: SiteRecord) => {
+    if (!site.monthly_revenue) return null;
+    return site.monthly_revenue * 12;
+  };
+
   // Table columns for tabulator
   const tabulatorColumns = [
     { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
+    { title: "Client", field: "client_name", headerFilter: true, sorter: "string" },
     { title: "Address", field: "address", headerFilter: true },
     { title: "City", field: "city", headerFilter: true },
-    { title: "State", field: "state" },
+    { title: "State", field: "state", headerFilter: true },
+    { title: "Postcode", field: "postcode", headerFilter: true },
     { title: "Representative", field: "representative", headerFilter: true },
     { 
       title: "Monthly Revenue", 
@@ -52,26 +62,78 @@ export function SitesList() {
       formatter: "money", 
       formatterParams: { precision: 2, symbol: "$" },
       sorter: "number",
+      headerFilter: "number",
+      headerFilterPlaceholder: "Filter...",
+      topCalc: "sum",
+      topCalcFormatter: "money",
+      topCalcFormatterParams: { precision: 2, symbol: "$" },
       bottomCalc: "sum",
       bottomCalcFormatter: "money",
       bottomCalcFormatterParams: { precision: 2, symbol: "$" }
     },
+    { 
+      title: "Annual Revenue", 
+      field: "annual_revenue", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      topCalc: "sum",
+      topCalcFormatter: "money",
+      topCalcFormatterParams: { precision: 2, symbol: "$" },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" },
+      mutator: function(value: any, data: any) {
+        return data.monthly_revenue ? data.monthly_revenue * 12 : 0;
+      }
+    },
+    { 
+      title: "Monthly Cost", 
+      field: "monthly_cost", 
+      formatter: "money", 
+      formatterParams: { precision: 2, symbol: "$" },
+      sorter: "number",
+      headerFilter: "number",
+      headerFilterPlaceholder: "Filter...",
+      topCalc: "sum",
+      topCalcFormatter: "money",
+      topCalcFormatterParams: { precision: 2, symbol: "$" },
+      bottomCalc: "sum",
+      bottomCalcFormatter: "money",
+      bottomCalcFormatterParams: { precision: 2, symbol: "$" }
+    },
+    { 
+      title: "Profit Margin", 
+      field: "profit_margin", 
+      formatter: "progress", 
+      formatterParams: {
+        min: 0,
+        max: 100,
+        color: ["red", "orange", "green"],
+        legendColor: "#000000",
+        legendAlign: "center",
+      },
+      sorter: "number",
+      mutator: function(value: any, data: any) {
+        if (!data.monthly_revenue || !data.monthly_cost || data.monthly_revenue <= 0) return 0;
+        const margin = ((data.monthly_revenue - data.monthly_cost) / data.monthly_revenue) * 100;
+        return Math.round(margin * 10) / 10; // Round to 1 decimal place
+      }
+    },
     { title: "Status", field: "status", headerFilter: "list", headerFilterParams: { values: { active: "Active", inactive: "Inactive", pending: "Pending" } } },
+    { title: "Phone", field: "phone", headerFilter: true, visible: false },
+    { title: "Email", field: "email", headerFilter: true, visible: false },
+    { title: "Custom ID", field: "custom_id", headerFilter: true, visible: false },
     { 
       title: "Actions", 
       formatter: "html", 
       width: 120,
+      headerSort: false,
       formatterParams: {
         html: (cell: any) => `<a href="/sites/${cell.getData().id}" class="text-primary hover:underline">View</a>`
       }
     }
   ];
-
-  // Format currency for display
-  const formatCurrency = (amount: number | null) => {
-    if (amount === null) return "—";
-    return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
-  };
 
   if (isLoading) {
     return (
@@ -91,6 +153,14 @@ export function SitesList() {
       </div>
     );
   }
+
+  // Add annual revenue data for the table view
+  const enhancedSiteData = filteredSites.map(site => ({
+    ...site,
+    annual_revenue: site.monthly_revenue ? site.monthly_revenue * 12 : 0,
+    profit_margin: site.monthly_revenue && site.monthly_cost ? 
+      ((site.monthly_revenue - site.monthly_cost) / site.monthly_revenue) * 100 : 0
+  }));
 
   return (
     <div className="space-y-6">
@@ -154,11 +224,11 @@ export function SitesList() {
           </div>
         ) : (
           <TabulatorView 
-            data={filteredSites}
+            data={enhancedSiteData}
             columns={tabulatorColumns}
             title="Site List"
             initialSort={[{ column: "name", dir: "asc" }]}
-            groupBy={["status", "city", "state"]}
+            groupBy={["client_name", "status", "city", "state"]}
             filename="sites-export"
           />
         )
