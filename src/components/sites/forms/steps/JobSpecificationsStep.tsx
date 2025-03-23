@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +17,36 @@ interface JobSpecificationsStepProps {
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
 }
 
-export function JobSpecificationsStep({ formData, handleNestedChange }: JobSpecificationsStepProps) {
+const JobSpecificationsStep = ({ formData, handleNestedChange }) => {
+  // Local state for area management
+  const [areaName, setAreaName] = useState('');
+  const [areaDetails, setAreaDetails] = useState('');
+  
+  // Handle adding a new area
+  const handleAddArea = () => {
+    if (areaName.trim() === '') return;
+    
+    const newArea: AreaSpecification = {
+      name: areaName,
+      details: areaDetails
+    };
+    
+    const updatedAreas = [...(formData.jobSpecifications.areas || []), newArea];
+    handleNestedChange('jobSpecifications', 'areas', updatedAreas);
+    
+    // Reset inputs
+    setAreaName('');
+    setAreaDetails('');
+  };
+  
+  // Handle removing an area
+  const handleRemoveArea = (indexToRemove: number) => {
+    const updatedAreas = formData.jobSpecifications.areas?.filter(
+      (_, index) => index !== indexToRemove
+    );
+    handleNestedChange('jobSpecifications', 'areas', updatedAreas);
+  };
+
   // Calculate hours per week
   const hoursPerWeek = formData.jobSpecifications.daysPerWeek * formData.jobSpecifications.hoursPerDay;
   
@@ -165,4 +193,6 @@ export function JobSpecificationsStep({ formData, handleNestedChange }: JobSpeci
       </div>
     </div>
   );
-}
+};
+
+export default JobSpecificationsStep;

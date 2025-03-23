@@ -98,12 +98,12 @@ export const sitesApi = {
       monthly_revenue: siteData.monthlyRevenue,
       custom_id: siteData.customId && siteData.customId.trim() !== '' ? siteData.customId : null,
       // Store the detailed data as JSON
-      security_details: siteData.securityDetails,
-      job_specifications: siteData.jobSpecifications,
-      periodicals: siteData.periodicals,
-      replenishables: siteData.replenishables,
-      contract_details: siteData.contractDetails,
-      billing_details: siteData.billingDetails,
+      security_details: JSON.stringify(siteData.securityDetails) as any,
+      job_specifications: JSON.stringify(siteData.jobSpecifications) as any,
+      periodicals: JSON.stringify(siteData.periodicals) as any,
+      replenishables: JSON.stringify(siteData.replenishables) as any,
+      contract_details: JSON.stringify(siteData.contractDetails) as any,
+      billing_details: JSON.stringify(siteData.billingDetails) as any,
       // If there are subcontractors, store them
       has_subcontractors: siteData.subcontractors.length > 0,
     };
@@ -156,31 +156,48 @@ export const sitesApi = {
       }
     }
     
+    const updateData: any = {
+      name: siteData.name,
+      address: siteData.address,
+      city: siteData.city,
+      state: siteData.state,
+      postcode: siteData.postcode,
+      status: siteData.status,
+      representative: siteData.representative,
+      phone: siteData.phone,
+      email: siteData.email,
+      client_id: siteData.clientId,
+      monthly_cost: siteData.monthlyCost,
+      monthly_revenue: siteData.monthlyRevenue,
+      custom_id: siteData.customId && siteData.customId.trim() !== '' ? siteData.customId : null,
+    };
+
+    // Update the JSON fields if provided
+    if (siteData.securityDetails) {
+      updateData.security_details = JSON.stringify(siteData.securityDetails);
+    }
+    if (siteData.jobSpecifications) {
+      updateData.job_specifications = JSON.stringify(siteData.jobSpecifications);
+    }
+    if (siteData.periodicals) {
+      updateData.periodicals = JSON.stringify(siteData.periodicals);
+    }
+    if (siteData.replenishables) {
+      updateData.replenishables = JSON.stringify(siteData.replenishables);
+    }
+    if (siteData.contractDetails) {
+      updateData.contract_details = JSON.stringify(siteData.contractDetails);
+    }
+    if (siteData.billingDetails) {
+      updateData.billing_details = JSON.stringify(siteData.billingDetails);
+    }
+    if (siteData.subcontractors) {
+      updateData.has_subcontractors = siteData.subcontractors.length > 0;
+    }
+    
     const { data, error } = await supabase
       .from('sites')
-      .update({
-        name: siteData.name,
-        address: siteData.address,
-        city: siteData.city,
-        state: siteData.state,
-        postcode: siteData.postcode,
-        status: siteData.status,
-        representative: siteData.representative,
-        phone: siteData.phone,
-        email: siteData.email,
-        client_id: siteData.clientId,
-        monthly_cost: siteData.monthlyCost,
-        monthly_revenue: siteData.monthlyRevenue,
-        custom_id: siteData.customId && siteData.customId.trim() !== '' ? siteData.customId : null,
-        // Update the JSON fields if provided
-        ...(siteData.securityDetails && { security_details: siteData.securityDetails }),
-        ...(siteData.jobSpecifications && { job_specifications: siteData.jobSpecifications }),
-        ...(siteData.periodicals && { periodicals: siteData.periodicals }),
-        ...(siteData.replenishables && { replenishables: siteData.replenishables }),
-        ...(siteData.contractDetails && { contract_details: siteData.contractDetails }),
-        ...(siteData.billingDetails && { billing_details: siteData.billingDetails }),
-        ...(siteData.subcontractors && { has_subcontractors: siteData.subcontractors.length > 0 }),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

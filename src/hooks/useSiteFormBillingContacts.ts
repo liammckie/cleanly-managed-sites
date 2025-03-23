@@ -1,4 +1,3 @@
-
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 import { BillingContact } from '@/components/sites/forms/types/contactTypes';
 
@@ -8,24 +7,27 @@ export const useSiteFormBillingContacts = (
   errors: Record<string, string>,
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
 ) => {
-  // Add new billing contact
+  // Add a new billing contact
   const addBillingContact = () => {
+    // Create a new contact with default values
     const newContact: BillingContact = {
+      id: crypto.randomUUID(),
       name: '',
-      position: '',
       email: '',
-      phone: ''
+      phone: '',
+      role: '' // Don't include position here since it's not in the interface
     };
     
-    const updatedContacts = [...(formData.billingDetails.contacts || []), newContact];
-    
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        contacts: updatedContacts
-      }
-    }));
+    setFormData(prev => {
+      const updatedContacts = [...(prev.billingDetails.contacts || []), newContact];
+      return {
+        ...prev,
+        billingDetails: {
+          ...prev.billingDetails,
+          contacts: updatedContacts
+        }
+      };
+    });
   };
   
   // Remove a billing contact

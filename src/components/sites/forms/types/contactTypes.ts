@@ -3,7 +3,7 @@ import { ContactRecord } from '@/lib/types';
 
 export interface SiteContact extends ContactRecord {
   isPrimary?: boolean;
-  role?: string;
+  role: string; // Changed from optional to required to match ContactRecord
 }
 
 export interface BillingContact {
@@ -12,13 +12,14 @@ export interface BillingContact {
   email: string;
   phone: string;
   role?: string;
+  position?: string; // Added position field
 }
 
 export function convertContactRecordToSiteContact(contact: ContactRecord): SiteContact {
   return {
     ...contact,
-    isPrimary: false,
-    role: ''
+    isPrimary: contact.is_primary || false,
+    role: contact.role || ''
   };
 }
 

@@ -47,6 +47,10 @@ export interface ContractHistoryEntry {
 export interface ContractForecast {
   month: string;
   value: number;
+  revenue?: number;
+  cost?: number;
+  profit?: number;
+  date?: Date;
 }
 
 export interface ContractSummary {
@@ -54,4 +58,8 @@ export interface ContractSummary {
   activeContracts: number;
   expiringContracts: number;
   avgContractValue: number;
+  expiringWithin30Days?: number;
+  expiringWithin90Days?: number;
+  averageContractLength?: number;
+  renewalRate?: number;
 }
