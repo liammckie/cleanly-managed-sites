@@ -129,6 +129,12 @@ export function useCreateUser() {
         userData.role_id
       );
       
+      // Ensure newUserProfile is an object with the expected properties
+      if (!newUserProfile || typeof newUserProfile !== 'object') {
+        console.error("Invalid user profile returned:", newUserProfile);
+        throw new Error("Failed to create user profile properly");
+      }
+      
       // Update local cache with new user
       queryClient.setQueryData(['users'], (oldData: SystemUser[] = []) => {
         // Get role info for the new user

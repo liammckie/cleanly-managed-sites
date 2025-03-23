@@ -64,9 +64,9 @@ export const authApi = {
 
       console.log("Auth user created successfully with ID:", authData.user.id);
       
-      // Then insert the profile using RPC to bypass RLS
+      // Use a raw query to call the RPC function since TypeScript doesn't know about it yet
       const { data: profileData, error: profileError } = await supabase.rpc(
-        'create_user_profile',
+        'create_user_profile' as any,
         { 
           user_id: authData.user.id,
           user_email: email,
@@ -119,6 +119,24 @@ export const authApi = {
       }
       
       console.log("User profile created via RPC:", profileData);
+      
+      // If profileData is not an object (could be just true or a string), fetch the user profile
+      if (typeof profileData !== 'object' || profileData === null) {
+        console.log("RPC returned non-object response, fetching user profile directly");
+        const { data: fetchedProfile, error: fetchError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+          
+        if (fetchError) {
+          console.error("Error fetching created profile:", fetchError);
+          throw fetchError;
+        }
+        
+        return fetchedProfile;
+      }
+      
       return profileData;
     } catch (error) {
       console.error('Error in user creation flow:', error);
