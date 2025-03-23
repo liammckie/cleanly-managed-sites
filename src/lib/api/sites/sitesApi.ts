@@ -126,8 +126,9 @@ export const sitesApi = {
     
     // Handle contacts separately
     if (siteData.contacts && siteData.contacts.length > 0) {
-      await handleSiteContacts(data.id, siteData.contacts.map(contact => 
-        convertSiteContactToContactRecord(contact, data.id)), user.id);
+      const contactRecords = siteData.contacts.map(contact => 
+        convertSiteContactToContactRecord(contact, data.id));
+      await handleSiteContacts(data.id, contactRecords, user.id);
     }
     
     // Create a result that includes the contacts
@@ -199,8 +200,9 @@ export const sitesApi = {
     
     // Handle contacts if provided
     if (siteData.contacts) {
-      await handleSiteContacts(id, siteData.contacts.map(contact => 
-        convertSiteContactToContactRecord(contact, id)), user?.id);
+      const contactRecords = siteData.contacts.map(contact => 
+        convertSiteContactToContactRecord(contact, id));
+      await handleSiteContacts(id, contactRecords, user?.id);
     }
     
     // Fetch the contacts to include in the result

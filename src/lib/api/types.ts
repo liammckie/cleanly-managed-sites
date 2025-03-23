@@ -7,6 +7,8 @@ export type {
   ContactRecord,
   SiteRecord,
   ContractorRecord,
-  ContractorVersionHistoryEntry,
-  WorkOrderRecord
+  ContractorVersionHistoryEntry
 } from '../types';
+
+// Export WorkOrderRecord directly from here to avoid conflicts
+export type { WorkOrderRecord } from './workorders/types';

@@ -7,5 +7,5 @@ export * from './api/subcontractorsApi';
 export * from './api/authApi';
 export * from './api/workorders';
 export * from './api/contractors';
-// Export types but avoid duplication of WorkOrderRecord
+// Export types but avoid duplication by using the types from api/types
 export * from './api/types';

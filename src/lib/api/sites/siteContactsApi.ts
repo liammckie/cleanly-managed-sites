@@ -22,7 +22,7 @@ export async function getSiteContacts(siteId: string): Promise<ContactRecord[]> 
 // Handle creating/updating site contacts
 export async function handleSiteContacts(
   siteId: string, 
-  contacts: ContactRecord[], 
+  contacts: Partial<ContactRecord>[], 
   userId: string | undefined
 ): Promise<void> {
   // First, delete existing contacts for this site
@@ -35,8 +35,8 @@ export async function handleSiteContacts(
   // Then insert the new ones if there are any
   if (contacts.length > 0) {
     const contactRecords = contacts.map(contact => ({
-      name: contact.name,
-      role: contact.role,
+      name: contact.name || '',
+      role: contact.role || '',
       department: contact.department || null,
       email: contact.email || null,
       phone: contact.phone || null,

@@ -30,8 +30,23 @@ export const useSiteFormContacts = () => {
     name: 'contacts',
   });
   
-  // Add a new contact to the form
-  const addContact = useCallback((contact: SiteContactFormData) => {
+  // Simple function to add a new empty contact (required for siteFormConfig compatibility)
+  const addContact = useCallback(() => {
+    // Create a temporary ID for the new contact
+    const tempId = uuidv4();
+    
+    // Add an empty contact to the form state
+    append({
+      id: tempId,
+      name: '',
+      role: '',
+      entity_type: 'site',
+      is_primary: false
+    });
+  }, [append]);
+  
+  // Add a contact with data
+  const addContactWithData = useCallback((contact: SiteContactFormData) => {
     // Create a temporary ID for the new contact
     const tempId = uuidv4();
     
@@ -96,6 +111,7 @@ export const useSiteFormContacts = () => {
   return {
     contacts,
     addContact,
+    addContactWithData,
     updateContact,
     removeContact,
     setAsPrimary,
