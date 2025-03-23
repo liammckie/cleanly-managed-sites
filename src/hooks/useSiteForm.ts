@@ -27,11 +27,11 @@ export const useSiteForm = () => {
   // Use the smaller focused hooks
   const validation = useSiteFormValidation();
   const formHandlers = useSiteFormHandlers(formData, setFormData, errors, setErrors);
-  const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData);
+  const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData, errors, setErrors);
   const replenishableHandlers = useSiteFormReplenishables(formData, setFormData);
-  const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData);
-  const billingLineHandlers = useSiteFormBillingLines(formData, setFormData);
-  const contractTermHandlers = useSiteFormContractTerms(formData, setFormData);
+  const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData, errors, setErrors);
+  const billingLineHandlers = useSiteFormBillingLines(formData, setFormData, errors, setErrors);
+  const contractTermHandlers = useSiteFormContractTerms(formData, setFormData, errors, setErrors);
   const contactHandlers = useSiteFormContacts();
   
   // Validate a specific step
