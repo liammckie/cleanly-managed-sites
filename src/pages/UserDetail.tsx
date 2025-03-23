@@ -272,7 +272,7 @@ const UserDetail = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Role*</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a role" />
@@ -386,59 +386,61 @@ const UserDetail = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="status.active"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox 
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>Active user</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status.send_activation"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox 
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>Send activation email</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status.daily_summary"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <Checkbox 
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>Use daily summary email</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
+                  <Form {...form}>
+                    <FormField
+                      control={form.control}
+                      name="status.active"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel>Active user</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="status.send_activation"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel>Send activation email</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="status.daily_summary"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div>
+                            <FormLabel>Use daily summary email</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </Form>
                 </div>
               </CardContent>
             </Card>
