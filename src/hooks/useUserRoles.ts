@@ -3,135 +3,108 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/lib/types';
+import { toast } from 'sonner';
+import { PermissionsMap } from '@/types/permissions';
 
 // Define an extended UserRole type with userCount
 interface UserRoleWithCount extends UserRole {
   userCount?: number;
 }
 
-// Mock data for roles (replace with actual API calls)
-const mockRoles: UserRoleWithCount[] = [
-  {
-    id: '1',
-    name: 'Administrator',
-    permissions: [
-      'users:manage',
-      'roles:manage',
-      'sites:manage',
-      'clients:manage',
-      'contractors:manage',
-      'work_orders:manage',
-      'settings:manage'
-    ],
-    description: 'Full system access with all permissions',
-    userCount: 1
-  },
-  {
-    id: '2',
-    name: 'Manager',
-    permissions: [
-      'sites:manage',
-      'clients:manage',
-      'contractors:read',
-      'contractors:write',
-      'work_orders:manage'
-    ],
-    description: 'Manage clients, sites and work orders',
-    userCount: 1
-  },
-  {
-    id: '3',
-    name: 'User',
-    permissions: [
-      'sites:read',
-      'clients:read',
-      'contractors:read',
-      'work_orders:read'
-    ],
-    description: 'Standard user with read-only access',
-    userCount: 1
-  }
-];
-
-// Mock function to fetch roles
+// Fetch user roles from Supabase
 const fetchRoles = async (): Promise<UserRoleWithCount[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('*');
   
-  // In a real implementation, you would fetch from Supabase or API
-  // const { data, error } = await supabase
-  //   .from('roles')
-  //   .select('*, users:user_roles(count)')
+  if (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
   
-  return mockRoles;
+  // Get user count for each role
+  const roles = await Promise.all(data.map(async (role) => {
+    const { count, error: countError } = await supabase
+      .from('user_profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role_id', role.id);
+    
+    return {
+      id: role.id,
+      name: role.name,
+      permissions: role.permissions as unknown as string[],
+      description: role.description,
+      userCount: count || 0
+    };
+  }));
+  
+  return roles;
 };
 
-// Mock function to create a role
+// Create a new role
 const createRoleFn = async (roleData: {
   name: string;
-  permissions: string[];
+  permissions: PermissionsMap;
   description?: string;
 }): Promise<UserRoleWithCount> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const { data, error } = await supabase
+    .from('user_roles')
+    .insert({
+      name: roleData.name,
+      permissions: roleData.permissions,
+      description: roleData.description,
+    })
+    .select()
+    .single();
   
-  // In a real implementation, you would create role in Supabase
-  // const { data, error } = await supabase
-  //   .from('roles')
-  //   .insert(roleData)
-  //   .select()
-  //   .single()
+  if (error) {
+    console.error('Error creating role:', error);
+    throw error;
+  }
   
-  // Mock created role
-  const newRole: UserRoleWithCount = {
-    id: Date.now().toString(),
-    name: roleData.name,
-    permissions: roleData.permissions,
-    description: roleData.description,
+  return {
+    id: data.id,
+    name: data.name,
+    permissions: data.permissions as unknown as string[],
+    description: data.description,
     userCount: 0
   };
-  
-  mockRoles.push(newRole);
-  
-  return newRole;
 };
 
-// Mock function to update a role
+// Update an existing role
 const updateRoleFn = async (
   roleId: string,
   roleData: {
     name?: string;
-    permissions?: string[];
+    permissions?: PermissionsMap;
     description?: string;
   }
 ): Promise<UserRoleWithCount> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const { data, error } = await supabase
+    .from('user_roles')
+    .update(roleData)
+    .eq('id', roleId)
+    .select()
+    .single();
   
-  // In a real implementation, you would update role in Supabase
-  // const { data, error } = await supabase
-  //   .from('roles')
-  //   .update(roleData)
-  //   .eq('id', roleId)
-  //   .select()
-  //   .single()
-  
-  // Mock update
-  const role = mockRoles.find(r => r.id === roleId);
-  if (!role) throw new Error('Role not found');
-  
-  const updatedRole: UserRoleWithCount = {
-    ...role,
-    ...roleData,
-  };
-  
-  // Update the mock data (in a real app, this would be done via the queryClient)
-  const roleIndex = mockRoles.findIndex(r => r.id === roleId);
-  if (roleIndex !== -1) {
-    mockRoles[roleIndex] = updatedRole;
+  if (error) {
+    console.error('Error updating role:', error);
+    throw error;
   }
   
-  return updatedRole;
+  // Get updated user count
+  const { count } = await supabase
+    .from('user_profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('role_id', data.id);
+  
+  return {
+    id: data.id,
+    name: data.name,
+    permissions: data.permissions as unknown as string[],
+    description: data.description,
+    userCount: count || 0
+  };
 };
 
 export function useUserRoles() {
@@ -160,7 +133,7 @@ export function useCreateRole() {
   
   const createRole = async (roleData: {
     name: string;
-    permissions: string[];
+    permissions: PermissionsMap;
     description?: string;
   }) => {
     try {
@@ -172,8 +145,10 @@ export function useCreateRole() {
         return [...oldData, newRole];
       });
       
+      toast.success('Role created successfully');
       return newRole;
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Failed to create role: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -194,7 +169,7 @@ export function useUpdateRole() {
     roleId: string,
     roleData: {
       name?: string;
-      permissions?: string[];
+      permissions?: PermissionsMap;
       description?: string;
     }
   ) => {
@@ -204,11 +179,13 @@ export function useUpdateRole() {
       
       // Update local cache with updated role
       queryClient.setQueryData<UserRoleWithCount[]>(['roles'], (oldData = []) => {
-        return oldData.map(r => r.id === roleId ? updatedRole : r);
+        return oldData?.map(r => r.id === roleId ? updatedRole : r) || [];
       });
       
+      toast.success('Role updated successfully');
       return updatedRole;
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Failed to update role: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);

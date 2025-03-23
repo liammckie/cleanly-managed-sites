@@ -5,122 +5,136 @@ import { supabase } from '@/integrations/supabase/client';
 import { SystemUser, UserRole } from '@/lib/types';
 import { toast } from 'sonner';
 
-// Mock data for users (replace with actual API calls)
-const mockUsers: SystemUser[] = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    full_name: 'Admin User',
-    role: {
-      id: '1',
-      name: 'Administrator',
-      permissions: [
-        'users:manage',
-        'roles:manage',
-        'sites:manage',
-        'clients:manage',
-        'contractors:manage'
-      ],
-      description: 'Full system access'
-    },
-    status: 'active',
-    last_login: new Date().toISOString(),
-    created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date().toISOString(),
-    avatar_url: 'https://i.pravatar.cc/150?u=admin'
-  },
-  {
-    id: '2',
-    email: 'manager@example.com',
-    full_name: 'Client Manager',
-    role: {
-      id: '2',
-      name: 'Manager',
-      permissions: [
-        'sites:manage',
-        'clients:manage',
-        'contractors:read'
-      ],
-      description: 'Manage clients and sites'
-    },
-    status: 'active',
-    last_login: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    avatar_url: 'https://i.pravatar.cc/150?u=manager'
-  },
-  {
-    id: '3',
-    email: 'user@example.com',
-    full_name: 'Regular User',
-    role: {
-      id: '3',
-      name: 'User',
-      permissions: [
-        'sites:read',
-        'clients:read',
-        'contractors:read'
-      ],
-      description: 'Standard user access'
-    },
-    status: 'pending',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  }
-];
-
-// Mock function to fetch users (replace with actual implementation)
+// Fetch users from Supabase
 const fetchUsers = async (): Promise<SystemUser[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const { data: usersData, error: usersError } = await supabase
+    .from('user_profiles')
+    .select('*');
   
-  // In a real implementation, you would fetch from Supabase or API
-  // const { data, error } = await supabase
-  //   .from('users')
-  //   .select('*, roles(*)')
+  if (usersError) {
+    console.error('Error fetching users:', usersError);
+    throw usersError;
+  }
   
-  return mockUsers;
+  // Fetch all roles in one query to avoid n+1 problem
+  const { data: rolesData, error: rolesError } = await supabase
+    .from('user_roles')
+    .select('*');
+  
+  if (rolesError) {
+    console.error('Error fetching roles:', rolesError);
+    throw rolesError;
+  }
+  
+  // Build a map of role id to role for fast lookup
+  const rolesMap = rolesData.reduce((acc, role) => {
+    acc[role.id] = {
+      id: role.id,
+      name: role.name,
+      permissions: Object.keys(role.permissions).filter(key => 
+        role.permissions[key] === true
+      ),
+      description: role.description
+    };
+    return acc;
+  }, {} as Record<string, UserRole>);
+  
+  // Map user data to our SystemUser type
+  const users = usersData.map(user => {
+    const role = user.role_id ? rolesMap[user.role_id] : {
+      id: '',
+      name: 'No Role Assigned',
+      permissions: [],
+    };
+    
+    return {
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role,
+      status: user.status as 'active' | 'inactive' | 'pending',
+      last_login: user.last_login,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      avatar_url: user.avatar_url
+    };
+  });
+  
+  return users;
 };
 
-// Function to create a user (mock implementation)
+// Function to create a user
 const createUserFn = async (userData: {
   email: string;
   full_name: string;
   role_id: string;
   password: string;
 }): Promise<SystemUser> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Create the user in Auth
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: userData.email,
+    password: userData.password,
+    options: {
+      data: {
+        full_name: userData.full_name,
+      }
+    }
+  });
   
-  // In a real implementation, you would create user in Supabase
-  // const { data, error } = await supabase
-  //   .auth.admin.createUser({
-  //     email: userData.email,
-  //     password: userData.password,
-  //     user_metadata: { full_name: userData.full_name }
-  //   })
+  if (authError) {
+    console.error('Error creating user:', authError);
+    throw authError;
+  }
   
-  // Then link to role in a separate table
-  // await supabase.from('user_roles').insert({
-  //   user_id: data.user.id,
-  //   role_id: userData.role_id
-  // })
+  if (!authData.user) {
+    throw new Error('Failed to create user');
+  }
   
-  // Mock created user
-  const mockRole = mockUsers.find(u => u.role.id === userData.role_id)?.role || {
-    id: userData.role_id,
-    name: 'User',
-    permissions: ['sites:read', 'clients:read', 'contractors:read']
-  };
+  // Create or update the user profile
+  const { data: profileData, error: profileError } = await supabase
+    .from('user_profiles')
+    .upsert({
+      id: authData.user.id,
+      email: userData.email,
+      full_name: userData.full_name,
+      role_id: userData.role_id,
+      status: 'pending',
+    })
+    .select()
+    .single();
+  
+  if (profileError) {
+    console.error('Error creating user profile:', profileError);
+    throw profileError;
+  }
+  
+  // Fetch the role
+  const { data: roleData, error: roleError } = await supabase
+    .from('user_roles')
+    .select('*')
+    .eq('id', userData.role_id)
+    .single();
+  
+  if (roleError) {
+    console.error('Error fetching role:', roleError);
+    throw roleError;
+  }
   
   return {
-    id: Date.now().toString(),
-    email: userData.email,
-    full_name: userData.full_name,
-    role: mockRole,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    id: profileData.id,
+    email: profileData.email,
+    full_name: profileData.full_name,
+    role: {
+      id: roleData.id,
+      name: roleData.name,
+      permissions: Object.keys(roleData.permissions).filter(key => 
+        roleData.permissions[key] === true
+      ),
+      description: roleData.description
+    },
+    status: profileData.status as 'active' | 'inactive' | 'pending',
+    created_at: profileData.created_at,
+    updated_at: profileData.updated_at,
   };
 };
 
@@ -156,8 +170,10 @@ export function useCreateUser() {
         return [...oldData, newUser];
       });
       
+      toast.success('User created successfully');
       return newUser;
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`Failed to create user: ${error.message}`);
       throw error;
     } finally {
       setIsLoading(false);

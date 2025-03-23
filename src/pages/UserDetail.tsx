@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,13 +33,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  Shield, 
-  MapPin,
-  Save, 
   Plus,
+  Save, 
   X
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -48,6 +42,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from 'sonner';
+import { PermissionCheckbox } from '@/components/users/PermissionCheckbox';
+import { PERMISSIONS, getPermissionsByCategory, PermissionId, PermissionsMap } from '@/types/permissions';
 
 // Define form schema using zod
 const userFormSchema = z.object({
@@ -62,7 +58,8 @@ const userFormSchema = z.object({
     send_activation: z.boolean().default(false),
     daily_summary: z.boolean().default(false)
   }),
-  territories: z.array(z.string()).default([])
+  territories: z.array(z.string()).default([]),
+  permissions: z.record(z.string(), z.boolean()).optional()
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -74,27 +71,31 @@ const UserDetail = () => {
   const { roles } = useUserRoles();
   const [selectedTerritory, setSelectedTerritory] = useState('');
   const [territories, setTerritories] = useState<string[]>(['All']);
+  const [permissions, setPermissions] = useState<PermissionsMap>({} as PermissionsMap);
+  const [isRoleLocked, setIsRoleLocked] = useState(true);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      full_name: user?.full_name || '',
-      email: user?.email || '',
-      role_id: user?.role.id || '',
+      full_name: '',
+      email: '',
+      role_id: '',
       phone: '',
       custom_id: '',
       note: '',
       status: {
-        active: user?.status === 'active',
+        active: true,
         send_activation: false,
         daily_summary: false
       },
-      territories: ['All']
+      territories: ['All'],
+      permissions: {}
     }
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
+      // Initialize form with user data
       form.reset({
         full_name: user.full_name,
         email: user.email,
@@ -107,23 +108,38 @@ const UserDetail = () => {
           send_activation: false,
           daily_summary: false
         },
-        territories: ['All']
+        territories: ['All'],
+        permissions: {}
       });
+
+      // If role is defined, initialize permissions based on role
+      if (user.role && roles) {
+        const role = roles.find(r => r.id === user.role.id);
+        if (role && role.permissions) {
+          const permMap = role.permissions as unknown as PermissionsMap;
+          setPermissions(permMap);
+        }
+      }
     }
-  }, [user, form]);
+  }, [user, roles, form]);
 
   const onSubmit = async (data: UserFormValues) => {
     try {
+      // If role is unlocked, update permissions for this specific user
+      const updatedPermissions = isRoleLocked ? undefined : permissions;
+      
       await updateUser({
         full_name: data.full_name,
         email: data.email,
         role: roles?.find(r => r.id === data.role_id) || user?.role,
-        status: data.status.active ? 'active' : 'inactive'
+        status: data.status.active ? 'active' : 'inactive',
+        phone: data.phone,
+        custom_id: data.custom_id,
+        note: data.note,
+        territories: data.territories,
+        permissions: updatedPermissions
       });
-      
-      toast.success('User updated successfully');
     } catch (error) {
-      toast.error('Failed to update user');
       console.error(error);
     }
   };
@@ -141,6 +157,27 @@ const UserDetail = () => {
     const newTerritories = territories.filter(t => t !== territory);
     setTerritories(newTerritories);
     form.setValue('territories', newTerritories);
+  };
+
+  const handlePermissionChange = (permissionId: PermissionId, checked: boolean | "indeterminate") => {
+    setPermissions(prev => ({
+      ...prev,
+      [permissionId]: checked === true
+    }));
+  };
+
+  // Handle role change
+  const handleRoleChange = (roleId: string) => {
+    form.setValue('role_id', roleId);
+    
+    // Update permissions based on role
+    if (roles) {
+      const role = roles.find(r => r.id === roleId);
+      if (role && role.permissions) {
+        const permMap = role.permissions as unknown as PermissionsMap;
+        setPermissions(permMap);
+      }
+    }
   };
 
   if (isLoading) {
@@ -272,7 +309,10 @@ const UserDetail = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Role*</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                          <Select 
+                            onValueChange={val => handleRoleChange(val)} 
+                            value={field.value || undefined}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a role" />
@@ -385,8 +425,8 @@ const UserDetail = () => {
           <div className="space-y-6">
             <Card>
               <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <Form {...form}>
+                <Form {...form}>
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="status.active"
@@ -440,166 +480,67 @@ const UserDetail = () => {
                         </FormItem>
                       )}
                     />
-                  </Form>
-                </div>
+                  </div>
+                </Form>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Admin permissions</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="override-role"
+                    checked={!isRoleLocked}
+                    onCheckedChange={(checked) => setIsRoleLocked(!checked)}
+                  />
+                  <label htmlFor="override-role" className="text-sm cursor-pointer">
+                    Override role
+                  </label>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="data-admin" checked={true} />
-                      <label htmlFor="data-admin" className="text-sm font-medium">
-                        Data Administration
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="places" checked={true} />
-                      <label htmlFor="places" className="text-sm font-medium">
-                        Places
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="products" checked={true} />
-                      <label htmlFor="products" className="text-sm font-medium">
-                        Products
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="files" checked={true} />
-                      <label htmlFor="files" className="text-sm font-medium">
-                        Files
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="pricelists" checked={true} />
-                      <label htmlFor="pricelists" className="text-sm font-medium">
-                        Pricelists
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="forms" checked={true} />
-                      <label htmlFor="forms" className="text-sm font-medium">
-                        Forms
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="schedule" checked={true} />
-                      <label htmlFor="schedule" className="text-sm font-medium">
-                        Schedule
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="statuses" checked={true} />
-                      <label htmlFor="statuses" className="text-sm font-medium">
-                        Statuses
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="audits" checked={true} />
-                      <label htmlFor="audits" className="text-sm font-medium">
-                        Audits
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="tags" checked={true} />
-                      <label htmlFor="tags" className="text-sm font-medium">
-                        Tags
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="app-settings" checked={true} />
-                      <label htmlFor="app-settings" className="text-sm font-medium">
-                        Application settings
-                      </label>
-                    </div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-2">Data Management</h3>
+                    {getPermissionsByCategory('data').map((permission) => (
+                      <PermissionCheckbox 
+                        key={permission.id}
+                        id={permission.id}
+                        label={permission.label}
+                        description={permission.description}
+                        checked={permissions[permission.id]}
+                        onCheckedChange={checked => handlePermissionChange(permission.id, checked)}
+                      />
+                    ))}
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="data-analysis" checked={true} />
-                      <label htmlFor="data-analysis" className="text-sm font-medium">
-                        Data analysis
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="exports" checked={true} />
-                      <label htmlFor="exports" className="text-sm font-medium">
-                        Exports
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="public-link" checked={true} />
-                      <label htmlFor="public-link" className="text-sm font-medium">
-                        Public link
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="manage-org" />
-                      <label htmlFor="manage-org" className="text-sm font-medium">
-                        Manage Organization
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="representatives" />
-                      <label htmlFor="representatives" className="text-sm font-medium">
-                        Representatives
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="home-address" />
-                      <label htmlFor="home-address" className="text-sm font-medium">
-                        Home address
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="admins" />
-                      <label htmlFor="admins" className="text-sm font-medium">
-                        Admins
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="territories" />
-                      <label htmlFor="territories" className="text-sm font-medium">
-                        Territories
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="company-info" />
-                      <label htmlFor="company-info" className="text-sm font-medium">
-                        Company info
-                      </label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="third-party" />
-                      <label htmlFor="third-party" className="text-sm font-medium">
-                        3rd party users
-                      </label>
-                    </div>
+                  <div className="space-y-2 mt-4">
+                    <h3 className="font-medium text-sm text-muted-foreground mb-2">Management</h3>
+                    {getPermissionsByCategory('management').map((permission) => (
+                      <PermissionCheckbox 
+                        key={permission.id}
+                        id={permission.id}
+                        label={permission.label}
+                        description={permission.description}
+                        checked={permissions[permission.id]}
+                        onCheckedChange={checked => handlePermissionChange(permission.id, checked)}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2 mt-4">
+                    <h3 className="font-medium text-sm text-muted-foreground mb-2">Admin</h3>
+                    {getPermissionsByCategory('admin').map((permission) => (
+                      <PermissionCheckbox 
+                        key={permission.id}
+                        id={permission.id}
+                        label={permission.label}
+                        description={permission.description}
+                        checked={permissions[permission.id]}
+                        onCheckedChange={checked => handlePermissionChange(permission.id, checked)}
+                      />
+                    ))}
                   </div>
                 </div>
               </CardContent>

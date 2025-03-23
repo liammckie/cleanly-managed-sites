@@ -795,6 +795,92 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          custom_id: string | null
+          daily_summary: boolean | null
+          email: string
+          full_name: string
+          id: string
+          last_login: string | null
+          notes: string | null
+          phone: string | null
+          role_id: string | null
+          status: string
+          territories: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          custom_id?: string | null
+          daily_summary?: boolean | null
+          email: string
+          full_name: string
+          id: string
+          last_login?: string | null
+          notes?: string | null
+          phone?: string | null
+          role_id?: string | null
+          status?: string
+          territories?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          custom_id?: string | null
+          daily_summary?: boolean | null
+          email?: string
+          full_name?: string
+          id?: string
+          last_login?: string | null
+          notes?: string | null
+          phone?: string | null
+          role_id?: string | null
+          status?: string
+          territories?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          permissions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          permissions?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          permissions?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       work_orders: {
         Row: {
           actual_cost: number | null
