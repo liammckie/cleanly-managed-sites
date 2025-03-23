@@ -100,6 +100,27 @@ export function useCreateUser() {
       setIsLoading(true);
       console.log("Starting user creation process for:", userData.email);
       
+      // Get the current authenticated user - needed for RLS policies
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        throw new Error("You must be logged in to create users");
+      }
+      
+      // Check if current user has admin permissions using service role or special function
+      const { data: adminCheck, error: adminCheckError } = await supabase.rpc(
+        'get_user_admin_status',
+        { user_uuid: currentUser.id }
+      );
+      
+      console.log("Admin check result:", adminCheck);
+      
+      // For non-admins, we need to use a different approach or show a permission error
+      if (!adminCheck && adminCheckError) {
+        console.error("Admin check failed:", adminCheckError);
+        throw new Error("You don't have permission to create users");
+      }
+      
       // Use the authApi to handle the user creation
       const newUserProfile = await authApi.createUser(
         userData.email,
@@ -151,6 +172,8 @@ export function useCreateUser() {
           errorMessage = 'Permission denied. You may not have admin rights';
         } else if (error.message.includes('infinite recursion')) {
           errorMessage = 'Database policy error. Try logging out and back in';
+        } else if (error.message.includes('policy')) {
+          errorMessage = 'Database policy error. Make sure you have admin permissions';
         }
       }
       
