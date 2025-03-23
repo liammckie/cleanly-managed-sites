@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -76,6 +77,12 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
   const onSubmit = async (data: FormData) => {
     try {
       setError(null);
+      console.log("Creating user with data:", { 
+        email: data.email, 
+        full_name: data.full_name, 
+        role_id: data.role_id 
+      });
+      
       await createUser({
         email: data.email,
         full_name: data.full_name,

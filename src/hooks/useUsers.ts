@@ -87,7 +87,8 @@ const createUserFn = async (userData: {
       options: {
         data: {
           full_name: userData.full_name,
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/login?verified=true`
       }
     });
     
@@ -100,16 +101,17 @@ const createUserFn = async (userData: {
       throw new Error('Failed to create user');
     }
     
-    // Create or update the user profile using admin access to bypass RLS policies
+    // Create user profile using the admin API endpoint - this will be handled by server 
+    // rather than directly inserting due to RLS policies
     const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
-      .upsert({
+      .insert({
         id: authData.user.id,
         email: userData.email,
         full_name: userData.full_name,
         role_id: userData.role_id,
         status: 'pending',
-      }, { onConflict: 'id' })
+      })
       .select()
       .single();
     

@@ -22,6 +22,11 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 // Sign up with email and password
 export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+  const origin = window.location.origin;
+  const redirectUrl = `${origin}/login?verified=true`;
+  
+  console.log(`Email redirect set to: ${redirectUrl}`);
+  
   const { error, data } = await supabase.auth.signUp({
     email,
     password,
@@ -29,7 +34,7 @@ export const signUpWithEmail = async (email: string, password: string, fullName:
       data: {
         full_name: fullName,
       },
-      emailRedirectTo: `${window.location.origin}/login?verified=true`
+      emailRedirectTo: redirectUrl
     },
   });
 
@@ -68,7 +73,7 @@ export const resetPasswordForEmail = async (email: string) => {
 export const verifyOtpToken = async (email: string, token: string, newPassword?: string) => {
   // If newPassword is provided, this is a password reset
   if (newPassword) {
-    // For password reset, we use updateUser instead
+    // For password reset, we use verifyOtp first then updateUser
     const { error } = await supabase.auth.verifyOtp({
       email,
       token,
