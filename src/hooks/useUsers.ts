@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,13 +53,16 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone: user.phone,
+        title: user.title,
         role,
         status: user.status as 'active' | 'inactive' | 'pending',
         last_login: user.last_login,
         created_at: user.created_at,
         updated_at: user.updated_at,
         avatar_url: user.avatar_url,
-        phone: user.phone,
         custom_id: user.custom_id,
         note: user.notes,
         territories: user.territories
@@ -91,7 +95,10 @@ export function useCreateUser() {
   
   const createUser = async (userData: {
     email: string;
-    full_name: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    title: string;
     role_id: string;
     password: string;
   }) => {
@@ -103,7 +110,10 @@ export function useCreateUser() {
       const newUserProfile = await authApi.createUser(
         userData.email,
         userData.password,
-        userData.full_name,
+        userData.firstName,
+        userData.lastName,
+        userData.phone,
+        userData.title,
         userData.role_id
       );
       
@@ -120,6 +130,10 @@ export function useCreateUser() {
           id: newUserProfile.id,
           email: newUserProfile.email,
           full_name: newUserProfile.full_name,
+          first_name: newUserProfile.first_name,
+          last_name: newUserProfile.last_name,
+          phone: newUserProfile.phone,
+          title: newUserProfile.title,
           role: {
             id: userData.role_id,
             name: '', // This will be populated when the query refreshes
@@ -129,7 +143,6 @@ export function useCreateUser() {
           created_at: newUserProfile.created_at,
           updated_at: newUserProfile.updated_at,
           avatar_url: newUserProfile.avatar_url,
-          phone: newUserProfile.phone,
           custom_id: newUserProfile.custom_id,
           note: newUserProfile.notes,
           territories: newUserProfile.territories

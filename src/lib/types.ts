@@ -1,4 +1,3 @@
-
 import { PermissionsMap } from '@/types/permissions';
 
 // User and Auth related types
@@ -13,13 +12,16 @@ export type SystemUser = {
   id: string;
   email: string;
   full_name: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  title?: string;
   role: UserRole;
   status: 'active' | 'inactive' | 'pending';
   last_login?: string;
   created_at: string;
   updated_at: string;
   avatar_url?: string;
-  phone?: string;
   custom_id?: string;
   note?: string;
   territories?: string[];

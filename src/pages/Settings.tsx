@@ -9,12 +9,13 @@ import {
 import { BusinessDetailsForm } from '@/components/settings/BusinessDetailsForm';
 import { UserPreferencesForm } from '@/components/settings/UserPreferencesForm';
 import { WorkOrderSettingsForm } from '@/components/settings/WorkOrderSettingsForm';
-import { Settings as SettingsIcon, Building2, User, Briefcase, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, Building2, User, Briefcase, Bell, UserCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Settings = () => {
   const { user } = useAuth();
@@ -44,6 +45,12 @@ const Settings = () => {
                     Manage your account and business settings
                   </p>
                 </div>
+                <Button variant="outline" asChild>
+                  <Link to="/profile">
+                    <UserCircle className="h-4 w-4 mr-2" />
+                    View My Profile
+                  </Link>
+                </Button>
               </div>
               
               <Tabs defaultValue={defaultTab} className="space-y-6">

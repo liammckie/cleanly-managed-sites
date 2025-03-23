@@ -31,11 +31,39 @@ export const authApi = {
     }
   },
   
+  // Check if a user with the given email already exists
+  async checkUserExists(email: string) {
+    try {
+      // This uses a simple auth check which doesn't require special permissions
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false
+        }
+      });
+      
+      // If we get here without an error saying user doesn't exist, the user exists
+      const userExists = !error || !error.message.includes("user does not exist");
+      return userExists;
+    } catch (error) {
+      // In case of network errors or other issues, assume user might exist to avoid duplicates
+      console.error('Error checking if user exists:', error);
+      return false;
+    }
+  },
+  
   // Create new user with fixed RLS policies
-  async createUser(email: string, password: string, fullName: string, roleId: string) {
+  async createUser(email: string, password: string, firstName: string, lastName: string, phone: string, title: string, roleId: string) {
     console.log("Creating user with email:", email);
     
     try {
+      // First check if the user already exists
+      const userExists = await this.checkUserExists(email);
+      
+      if (userExists) {
+        throw new Error(`A user with email ${email} already exists`);
+      }
+      
       // Get current user to verify admin status
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
@@ -49,18 +77,27 @@ export const authApi = {
         { user_uuid: currentUser.id }
       );
       
+      if (adminCheckError) {
+        console.error("Admin check error:", adminCheckError);
+        throw new Error("Error checking admin permissions");
+      }
+      
       if (!isAdmin) {
         console.error("Admin check result:", isAdmin);
         throw new Error("You don't have permission to create users");
       }
       
-      // Use standard signup method instead of admin.createUser
+      // Use standard signup method
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName,
+            first_name: firstName,
+            last_name: lastName,
+            full_name: `${firstName} ${lastName}`,
+            phone: phone,
+            title: title
           },
           emailRedirectTo: `${window.location.origin}/login?verified=true`
         },
@@ -83,7 +120,11 @@ export const authApi = {
         .insert({
           id: authData.user.id,
           email: email,
-          full_name: fullName,
+          full_name: `${firstName} ${lastName}`,
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone,
+          title: title,
           role_id: roleId,
           status: 'pending',
         })

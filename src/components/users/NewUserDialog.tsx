@@ -37,7 +37,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  full_name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
+  lastName: z.string().min(2, { message: 'Last name must be at least 2 characters' }),
+  phone: z.string().optional(),
+  title: z.string().optional(),
   role_id: z.string().min(1, { message: 'Please select a role' }),
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters' })
@@ -67,7 +70,10 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
-      full_name: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      title: '',
       role_id: '',
       password: '',
       confirm_password: '',
@@ -79,13 +85,18 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
       setError(null);
       console.log("Creating user with data:", { 
         email: data.email, 
-        full_name: data.full_name, 
-        role_id: data.role_id 
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        title: data.title
       });
       
       await createUser({
         email: data.email,
-        full_name: data.full_name,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone || '',
+        title: data.title || '',
         role_id: data.role_id,
         password: data.password,
       });
@@ -107,6 +118,8 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
         setError('Database policy error. Please contact your system administrator.');
       } else if (errorMessage.includes('duplicate key')) {
         setError('A user with this email already exists.');
+      } else if (errorMessage.includes('already exists')) {
+        setError(errorMessage);
       } else {
         setError(errorMessage);
       }
@@ -154,19 +167,65 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+1 (555) 123-4567" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Manager" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}
