@@ -76,11 +76,7 @@ export function BillingDetailsStep({
   };
 
   // Check if billing is currently on hold
-  const isBillingOnHold = isSiteBillingOnHold(
-    formData.billingDetails.billingOnHold,
-    formData.billingDetails.billingHoldStartDate,
-    formData.billingDetails.billingHoldEndDate
-  );
+  const isBillingOnHold = isSiteBillingOnHold(formData.billingDetails.billingOnHold);
 
   // Format date for display
   const formatDate = (dateString?: string) => {

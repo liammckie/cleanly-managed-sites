@@ -86,6 +86,8 @@ export type SiteRecord = {
   custom_id?: string;
   monthly_cost?: number;
   monthly_revenue?: number;
+  weekly_revenue?: number;
+  annual_revenue?: number;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -98,6 +100,8 @@ export type SiteRecord = {
   billing_details?: any;
   subcontractors?: any[];
   contacts?: ContactRecord[];
+  billingLines?: any[]; // Add billingLines property
+  additional_contracts?: any[]; // Add additional_contracts property
 };
 
 // Contractor related types

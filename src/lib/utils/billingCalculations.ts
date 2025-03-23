@@ -14,15 +14,15 @@ export const isSiteBillingOnHold = (isOnHold?: boolean): boolean => {
 export const calculateBillingAmounts = (
   amount: number,
   frequency: string
-): { weekly: number; monthly: number; annual: number } => {
+): { weeklyAmount: number; monthlyAmount: number; annualAmount: number } => {
   const weeklyAmount = calculateWeeklyAmount(amount, frequency);
   const monthlyAmount = calculateMonthlyAmount(weeklyAmount);
   const annualAmount = calculateAnnualAmount(weeklyAmount);
   
   return {
-    weekly: weeklyAmount,
-    monthly: monthlyAmount,
-    annual: annualAmount
+    weeklyAmount,
+    monthlyAmount,
+    annualAmount
   };
 };
 
@@ -67,7 +67,7 @@ export const calculateAnnualAmount = (weeklyAmount: number): number => {
  */
 export const calculateTotalBillingAmounts = (
   billingLines: BillingLine[]
-): { weekly: number; monthly: number; annual: number } => {
+): { totalWeeklyAmount: number; totalMonthlyAmount: number; totalAnnualAmount: number } => {
   // Initialize totals
   let totalWeeklyAmount = 0;
   let totalMonthlyAmount = 0;
@@ -77,15 +77,15 @@ export const calculateTotalBillingAmounts = (
   billingLines.forEach(line => {
     if (!line.onHold) {
       const lineAmounts = calculateBillingAmounts(line.amount || 0, line.frequency || 'monthly');
-      totalWeeklyAmount += lineAmounts.weekly;
-      totalMonthlyAmount += lineAmounts.monthly;
-      totalAnnualAmount += lineAmounts.annual;
+      totalWeeklyAmount += lineAmounts.weeklyAmount;
+      totalMonthlyAmount += lineAmounts.monthlyAmount;
+      totalAnnualAmount += lineAmounts.annualAmount;
     }
   });
   
   return {
-    weekly: totalWeeklyAmount,
-    monthly: totalMonthlyAmount,
-    annual: totalAnnualAmount
+    totalWeeklyAmount,
+    totalMonthlyAmount,
+    totalAnnualAmount
   };
 };

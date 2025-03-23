@@ -46,9 +46,9 @@ export const getSiteFormSteps = (
   handleFileUpload: (field: string, file: File) => void,
   handleFileRemove: (field: string, fileName: string) => void
 ): StepConfig[] => {
-  // This is a conversion helper for BasicInformationStep which expects a different signature
-  const handleFieldChange = (field: string) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    handleChange(field, e.target.value);
+  // Create a wrapper function to adapt handleChange to what BasicInformationStep expects
+  const handleFieldChangeEvent = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleChange(e.target.name, e.target.value);
   };
 
   return [
@@ -59,7 +59,7 @@ export const getSiteFormSteps = (
       component: (
         <BasicInformationStep
           formData={formData}
-          handleChange={handleFieldChange}
+          handleChange={handleFieldChangeEvent}
         />
       ),
     },
@@ -172,9 +172,7 @@ export const getSiteFormSteps = (
         <SubcontractorsStep
           formData={formData}
           errors={{}}
-          handleSubcontractorChange={(index, field, value) => 
-            updateSubcontractor(index, field, value)
-          }
+          handleSubcontractorChange={updateSubcontractor}
           addSubcontractor={addSubcontractor}
           removeSubcontractor={removeSubcontractor}
         />

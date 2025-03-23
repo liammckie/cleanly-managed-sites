@@ -1,6 +1,6 @@
 
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { Replenishable } from '@/components/sites/forms/types/replenishableTypes';
+import { ReplenishableSupply } from '@/components/sites/forms/types/replenishableTypes';
 
 export const useSiteFormReplenishables = (
   formData: SiteFormData,
@@ -22,13 +22,11 @@ export const useSiteFormReplenishables = (
   
   // Add a new replenishable
   const addReplenishable = () => {
-    const newReplenishable: Replenishable = {
+    const newReplenishable: ReplenishableSupply = {
+      id: crypto.randomUUID(),
       name: '',
       quantity: 0,
-      unit: '',
-      frequency: 'monthly',
-      lastDelivered: '',
-      nextDelivery: ''
+      notes: ''
     };
     
     setFormData(prev => ({

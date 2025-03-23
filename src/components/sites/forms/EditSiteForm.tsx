@@ -125,17 +125,16 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         state: site.state || '',
         postcode: site.postcode || '',
         status: site.status || 'active',
-        // Remove the notes field as it's not in SiteFormData type
-        // We use contractDetails.contractType instead
+        // Set contract type from contract_details if available
         contractDetails: {
           ...formData.contractDetails,
-          contractType: 'cleaning' // Default type
+          contractType: site.contract_details?.type || 'cleaning'
         }
       };
       
       // Add billing lines with unique IDs if available
-      if (site.billingLines && site.billingLines.length > 0) {
-        const formattedBillingLines: BillingLine[] = site.billingLines.map((line: any) => ({
+      if (site.billing_details?.billingLines && site.billing_details.billingLines.length > 0) {
+        const formattedBillingLines: BillingLine[] = site.billing_details.billingLines.map((line: any) => ({
           id: uuidv4(), // Generate unique ID for each line
           description: line.description || '',
           amount: line.amount || 0,
@@ -162,8 +161,8 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       }
       
       // Add additional contracts if available
-      if (site.additionalContracts && site.additionalContracts.length > 0) {
-        updatedFormData.additionalContracts = site.additionalContracts;
+      if (site.additional_contracts && site.additional_contracts.length > 0) {
+        updatedFormData.additionalContracts = site.additional_contracts;
       }
       
       // Update the form data
