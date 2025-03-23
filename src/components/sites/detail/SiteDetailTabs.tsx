@@ -12,16 +12,22 @@ import { ContractsTab } from './tabs/ContractsTab';
 import { Button } from '@/components/ui/button';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { contactsApi } from '@/lib/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Users, 
-  Briefcase, 
-  Calendar, 
+  History,
+  PencilRuler,
   FileText, 
   Package, 
-  Shield, 
-  File, // Changed from FileContract to File
-  UserPlus
+  UserPlus,
+  FileCog,
+  Layers
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
+import { ContractHistoryTable } from '../contract/ContractHistoryTable';
+import { useContractHistory } from '@/hooks/useContractHistory';
 
 interface SiteDetailTabsProps {
   site: SiteRecord;
@@ -30,6 +36,10 @@ interface SiteDetailTabsProps {
 export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [contractHistoryOpen, setContractHistoryOpen] = useState(false);
+  const [contractVariationOpen, setContractVariationOpen] = useState(false);
+  const navigate = useNavigate();
+  const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
   
   const handleContactSubmit = async (data: any) => {
     // Add entity_id and entity_type if not already set
@@ -53,77 +63,31 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
     setRefreshKey(prev => prev + 1);
   };
 
-  const navigateToTab = (tab: string) => {
-    setActiveTab(tab);
+  const navigateToEditSite = () => {
+    navigate(`/sites/${site.id}/edit`);
+  };
+  
+  const createContractVariation = async (notes: string) => {
+    try {
+      // Only save if we have contract details to save
+      if (site.contract_details) {
+        await contractHistoryApi.saveContractVersion(site.id, site.contract_details, notes);
+        toast.success("Contract variation recorded successfully");
+        refreshTabs();
+        setContractVariationOpen(false);
+      } else {
+        toast.error("No contract details available to record");
+      }
+    } catch (error) {
+      console.error("Error saving contract variation:", error);
+      toast.error("Failed to record contract variation");
+    }
   };
   
   return (
     <div className="space-y-6" key={refreshKey}>
-      {/* Quick Navigation Buttons */}
+      {/* Functional Action Buttons */}
       <div className="flex flex-wrap gap-2 mt-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('overview')}
-        >
-          <Users size={16} />
-          <span>Contacts</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('subcontractors')}
-        >
-          <Briefcase size={16} />
-          <span>Subcontractors</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('periodicals')}
-        >
-          <Calendar size={16} />
-          <span>Periodicals</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('job')}
-        >
-          <FileText size={16} />
-          <span>Job Specs</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('supplies')}
-        >
-          <Package size={16} />
-          <span>Supplies</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('security')}
-        >
-          <Shield size={16} />
-          <span>Security</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => navigateToTab('contracts')}
-        >
-          <File size={16} /> {/* Changed from FileContract to File */}
-          <span>Contracts</span>
-        </Button>
         <ContactDialog
           entityType="site"
           entityId={site.id}
@@ -136,7 +100,94 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
             </Button>
           }
         />
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1" 
+          onClick={() => setContractHistoryOpen(true)}
+        >
+          <History size={16} />
+          <span>Contract History</span>
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1" 
+          onClick={() => setContractVariationOpen(true)}
+        >
+          <Layers size={16} />
+          <span>Record Contract Variation</span>
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1" 
+          onClick={navigateToEditSite}
+        >
+          <FileCog size={16} />
+          <span>Edit Site Details</span>
+        </Button>
       </div>
+      
+      {/* Contract History Dialog */}
+      <Dialog open={contractHistoryOpen} onOpenChange={setContractHistoryOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Contract Version History</DialogTitle>
+          </DialogHeader>
+          <ContractHistoryTable 
+            history={history} 
+            isLoading={isLoadingHistory}
+            currentContractDetails={site.contract_details}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Contract Variation Dialog */}
+      <Dialog open={contractVariationOpen} onOpenChange={setContractVariationOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Contract Variation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              This will save the current contract details as a new version in the history.
+              You can then make changes to the contract by editing the site.
+            </p>
+            
+            <div className="space-y-2">
+              <label htmlFor="variation-notes" className="text-sm font-medium">
+                Variation Notes
+              </label>
+              <textarea
+                id="variation-notes"
+                className="w-full min-h-[100px] p-2 border rounded"
+                placeholder="Describe the reason for this contract variation..."
+              />
+            </div>
+            
+            <div className="flex justify-between pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setContractVariationOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  const notes = (document.getElementById('variation-notes') as HTMLTextAreaElement).value;
+                  createContractVariation(notes);
+                }}
+              >
+                Save Version & Continue
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="glass-card grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-6">
@@ -150,7 +201,7 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
         </TabsList>
         
         <TabsContent value="overview" className="mt-0 animate-slide-in">
-          <OverviewTab site={site} /> {/* Removed the onContactAdded prop */}
+          <OverviewTab site={site} />
         </TabsContent>
         
         <TabsContent value="subcontractors" className="mt-0 animate-slide-in">
