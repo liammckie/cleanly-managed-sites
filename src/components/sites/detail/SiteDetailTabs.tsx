@@ -19,7 +19,7 @@ import {
   FileText, 
   Package, 
   Shield, 
-  FileContract, 
+  File, // Changed from FileContract to File
   UserPlus
 } from 'lucide-react';
 
@@ -121,7 +121,7 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
           className="gap-1" 
           onClick={() => navigateToTab('contracts')}
         >
-          <FileContract size={16} />
+          <File size={16} /> {/* Changed from FileContract to File */}
           <span>Contracts</span>
         </Button>
         <ContactDialog
@@ -150,7 +150,7 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
         </TabsList>
         
         <TabsContent value="overview" className="mt-0 animate-slide-in">
-          <OverviewTab site={site} onContactAdded={refreshTabs} />
+          <OverviewTab site={site} /> {/* Removed the onContactAdded prop */}
         </TabsContent>
         
         <TabsContent value="subcontractors" className="mt-0 animate-slide-in">
