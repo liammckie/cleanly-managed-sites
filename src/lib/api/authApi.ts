@@ -121,7 +121,7 @@ export const authApi = {
           id: authData.user.id,
           email: email,
           full_name: `${firstName} ${lastName}`,
-          first_name: firstName,
+          first_name: firstName, 
           last_name: lastName,
           phone: phone,
           title: title,

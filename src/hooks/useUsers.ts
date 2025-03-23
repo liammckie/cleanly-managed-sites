@@ -41,8 +41,13 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
       return acc;
     }, {} as Record<string, UserRole>);
     
-    // Map user data to our SystemUser type
+    // Map user data to our SystemUser type with field transformations
     const users = usersData.map(user => {
+      // Extract first and last name from full_name if they don't exist
+      const nameParts = user.full_name ? user.full_name.split(' ') : ['', ''];
+      const firstName = user.first_name || nameParts[0] || '';
+      const lastName = user.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      
       const role = user.role_id ? rolesMap[user.role_id] : {
         id: '',
         name: 'No Role Assigned',
@@ -53,10 +58,10 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        first_name: firstName,
+        last_name: lastName,
         phone: user.phone,
-        title: user.title,
+        title: user.title || '',
         role,
         status: user.status as 'active' | 'inactive' | 'pending',
         last_login: user.last_login,
@@ -123,6 +128,11 @@ export function useCreateUser() {
         throw new Error("Failed to create user profile properly");
       }
       
+      // Extract name parts for consistency
+      const nameParts = newUserProfile.full_name ? newUserProfile.full_name.split(' ') : ['', ''];
+      const firstName = newUserProfile.first_name || userData.firstName || nameParts[0] || '';
+      const lastName = newUserProfile.last_name || userData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      
       // Update local cache with new user
       queryClient.setQueryData(['users'], (oldData: SystemUser[] = []) => {
         // Get role info for the new user
@@ -130,10 +140,10 @@ export function useCreateUser() {
           id: newUserProfile.id,
           email: newUserProfile.email,
           full_name: newUserProfile.full_name,
-          first_name: newUserProfile.first_name,
-          last_name: newUserProfile.last_name,
-          phone: newUserProfile.phone,
-          title: newUserProfile.title,
+          first_name: firstName,
+          last_name: lastName,
+          phone: newUserProfile.phone || '',
+          title: newUserProfile.title || '',
           role: {
             id: userData.role_id,
             name: '', // This will be populated when the query refreshes

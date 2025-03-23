@@ -35,11 +35,20 @@ const fetchUser = async (id?: string): Promise<SystemUser | null> => {
     throw roleError;
   }
   
+  // Extract first and last name from full_name if they don't exist
+  const nameParts = userData.full_name ? userData.full_name.split(' ') : ['', ''];
+  const firstName = userData.first_name || nameParts[0] || '';
+  const lastName = userData.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+  
   // Map the data to our SystemUser type
   const user: SystemUser = {
     id: userData.id,
     email: userData.email,
     full_name: userData.full_name,
+    first_name: firstName,
+    last_name: lastName,
+    phone: userData.phone,
+    title: userData.title || '',
     role: roleData ? {
       id: roleData.id,
       name: roleData.name,
@@ -56,7 +65,10 @@ const fetchUser = async (id?: string): Promise<SystemUser | null> => {
     last_login: userData.last_login,
     created_at: userData.created_at,
     updated_at: userData.updated_at,
-    avatar_url: userData.avatar_url
+    avatar_url: userData.avatar_url,
+    custom_id: userData.custom_id,
+    note: userData.notes,
+    territories: userData.territories
   };
   
   return user;
@@ -71,12 +83,24 @@ const updateUserFn = async (userData: Partial<SystemUser> & { id: string }): Pro
     status: userData.status,
   };
   
+  if (userData.first_name !== undefined) {
+    updateData.first_name = userData.first_name;
+  }
+  
+  if (userData.last_name !== undefined) {
+    updateData.last_name = userData.last_name;
+  }
+  
   if (userData.role && userData.role.id) {
     updateData.role_id = userData.role.id;
   }
   
   if (userData.phone !== undefined) {
     updateData.phone = userData.phone;
+  }
+  
+  if (userData.title !== undefined) {
+    updateData.title = userData.title;
   }
   
   if (userData.custom_id !== undefined) {

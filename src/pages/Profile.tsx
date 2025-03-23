@@ -45,10 +45,15 @@ const Profile = () => {
         throw error;
       }
       
+      // Extract first and last name from full_name if they don't exist in the database
+      const nameParts = data.full_name ? data.full_name.split(' ') : ['', ''];
+      const firstName = data.first_name || nameParts[0] || '';
+      const lastName = data.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      
       setProfile(data);
       setFormData({
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
+        first_name: firstName,
+        last_name: lastName,
         email: data.email || '',
         phone: data.phone || '',
         title: data.title || '',
@@ -82,7 +87,7 @@ const Profile = () => {
         last_name: formData.last_name,
         phone: formData.phone,
         title: formData.title,
-        updated_at: new Date()
+        updated_at: new Date().toISOString() // Convert Date to string
       };
       
       const { error } = await supabase
