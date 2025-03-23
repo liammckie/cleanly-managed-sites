@@ -26,31 +26,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { PERMISSIONS, PermissionId, PermissionsMap } from '@/types/permissions';
 
-// All available permissions in the system
-const availablePermissions = [
-  { id: 'users:read', label: 'View Users' },
-  { id: 'users:write', label: 'Create/Edit Users' },
-  { id: 'users:manage', label: 'Manage Users (Including Delete)' },
-  { id: 'roles:read', label: 'View Roles' },
-  { id: 'roles:write', label: 'Create/Edit Roles' },
-  { id: 'roles:manage', label: 'Manage Roles (Including Delete)' },
-  { id: 'sites:read', label: 'View Sites' },
-  { id: 'sites:write', label: 'Create/Edit Sites' },
-  { id: 'sites:manage', label: 'Manage Sites (Including Delete)' },
-  { id: 'clients:read', label: 'View Clients' },
-  { id: 'clients:write', label: 'Create/Edit Clients' },
-  { id: 'clients:manage', label: 'Manage Clients (Including Delete)' },
-  { id: 'contractors:read', label: 'View Contractors' },
-  { id: 'contractors:write', label: 'Create/Edit Contractors' },
-  { id: 'contractors:manage', label: 'Manage Contractors (Including Delete)' },
-  { id: 'work_orders:read', label: 'View Work Orders' },
-  { id: 'work_orders:write', label: 'Create/Edit Work Orders' },
-  { id: 'work_orders:manage', label: 'Manage Work Orders (Including Delete)' },
-  { id: 'settings:read', label: 'View Settings' },
-  { id: 'settings:write', label: 'Edit Settings' },
-  { id: 'reports:access', label: 'Access Reports' },
-];
+// Group permissions by category
+const dataPermissions = PERMISSIONS.filter(p => p.category === 'data');
+const managementPermissions = PERMISSIONS.filter(p => p.category === 'management');
+const adminPermissions = PERMISSIONS.filter(p => p.category === 'admin');
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Role name must be at least 2 characters' }),
@@ -79,16 +60,29 @@ export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Convert string array to PermissionsMap
+      const permissionsMap: PermissionsMap = {} as PermissionsMap;
+      
+      // Initialize all permissions to false
+      PERMISSIONS.forEach(permission => {
+        permissionsMap[permission.id as PermissionId] = false;
+      });
+      
+      // Set selected permissions to true
+      data.permissions.forEach(permissionId => {
+        permissionsMap[permissionId as PermissionId] = true;
+      });
+      
       await createRole({
         name: data.name,
-        permissions: data.permissions,
+        permissions: permissionsMap,
         description: data.description,
       });
       
       toast.success('Role created successfully');
       form.reset();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(`Failed to create role: ${error.message}`);
     }
   };
@@ -146,38 +140,126 @@ export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {
                 Select the permissions that this role should have.
               </FormDescription>
               
-              <div className="space-y-1 max-h-60 overflow-y-auto p-2 border rounded-md">
-                {availablePermissions.map((permission) => (
-                  <FormField
-                    key={permission.id}
-                    control={form.control}
-                    name="permissions"
-                    render={({ field }) => (
-                      <FormItem
-                        key={permission.id}
-                        className="flex flex-row items-start space-x-3 space-y-0 py-1"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value?.includes(permission.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                field.onChange([...field.value, permission.id]);
-                              } else {
-                                field.onChange(
-                                  field.value.filter((p) => p !== permission.id)
-                                );
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          {permission.label}
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                ))}
+              <div className="space-y-4 max-h-60 overflow-y-auto p-2 border rounded-md">
+                <div className="space-y-2">
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Data Management</h3>
+                  {dataPermissions.map((permission) => (
+                    <FormField
+                      key={permission.id}
+                      control={form.control}
+                      name="permissions"
+                      render={({ field }) => (
+                        <FormItem
+                          key={permission.id}
+                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(permission.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...field.value, permission.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value.filter((p) => p !== permission.id)
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-normal cursor-pointer">
+                              {permission.label}
+                            </FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              {permission.description}
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                
+                <div className="space-y-2 mt-4">
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Management</h3>
+                  {managementPermissions.map((permission) => (
+                    <FormField
+                      key={permission.id}
+                      control={form.control}
+                      name="permissions"
+                      render={({ field }) => (
+                        <FormItem
+                          key={permission.id}
+                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(permission.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...field.value, permission.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value.filter((p) => p !== permission.id)
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-normal cursor-pointer">
+                              {permission.label}
+                            </FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              {permission.description}
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+                
+                <div className="space-y-2 mt-4">
+                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Admin</h3>
+                  {adminPermissions.map((permission) => (
+                    <FormField
+                      key={permission.id}
+                      control={form.control}
+                      name="permissions"
+                      render={({ field }) => (
+                        <FormItem
+                          key={permission.id}
+                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(permission.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...field.value, permission.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value.filter((p) => p !== permission.id)
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-normal cursor-pointer">
+                              {permission.label}
+                            </FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              {permission.description}
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
               </div>
               {form.formState.errors.permissions && (
                 <FormMessage>

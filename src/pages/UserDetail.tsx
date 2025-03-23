@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@/hooks/useUser';
@@ -45,7 +44,6 @@ import { toast } from 'sonner';
 import { PermissionCheckbox } from '@/components/users/PermissionCheckbox';
 import { PERMISSIONS, getPermissionsByCategory, PermissionId, PermissionsMap } from '@/types/permissions';
 
-// Define form schema using zod
 const userFormSchema = z.object({
   full_name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -95,7 +93,6 @@ const UserDetail = () => {
 
   useEffect(() => {
     if (user) {
-      // Initialize form with user data
       form.reset({
         full_name: user.full_name,
         email: user.email,
@@ -112,7 +109,6 @@ const UserDetail = () => {
         permissions: {}
       });
 
-      // If role is defined, initialize permissions based on role
       if (user.role && roles) {
         const role = roles.find(r => r.id === user.role.id);
         if (role && role.permissions) {
@@ -125,7 +121,6 @@ const UserDetail = () => {
 
   const onSubmit = async (data: UserFormValues) => {
     try {
-      // If role is unlocked, update permissions for this specific user
       const updatedPermissions = isRoleLocked ? undefined : permissions;
       
       await updateUser({
@@ -166,11 +161,9 @@ const UserDetail = () => {
     }));
   };
 
-  // Handle role change
   const handleRoleChange = (roleId: string) => {
     form.setValue('role_id', roleId);
     
-    // Update permissions based on role
     if (roles) {
       const role = roles.find(r => r.id === roleId);
       if (role && role.permissions) {
@@ -227,7 +220,6 @@ const UserDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column */}
           <div className="col-span-2">
             <Card>
               <CardHeader>
@@ -254,7 +246,6 @@ const UserDetail = () => {
                       </div>
                     </div>
                     
-                    {/* Name */}
                     <FormField
                       control={form.control}
                       name="full_name"
@@ -269,7 +260,6 @@ const UserDetail = () => {
                       )}
                     />
                     
-                    {/* Email */}
                     <FormField
                       control={form.control}
                       name="email"
@@ -284,7 +274,6 @@ const UserDetail = () => {
                       )}
                     />
                     
-                    {/* Custom ID */}
                     <FormField
                       control={form.control}
                       name="custom_id"
@@ -302,7 +291,6 @@ const UserDetail = () => {
                       )}
                     />
                     
-                    {/* Role */}
                     <FormField
                       control={form.control}
                       name="role_id"
@@ -331,7 +319,6 @@ const UserDetail = () => {
                       )}
                     />
                     
-                    {/* Territory */}
                     <FormItem>
                       <FormLabel>Territory*</FormLabel>
                       <div className="flex items-center space-x-2">
@@ -373,7 +360,6 @@ const UserDetail = () => {
                       </FormDescription>
                     </FormItem>
                     
-                    {/* Phone */}
                     <FormField
                       control={form.control}
                       name="phone"
@@ -388,7 +374,6 @@ const UserDetail = () => {
                       )}
                     />
                     
-                    {/* Note */}
                     <div className="pt-6 border-t">
                       <h3 className="text-lg font-medium mb-2">Note</h3>
                       <FormField
@@ -421,7 +406,6 @@ const UserDetail = () => {
             </Card>
           </div>
           
-          {/* Right column */}
           <div className="space-y-6">
             <Card>
               <CardContent className="pt-6">

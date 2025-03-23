@@ -4,12 +4,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/lib/types';
 import { toast } from 'sonner';
-import { PermissionsMap } from '@/types/permissions';
+import { PermissionsMap, PermissionId } from '@/types/permissions';
 
 // Define an extended UserRole type with userCount
 interface UserRoleWithCount extends UserRole {
   userCount?: number;
 }
+
+// Convert PermissionsMap to string[] for the UI
+const mapPermissionsToArray = (permissions: PermissionsMap): string[] => {
+  return Object.entries(permissions)
+    .filter(([_, value]) => value === true)
+    .map(([key]) => key);
+};
 
 // Fetch user roles from Supabase
 const fetchRoles = async (): Promise<UserRoleWithCount[]> => {
@@ -32,7 +39,7 @@ const fetchRoles = async (): Promise<UserRoleWithCount[]> => {
     return {
       id: role.id,
       name: role.name,
-      permissions: role.permissions as unknown as string[],
+      permissions: mapPermissionsToArray(role.permissions as unknown as PermissionsMap),
       description: role.description,
       userCount: count || 0
     };
@@ -65,7 +72,7 @@ const createRoleFn = async (roleData: {
   return {
     id: data.id,
     name: data.name,
-    permissions: data.permissions as unknown as string[],
+    permissions: mapPermissionsToArray(data.permissions as unknown as PermissionsMap),
     description: data.description,
     userCount: 0
   };
@@ -101,7 +108,7 @@ const updateRoleFn = async (
   return {
     id: data.id,
     name: data.name,
-    permissions: data.permissions as unknown as string[],
+    permissions: mapPermissionsToArray(data.permissions as unknown as PermissionsMap),
     description: data.description,
     userCount: count || 0
   };

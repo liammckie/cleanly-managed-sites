@@ -75,19 +75,19 @@ const updateUserFn = async (userData: Partial<SystemUser> & { id: string }): Pro
     updateData.role_id = userData.role.id;
   }
   
-  if (userData.phone) {
+  if (userData.phone !== undefined) {
     updateData.phone = userData.phone;
   }
   
-  if (userData.custom_id) {
+  if (userData.custom_id !== undefined) {
     updateData.custom_id = userData.custom_id;
   }
   
-  if (userData.note) {
+  if (userData.note !== undefined) {
     updateData.notes = userData.note;
   }
   
-  if (userData.territories) {
+  if (userData.territories !== undefined) {
     updateData.territories = userData.territories;
   }
   

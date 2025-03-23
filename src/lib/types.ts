@@ -114,4 +114,9 @@ export interface SystemUser {
   created_at: string;
   updated_at: string;
   avatar_url?: string;
+  phone?: string;
+  custom_id?: string;
+  note?: string;
+  territories?: string[];
+  permissions?: PermissionsMap;
 }
