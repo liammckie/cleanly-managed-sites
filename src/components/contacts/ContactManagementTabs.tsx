@@ -2,9 +2,17 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building2, Building, Briefcase, Users } from 'lucide-react';
 
-export function ContactManagementTabs() {
+interface ContactManagementTabsProps {
+  onValueChange?: (value: string) => void;
+}
+
+export function ContactManagementTabs({ onValueChange }: ContactManagementTabsProps) {
   return (
-    <Tabs defaultValue="all" className="w-full">
+    <Tabs 
+      defaultValue="all" 
+      className="w-full"
+      onValueChange={onValueChange}
+    >
       <TabsList className="w-full grid grid-cols-2 md:grid-cols-5 lg:w-auto">
         <TabsTrigger value="all" className="flex items-center gap-2">
           <Users className="h-4 w-4" />
