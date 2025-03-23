@@ -1,20 +1,27 @@
 
-export type WindowCleaning = {
+export interface WindowCleaning {
   frequency: string;
   lastCompleted: string;
   nextScheduled: string;
 }
 
-export type SteamCleaning = {
+export interface SteamCleaning {
   charges: string;
   frequency: string;
   lastCompleted: string;
 }
 
-export type Periodicals = {
+export interface PeriodicalTask {
+  id: string;
+  name: string;
+  frequency: string;
+  lastCompleted?: string;
+  nextScheduled?: string;
+  notes?: string;
+}
+
+export interface Periodicals {
   windowCleaning: WindowCleaning;
   steamCleaning: SteamCleaning;
-  
-  // Add legacy properties for compatibility
-  tasks?: any[];
+  tasks?: PeriodicalTask[];
 }

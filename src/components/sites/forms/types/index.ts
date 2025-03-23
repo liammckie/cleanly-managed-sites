@@ -8,4 +8,5 @@ export * from './subcontractorTypes';
 export * from './contractTypes';
 export * from './billingTypes';
 export * from './validationUtils';
+export * from './adHocWorkTypes';
 export * from './siteFormDataTypes';

@@ -1,8 +1,13 @@
 
-export type Replenishables = {
+export interface ReplenishableSupply {
+  id: string;
+  name: string;
+  quantity?: number;
+  notes?: string;
+}
+
+export interface Replenishables {
   stock: string[];
   contactDetails: string;
-  
-  // Add legacy properties for compatibility
-  supplies?: any[];
+  supplies?: ReplenishableSupply[];
 }

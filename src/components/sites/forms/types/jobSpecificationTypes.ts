@@ -1,5 +1,15 @@
 
-export type JobSpecifications = {
+export interface WorkingDays {
+  monday: boolean;
+  tuesday: boolean;
+  wednesday: boolean;
+  thursday: boolean;
+  friday: boolean;
+  saturday: boolean;
+  sunday: boolean;
+}
+
+export interface JobSpecifications {
   daysPerWeek: number;
   hoursPerDay: number;
   directEmployees: boolean;
@@ -8,8 +18,5 @@ export type JobSpecifications = {
   equipmentDetails?: string;
   cleaningInstructions?: string;
   areas?: string[];
-  workingDays?: Record<string, boolean>;
-  serviceDeliveryType?: 'direct' | 'contractor'; // Keep for backward compatibility
-  annualContractorCost?: number;
-  contractorInvoiceFrequency?: 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
+  workingDays?: WorkingDays;
 }

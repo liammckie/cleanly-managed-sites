@@ -1,11 +1,9 @@
 
-export type SecurityDetails = {
+export interface SecurityDetails {
   accessCode: string;
   alarmCode: string;
   keyLocation: string;
   outOfHoursAccess: boolean;
-  
-  // Add legacy properties for compatibility
   needsAlarmCode?: boolean;
   needsKey?: boolean;
   hasSecurity?: boolean;

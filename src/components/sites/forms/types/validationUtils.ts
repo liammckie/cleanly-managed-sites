@@ -1,19 +1,27 @@
 
-export const isValidEmail = (email: string): boolean => {
-  if (!email) return true; // Email is optional
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+import { SiteFormData } from './siteFormDataTypes';
 
-export const isValidPhone = (phone: string): boolean => {
-  if (!phone) return true; // Phone is optional
-  const phoneRegex = /^\+?[0-9\s\-()]{8,}$/;
-  return phoneRegex.test(phone);
-};
+export interface SiteFormValidationErrors {
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  representative?: string;
+  clientId?: string;
+  customId?: string;
+}
 
-export const requiredFields = {
-  basicInformation: ['name', 'address', 'city', 'state', 'postcode', 'representative', 'clientId'],
-  contractDetails: ['startDate', 'contractNumber'],
-  billingDetails: ['rate', 'billingFrequency', 'paymentTerms'],
-  subcontractors: [] // Subcontractors are optional
-};
+export function validateBasicInfo(formData: SiteFormData): SiteFormValidationErrors {
+  const errors: SiteFormValidationErrors = {};
+  
+  if (!formData.name?.trim()) errors.name = 'Site name is required';
+  if (!formData.address?.trim()) errors.address = 'Address is required';
+  if (!formData.city?.trim()) errors.city = 'City is required';
+  if (!formData.state?.trim()) errors.state = 'State is required';
+  if (!formData.postcode?.trim()) errors.postcode = 'Postcode is required';
+  if (!formData.representative?.trim()) errors.representative = 'Representative name is required';
+  if (!formData.clientId) errors.clientId = 'Client is required';
+  
+  return errors;
+}

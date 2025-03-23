@@ -1,9 +1,7 @@
 
-import { BillingContact } from './contactTypes';
+export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
 
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
-
-export type BillingLine = {
+export interface BillingLine {
   id?: string;
   description: string;
   amount: number;
@@ -11,16 +9,24 @@ export type BillingLine = {
   isRecurring: boolean;
 }
 
-export type LaborPlan = {
-  workingDays?: Record<string, boolean>;
-  shiftStartTime?: string;
-  shiftEndTime?: string;
-  notes?: string;
+export interface LaborPlan {
+  workingDays?: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  shiftStartTime: string;
+  shiftEndTime: string;
+  notes: string;
 }
 
-export type BillingDetails = {
+export interface BillingDetails {
   rate: string;
-  billingFrequency: BillingFrequency;
+  billingFrequency: string;
   paymentTerms: string;
   invoiceMethod: string;
   accountNumber: string;
@@ -32,33 +38,17 @@ export type BillingDetails = {
   billingState: string;
   billingPostcode: string;
   useSiteAddress: boolean;
-  contacts: BillingContact[];
+  contacts: any[]; // Replace with proper type
   taxId: string;
   xeroContactId: string;
   notes: string;
-  billingLines: BillingLine[];  // Multiple billing lines per site
-  annualForecast?: string;  // Calculated annual forecast
-  
-  // Add legacy properties for compatibility
   billingContact?: string;
   billingPhone?: string;
-  
-  // Service delivery fields (moved from JobSpecifications)
+  annualForecast?: string;
   serviceDeliveryType?: 'direct' | 'contractor';
   annualContractorCost?: number;
-  contractorInvoiceFrequency?: BillingFrequency;
-  
-  // Direct employees budget
+  contractorInvoiceFrequency?: 'weekly' | 'monthly' | 'quarterly';
   weeklyBudget?: number;
-  
-  // Labor plan details
   laborPlan?: LaborPlan;
-}
-
-export type AdHocWorkAuthorization = {
-  approvalLimit: number;
-  approverName: string;
-  approverEmail: string;
-  approverPhone: string;
-  requirePurchaseOrder: boolean;
+  billingLines: BillingLine[];
 }
