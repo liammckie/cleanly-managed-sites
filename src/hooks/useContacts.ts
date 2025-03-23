@@ -86,6 +86,19 @@ export function useContacts() {
     }
   };
 
+  // Search for entities to link contacts to
+  const searchEntities = async (query: string, entityType?: string) => {
+    if (query.length < 2) return [];
+    
+    try {
+      return await contactsApi.searchEntities(query, entityType);
+    } catch (error) {
+      console.error('Error searching entities:', error);
+      toast.error('Failed to search entities');
+      return [];
+    }
+  };
+
   return {
     contacts,
     isLoading: isLoading || addContactMutation.isPending || updateContactMutation.isPending || deleteContactMutation.isPending,
@@ -96,6 +109,7 @@ export function useContacts() {
     filter: activeEntityType,
     setFilter: setActiveEntityType,
     fetchContactsForEntity,
+    searchEntities,
     addContact: (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => 
       addContactMutation.mutateAsync(contact),
     updateContact: (id: string, contact: Partial<ContactRecord>) => 
@@ -109,6 +123,8 @@ export function useContacts() {
 }
 
 export function useEntityContacts(entityId?: string, entityType?: 'client' | 'site' | 'supplier' | 'internal') {
+  const queryClient = useQueryClient();
+  
   const { data: contacts = [], isLoading, error } = useQuery({
     queryKey: ['entity-contacts', entityType, entityId],
     queryFn: () => 

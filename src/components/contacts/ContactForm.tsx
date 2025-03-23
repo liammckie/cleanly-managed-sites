@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ContactRecord } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { contactsApi } from '@/lib/api';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Search, Loader2 } from 'lucide-react';
+import { CommandInput, CommandGroup, CommandItem, CommandList, Command } from '@/components/ui/command';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -54,6 +58,11 @@ export function ContactForm({
   onCancel,
   isSubmitting = false
 }: ContactFormProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [open, setOpen] = useState(false);
+
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,6 +86,32 @@ export function ContactForm({
       entity_type: data.entity_type as 'client' | 'site' | 'supplier' | 'internal',
     };
     onSubmit(contactData);
+  };
+
+  const searchEntities = async (query: string) => {
+    if (query.length < 2) return;
+    
+    setIsSearching(true);
+    try {
+      const selectedEntityType = form.getValues('entity_type');
+      const results = await contactsApi.searchEntities(query, selectedEntityType);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching entities:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    searchEntities(value);
+  };
+
+  const selectEntity = (entity: any) => {
+    form.setValue('entity_id', entity.id);
+    form.setValue('entity_type', entity.type as any);
+    setOpen(false);
   };
 
   return (
@@ -156,50 +191,101 @@ export function ContactForm({
           )}
         />
 
-        {!entityType && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="entity_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Type</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value as 'client' | 'site' | 'supplier' | 'internal')}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a contact type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="client">Client</SelectItem>
-                      <SelectItem value="site">Site</SelectItem>
-                      <SelectItem value="supplier">Supplier</SelectItem>
-                      <SelectItem value="internal">Internal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="entity_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Entity ID</FormLabel>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="entity_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Type</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(value as 'client' | 'site' | 'supplier' | 'internal')}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Input placeholder="Entity ID" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a contact type" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
+                  <SelectContent>
+                    <SelectItem value="client">Client</SelectItem>
+                    <SelectItem value="site">Site</SelectItem>
+                    <SelectItem value="supplier">Supplier</SelectItem>
+                    <SelectItem value="internal">Internal</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="entity_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Link to Entity</FormLabel>
+                <div className="flex space-x-2">
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        type="button"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Search className="mr-2 h-4 w-4" />
+                        {field.value ? "Entity Selected" : "Search for entity..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start" side="bottom" avoidCollisions={false} className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput
+                          placeholder="Search by name..." 
+                          value={searchQuery}
+                          onValueChange={handleSearch}
+                        />
+                        {isSearching ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          </div>
+                        ) : (
+                          <CommandList>
+                            {searchResults.length > 0 ? (
+                              <CommandGroup>
+                                {searchResults.map((entity) => (
+                                  <CommandItem
+                                    key={`${entity.type}-${entity.id}`}
+                                    value={entity.id}
+                                    onSelect={() => selectEntity(entity)}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span>{entity.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {entity.type.charAt(0).toUpperCase() + entity.type.slice(1)} 
+                                        {entity.identifier ? ` • ${entity.identifier}` : ''}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            ) : searchQuery.length > 0 ? (
+                              <p className="py-6 text-center text-sm">No results found.</p>
+                            ) : null}
+                          </CommandList>
+                        )}
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="hidden"
+                    {...field}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

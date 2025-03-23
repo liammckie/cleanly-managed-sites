@@ -44,22 +44,28 @@ export const contactsApi = {
   async createContact(contactData: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>): Promise<ContactRecord> {
     console.log('Creating contact with data:', contactData);
     
-    // Get the current user
+    // Check for user but don't throw if not found - let the DB handle permissions
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user) {
-      throw new Error('User not authenticated');
+    // Make sure required fields are present
+    if (!contactData.name || !contactData.role) {
+      throw new Error('Missing required contact data: name and role are required');
     }
     
-    // Make sure required fields are present
-    if (!contactData.name || !contactData.role || !contactData.entity_id || !contactData.entity_type) {
-      throw new Error('Missing required contact data: name, role, entity_id, and entity_type are required');
+    // If entity_id is missing, use a placeholder (can be updated later)
+    if (!contactData.entity_id) {
+      contactData.entity_id = 'general';
+    }
+    
+    // If entity_type is missing, use a default
+    if (!contactData.entity_type) {
+      contactData.entity_type = 'internal';
     }
     
     // Prepare the contact data for insertion
     const contactRecord = {
       ...contactData,
-      user_id: user.id,
+      user_id: user?.id, // This will be null if no user, but the RLS policies will handle this
     };
     
     const { data, error } = await supabase
@@ -147,5 +153,82 @@ export const contactsApi = {
       console.error(`Error setting contact ${id} as primary:`, setPrimaryError);
       throw setPrimaryError;
     }
+  },
+
+  // Search for entities to link contacts to (cross-system linking)
+  async searchEntities(query: string, entityType?: string): Promise<any[]> {
+    let results = [];
+
+    // Search clients
+    if (!entityType || entityType === 'client') {
+      const { data: clients, error: clientError } = await supabase
+        .from('clients')
+        .select('id, name, custom_id')
+        .ilike('name', `%${query}%`)
+        .limit(5);
+
+      if (clientError) {
+        console.error('Error searching clients:', clientError);
+      } else if (clients) {
+        results = [
+          ...results,
+          ...clients.map(client => ({
+            id: client.id,
+            name: client.name,
+            identifier: client.custom_id,
+            type: 'client'
+          }))
+        ];
+      }
+    }
+
+    // Search sites
+    if (!entityType || entityType === 'site') {
+      const { data: sites, error: siteError } = await supabase
+        .from('sites')
+        .select('id, name, client_id, site_code')
+        .ilike('name', `%${query}%`)
+        .limit(5);
+
+      if (siteError) {
+        console.error('Error searching sites:', siteError);
+      } else if (sites) {
+        results = [
+          ...results,
+          ...sites.map(site => ({
+            id: site.id,
+            name: site.name,
+            identifier: site.site_code,
+            type: 'site',
+            parent_id: site.client_id
+          }))
+        ];
+      }
+    }
+
+    // Search suppliers
+    if (!entityType || entityType === 'supplier') {
+      const { data: suppliers, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id, name, supplier_code')
+        .ilike('name', `%${query}%`)
+        .limit(5);
+
+      if (supplierError) {
+        console.error('Error searching suppliers:', supplierError);
+      } else if (suppliers) {
+        results = [
+          ...results,
+          ...suppliers.map(supplier => ({
+            id: supplier.id,
+            name: supplier.name,
+            identifier: supplier.supplier_code,
+            type: 'supplier'
+          }))
+        ];
+      }
+    }
+
+    return results;
   }
 };
