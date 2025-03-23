@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
 import { FormProvider } from "react-hook-form";
@@ -19,7 +19,13 @@ interface EditSiteFormProps {
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Parse query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab');
+  const isContractVariation = queryParams.get('variation') === 'true';
   
   // Use the custom hooks
   const formHandlers = useSiteForm();
@@ -69,11 +75,35 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   // Get steps configuration
   const steps = getStepsConfig(formHandlers);
   
-  // Use stepper hook with validation
+  // Find appropriate step index if tab parameter is provided
+  const getInitialStepIndex = () => {
+    if (!initialTab) return 0;
+    
+    // Map tab names to step indexes
+    const tabToStepMap: Record<string, number> = {
+      'basic': 0,
+      'contract': 2, // Assuming contract details is the 3rd step (index 2)
+      'billing': 3,  // Assuming billing is the 4th step (index 3)
+      'contacts': 4  // Assuming contacts is the 5th step (index 4)
+    };
+    
+    return tabToStepMap[initialTab] || 0;
+  };
+  
+  // Use stepper hook with validation and initial step from URL
   const stepper = useSiteFormStepper({
     steps,
-    validateStep: formHandlers.validateStep
+    validateStep: formHandlers.validateStep,
+    initialStep: getInitialStepIndex()
   });
+  
+  // Show appropriate title based on whether this is a contract variation
+  const getPageTitle = () => {
+    if (isContractVariation) {
+      return "Contract Variation: " + site.name;
+    }
+    return "Edit Site: " + site.name;
+  };
   
   // Handle submit
   const handleSubmit = async () => {
@@ -87,7 +117,13 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     try {
       // Use the API to update the site
       await sitesApi.updateSite(site.id, formHandlers.formData);
-      toast.success("Site has been updated successfully!");
+      
+      if (isContractVariation) {
+        toast.success("Contract variation completed successfully!");
+      } else {
+        toast.success("Site has been updated successfully!");
+      }
+      
       navigate(`/sites/${site.id}`);
     } catch (error) {
       console.error('Error updating site:', error);
@@ -102,7 +138,22 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       <Form {...formHandlers.form}>
         <form>
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Edit Site: {site.name}</h1>
+            <h1 className="text-2xl font-bold mb-6">{getPageTitle()}</h1>
+            
+            {isContractVariation && (
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <History className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      You are creating a contract variation. The previous version has been saved in the contract history.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <FormProgressBar 
               currentStep={stepper.currentStep}

@@ -5,10 +5,11 @@ import { StepConfigItem } from '@/components/sites/forms/siteFormConfig';
 type UseSiteFormStepperProps = {
   steps: StepConfigItem[];
   validateStep: (stepIndex: number) => boolean;
+  initialStep?: number;
 }
 
-export function useSiteFormStepper({ steps, validateStep }: UseSiteFormStepperProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+export function useSiteFormStepper({ steps, validateStep, initialStep = 0 }: UseSiteFormStepperProps) {
+  const [currentStep, setCurrentStep] = useState(initialStep);
   
   const handleNext = (onSubmit?: () => void) => {
     // Validate the current step before proceeding

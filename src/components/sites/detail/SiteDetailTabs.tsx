@@ -67,20 +67,21 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
     navigate(`/sites/${site.id}/edit`);
   };
   
-  const createContractVariation = async (notes: string) => {
+  const startContractVariation = async () => {
     try {
       // Only save if we have contract details to save
       if (site.contract_details) {
-        await contractHistoryApi.saveContractVersion(site.id, site.contract_details, notes);
-        toast.success("Contract variation recorded successfully");
-        refreshTabs();
-        setContractVariationOpen(false);
+        await contractHistoryApi.saveContractVersion(site.id, site.contract_details, "Contract variation initiated");
+        toast.success("Contract version saved. Redirecting to edit contract...");
+        
+        // Navigate to edit site with contract tab selected
+        navigate(`/sites/${site.id}/edit?tab=contract&variation=true`);
       } else {
-        toast.error("No contract details available to record");
+        toast.error("No contract details available to modify");
       }
     } catch (error) {
       console.error("Error saving contract variation:", error);
-      toast.error("Failed to record contract variation");
+      toast.error("Failed to initiate contract variation");
     }
   };
   
@@ -112,13 +113,13 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
         </Button>
         
         <Button 
-          variant="outline" 
+          variant="default" 
           size="sm" 
           className="gap-1" 
-          onClick={() => setContractVariationOpen(true)}
+          onClick={startContractVariation}
         >
           <Layers size={16} />
-          <span>Record Contract Variation</span>
+          <span>Make Contract Variation</span>
         </Button>
         
         <Button 
@@ -143,49 +144,6 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
             isLoading={isLoadingHistory}
             currentContractDetails={site.contract_details}
           />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Contract Variation Dialog */}
-      <Dialog open={contractVariationOpen} onOpenChange={setContractVariationOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Record Contract Variation</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              This will save the current contract details as a new version in the history.
-              You can then make changes to the contract by editing the site.
-            </p>
-            
-            <div className="space-y-2">
-              <label htmlFor="variation-notes" className="text-sm font-medium">
-                Variation Notes
-              </label>
-              <textarea
-                id="variation-notes"
-                className="w-full min-h-[100px] p-2 border rounded"
-                placeholder="Describe the reason for this contract variation..."
-              />
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setContractVariationOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => {
-                  const notes = (document.getElementById('variation-notes') as HTMLTextAreaElement).value;
-                  createContractVariation(notes);
-                }}
-              >
-                Save Version & Continue
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
       
