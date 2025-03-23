@@ -6,9 +6,7 @@ import { handleSiteSubcontractors } from './siteSubcontractorsApi';
 import { contractHistoryApi } from './contractHistoryApi';
 import { convertSiteContactToContactRecord } from '@/components/sites/forms/types/contactTypes';
 
-// Site API functions
 export const sitesApi = {
-  // Get all sites for the current user
   async getSites(): Promise<SiteRecord[]> {
     const { data: sites, error } = await supabase
       .from('sites')
@@ -20,21 +18,19 @@ export const sitesApi = {
       throw error;
     }
     
-    // Transform the result to include client_name
     const transformedSites = sites.map(site => {
       const clientData = site.clients as { name: string } | null;
       return {
         ...site,
         client_name: clientData?.name || null,
-        clients: undefined, // Remove the clients property
-        contacts: [] // Initialize with empty contacts array
+        clients: undefined,
+        contacts: []
       };
     });
     
     return transformedSites as SiteRecord[];
   },
   
-  // Get a single site by ID
   async getSiteById(id: string): Promise<SiteRecord | null> {
     const { data, error } = await supabase
       .from('sites')
@@ -47,23 +43,20 @@ export const sitesApi = {
       throw error;
     }
     
-    // Transform to include client_name
     if (data) {
       const clientData = data.clients as { name: string } | null;
       const transformedData = {
         ...data,
         client_name: clientData?.name || null,
-        clients: undefined, // Remove the clients property
-        contacts: [] // Initialize with empty array
+        clients: undefined,
+        contacts: []
       };
       
       try {
-        // Get contacts for the site separately
         const siteContacts = await getSiteContacts(id);
         transformedData.contacts = siteContacts;
       } catch (contactError) {
         console.error(`Error fetching contacts for site ${id}:`, contactError);
-        // Keep empty contacts array if there's an error
       }
       
       return transformedData as SiteRecord;
@@ -72,16 +65,13 @@ export const sitesApi = {
     return null;
   },
   
-  // Create a new site
   async createSite(siteData: SiteFormData): Promise<SiteRecord> {
-    // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error('User not authenticated');
     }
     
-    // Prepare the site data for insertion
     const siteRecord = {
       name: siteData.name,
       address: siteData.address,
@@ -96,15 +86,15 @@ export const sitesApi = {
       client_id: siteData.clientId,
       monthly_cost: siteData.monthlyCost,
       monthly_revenue: siteData.monthlyRevenue,
+      weekly_revenue: siteData.weeklyRevenue,
+      annual_revenue: siteData.annualRevenue,
       custom_id: siteData.customId && siteData.customId.trim() !== '' ? siteData.customId : null,
-      // Store the detailed data as JSON
       security_details: JSON.stringify(siteData.securityDetails) as any,
       job_specifications: JSON.stringify(siteData.jobSpecifications) as any,
       periodicals: JSON.stringify(siteData.periodicals) as any,
       replenishables: JSON.stringify(siteData.replenishables) as any,
       contract_details: JSON.stringify(siteData.contractDetails) as any,
       billing_details: JSON.stringify(siteData.billingDetails) as any,
-      // If there are subcontractors, store them
       has_subcontractors: siteData.subcontractors.length > 0,
     };
     
@@ -119,30 +109,34 @@ export const sitesApi = {
       throw error;
     }
     
-    // Handle subcontractors separately
     if (siteData.subcontractors.length > 0) {
       await handleSiteSubcontractors(data.id, siteData.subcontractors, user.id);
     }
     
-    // Handle contacts separately
     if (siteData.contacts && siteData.contacts.length > 0) {
       const contactRecords = siteData.contacts.map(contact => 
         convertSiteContactToContactRecord(contact, data.id));
       await handleSiteContacts(data.id, contactRecords, user.id);
     }
     
-    // Create a result that includes the contacts
+    if (siteData.additionalContracts && siteData.additionalContracts.length > 0) {
+      await handleSiteAdditionalContracts(data.id, siteData.additionalContracts, user.id);
+    }
+    
+    if (siteData.billingDetails && siteData.billingDetails.billingLines && 
+        siteData.billingDetails.billingLines.length > 0) {
+      await handleSiteBillingLines(data.id, siteData.billingDetails.billingLines);
+    }
+    
     const result = {
       ...data,
       contacts: siteData.contacts || []
-    } as unknown as SiteRecord; // Use unknown to avoid type issues
+    } as unknown as SiteRecord;
     
     return result;
   },
   
-  // Update an existing site
   async updateSite(id: string, siteData: Partial<SiteFormData>): Promise<SiteRecord> {
-    // First, if contract details are provided, save the contract history
     if (siteData.contractDetails) {
       try {
         await contractHistoryApi.saveContractVersion(
@@ -152,7 +146,6 @@ export const sitesApi = {
         );
       } catch (error) {
         console.error('Error saving contract history:', error);
-        // Don't throw here, continue with site update
       }
     }
     
@@ -169,10 +162,11 @@ export const sitesApi = {
       client_id: siteData.clientId,
       monthly_cost: siteData.monthlyCost,
       monthly_revenue: siteData.monthlyRevenue,
+      weekly_revenue: siteData.weeklyRevenue,
+      annual_revenue: siteData.annualRevenue,
       custom_id: siteData.customId && siteData.customId.trim() !== '' ? siteData.customId : null,
     };
 
-    // Update the JSON fields if provided
     if (siteData.securityDetails) {
       updateData.security_details = JSON.stringify(siteData.securityDetails);
     }
@@ -207,55 +201,53 @@ export const sitesApi = {
       throw error;
     }
     
-    // Get the current user for user_id
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Handle subcontractors if provided
     if (siteData.subcontractors) {
       await handleSiteSubcontractors(id, siteData.subcontractors, user?.id);
     }
     
-    // Handle contacts if provided
     if (siteData.contacts) {
       const contactRecords = siteData.contacts.map(contact => 
         convertSiteContactToContactRecord(contact, id));
       await handleSiteContacts(id, contactRecords, user?.id);
     }
     
-    // Fetch the contacts to include in the result
+    if (siteData.additionalContracts) {
+      await handleSiteAdditionalContracts(id, siteData.additionalContracts, user?.id);
+    }
+    
+    if (siteData.billingDetails && siteData.billingDetails.billingLines) {
+      await handleSiteBillingLines(id, siteData.billingDetails.billingLines);
+    }
+    
     let contacts = [];
     try {
       contacts = await getSiteContacts(id);
     } catch (contactError) {
       console.error(`Error fetching contacts for site ${id}:`, contactError);
-      // Keep empty contacts array if there's an error
     }
     
-    // Create a result that includes the contacts
     const result = {
       ...data,
       contacts: contacts || []
-    } as unknown as SiteRecord; // Use unknown to avoid type issues
+    } as unknown as SiteRecord;
     
     return result;
   },
   
-  // Delete a site
   async deleteSite(id: string): Promise<void> {
-    // First delete related contacts
     await supabase
       .from('contacts')
       .delete()
       .eq('entity_id', id)
       .eq('entity_type', 'site');
     
-    // Then delete related subcontractors
     await supabase
       .from('subcontractors')
       .delete()
       .eq('site_id', id);
     
-    // Finally delete the site
     const { error } = await supabase
       .from('sites')
       .delete()

@@ -1,352 +1,124 @@
+
 import React, { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Trash2, PauseCircle, PlayCircle, CreditCard } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { BillingLine, BillingFrequency } from './types/billingTypes';
 import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
-import { formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { BillingLine } from '@/hooks/useSiteFormBillingLines';
 
 interface BillingLineItemProps {
   line: BillingLine;
-  index: number;
-  updateLine: (index: number, field: keyof BillingLine, value: any) => void;
-  removeLine: (index: number) => void;
-  isFirst: boolean;
+  onUpdate: (id: string, field: keyof BillingLine, value: any) => void;
+  onRemove: (id: string) => void;
+  isRemovable?: boolean;
 }
 
-export function BillingLineItem({
+export const BillingLineItem: React.FC<BillingLineItemProps> = ({
   line,
-  index,
-  updateLine,
-  removeLine,
-  isFirst,
-}: BillingLineItemProps) {
-  // Recalculate and update amounts when amount or frequency changes
+  onUpdate,
+  onRemove,
+  isRemovable = true
+}) => {
+  // Calculate derived amounts when amount or frequency changes
   useEffect(() => {
-    if (line.amount) {
+    if (line.amount !== undefined && line.frequency) {
       const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
         line.amount,
-        line.frequency as BillingFrequency
+        line.frequency
       );
-      updateLine(index, 'weeklyAmount', weeklyAmount);
-      updateLine(index, 'monthlyAmount', monthlyAmount);
-      updateLine(index, 'annualAmount', annualAmount);
+      
+      // Only update if values have changed
+      if (line.weeklyAmount !== weeklyAmount) {
+        onUpdate(line.id, 'weeklyAmount', weeklyAmount);
+      }
+      
+      if (line.monthlyAmount !== monthlyAmount) {
+        onUpdate(line.id, 'monthlyAmount', monthlyAmount);
+      }
+      
+      if (line.annualAmount !== annualAmount) {
+        onUpdate(line.id, 'annualAmount', annualAmount);
+      }
     }
-  }, [line.amount, line.frequency, index, updateLine]);
-
-  const frequencyOptions = [
-    { value: "weekly", label: "Weekly" },
-    { value: "fortnightly", label: "Fortnightly" },
-    { value: "monthly", label: "Monthly" },
-    { value: "quarterly", label: "Quarterly" },
-    { value: "annually", label: "Annually" },
-  ];
-
-  // Toggle billing hold
-  const toggleHold = () => {
-    // If turning on hold, set the start date to today
-    if (!line.onHold) {
-      updateLine(index, 'onHold', true);
-      updateLine(index, 'holdStartDate', format(new Date(), 'yyyy-MM-dd'));
-    } else {
-      updateLine(index, 'onHold', false);
-    }
-  };
-
-  // Format date for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    return format(new Date(dateString), 'dd/MM/yyyy');
-  };
+  }, [line.amount, line.frequency, line.id, onUpdate]);
 
   return (
-    <Card key={line.id || index} className={`p-4 border relative ${line.onHold ? 'bg-gray-50' : ''}`}>
-      {line.onHold && (
-        <div className="absolute top-0 left-0 w-full bg-yellow-100 text-yellow-800 px-4 py-1 text-sm flex items-center">
-          <PauseCircle size={14} className="mr-1" />
-          <span>
-            On Hold
-            {line.holdStartDate && ` since ${formatDate(line.holdStartDate)}`}
-            {line.holdEndDate && ` until ${formatDate(line.holdEndDate)}`}
-          </span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
-        <div className="space-y-2">
-          <Label htmlFor={`line-${index}-description`}>Description</Label>
-          <Input
-            id={`line-${index}-description`}
-            placeholder="Line item description"
-            value={line.description}
-            onChange={(e) => updateLine(index, 'description', e.target.value)}
-            className="glass-input"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor={`line-${index}-amount`}>Amount</Label>
-          <Input
-            id={`line-${index}-amount`}
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            value={line.amount}
-            onChange={(e) => updateLine(index, 'amount', parseFloat(e.target.value))}
-            className="glass-input"
-          />
-        </div>
+    <div className="grid grid-cols-12 gap-4 items-start mb-4 p-3 bg-slate-50 rounded-md border border-slate-200">
+      <div className="col-span-12 md:col-span-5">
+        <Label htmlFor={`description-${line.id}`} className="text-xs mb-1 block">
+          Description
+        </Label>
+        <Input
+          id={`description-${line.id}`}
+          value={line.description}
+          onChange={(e) => onUpdate(line.id, 'description', e.target.value)}
+          placeholder="Service description"
+        />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="space-y-2">
-          <Label htmlFor={`line-${index}-frequency`}>Frequency</Label>
-          <select
-            id={`line-${index}-frequency`}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 glass-input"
-            value={line.frequency}
-            onChange={(e) => updateLine(index, 'frequency', e.target.value)}
-          >
-            {frequencyOptions.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </div>
-        
+      <div className="col-span-4 md:col-span-2">
+        <Label htmlFor={`amount-${line.id}`} className="text-xs mb-1 block">
+          Amount
+        </Label>
+        <Input
+          id={`amount-${line.id}`}
+          type="number"
+          value={line.amount === 0 ? '' : line.amount}
+          onChange={(e) => onUpdate(line.id, 'amount', parseFloat(e.target.value) || 0)}
+          placeholder="0.00"
+        />
+      </div>
+      
+      <div className="col-span-8 md:col-span-3">
+        <Label htmlFor={`frequency-${line.id}`} className="text-xs mb-1 block">
+          Frequency
+        </Label>
+        <Select
+          value={line.frequency}
+          onValueChange={(value) => onUpdate(line.id, 'frequency', value)}
+        >
+          <SelectTrigger id={`frequency-${line.id}`}>
+            <SelectValue placeholder="Select frequency" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="fortnightly">Fortnightly</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="quarterly">Quarterly</SelectItem>
+            <SelectItem value="annually">Annually</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="col-span-9 md:col-span-1 flex items-end justify-start">
         <div className="flex items-center space-x-2 mt-6">
-          <Checkbox 
-            id={`line-${index}-recurring`} 
+          <Switch
+            id={`recurring-${line.id}`}
             checked={line.isRecurring}
-            onCheckedChange={(checked) => updateLine(index, 'isRecurring', !!checked)}
+            onCheckedChange={(checked) => onUpdate(line.id, 'isRecurring', checked)}
           />
-          <label
-            htmlFor={`line-${index}-recurring`}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Recurring Charge
-          </label>
-        </div>
-      </div>
-
-      {/* Show calculated amounts */}
-      <div className="grid grid-cols-3 gap-4 mb-4 bg-gray-50 p-2 rounded">
-        <div className="text-sm">
-          <span className="text-muted-foreground mr-2">Weekly:</span>
-          <span className="font-medium">{formatCurrency(line.weeklyAmount, 'AUD')}</span>
-        </div>
-        <div className="text-sm">
-          <span className="text-muted-foreground mr-2">Monthly:</span>
-          <span className="font-medium">{formatCurrency(line.monthlyAmount, 'AUD')}</span>
-        </div>
-        <div className="text-sm">
-          <span className="text-muted-foreground mr-2">Annual:</span>
-          <span className="font-medium">{formatCurrency(line.annualAmount, 'AUD')}</span>
+          <Label htmlFor={`recurring-${line.id}`} className="text-xs">
+            Recurring
+          </Label>
         </div>
       </div>
       
-      {/* Display credit information if applicable */}
-      {line.creditAmount && line.creditAmount > 0 && (
-        <div className="mt-2 p-2 bg-green-50 rounded text-sm">
-          <span className="text-green-700 font-medium">
-            Credit applied: {formatCurrency(line.creditAmount, 'AUD')} 
-            {line.creditDate && ` on ${formatDate(line.creditDate)}`}
-          </span>
-          {line.creditReason && (
-            <p className="text-green-600 mt-1">{line.creditReason}</p>
-          )}
-        </div>
-      )}
-
-      <div className="flex justify-end gap-2 mt-2">
-        {/* Hold button */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={line.onHold ? "text-green-600" : "text-yellow-600"}
-            >
-              {line.onHold ? (
-                <>
-                  <PlayCircle size={16} className="mr-1" />
-                  Resume Billing
-                </>
-              ) : (
-                <>
-                  <PauseCircle size={16} className="mr-1" />
-                  Hold Billing
-                </>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-4">
-              <h4 className="font-medium">
-                {line.onHold ? "Resume Billing" : "Place Billing On Hold"}
-              </h4>
-
-              {!line.onHold ? (
-                <>
-                  <div className="space-y-2">
-                    <Label>Hold Start Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left">
-                          {line.holdStartDate ? formatDate(line.holdStartDate) : "Select start date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={line.holdStartDate ? new Date(line.holdStartDate) : undefined}
-                          onSelect={(date) => updateLine(index, 'holdStartDate', date ? format(date, 'yyyy-MM-dd') : undefined)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Hold End Date (Optional)</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left">
-                          {line.holdEndDate ? formatDate(line.holdEndDate) : "Select end date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={line.holdEndDate ? new Date(line.holdEndDate) : undefined}
-                          onSelect={(date) => updateLine(index, 'holdEndDate', date ? format(date, 'yyyy-MM-dd') : undefined)}
-                          initialFocus
-                          disabled={(date) => {
-                            if (!line.holdStartDate) return false;
-                            return date < new Date(line.holdStartDate);
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </>
-              ) : null}
-
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => toggleHold()}>
-                  {line.onHold ? "Resume Billing" : "Place On Hold"}
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Credit button */}
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="text-green-600">
-              <CreditCard size={16} className="mr-1" />
-              Apply Credit
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Apply Credit</DialogTitle>
-              <DialogDescription>
-                Apply a credit to this billing line.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="credit-amount">Credit Amount</Label>
-                <Input
-                  id="credit-amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Enter credit amount"
-                  value={line.creditAmount || ''}
-                  onChange={(e) => updateLine(index, 'creditAmount', e.target.value ? parseFloat(e.target.value) : undefined)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Credit Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left">
-                      {line.creditDate ? formatDate(line.creditDate) : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={line.creditDate ? new Date(line.creditDate) : undefined}
-                      onSelect={(date) => updateLine(index, 'creditDate', date ? format(date, 'yyyy-MM-dd') : undefined)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="credit-reason">Reason for Credit</Label>
-                <Textarea
-                  id="credit-reason"
-                  placeholder="Enter reason for credit"
-                  value={line.creditReason || ''}
-                  onChange={(e) => updateLine(index, 'creditReason', e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button type="submit">Apply Credit</Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete button - only visible if not the first line */}
-        {!isFirst && (
+      <div className="col-span-3 md:col-span-1 flex items-end justify-end">
+        {isRemovable && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => removeLine(index)}
-            className="h-8 w-8 p-0 text-destructive"
+            onClick={() => onRemove(line.id)}
+            className="h-9 w-9 mt-6"
           >
-            <Trash2 size={16} />
+            <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         )}
       </div>
-    </Card>
+    </div>
   );
-}
+};
