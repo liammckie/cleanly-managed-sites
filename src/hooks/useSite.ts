@@ -24,8 +24,8 @@ export const useSite = (id?: string): SiteResult => {
         setIsLoading(true);
         setError(null);
 
-        // Using the sitesApi.getSite method instead of a non-existent getSiteById
-        const siteData = await sitesApi.getSite(id);
+        // Using the sitesApi.getSiteById method
+        const siteData = await sitesApi.getSiteById(id);
         setSite(siteData);
       } catch (err) {
         console.error('Error fetching site:', err);

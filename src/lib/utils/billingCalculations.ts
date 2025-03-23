@@ -9,6 +9,7 @@ export const calculateWeeklyAmount = (amount: number, frequency: string) => {
     case 'weekly':
       return amount;
     case 'biweekly':
+    case 'fortnightly':
       return amount / 2;
     case 'monthly':
       return amount / 4.33;  // Average weeks in a month
@@ -29,6 +30,7 @@ export const calculateMonthlyAmount = (amount: number, frequency: string) => {
     case 'weekly':
       return amount * 4.33;  // Average weeks in a month
     case 'biweekly':
+    case 'fortnightly':
       return amount * 2.17;  // Half of a month
     case 'monthly':
       return amount;
@@ -49,6 +51,7 @@ export const calculateAnnualAmount = (amount: number, frequency: string) => {
     case 'weekly':
       return amount * 52;    // 52 weeks in a year
     case 'biweekly':
+    case 'fortnightly':
       return amount * 26;    // 26 biweekly periods in a year
     case 'monthly':
       return amount * 12;    // 12 months in a year
@@ -59,6 +62,40 @@ export const calculateAnnualAmount = (amount: number, frequency: string) => {
     default:
       return 0;
   }
+};
+
+/**
+ * Calculates all billing amounts (weekly, monthly, annual) based on a billing line's frequency and amount
+ */
+export const calculateBillingAmounts = (amount: number, frequency: string) => {
+  return {
+    weeklyAmount: calculateWeeklyAmount(amount, frequency),
+    monthlyAmount: calculateMonthlyAmount(amount, frequency),
+    annualAmount: calculateAnnualAmount(amount, frequency)
+  };
+};
+
+/**
+ * Calculates the total amounts for all billing lines (weekly, monthly, annual)
+ */
+export const calculateTotalBillingAmounts = (billingLines: BillingLine[]) => {
+  let totalWeeklyAmount = 0;
+  let totalMonthlyAmount = 0;
+  let totalAnnualAmount = 0;
+
+  billingLines.forEach(line => {
+    if (!isBillingLineOnHold(line)) {
+      totalWeeklyAmount += line.weeklyAmount || 0;
+      totalMonthlyAmount += line.monthlyAmount || 0;
+      totalAnnualAmount += line.annualAmount || 0;
+    }
+  });
+
+  return {
+    totalWeeklyAmount,
+    totalMonthlyAmount,
+    totalAnnualAmount
+  };
 };
 
 /**

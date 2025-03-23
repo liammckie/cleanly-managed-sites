@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, ChangeEvent } from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps/ContactsStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
@@ -46,6 +46,11 @@ export const getSiteFormSteps = (
   handleFileUpload: (field: string, file: File) => void,
   handleFileRemove: (field: string, fileName: string) => void
 ): StepConfig[] => {
+  // Helper function to convert our handleChange to expected event handler
+  const createChangeHandler = (field: string) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleChange(field, e.target.value);
+  };
+
   return [
     {
       id: 'basic-info',
@@ -54,7 +59,7 @@ export const getSiteFormSteps = (
       component: (
         <BasicInformationStep
           formData={formData}
-          handleChange={handleChange}
+          handleChange={createChangeHandler}
           handleNestedChange={handleNestedChange}
           handleArrayChange={handleArrayChange}
           handleArrayUpdate={handleArrayUpdate}
@@ -70,8 +75,6 @@ export const getSiteFormSteps = (
       component: (
         <ContactsStep
           formData={formData}
-          handleChange={handleChange}
-          handleNestedChange={handleNestedChange}
         />
       ),
     },
@@ -82,7 +85,6 @@ export const getSiteFormSteps = (
       component: (
         <ContractDetailsStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleDoubleNestedChange={handleDoubleNestedChange}
           addContractTerm={addContractTerm}
@@ -116,7 +118,6 @@ export const getSiteFormSteps = (
       component: (
         <JobSpecificationsStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleFileUpload={handleFileUpload}
           handleFileRemove={handleFileRemove}
@@ -130,7 +131,6 @@ export const getSiteFormSteps = (
       component: (
         <PeriodicalsStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
         />
       ),
@@ -142,7 +142,6 @@ export const getSiteFormSteps = (
       component: (
         <ReplenishablesStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           addReplenishable={addReplenishable}
           updateReplenishable={updateReplenishable}
@@ -157,7 +156,6 @@ export const getSiteFormSteps = (
       component: (
         <SecurityStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
         />
       ),
@@ -169,7 +167,6 @@ export const getSiteFormSteps = (
       component: (
         <SubcontractorsStep
           formData={formData}
-          handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           addSubcontractor={addSubcontractor}
           updateSubcontractor={updateSubcontractor}

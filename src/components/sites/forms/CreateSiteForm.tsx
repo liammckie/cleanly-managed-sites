@@ -51,7 +51,28 @@ export function CreateSiteForm() {
     console.log(`Removing file ${fileName} from ${field}`);
   };
   
-  // Get steps configuration
+  // Fallback handlers for any missing functions
+  const addSubcontractor = formHandlers.addSubcontractor || (() => {});
+  const updateSubcontractor = formHandlers.updateSubcontractor || ((index: number, field: string, value: any) => {});
+  const removeSubcontractor = formHandlers.removeSubcontractor || ((index: number) => {});
+  
+  const addReplenishable = formHandlers.addReplenishable || (() => {});
+  const updateReplenishable = formHandlers.updateReplenishable || ((index: number, field: string, value: any) => {});
+  const removeReplenishable = formHandlers.removeReplenishable || ((index: number) => {});
+  
+  const addBillingLine = formHandlers.addBillingLine || (() => {});
+  const updateBillingLine = formHandlers.updateBillingLine || ((id: string, field: string, value: any) => {});
+  const removeBillingLine = formHandlers.removeBillingLine || ((id: string) => {});
+  
+  const addContractTerm = formHandlers.addContractTerm || (() => {});
+  const updateContractTerm = formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {});
+  const removeContractTerm = formHandlers.removeContractTerm || ((index: number) => {});
+  
+  const addAdditionalContract = formHandlers.addAdditionalContract || (() => {});
+  const updateAdditionalContract = formHandlers.updateAdditionalContract || ((index: number, field: string, value: any) => {});
+  const removeAdditionalContract = formHandlers.removeAdditionalContract || ((index: number) => {});
+  
+  // Get steps configuration with defined handlers
   const steps = getSiteFormSteps(
     formHandlers.formData,
     (field: string, value: any) => formHandlers.handleChange({ target: { name: field, value } } as any),
@@ -61,21 +82,21 @@ export function CreateSiteForm() {
     formHandlers.handleDoubleNestedChange,
     addArrayItem,
     removeArrayItem,
-    formHandlers.addSubcontractor || (() => {}),
-    formHandlers.updateSubcontractor || ((index: number, field: string, value: any) => {}),
-    formHandlers.removeSubcontractor || ((index: number) => {}),
-    formHandlers.addReplenishable || (() => {}),
-    formHandlers.updateReplenishable || ((index: number, field: string, value: any) => {}),
-    formHandlers.removeReplenishable || ((index: number) => {}),
-    formHandlers.addBillingLine || (() => {}),
-    formHandlers.updateBillingLine || ((id: string, field: string, value: any) => {}),
-    formHandlers.removeBillingLine || ((id: string) => {}),
-    formHandlers.addContractTerm || (() => {}),
-    formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {}),
-    formHandlers.removeContractTerm || ((index: number) => {}),
-    formHandlers.addAdditionalContract || (() => {}),
-    formHandlers.updateAdditionalContract || ((index: number, field: string, value: any) => {}),
-    formHandlers.removeAdditionalContract || ((index: number) => {}),
+    addSubcontractor,
+    updateSubcontractor,
+    removeSubcontractor,
+    addReplenishable,
+    updateReplenishable,
+    removeReplenishable,
+    addBillingLine,
+    updateBillingLine,
+    removeBillingLine,
+    addContractTerm,
+    updateContractTerm,
+    removeContractTerm,
+    addAdditionalContract,
+    updateAdditionalContract,
+    removeAdditionalContract,
     handleFileUpload,
     handleFileRemove
   );
