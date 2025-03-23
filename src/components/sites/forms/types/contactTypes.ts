@@ -17,7 +17,7 @@ export type SiteContact = {
   is_primary?: boolean;
   notes?: string;
   entity_id?: string;
-  entity_type?: 'site' | 'client';
+  entity_type?: 'site' | 'client';  // Keep as site/client for site forms
   id?: string; // Add id field for existing contacts
   created_at?: string;
   updated_at?: string;
@@ -38,7 +38,7 @@ export const convertSiteContactToContactRecord = (
     is_primary: contact.is_primary,
     notes: contact.notes,
     entity_id: entityId,
-    entity_type: 'site',
+    entity_type: 'site',  // Hardcode to 'site' for this converter
     created_at: contact.created_at,
     updated_at: contact.updated_at
   };
@@ -58,7 +58,7 @@ export const convertContactRecordToSiteContact = (
     is_primary: contact.is_primary,
     notes: contact.notes,
     entity_id: contact.entity_id,
-    entity_type: contact.entity_type,
+    entity_type: contact.entity_type as 'site' | 'client', // Type assertion to narrow the type
     created_at: contact.created_at,
     updated_at: contact.updated_at
   };
