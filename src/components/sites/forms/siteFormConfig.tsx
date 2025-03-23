@@ -4,7 +4,7 @@ import { SiteFormData } from './siteFormTypes';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { SubcontractorsStep } from './steps/SubcontractorsStep';
 import { PeriodicalsStep } from './steps/PeriodicalsStep';
-import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
+import JobSpecificationsStep from './steps/JobSpecificationsStep';
 import { ReplenishablesStep } from './steps/ReplenishablesStep';
 import { SecurityStep } from './steps/SecurityStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';

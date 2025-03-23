@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,13 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AreaSpecification } from '../types/jobSpecificationTypes';
 
 interface JobSpecificationsStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
 }
 
-const JobSpecificationsStep = ({ formData, handleNestedChange }) => {
+export const JobSpecificationsStep: React.FC<JobSpecificationsStepProps> = ({ formData, handleNestedChange }) => {
   // Local state for area management
   const [areaName, setAreaName] = useState('');
   const [areaDetails, setAreaDetails] = useState('');
@@ -119,15 +121,15 @@ const JobSpecificationsStep = ({ formData, handleNestedChange }) => {
                   <div key={area} className="flex items-center space-x-2">
                     <Checkbox
                       id={`area-${area}`}
-                      checked={formData.jobSpecifications.areas?.includes(area) || false}
+                      checked={formData.jobSpecifications.areas?.some(a => a.name === area) || false}
                       onCheckedChange={(checked) => {
                         let areas = [...(formData.jobSpecifications.areas || [])];
                         if (checked) {
-                          if (!areas.includes(area)) {
-                            areas.push(area);
+                          if (!areas.some(a => a.name === area)) {
+                            areas.push({ name: area, details: '' });
                           }
                         } else {
-                          areas = areas.filter(a => a !== area);
+                          areas = areas.filter(a => a.name !== area);
                         }
                         handleNestedChange('jobSpecifications', 'areas', areas);
                       }}
