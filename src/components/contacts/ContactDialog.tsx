@@ -10,6 +10,7 @@ import { ContactForm } from './ContactForm';
 import { ContactRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ContactDialogProps {
   contact?: ContactRecord;
@@ -19,6 +20,7 @@ interface ContactDialogProps {
   isSubmitting?: boolean;
   trigger?: React.ReactNode;
   title?: string;
+  onSuccess?: () => void;
 }
 
 export function ContactDialog({
@@ -28,7 +30,8 @@ export function ContactDialog({
   onSubmit,
   isSubmitting = false,
   trigger,
-  title
+  title,
+  onSuccess
 }: ContactDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -36,8 +39,17 @@ export function ContactDialog({
     try {
       await onSubmit(data);
       setOpen(false);
+      
+      // Notify success
+      toast.success(contact ? 'Contact updated successfully' : 'Contact added successfully');
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error submitting contact:", error);
+      toast.error(`Failed to ${contact ? 'update' : 'add'} contact`);
       // Keep dialog open if there's an error
     }
   };

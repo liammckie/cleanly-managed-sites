@@ -1,5 +1,6 @@
 
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { ServiceOption } from '@/components/sites/forms/types/subcontractorTypes';
 
 export const useSiteFormSubcontractors = (
   formData: SiteFormData,
@@ -8,7 +9,7 @@ export const useSiteFormSubcontractors = (
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
 ) => {
   // Handle subcontractor changes with type safety
-  const handleSubcontractorChange = (index: number, field: string, value: string) => {
+  const handleSubcontractorChange = (index: number, field: string, value: string | number | boolean | ServiceOption[]) => {
     const updatedSubcontractors = [...formData.subcontractors];
     updatedSubcontractors[index] = {
       ...updatedSubcontractors[index],
@@ -20,12 +21,14 @@ export const useSiteFormSubcontractors = (
       subcontractors: updatedSubcontractors
     }));
     
-    // Clear errors for the field
-    const errorKey = `subcontractors[${index}].${field}`;
-    if (errors[errorKey] && value.trim()) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[errorKey];
-      setErrors(updatedErrors);
+    // Clear errors for the field if it's a string field
+    if (typeof value === 'string' && field !== 'customServices') {
+      const errorKey = `subcontractors[${index}].${field}`;
+      if (errors[errorKey] && value.trim()) {
+        const updatedErrors = { ...errors };
+        delete updatedErrors[errorKey];
+        setErrors(updatedErrors);
+      }
     }
   };
   
@@ -35,7 +38,16 @@ export const useSiteFormSubcontractors = (
       ...prev,
       subcontractors: [
         ...prev.subcontractors,
-        { businessName: '', contactName: '', email: '', phone: '' }
+        { 
+          businessName: '', 
+          contactName: '', 
+          email: '', 
+          phone: '',
+          services: [],
+          customServices: '',
+          monthlyCost: undefined,
+          isFlatRate: true
+        }
       ]
     }));
   };

@@ -23,6 +23,11 @@ export async function handleSiteSubcontractors(
       email: sub.email,
       phone: sub.phone,
       user_id: userId,
+      // Add the new fields as JSON since they're not native columns
+      services: sub.services || [],
+      custom_services: sub.customServices || null,
+      monthly_cost: sub.monthlyCost || null,
+      is_flat_rate: sub.isFlatRate !== undefined ? sub.isFlatRate : true
     }));
     
     const { error: subError } = await supabase
