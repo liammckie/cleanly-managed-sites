@@ -21,7 +21,7 @@ export {
   updateBusinessDetails,
   uploadBusinessLogo,
   contractorsApi,
-  contactsApi
+  contactsApi  // Make sure contactsApi is exported here
 };
 
 // Re-export types from the API modules

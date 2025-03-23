@@ -7,5 +7,6 @@ export * from './api/subcontractorsApi';
 export * from './api/authApi';
 export * from './api/workorders';
 export * from './api/contractors';
+export * from './api/contactsApi'; // Add this line to export contactsApi
 // Export types but avoid duplication by using the types from api/types
 export * from './api/types';
