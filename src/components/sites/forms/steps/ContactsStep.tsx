@@ -5,7 +5,7 @@ import { SiteContact } from '../types/contactTypes';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, X, StarIcon, Star } from 'lucide-react';
+import { UserPlus, X, Star } from 'lucide-react';
 
 export interface ContactsStepProps {
   formData: SiteFormData;

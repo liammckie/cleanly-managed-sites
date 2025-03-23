@@ -2,7 +2,7 @@
 import { ContactRecord } from '@/lib/types';
 
 export interface SiteContact extends ContactRecord {
-  isPrimary?: boolean;
+  // Ensure we only have one primary flag property using is_primary from ContactRecord
   role: string; // Changed from optional to required to match ContactRecord
 }
 
@@ -18,7 +18,6 @@ export interface BillingContact {
 export function convertContactRecordToSiteContact(contact: ContactRecord): SiteContact {
   return {
     ...contact,
-    isPrimary: contact.is_primary || false,
     role: contact.role || ''
   };
 }
@@ -31,7 +30,7 @@ export function convertSiteContactToContactRecord(contact: SiteContact, entityId
     department: contact.department || undefined,
     email: contact.email || undefined,
     phone: contact.phone || undefined,
-    is_primary: contact.isPrimary || false,
+    is_primary: contact.is_primary || false,
     notes: contact.notes || undefined,
     entity_id: entityId,
     entity_type: 'site',
