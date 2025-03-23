@@ -11,6 +11,13 @@ export type BillingLine = {
   isRecurring: boolean;
 }
 
+export type LaborPlan = {
+  workingDays?: Record<string, boolean>;
+  shiftStartTime?: string;
+  shiftEndTime?: string;
+  notes?: string;
+}
+
 export type BillingDetails = {
   rate: string;
   billingFrequency: BillingFrequency;
@@ -40,6 +47,12 @@ export type BillingDetails = {
   serviceDeliveryType?: 'direct' | 'contractor';
   annualContractorCost?: number;
   contractorInvoiceFrequency?: BillingFrequency;
+  
+  // Direct employees budget
+  weeklyBudget?: number;
+  
+  // Labor plan details
+  laborPlan?: LaborPlan;
 }
 
 export type AdHocWorkAuthorization = {

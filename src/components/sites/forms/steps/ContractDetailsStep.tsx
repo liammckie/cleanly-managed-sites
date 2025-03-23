@@ -15,6 +15,7 @@ import {
 import { SiteFormData } from '../siteFormTypes';
 import { History, Plus, Trash2, Calculator } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface ContractDetailsStepProps {
   formData: SiteFormData;
@@ -32,6 +33,9 @@ export function ContractDetailsStep({
   updateContractTerm
 }: ContractDetailsStepProps) {
   const [annualValue, setAnnualValue] = useState<number>(0);
+  const [annualDirectCost, setAnnualDirectCost] = useState<number>(0);
+  const [annualContractorCost, setAnnualContractorCost] = useState<number>(0);
+  const [profitMargin, setProfitMargin] = useState<number>(0);
 
   // Calculate annual value based on billing cycle and contract value
   useEffect(() => {
@@ -68,6 +72,37 @@ export function ContractDetailsStep({
       }]);
     }
   }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
+
+  // Calculate annual direct cost based on weekly budget
+  useEffect(() => {
+    if (formData.billingDetails.serviceDeliveryType === 'direct') {
+      const weeklyBudget = formData.billingDetails.weeklyBudget || 0;
+      const annualCost = weeklyBudget * 52;
+      setAnnualDirectCost(annualCost);
+      
+      // Calculate profit margin
+      if (annualValue > 0) {
+        const profit = annualValue - annualCost;
+        const margin = (profit / annualValue) * 100;
+        setProfitMargin(margin);
+      }
+    }
+  }, [formData.billingDetails.weeklyBudget, annualValue, formData.billingDetails.serviceDeliveryType]);
+
+  // Calculate annual contractor cost
+  useEffect(() => {
+    if (formData.billingDetails.serviceDeliveryType === 'contractor') {
+      const contractorCost = formData.billingDetails.annualContractorCost || 0;
+      setAnnualContractorCost(contractorCost);
+      
+      // Calculate profit margin
+      if (annualValue > 0) {
+        const profit = annualValue - contractorCost;
+        const margin = (profit / annualValue) * 100;
+        setProfitMargin(margin);
+      }
+    }
+  }, [formData.billingDetails.annualContractorCost, annualValue, formData.billingDetails.serviceDeliveryType]);
 
   return (
     <div className="space-y-6">
@@ -197,6 +232,211 @@ export function ContractDetailsStep({
             />
           </div>
         )}
+      </div>
+      
+      {/* Service Delivery Type section */}
+      <div className="glass-card p-6 space-y-4">
+        <h3 className="text-lg font-medium">Service Delivery Method</h3>
+        
+        <div className="space-y-3">
+          <Label>How will services be delivered?</Label>
+          <RadioGroup 
+            value={formData.billingDetails.serviceDeliveryType || 'direct'} 
+            onValueChange={(value) => handleNestedChange('billingDetails', 'serviceDeliveryType', value)}
+            className="flex flex-col space-y-1"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="direct" id="direct" />
+              <Label htmlFor="direct">Direct Employees</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="contractor" id="contractor" />
+              <Label htmlFor="contractor">Contractor</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
+        {formData.billingDetails.serviceDeliveryType === 'direct' ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="weekly-budget">Weekly Budget ($)</Label>
+                <Input
+                  id="weekly-budget"
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.billingDetails.weeklyBudget || ''}
+                  onChange={(e) => handleNestedChange('billingDetails', 'weeklyBudget', parseFloat(e.target.value))}
+                  className="glass-input"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Annual Labor Cost Forecast</Label>
+                <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ${annualDirectCost.toFixed(2)}
+                </div>
+              </div>
+            </div>
+            
+            {/* Labor Plan */}
+            <Card className="border border-muted">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-medium">
+                  Labor Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-7 gap-2">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                      <div key={day} className="text-center">
+                        <Label htmlFor={`day-${day.toLowerCase()}`} className="text-xs">{day}</Label>
+                        <div className="mt-1">
+                          <Checkbox 
+                            id={`day-${day.toLowerCase()}`} 
+                            checked={formData.billingDetails.laborPlan?.workingDays?.[day.toLowerCase()] || false}
+                            onCheckedChange={(checked) => {
+                              const workingDays = {
+                                ...(formData.billingDetails.laborPlan?.workingDays || {}),
+                                [day.toLowerCase()]: checked
+                              };
+                              handleNestedChange('billingDetails', 'laborPlan', {
+                                ...formData.billingDetails.laborPlan,
+                                workingDays
+                              });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="shift-start-time">Shift Start Time</Label>
+                      <Input
+                        id="shift-start-time"
+                        type="time"
+                        value={formData.billingDetails.laborPlan?.shiftStartTime || ''}
+                        onChange={(e) => {
+                          handleNestedChange('billingDetails', 'laborPlan', {
+                            ...formData.billingDetails.laborPlan,
+                            shiftStartTime: e.target.value
+                          });
+                        }}
+                        className="glass-input"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="shift-end-time">Shift End Time</Label>
+                      <Input
+                        id="shift-end-time"
+                        type="time"
+                        value={formData.billingDetails.laborPlan?.shiftEndTime || ''}
+                        onChange={(e) => {
+                          handleNestedChange('billingDetails', 'laborPlan', {
+                            ...formData.billingDetails.laborPlan,
+                            shiftEndTime: e.target.value
+                          });
+                        }}
+                        className="glass-input"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="labor-notes">Labor Notes</Label>
+                    <Textarea
+                      id="labor-notes"
+                      placeholder="Enter any additional information about the labor plan..."
+                      rows={3}
+                      value={formData.billingDetails.laborPlan?.notes || ''}
+                      onChange={(e) => {
+                        handleNestedChange('billingDetails', 'laborPlan', {
+                          ...formData.billingDetails.laborPlan,
+                          notes: e.target.value
+                        });
+                      }}
+                      className="glass-input resize-none"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="annual-contractor-cost">Annual Contractor Cost ($)</Label>
+              <Input
+                id="annual-contractor-cost"
+                type="number"
+                placeholder="0.00"
+                value={formData.billingDetails.annualContractorCost || ''}
+                onChange={(e) => handleNestedChange('billingDetails', 'annualContractorCost', parseFloat(e.target.value))}
+                className="glass-input"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="contractor-invoice-frequency">Contractor Invoice Frequency</Label>
+              <Select 
+                value={formData.billingDetails.contractorInvoiceFrequency || 'monthly'}
+                onValueChange={(value) => handleNestedChange('billingDetails', 'contractorInvoiceFrequency', value)}
+              >
+                <SelectTrigger id="contractor-invoice-frequency" className="glass-input">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="annually">Annually</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        
+        {/* Profit Calculation */}
+        {(formData.billingDetails.serviceDeliveryType === 'direct' && formData.billingDetails.weeklyBudget) || 
+         (formData.billingDetails.serviceDeliveryType === 'contractor' && formData.billingDetails.annualContractorCost) ? (
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+            <h4 className="font-medium mb-2">Profit Calculation</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Annual Revenue</p>
+                <p className="font-medium">${annualValue.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Annual Cost</p>
+                <p className="font-medium">
+                  ${formData.billingDetails.serviceDeliveryType === 'direct' 
+                    ? annualDirectCost.toFixed(2) 
+                    : annualContractorCost.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Annual Profit</p>
+                <p className="font-medium">
+                  ${(annualValue - (formData.billingDetails.serviceDeliveryType === 'direct' 
+                    ? annualDirectCost 
+                    : annualContractorCost)).toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Profit Margin</p>
+                <p className={`font-medium ${profitMargin < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {profitMargin.toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
       
       <div className="glass-card p-6 space-y-4">

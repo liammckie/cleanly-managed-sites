@@ -85,7 +85,6 @@ export const getInitialFormData = (): SiteFormData => ({
     daysPerWeek: 5,
     hoursPerDay: 3,
     directEmployees: true,
-    serviceDeliveryType: 'direct', // Keep for backward compatibility
     notes: '',
     requiresSpecialEquipment: false,
     equipmentDetails: '',
@@ -159,9 +158,24 @@ export const getInitialFormData = (): SiteFormData => ({
     billingContact: '',
     billingPhone: '',
     annualForecast: '',
-    serviceDeliveryType: 'direct', // Add service delivery type field to billing details
-    annualContractorCost: 0, // Add contractor cost field
-    contractorInvoiceFrequency: 'monthly', // Add contractor invoice frequency
+    serviceDeliveryType: 'direct', // Service delivery type field
+    annualContractorCost: 0, // Contractor cost field
+    contractorInvoiceFrequency: 'monthly', // Contractor invoice frequency
+    weeklyBudget: 0, // Weekly budget for direct employees
+    laborPlan: { // Labor plan for direct employees
+      workingDays: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false
+      },
+      shiftStartTime: '',
+      shiftEndTime: '',
+      notes: ''
+    },
     billingLines: [{
       id: crypto.randomUUID(),
       description: 'General Contract Cleaning',
