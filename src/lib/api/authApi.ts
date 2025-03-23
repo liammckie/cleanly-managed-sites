@@ -33,23 +33,34 @@ export const authApi = {
   
   // Create new user (admin only function)
   async createUser(email: string, password: string, fullName: string, roleId: string) {
-    // First create the auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
+    console.log("AuthAPI: Creating user", email);
+    
+    try {
+      // First create auth user with standard auth signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/login?verified=true`
+        }
+      });
+      
+      if (authError) {
+        console.error('Error creating user auth:', authError);
+        throw authError;
       }
-    });
-    
-    if (authError) {
-      console.error('Error creating user with admin API:', authError);
-      throw authError;
-    }
-    
-    // Then create the profile
-    if (authData.user) {
+      
+      if (!authData.user) {
+        throw new Error('Failed to create user authentication');
+      }
+
+      console.log("Auth user created:", authData.user.id);
+      
+      // Then create the profile directly with a separate API call
+      // Insert into user_profiles with ID matching the auth user
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .insert({
@@ -57,7 +68,7 @@ export const authApi = {
           email: email,
           full_name: fullName,
           role_id: roleId,
-          status: 'active',
+          status: 'pending',
         })
         .select()
         .single();
@@ -67,9 +78,11 @@ export const authApi = {
         throw profileError;
       }
       
+      console.log("User profile created:", profileData);
       return profileData;
+    } catch (error) {
+      console.error('Error in createUser flow:', error);
+      throw error;
     }
-    
-    throw new Error('Failed to create user');
   }
 };

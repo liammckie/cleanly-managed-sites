@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser, UserRole } from '@/lib/types';
 import { toast } from 'sonner';
+import { authApi } from '@/lib/api/authApi';
 
 // Fetch users from Supabase
 const fetchUsers = async (): Promise<SystemUser[]> => {
@@ -72,7 +73,7 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
   }
 };
 
-// Function to create a user
+// Function to create a user - now delegates to authApi
 const createUserFn = async (userData: {
   email: string;
   full_name: string;
@@ -80,46 +81,14 @@ const createUserFn = async (userData: {
   password: string;
 }): Promise<SystemUser> => {
   try {
-    // Create the user in Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-      options: {
-        data: {
-          full_name: userData.full_name,
-        },
-        emailRedirectTo: `${window.location.origin}/login?verified=true`
-      }
-    });
-    
-    if (authError) {
-      console.error('Error creating user:', authError);
-      throw authError;
-    }
-    
-    if (!authData.user) {
-      throw new Error('Failed to create user');
-    }
-    
-    // Create user profile using the service role if needed
-    // For now, let's try to create it using the current user's permissions
-    // and the proper RLS policies should handle it
-    const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
-      .insert({
-        id: authData.user.id,
-        email: userData.email,
-        full_name: userData.full_name,
-        role_id: userData.role_id,
-        status: 'pending',
-      })
-      .select()
-      .single();
-    
-    if (profileError) {
-      console.error('Error creating user profile:', profileError);
-      throw profileError;
-    }
+    console.log("Creating user via authApi:", userData.email);
+    // Use the authApi to handle the user creation
+    const profileData = await authApi.createUser(
+      userData.email,
+      userData.password,
+      userData.full_name,
+      userData.role_id
+    );
     
     // Fetch the role
     const { data: roleData, error: roleError } = await supabase

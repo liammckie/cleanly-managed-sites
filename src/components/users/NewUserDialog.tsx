@@ -100,7 +100,16 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
       }, 3000);
     } catch (error: any) {
       console.error('Error in form submission:', error);
-      setError(error.message || 'Failed to create user');
+      
+      // Show a more specific error message
+      const errorMessage = error.message || 'Failed to create user';
+      if (errorMessage.includes('infinite recursion')) {
+        setError('Database policy error. Please contact your system administrator.');
+      } else if (errorMessage.includes('duplicate key')) {
+        setError('A user with this email already exists.');
+      } else {
+        setError(errorMessage);
+      }
     }
   };
 
