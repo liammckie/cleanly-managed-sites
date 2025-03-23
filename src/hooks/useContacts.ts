@@ -75,7 +75,7 @@ export function useContacts() {
   });
 
   // Fetch contacts for a specific entity
-  const fetchContactsForEntity = async (entityId: string, entityType: 'client' | 'site') => {
+  const fetchContactsForEntity = async (entityId: string, entityType: 'client' | 'site' | 'supplier' | 'internal') => {
     try {
       const entityContacts = await contactsApi.getContactsByEntityId(entityId, entityType);
       return entityContacts;
@@ -108,7 +108,7 @@ export function useContacts() {
   };
 }
 
-export function useEntityContacts(entityId?: string, entityType?: 'client' | 'site') {
+export function useEntityContacts(entityId?: string, entityType?: 'client' | 'site' | 'supplier' | 'internal') {
   const { data: contacts = [], isLoading, error } = useQuery({
     queryKey: ['entity-contacts', entityType, entityId],
     queryFn: () => 

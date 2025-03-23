@@ -61,7 +61,7 @@ export type ContactRecord = {
   is_primary?: boolean;
   notes?: string;
   entity_id: string;
-  entity_type: 'site' | 'client';
+  entity_type: 'site' | 'client' | 'supplier' | 'internal';
   user_id?: string;
   created_at: string;
   updated_at: string;
