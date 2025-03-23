@@ -43,15 +43,29 @@ const Contacts = () => {
     addContact,
     updateContact,
     deleteContact,
-    setPrimaryContact
+    setPrimaryContact,
+    setFilter
   } = useContacts();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    setFilter(value === 'all' ? undefined : value);
   };
 
   const handleAddContact = async (contactData: Partial<ContactRecord>) => {
-    await addContact(contactData as any);
+    try {
+      await addContact(contactData as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
+    } catch (error) {
+      console.error('Error adding contact:', error);
+    }
+  };
+
+  const handleUpdateContact = async (id: string, contactData: Partial<ContactRecord>) => {
+    try {
+      await updateContact(id, contactData);
+    } catch (error) {
+      console.error('Error updating contact:', error);
+    }
   };
 
   const handleSetPrimary = async (contact: ContactRecord) => {
@@ -61,7 +75,9 @@ const Contacts = () => {
   };
 
   const handleDeleteContact = async (id: string) => {
-    await deleteContact(id);
+    if (window.confirm('Are you sure you want to delete this contact?')) {
+      await deleteContact(id);
+    }
   };
 
   const filteredContacts = React.useMemo(() => {
@@ -101,6 +117,7 @@ const Contacts = () => {
             </div>
             <ContactDialog
               onSubmit={handleAddContact}
+              isSubmitting={isLoading}
               title="Add New Contact"
             />
           </div>
@@ -199,14 +216,14 @@ const Contacts = () => {
                               <DropdownMenuContent align="end">
                                 <ContactDialog
                                   contact={contact}
-                                  onSubmit={(data) => updateContact(contact.id, data)}
+                                  onSubmit={(data) => handleUpdateContact(contact.id, data)}
                                   trigger={
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                       Edit Contact
                                     </DropdownMenuItem>
                                   }
                                 />
-                                {!contact.is_primary && (
+                                {!contact.is_primary && contact.entity_id && (
                                   <DropdownMenuItem onSelect={() => handleSetPrimary(contact)}>
                                     Set as Primary
                                   </DropdownMenuItem>

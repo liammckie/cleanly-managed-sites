@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ContactRecord } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { contactsApi } from '@/lib/api/contactsApi';
+import { useContacts } from '@/hooks/useContacts';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Search, Loader2 } from 'lucide-react';
 import { CommandInput, CommandGroup, CommandItem, CommandList, Command } from '@/components/ui/command';
@@ -62,6 +62,7 @@ export function ContactForm({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [open, setOpen] = useState(false);
+  const { searchEntities } = useContacts();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
@@ -80,6 +81,14 @@ export function ContactForm({
     },
   });
 
+  useEffect(() => {
+    // Update form when entityId or entityType props change
+    if (entityId && entityType) {
+      form.setValue('entity_id', entityId);
+      form.setValue('entity_type', entityType as any);
+    }
+  }, [entityId, entityType, form]);
+
   const handleSubmit = (data: ContactFormValues) => {
     const contactData: Partial<ContactRecord> = {
       ...data,
@@ -88,7 +97,7 @@ export function ContactForm({
     onSubmit(contactData);
   };
 
-  const searchEntities = async (query: string) => {
+  const searchForEntities = async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
       return;
@@ -97,8 +106,8 @@ export function ContactForm({
     setIsSearching(true);
     try {
       const selectedEntityType = form.getValues('entity_type');
-      const results = await contactsApi.searchEntities(query, selectedEntityType);
-      setSearchResults(results || []);
+      const results = await searchEntities(query, selectedEntityType);
+      setSearchResults(Array.isArray(results) ? results : []);
     } catch (error) {
       console.error('Error searching entities:', error);
       setSearchResults([]);
@@ -109,7 +118,7 @@ export function ContactForm({
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    searchEntities(value);
+    searchForEntities(value);
   };
 
   const selectEntity = (entity: any) => {
@@ -203,8 +212,11 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Contact Type</FormLabel>
                 <Select
-                  onValueChange={(value) => field.onChange(value as 'client' | 'site' | 'supplier' | 'internal')}
-                  defaultValue={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value as 'client' | 'site' | 'supplier' | 'internal');
+                    form.setValue('entity_id', ''); // Reset entity_id when type changes
+                  }}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -275,7 +287,9 @@ export function ContactForm({
                                 </CommandGroup>
                               ) : searchQuery.length > 0 ? (
                                 <div className="py-6 text-center text-sm">No results found.</div>
-                              ) : null}
+                              ) : (
+                                <div className="py-6 text-center text-sm">Type at least 2 characters to search</div>
+                              )}
                             </>
                           )}
                         </CommandList>

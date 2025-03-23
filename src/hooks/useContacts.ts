@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contactsApi } from '@/lib/api/contactsApi'; // Import directly from the source file
+import { contactsApi } from '@/lib/api/contactsApi';
 import { ContactRecord } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -74,18 +74,6 @@ export function useContacts() {
     }
   });
 
-  // Fetch contacts for a specific entity
-  const fetchContactsForEntity = async (entityId: string, entityType: 'client' | 'site' | 'supplier' | 'internal') => {
-    try {
-      const entityContacts = await contactsApi.getContactsByEntityId(entityId, entityType);
-      return entityContacts;
-    } catch (error) {
-      console.error(`Error fetching contacts for ${entityType} ${entityId}:`, error);
-      toast.error(`Failed to load contacts for this ${entityType}`);
-      throw error;
-    }
-  };
-
   // Search for entities to link contacts to
   const searchEntities = async (query: string, entityType?: string) => {
     if (!query || query.length < 2) return [];
@@ -109,7 +97,6 @@ export function useContacts() {
     isDeleting: deleteContactMutation.isPending,
     filter: activeEntityType,
     setFilter: setActiveEntityType,
-    fetchContactsForEntity,
     searchEntities,
     addContact: (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => 
       addContactMutation.mutateAsync(contact),
@@ -135,9 +122,60 @@ export function useEntityContacts(entityId?: string, entityType?: 'client' | 'si
     enabled: !!entityId && !!entityType,
   });
   
+  const createContactMutation = useMutation({
+    mutationFn: (contactData: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => {
+      // Ensure entity_id and entity_type are set correctly
+      const formattedData = {
+        ...contactData,
+        entity_id: entityId,
+        entity_type: entityType
+      };
+      return contactsApi.createContact(formattedData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entity-contacts', entityType, entityId] });
+      toast.success('Contact added successfully');
+    },
+    onError: (error: any) => {
+      console.error('Error creating contact:', error);
+      toast.error(`Failed to add contact: ${error.message}`);
+    },
+  });
+  
+  const deleteContactMutation = useMutation({
+    mutationFn: (id: string) => contactsApi.deleteContact(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entity-contacts', entityType, entityId] });
+      toast.success('Contact removed successfully');
+    },
+    onError: (error: any) => {
+      console.error('Error deleting contact:', error);
+      toast.error(`Failed to remove contact: ${error.message}`);
+    },
+  });
+  
+  const setPrimaryContactMutation = useMutation({
+    mutationFn: (id: string) => 
+      contactsApi.setPrimaryContact(id, entityId!, entityType!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entity-contacts', entityType, entityId] });
+      toast.success('Primary contact updated');
+    },
+    onError: (error: any) => {
+      console.error('Error setting primary contact:', error);
+      toast.error(`Failed to update primary contact: ${error.message}`);
+    },
+  });
+  
   return {
     contacts,
     isLoading,
-    error
+    isError: !!error,
+    error,
+    createContact: createContactMutation.mutate,
+    deleteContact: deleteContactMutation.mutate,
+    setPrimaryContact: setPrimaryContactMutation.mutate,
+    isCreating: createContactMutation.isPending,
+    isDeleting: deleteContactMutation.isPending,
   };
 }

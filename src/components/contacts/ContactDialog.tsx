@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -31,11 +30,16 @@ export function ContactDialog({
   trigger,
   title
 }: ContactDialogProps) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async (data: Partial<ContactRecord>) => {
-    await onSubmit(data);
-    setOpen(false);
+    try {
+      await onSubmit(data);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error submitting contact:", error);
+      // Keep dialog open if there's an error
+    }
   };
 
   return (

@@ -52,19 +52,11 @@ export const contactsApi = {
       throw new Error('Missing required contact data: name and role are required');
     }
     
-    // If entity_id is missing, use a placeholder (can be updated later)
-    if (!contactData.entity_id) {
-      contactData.entity_id = 'general';
-    }
-    
-    // If entity_type is missing, use a default
-    if (!contactData.entity_type) {
-      contactData.entity_type = 'internal';
-    }
-    
-    // Prepare the contact data for insertion
+    // If entity_id is missing or empty, use null instead of a placeholder
+    // This will be better handled by the database
     const contactRecord = {
       ...contactData,
+      entity_id: contactData.entity_id && contactData.entity_id.trim() !== '' ? contactData.entity_id : null,
       user_id: user?.id, // This will be null if no user, but the RLS policies will handle this
     };
     
@@ -157,15 +149,16 @@ export const contactsApi = {
 
   // Search for entities to link contacts to (cross-system linking)
   async searchEntities(query: string, entityType?: string): Promise<any[]> {
+    // Default empty array for results
     let results: any[] = [];
 
     if (!query || query.length < 2) {
       return results;
     }
 
-    // Search clients
-    if (!entityType || entityType === 'client') {
-      try {
+    try {
+      // Search clients
+      if (!entityType || entityType === 'client') {
         const { data: clients, error: clientError } = await supabase
           .from('clients')
           .select('id, name, custom_id')
@@ -185,14 +178,10 @@ export const contactsApi = {
             }))
           ];
         }
-      } catch (error) {
-        console.error('Error in client search:', error);
       }
-    }
 
-    // Search sites
-    if (!entityType || entityType === 'site') {
-      try {
+      // Search sites
+      if (!entityType || entityType === 'site') {
         const { data: sites, error: siteError } = await supabase
           .from('sites')
           .select('id, name, client_id, custom_id')
@@ -213,43 +202,38 @@ export const contactsApi = {
             }))
           ];
         }
-      } catch (error) {
-        console.error('Error in site search:', error);
       }
-    }
 
-    // Search contractors (as a fallback for suppliers)
-    if (!entityType || entityType === 'supplier') {
-      try {
-        // Check if the contractors table exists and has the required fields
-        const { data: contractors, error: contractorError } = await supabase
-          .from('contractors')
-          .select('id, business_name, abn')
-          .ilike('business_name', `%${query}%`)
-          .limit(5);
+      // Search contractors (as a fallback for suppliers)
+      if (!entityType || entityType === 'supplier') {
+        try {
+          const { data: contractors, error: contractorError } = await supabase
+            .from('contractors')
+            .select('id, business_name, abn')
+            .ilike('business_name', `%${query}%`)
+            .limit(5);
 
-        if (contractorError) {
-          console.error('Error searching contractors:', contractorError);
-        } else if (contractors && Array.isArray(contractors)) {
-          // Process each contractor record, ensuring we have valid data
-          const contractorResults = contractors.map(contractor => {
-            // Make sure we have all properties before accessing them
-            return {
+          if (contractorError) {
+            console.error('Error searching contractors:', contractorError);
+          } else if (contractors && Array.isArray(contractors)) {
+            const contractorResults = contractors.map(contractor => ({
               id: contractor.id,
               name: contractor.business_name,
-              // Use ABN as an identifier if available
               identifier: contractor.abn || '',
               type: 'supplier'
-            };
-          });
-          
-          results = [...results, ...contractorResults];
+            }));
+            
+            results = [...results, ...contractorResults];
+          }
+        } catch (error) {
+          console.error('Error in contractor search:', error);
         }
-      } catch (error) {
-        console.error('Error in contractor search:', error);
       }
-    }
 
-    return results;
+      return results;
+    } catch (error) {
+      console.error('Error in searchEntities:', error);
+      return [];
+    }
   }
 };
