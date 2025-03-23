@@ -9,7 +9,7 @@ export type JobSpecifications = {
   cleaningInstructions?: string;
   areas?: string[];
   workingDays?: Record<string, boolean>;
-  serviceDeliveryType?: 'direct' | 'contractor';
+  serviceDeliveryType?: 'direct' | 'contractor'; // Keep for backward compatibility
   annualContractorCost?: number;
   contractorInvoiceFrequency?: 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 }

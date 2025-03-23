@@ -35,6 +35,11 @@ export type BillingDetails = {
   // Add legacy properties for compatibility
   billingContact?: string;
   billingPhone?: string;
+  
+  // Service delivery fields (moved from JobSpecifications)
+  serviceDeliveryType?: 'direct' | 'contractor';
+  annualContractorCost?: number;
+  contractorInvoiceFrequency?: BillingFrequency;
 }
 
 export type AdHocWorkAuthorization = {

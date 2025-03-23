@@ -85,7 +85,7 @@ export const getInitialFormData = (): SiteFormData => ({
     daysPerWeek: 5,
     hoursPerDay: 3,
     directEmployees: true,
-    serviceDeliveryType: 'direct',
+    serviceDeliveryType: 'direct', // Keep for backward compatibility
     notes: '',
     requiresSpecialEquipment: false,
     equipmentDetails: '',
@@ -159,6 +159,9 @@ export const getInitialFormData = (): SiteFormData => ({
     billingContact: '',
     billingPhone: '',
     annualForecast: '',
+    serviceDeliveryType: 'direct', // Add service delivery type field to billing details
+    annualContractorCost: 0, // Add contractor cost field
+    contractorInvoiceFrequency: 'monthly', // Add contractor invoice frequency
     billingLines: [{
       id: crypto.randomUUID(),
       description: 'General Contract Cleaning',
