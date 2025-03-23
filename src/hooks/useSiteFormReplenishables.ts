@@ -1,5 +1,6 @@
 
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { Replenishable } from '@/components/sites/forms/types/replenishableTypes';
 
 export const useSiteFormReplenishables = (
   formData: SiteFormData,
@@ -19,7 +20,64 @@ export const useSiteFormReplenishables = (
     }));
   };
   
+  // Add a new replenishable
+  const addReplenishable = () => {
+    const newReplenishable: Replenishable = {
+      name: '',
+      quantity: 0,
+      unit: '',
+      frequency: 'monthly',
+      lastDelivered: '',
+      nextDelivery: ''
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      replenishables: {
+        ...prev.replenishables,
+        supplies: [...(prev.replenishables.supplies || []), newReplenishable]
+      }
+    }));
+  };
+  
+  // Update a replenishable item
+  const updateReplenishable = (index: number, field: string, value: any) => {
+    const updatedSupplies = [...(formData.replenishables.supplies || [])];
+    
+    if (updatedSupplies[index]) {
+      updatedSupplies[index] = {
+        ...updatedSupplies[index],
+        [field]: value
+      };
+      
+      setFormData(prev => ({
+        ...prev,
+        replenishables: {
+          ...prev.replenishables,
+          supplies: updatedSupplies
+        }
+      }));
+    }
+  };
+  
+  // Remove a replenishable item
+  const removeReplenishable = (index: number) => {
+    const updatedSupplies = [...(formData.replenishables.supplies || [])];
+    updatedSupplies.splice(index, 1);
+    
+    setFormData(prev => ({
+      ...prev,
+      replenishables: {
+        ...prev.replenishables,
+        supplies: updatedSupplies
+      }
+    }));
+  };
+  
   return {
-    handleStockChange
+    handleStockChange,
+    addReplenishable,
+    updateReplenishable,
+    removeReplenishable
   };
 };

@@ -11,6 +11,7 @@ import { useSiteFormBillingContacts } from './useSiteFormBillingContacts';
 import { useSiteFormBillingLines } from './useSiteFormBillingLines';
 import { useSiteFormContractTerms } from './useSiteFormContractTerms';
 import { useSiteFormContacts } from './useSiteFormContacts';
+import { useSiteFormAdditionalContracts } from './useSiteFormAdditionalContracts';
 
 export const useSiteForm = () => {
   // Initialize form data with default values
@@ -33,6 +34,7 @@ export const useSiteForm = () => {
   const billingLineHandlers = useSiteFormBillingLines(formData.billingDetails?.billingLines || []);
   const contractTermHandlers = useSiteFormContractTerms(formData, setFormData, errors, setErrors);
   const contactHandlers = useSiteFormContacts();
+  const additionalContractHandlers = useSiteFormAdditionalContracts(formData, setFormData);
   
   // Validate a specific step
   const validateStep = (stepIndex: number): boolean => {
@@ -81,6 +83,7 @@ export const useSiteForm = () => {
     ...billingContactHandlers,
     ...billingLineHandlers,
     ...contractTermHandlers,
-    ...contactHandlers
+    ...contactHandlers,
+    ...additionalContractHandlers
   };
 };

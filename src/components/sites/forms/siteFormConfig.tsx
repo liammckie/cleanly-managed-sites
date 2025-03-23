@@ -46,6 +46,11 @@ export const getSiteFormSteps = (
   handleFileUpload: (field: string, file: File) => void,
   handleFileRemove: (field: string, fileName: string) => void
 ): StepConfig[] => {
+  // This is a conversion helper for BasicInformationStep which expects a different signature
+  const handleFieldChange = (field: string) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleChange(field, e.target.value);
+  };
+
   return [
     {
       id: 'basic-info',
@@ -54,12 +59,7 @@ export const getSiteFormSteps = (
       component: (
         <BasicInformationStep
           formData={formData}
-          handleChange={(e) => handleChange(e.target.name, e.target.value)}
-          handleNestedChange={handleNestedChange}
-          handleArrayChange={handleArrayChange}
-          handleArrayUpdate={handleArrayUpdate}
-          addArrayItem={addArrayItem}
-          removeArrayItem={removeArrayItem}
+          handleChange={handleFieldChange}
         />
       ),
     },
@@ -71,9 +71,18 @@ export const getSiteFormSteps = (
         <ContactsStep
           formData={formData}
           errors={{}}
-          handleContactChange={() => {}}
-          addContact={() => {}}
-          removeContact={() => {}}
+          handleContactChange={(index, field, value) => {
+            // Implement contact change handler
+            console.log(`Contact ${index} field ${field} changed to:`, value);
+          }}
+          addContact={() => {
+            // Implement add contact handler
+            console.log("Add contact clicked");
+          }}
+          removeContact={(index) => {
+            // Implement remove contact handler
+            console.log(`Remove contact at index ${index}`);
+          }}
         />
       ),
     },
@@ -88,9 +97,6 @@ export const getSiteFormSteps = (
           addContractTerm={addContractTerm}
           updateContractTerm={updateContractTerm}
           removeContractTerm={removeContractTerm}
-          addAdditionalContract={addAdditionalContract}
-          updateAdditionalContract={updateAdditionalContract}
-          removeAdditionalContract={removeAdditionalContract}
         />
       ),
     },

@@ -13,13 +13,14 @@ import { toast } from 'sonner';
 import { SiteFormData } from './siteFormTypes';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from './types/billingTypes';
+import { SiteRecord } from '@/lib/types';
 
 // Define fallback functions for missing handlers
 const noop = () => {};
 const noopWithParams = (...args: any[]) => {};
 
 interface EditSiteFormProps {
-  site: any; // Using any to avoid the SiteRecord import issue
+  site: SiteRecord; // Use SiteRecord type
 }
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
@@ -125,8 +126,11 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         postcode: site.postcode || '',
         status: site.status || 'active',
         // Remove the notes field as it's not in SiteFormData type
-        contractType: 'cleaning', // Default type
-        // Add other fields from site as needed
+        // We use contractDetails.contractType instead
+        contractDetails: {
+          ...formData.contractDetails,
+          contractType: 'cleaning' // Default type
+        }
       };
       
       // Add billing lines with unique IDs if available

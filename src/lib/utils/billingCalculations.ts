@@ -2,128 +2,90 @@
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
 /**
- * Calculates the weekly amount based on a billing line's frequency and amount
+ * Checks if a site's billing is currently on hold
  */
-export const calculateWeeklyAmount = (amount: number, frequency: string) => {
+export const isSiteBillingOnHold = (isOnHold?: boolean): boolean => {
+  return isOnHold === true;
+};
+
+/**
+ * Calculates the billing amounts (weekly, monthly, annual) for a given billing line
+ */
+export const calculateBillingAmounts = (
+  amount: number,
+  frequency: string
+): { weekly: number; monthly: number; annual: number } => {
+  const weeklyAmount = calculateWeeklyAmount(amount, frequency);
+  const monthlyAmount = calculateMonthlyAmount(weeklyAmount);
+  const annualAmount = calculateAnnualAmount(weeklyAmount);
+  
+  return {
+    weekly: weeklyAmount,
+    monthly: monthlyAmount,
+    annual: annualAmount
+  };
+};
+
+/**
+ * Calculates the weekly amount from a given amount and frequency
+ */
+export const calculateWeeklyAmount = (amount: number, frequency: string): number => {
   switch (frequency) {
     case 'weekly':
       return amount;
-    case 'biweekly':
     case 'fortnightly':
       return amount / 2;
     case 'monthly':
-      return amount / 4.33;  // Average weeks in a month
+      return amount / 4.33; // Average weeks in a month
     case 'quarterly':
-      return amount / 13;    // 13 weeks in a quarter
+      return amount / 13; // 52 weeks / 4 quarters = 13 weeks per quarter
+    case 'semi-annually':
+      return amount / 26; // 52 weeks / 2 = 26 weeks per half year
     case 'annually':
-      return amount / 52;    // 52 weeks in a year
+      return amount / 52;
     default:
       return 0;
   }
 };
 
 /**
- * Calculates the monthly amount based on a billing line's frequency and amount
+ * Calculates monthly amount from weekly amount
  */
-export const calculateMonthlyAmount = (amount: number, frequency: string) => {
-  switch (frequency) {
-    case 'weekly':
-      return amount * 4.33;  // Average weeks in a month
-    case 'biweekly':
-    case 'fortnightly':
-      return amount * 2.17;  // Half of a month
-    case 'monthly':
-      return amount;
-    case 'quarterly':
-      return amount / 3;     // 3 months in a quarter
-    case 'annually':
-      return amount / 12;    // 12 months in a year
-    default:
-      return 0;
-  }
+export const calculateMonthlyAmount = (weeklyAmount: number): number => {
+  return weeklyAmount * 4.33; // Average weeks in a month
 };
 
 /**
- * Calculates the annual amount based on a billing line's frequency and amount
+ * Calculates annual amount from weekly amount
  */
-export const calculateAnnualAmount = (amount: number, frequency: string) => {
-  switch (frequency) {
-    case 'weekly':
-      return amount * 52;    // 52 weeks in a year
-    case 'biweekly':
-    case 'fortnightly':
-      return amount * 26;    // 26 biweekly periods in a year
-    case 'monthly':
-      return amount * 12;    // 12 months in a year
-    case 'quarterly':
-      return amount * 4;     // 4 quarters in a year
-    case 'annually':
-      return amount;
-    default:
-      return 0;
-  }
+export const calculateAnnualAmount = (weeklyAmount: number): number => {
+  return weeklyAmount * 52;
 };
 
 /**
- * Calculates all billing amounts (weekly, monthly, annual) based on a billing line's frequency and amount
+ * Calculates total billing amounts from an array of billing lines
  */
-export const calculateBillingAmounts = (amount: number, frequency: string) => {
-  return {
-    weeklyAmount: calculateWeeklyAmount(amount, frequency),
-    monthlyAmount: calculateMonthlyAmount(amount, frequency),
-    annualAmount: calculateAnnualAmount(amount, frequency)
-  };
-};
-
-/**
- * Calculates the total amounts for all billing lines (weekly, monthly, annual)
- */
-export const calculateTotalBillingAmounts = (billingLines: BillingLine[]) => {
+export const calculateTotalBillingAmounts = (
+  billingLines: BillingLine[]
+): { weekly: number; monthly: number; annual: number } => {
+  // Initialize totals
   let totalWeeklyAmount = 0;
   let totalMonthlyAmount = 0;
   let totalAnnualAmount = 0;
-
+  
+  // Sum up all active billing lines
   billingLines.forEach(line => {
-    if (!isBillingLineOnHold(line)) {
-      totalWeeklyAmount += line.weeklyAmount || 0;
-      totalMonthlyAmount += line.monthlyAmount || 0;
-      totalAnnualAmount += line.annualAmount || 0;
+    if (!line.onHold) {
+      const lineAmounts = calculateBillingAmounts(line.amount || 0, line.frequency || 'monthly');
+      totalWeeklyAmount += lineAmounts.weekly;
+      totalMonthlyAmount += lineAmounts.monthly;
+      totalAnnualAmount += lineAmounts.annual;
     }
   });
-
+  
   return {
-    totalWeeklyAmount,
-    totalMonthlyAmount,
-    totalAnnualAmount
+    weekly: totalWeeklyAmount,
+    monthly: totalMonthlyAmount,
+    annual: totalAnnualAmount
   };
-};
-
-/**
- * Checks if a billing line is currently on hold
- */
-export const isBillingLineOnHold = (billingLine: BillingLine): boolean => {
-  if (!billingLine.onHold) return false;
-  
-  const now = new Date();
-  const startDate = billingLine.holdStartDate ? new Date(billingLine.holdStartDate) : null;
-  const endDate = billingLine.holdEndDate ? new Date(billingLine.holdEndDate) : null;
-  
-  // If on hold and no date range specified, it's on indefinite hold
-  if (!startDate && !endDate) return true;
-  
-  // If only start date is specified, check if we're after the start date
-  if (startDate && !endDate) return now >= startDate;
-  
-  // If only end date is specified, check if we're before the end date
-  if (!startDate && endDate) return now <= endDate;
-  
-  // If both dates are specified, check if we're within the range
-  return startDate && endDate ? now >= startDate && now <= endDate : false;
-};
-
-/**
- * Checks if any of a site's billing lines are on hold
- */
-export const isSiteBillingOnHold = (billingLines: BillingLine[]): boolean => {
-  return billingLines.some(isBillingLineOnHold);
 };

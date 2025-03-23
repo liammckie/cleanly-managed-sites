@@ -13,11 +13,7 @@ interface BillingDetailsSummaryProps {
 }
 
 export function BillingDetailsSummary({ billingDetails, contractType = 'cleaning' }: BillingDetailsSummaryProps) {
-  const isBillingOnHold = isSiteBillingOnHold(
-    billingDetails.billingOnHold,
-    billingDetails.billingHoldStartDate,
-    billingDetails.billingHoldEndDate
-  );
+  const isBillingOnHold = billingDetails.billingOnHold || false;
 
   // Format date for display
   const formatDate = (dateString?: string) => {

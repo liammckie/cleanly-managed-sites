@@ -10,7 +10,7 @@ import { SiteFormData } from '../siteFormTypes';
 interface ReplenishablesStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  handleStockChange: (index: number, value: string) => void;
+  handleStockChange?: (index: number, value: string) => void;
 }
 
 export function ReplenishablesStep({ 
@@ -33,6 +33,16 @@ export function ReplenishablesStep({
     handleNestedChange('replenishables', 'stock', updatedStock);
   };
 
+  const handleStockItemChange = (index: number, value: string) => {
+    if (handleStockChange) {
+      handleStockChange(index, value);
+    } else {
+      const updatedStock = [...formData.replenishables.stock];
+      updatedStock[index] = value;
+      handleNestedChange('replenishables', 'stock', updatedStock);
+    }
+  };
+
   return (
     <div className="glass-card p-6 space-y-6">
       <h3 className="text-lg font-medium">Stock Items</h3>
@@ -44,7 +54,7 @@ export function ReplenishablesStep({
               id={`stock-${index}`}
               placeholder="Enter stock item"
               value={item}
-              onChange={(e) => handleStockChange(index, e.target.value)}
+              onChange={(e) => handleStockItemChange(index, e.target.value)}
               className="glass-input flex-1"
             />
             <Button 
