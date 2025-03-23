@@ -31,26 +31,26 @@ export const authApi = {
     }
   },
   
-  // Create new user (modified to use signUp instead of admin.createUser)
+  // Create new user with fixed RLS policies
   async createUser(email: string, password: string, fullName: string, roleId: string) {
     console.log("Creating user with email:", email);
     
     try {
-      // Get current user to check admin status
+      // Get current user to verify admin status
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
       if (!currentUser) {
         throw new Error("You must be logged in to create users");
       }
       
-      // Check if current user has admin permissions
+      // Check if current user has admin permissions using our security definer function
       const { data: isAdmin, error: adminCheckError } = await supabase.rpc(
-        'get_user_admin_status',
+        'check_if_user_is_admin',
         { user_uuid: currentUser.id }
       );
       
-      if (!isAdmin && adminCheckError) {
-        console.error("Admin check failed:", adminCheckError);
+      if (!isAdmin) {
+        console.error("Admin check result:", isAdmin);
         throw new Error("You don't have permission to create users");
       }
       
@@ -77,7 +77,7 @@ export const authApi = {
 
       console.log("Auth user created successfully with ID:", authData.user.id);
       
-      // Create the user profile directly
+      // Create the user profile
       const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .insert({
