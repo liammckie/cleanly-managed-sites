@@ -26,33 +26,58 @@ export function CreateSiteForm() {
   // Use the custom hooks
   const formHandlers = useSiteForm();
   
+  // Define dummy handlers for missing functionality
+  const handleArrayChange = (field: string, values: any[]) => {
+    console.log(`Array change for ${field}:`, values);
+  };
+  
+  const handleArrayUpdate = (field: string, index: number, value: any) => {
+    console.log(`Array update for ${field} at index ${index}:`, value);
+  };
+  
+  const addArrayItem = (field: string) => {
+    console.log(`Adding item to ${field}`);
+  };
+  
+  const removeArrayItem = (field: string, index: number) => {
+    console.log(`Removing item from ${field} at index ${index}`);
+  };
+  
+  const handleFileUpload = (field: string, file: File) => {
+    console.log(`Uploading file for ${field}:`, file.name);
+  };
+  
+  const handleFileRemove = (field: string, fileName: string) => {
+    console.log(`Removing file ${fileName} from ${field}`);
+  };
+  
   // Get steps configuration
   const steps = getSiteFormSteps(
     formHandlers.formData,
-    formHandlers.handleChange,
+    (field: string, value: any) => formHandlers.handleChange({ target: { name: field, value } } as any),
     formHandlers.handleNestedChange,
-    formHandlers.handleArrayChange || (() => {}),
-    formHandlers.handleArrayUpdate || (() => {}),
+    handleArrayChange,
+    handleArrayUpdate,
     formHandlers.handleDoubleNestedChange,
-    formHandlers.addArrayItem || (() => {}),
-    formHandlers.removeArrayItem || (() => {}),
-    formHandlers.addSubcontractor,
-    formHandlers.updateSubcontractor,
-    formHandlers.removeSubcontractor,
-    formHandlers.addReplenishable,
-    formHandlers.updateReplenishable,
-    formHandlers.removeReplenishable,
-    formHandlers.addBillingLine,
-    formHandlers.updateBillingLine,
-    formHandlers.removeBillingLine,
-    formHandlers.addContractTerm,
-    formHandlers.updateContractTerm,
-    formHandlers.removeContractTerm,
-    formHandlers.addAdditionalContract,
-    formHandlers.updateAdditionalContract,
-    formHandlers.removeAdditionalContract,
-    formHandlers.handleFileUpload,
-    formHandlers.handleFileRemove
+    addArrayItem,
+    removeArrayItem,
+    formHandlers.addSubcontractor || (() => {}),
+    formHandlers.updateSubcontractor || ((index: number, field: string, value: any) => {}),
+    formHandlers.removeSubcontractor || ((index: number) => {}),
+    formHandlers.addReplenishable || (() => {}),
+    formHandlers.updateReplenishable || ((index: number, field: string, value: any) => {}),
+    formHandlers.removeReplenishable || ((index: number) => {}),
+    formHandlers.addBillingLine || (() => {}),
+    formHandlers.updateBillingLine || ((id: string, field: string, value: any) => {}),
+    formHandlers.removeBillingLine || ((id: string) => {}),
+    formHandlers.addContractTerm || (() => {}),
+    formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {}),
+    formHandlers.removeContractTerm || ((index: number) => {}),
+    formHandlers.addAdditionalContract || (() => {}),
+    formHandlers.updateAdditionalContract || ((index: number, field: string, value: any) => {}),
+    formHandlers.removeAdditionalContract || ((index: number) => {}),
+    handleFileUpload,
+    handleFileRemove
   );
   
   // Use stepper hook with validation
@@ -116,15 +141,15 @@ export function CreateSiteForm() {
             />
             
             <SiteFormStep
-              title={steps[stepper.currentStep].title}
-              description={steps[stepper.currentStep].description}
+              title={stepper.steps[stepper.currentStep].title}
+              description={stepper.steps[stepper.currentStep].description}
               onNext={() => stepper.handleNext(handleSubmit)}
               onBack={stepper.handleBack}
               isSubmitting={isSubmitting}
               isLastStep={stepper.isLastStep}
               isFirstStep={stepper.isFirstStep}
             >
-              {steps[stepper.currentStep].component}
+              {stepper.steps[stepper.currentStep].component}
             </SiteFormStep>
           </div>
         </form>

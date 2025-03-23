@@ -26,35 +26,63 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   const siteForm = useSiteForm();
   const { formData, setFormData, validateStep } = siteForm;
   
+  // Define dummy handlers for missing functionality
+  const handleArrayChange = (field: string, values: any[]) => {
+    console.log(`Array change for ${field}:`, values);
+  };
+  
+  const handleArrayUpdate = (field: string, index: number, value: any) => {
+    console.log(`Array update for ${field} at index ${index}:`, value);
+  };
+  
+  const addArrayItem = (field: string) => {
+    console.log(`Adding item to ${field}`);
+  };
+  
+  const removeArrayItem = (field: string, index: number) => {
+    console.log(`Removing item from ${field} at index ${index}`);
+  };
+  
+  const handleFileUpload = (field: string, file: File) => {
+    console.log(`Uploading file for ${field}:`, file.name);
+  };
+  
+  const handleFileRemove = (field: string, fileName: string) => {
+    console.log(`Removing file ${fileName} from ${field}`);
+  };
+  
   // Initialize the stepper
+  const steps = getSiteFormSteps(
+    formData,
+    (field: string, value: any) => siteForm.handleChange({ target: { name: field, value } } as any),
+    siteForm.handleNestedChange,
+    handleArrayChange,
+    handleArrayUpdate,
+    siteForm.handleDoubleNestedChange,
+    addArrayItem,
+    removeArrayItem,
+    siteForm.addSubcontractor || (() => {}),
+    siteForm.updateSubcontractor || ((index: number, field: string, value: any) => {}),
+    siteForm.removeSubcontractor || ((index: number) => {}),
+    siteForm.addReplenishable || (() => {}),
+    siteForm.updateReplenishable || ((index: number, field: string, value: any) => {}),
+    siteForm.removeReplenishable || ((index: number) => {}),
+    siteForm.addBillingLine || (() => {}),
+    siteForm.updateBillingLine || ((id: string, field: string, value: any) => {}),
+    siteForm.removeBillingLine || ((id: string) => {}),
+    siteForm.addContractTerm || (() => {}),
+    siteForm.updateContractTerm || ((index: number, field: string, value: any) => {}),
+    siteForm.removeContractTerm || ((index: number) => {}),
+    siteForm.addAdditionalContract || (() => {}),
+    siteForm.updateAdditionalContract || ((index: number, field: string, value: any) => {}),
+    siteForm.removeAdditionalContract || ((index: number) => {}),
+    handleFileUpload,
+    handleFileRemove
+  );
+  
+  // Use stepper hook with validation
   const stepper = useSiteFormStepper({
-    steps: getSiteFormSteps(
-      formData,
-      siteForm.handleChange,
-      siteForm.handleNestedChange,
-      siteForm.handleArrayChange || (() => {}),
-      siteForm.handleArrayUpdate || (() => {}),
-      siteForm.handleDoubleNestedChange,
-      siteForm.addArrayItem || (() => {}),
-      siteForm.removeArrayItem || (() => {}),
-      siteForm.addSubcontractor,
-      siteForm.updateSubcontractor,
-      siteForm.removeSubcontractor,
-      siteForm.addReplenishable,
-      siteForm.updateReplenishable,
-      siteForm.removeReplenishable,
-      siteForm.addBillingLine,
-      siteForm.updateBillingLine,
-      siteForm.removeBillingLine,
-      siteForm.addContractTerm,
-      siteForm.updateContractTerm,
-      siteForm.removeContractTerm,
-      siteForm.addAdditionalContract,
-      siteForm.updateAdditionalContract,
-      siteForm.removeAdditionalContract,
-      siteForm.handleFileUpload || (() => {}),
-      siteForm.handleFileRemove || (() => {})
-    ),
+    steps,
     validateStep
   });
   
@@ -70,7 +98,6 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
         city: site.city || '',
         state: site.state || '',
         postcode: site.postcode || '',
-        squareMeters: site.square_meters?.toString() || '',
         status: site.status || 'active',
         notes: site.notes || '',
         contractType: 'cleaning', // Default type

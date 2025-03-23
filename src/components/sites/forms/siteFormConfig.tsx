@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { ReactNode } from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps/ContactsStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
@@ -15,7 +16,7 @@ export type StepConfig = {
   id: string;
   title: string;
   description?: string;
-  component: React.FC<any>;
+  component: ReactNode;
 };
 
 export const getSiteFormSteps = (
@@ -50,7 +51,7 @@ export const getSiteFormSteps = (
       id: 'basic-info',
       title: 'Basic Information',
       description: 'Enter the basic details of the site',
-      component: (props: any) => (
+      component: (
         <BasicInformationStep
           formData={formData}
           handleChange={handleChange}
@@ -59,7 +60,6 @@ export const getSiteFormSteps = (
           handleArrayUpdate={handleArrayUpdate}
           addArrayItem={addArrayItem}
           removeArrayItem={removeArrayItem}
-          {...props}
         />
       ),
     },
@@ -67,12 +67,11 @@ export const getSiteFormSteps = (
       id: 'contacts',
       title: 'Contacts',
       description: 'Manage contacts for this site',
-      component: (props: any) => (
+      component: (
         <ContactsStep
           formData={formData}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
-          {...props}
         />
       ),
     },
@@ -80,7 +79,7 @@ export const getSiteFormSteps = (
       id: 'contract-details',
       title: 'Contract Details',
       description: 'Manage contract details and terms',
-      component: (props: any) => (
+      component: (
         <ContractDetailsStep
           formData={formData}
           handleChange={handleChange}
@@ -92,7 +91,6 @@ export const getSiteFormSteps = (
           addAdditionalContract={addAdditionalContract}
           updateAdditionalContract={updateAdditionalContract}
           removeAdditionalContract={removeAdditionalContract}
-          {...props}
         />
       ),
     },
@@ -100,7 +98,7 @@ export const getSiteFormSteps = (
       id: 'billing-details',
       title: 'Billing Details',
       description: 'Manage billing information',
-      component: (props: any) => (
+      component: (
         <BillingDetailsStep
           formData={formData}
           handleNestedChange={handleNestedChange}
@@ -108,7 +106,6 @@ export const getSiteFormSteps = (
           addBillingLine={addBillingLine}
           removeBillingLine={removeBillingLine}
           updateBillingLine={updateBillingLine}
-          {...props}
         />
       ),
     },
@@ -116,14 +113,13 @@ export const getSiteFormSteps = (
       id: 'job-specs',
       title: 'Job Specifications',
       description: 'Enter job specifications and requirements',
-      component: (props: any) => (
+      component: (
         <JobSpecificationsStep
           formData={formData}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleFileUpload={handleFileUpload}
           handleFileRemove={handleFileRemove}
-          {...props}
         />
       ),
     },
@@ -131,12 +127,11 @@ export const getSiteFormSteps = (
       id: 'periodicals',
       title: 'Periodicals',
       description: 'Manage periodic tasks and schedules',
-      component: (props: any) => (
+      component: (
         <PeriodicalsStep
           formData={formData}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
-          {...props}
         />
       ),
     },
@@ -144,7 +139,7 @@ export const getSiteFormSteps = (
       id: 'replenishables',
       title: 'Replenishables',
       description: 'Manage replenishable supplies',
-      component: (props: any) => (
+      component: (
         <ReplenishablesStep
           formData={formData}
           handleChange={handleChange}
@@ -152,7 +147,6 @@ export const getSiteFormSteps = (
           addReplenishable={addReplenishable}
           updateReplenishable={updateReplenishable}
           removeReplenishable={removeReplenishable}
-          {...props}
         />
       ),
     },
@@ -160,12 +154,11 @@ export const getSiteFormSteps = (
       id: 'security',
       title: 'Security',
       description: 'Manage security details',
-      component: (props: any) => (
+      component: (
         <SecurityStep
           formData={formData}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
-          {...props}
         />
       ),
     },
@@ -173,7 +166,7 @@ export const getSiteFormSteps = (
       id: 'subcontractors',
       title: 'Subcontractors',
       description: 'Manage subcontractors for this site',
-      component: (props: any) => (
+      component: (
         <SubcontractorsStep
           formData={formData}
           handleChange={handleChange}
@@ -181,7 +174,6 @@ export const getSiteFormSteps = (
           addSubcontractor={addSubcontractor}
           updateSubcontractor={updateSubcontractor}
           removeSubcontractor={removeSubcontractor}
-          {...props}
         />
       ),
     },
@@ -189,10 +181,9 @@ export const getSiteFormSteps = (
       id: 'review',
       title: 'Review',
       description: 'Review site information before submission',
-      component: (props: any) => (
+      component: (
         <ReviewStep
           formData={formData}
-          {...props}
         />
       ),
     },

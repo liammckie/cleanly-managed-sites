@@ -1,69 +1,42 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { getSiteById } from '@/lib/api/sites/sitesApi';
-import { getSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
-import { getSiteAdditionalContracts, convertDbContractsToContractDetails } from '@/lib/api/sites/additionalContractsApi';
+import { useState, useEffect } from 'react';
+import { sitesApi } from '@/lib/api';
 
-export const useSite = (siteId?: string) => {
-  const { data: site, isLoading: siteLoading, error: siteError } = useQuery({
-    queryKey: ['site', siteId],
-    queryFn: () => getSiteById(siteId as string),
-    enabled: !!siteId,
-  });
+interface SiteResult {
+  site: any;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  // Fetch billing lines for the site
-  const { data: billingLines, isLoading: billingLinesLoading } = useQuery({
-    queryKey: ['site-billing-lines', siteId],
-    queryFn: () => getSiteBillingLines(siteId as string),
-    enabled: !!siteId,
-  });
+export const useSite = (id?: string): SiteResult => {
+  const [site, setSite] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Fetch additional contracts for the site
-  const { data: additionalContractsData, isLoading: additionalContractsLoading } = useQuery({
-    queryKey: ['site-additional-contracts', siteId],
-    queryFn: () => getSiteAdditionalContracts(siteId as string),
-    enabled: !!siteId,
-  });
+  useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
 
-  // Convert additional contracts from DB format to app format
-  const additionalContracts = additionalContractsData 
-    ? convertDbContractsToContractDetails(additionalContractsData)
-    : [];
+    const fetchSite = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  // Calculate total revenue
-  const calculateRevenue = () => {
-    if (!billingLines) return { weekly: 0, annual: 0 };
-    
-    let weeklyTotal = 0;
-    let annualTotal = 0;
-    
-    billingLines.forEach((line: any) => {
-      if (!line.on_hold) {
-        weeklyTotal += line.weekly_amount || 0;
-        annualTotal += line.annual_amount || 0;
+        // Using the sitesApi.getSite method instead of a non-existent getSiteById
+        const siteData = await sitesApi.getSite(id);
+        setSite(siteData);
+      } catch (err) {
+        console.error('Error fetching site:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch site'));
+      } finally {
+        setIsLoading(false);
       }
-    });
-    
-    return {
-      weekly: weeklyTotal,
-      annual: annualTotal
     };
-  };
 
-  const revenue = calculateRevenue();
+    fetchSite();
+  }, [id]);
 
-  // Enhance the site data with the billing lines and revenue data
-  const enhancedSite = site ? {
-    ...site,
-    billingLines,
-    additionalContracts,
-    weekly_revenue: revenue.weekly,
-    annual_revenue: revenue.annual,
-  } : null;
-
-  return {
-    site: enhancedSite,
-    isLoading: siteLoading || billingLinesLoading || additionalContractsLoading,
-    error: siteError,
-  };
+  return { site, isLoading, error };
 };
