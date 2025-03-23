@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
-import { Form, FormProvider } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { FormProvider, useForm } from "react-hook-form";
 import { SiteFormStep } from './SiteFormStep';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { getStepsConfig } from './siteFormConfig';
 import { FormProgressBar } from './FormProgressBar';
 import { sitesApi } from '@/lib/api';
-import { useForm } from 'react-hook-form';
 import { SiteFormData, getInitialFormData } from './siteFormTypes';
 
 export function CreateSiteForm() {
