@@ -256,48 +256,6 @@ export function BasicInformationStep({
           </div>
         </div>
       </div>
-      
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Financial Information</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="monthlyCost">Monthly Cost ($)</Label>
-            <Input
-              id="monthlyCost"
-              name="monthlyCost"
-              type="number"
-              placeholder="Enter monthly cost"
-              value={formData.monthlyCost || ''}
-              onChange={(e) => handleChange({
-                target: {
-                  name: 'monthlyCost',
-                  value: e.target.value ? parseFloat(e.target.value) : undefined
-                }
-              } as any)}
-              className="glass-input"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="monthlyRevenue">Monthly Revenue ($)</Label>
-            <Input
-              id="monthlyRevenue"
-              name="monthlyRevenue"
-              type="number"
-              placeholder="Enter monthly revenue"
-              value={formData.monthlyRevenue || ''}
-              onChange={(e) => handleChange({
-                target: {
-                  name: 'monthlyRevenue',
-                  value: e.target.value ? parseFloat(e.target.value) : undefined
-                }
-              } as any)}
-              className="glass-input"
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

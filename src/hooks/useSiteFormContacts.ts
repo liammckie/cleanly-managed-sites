@@ -1,7 +1,8 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ContactRecord } from '@/lib/types';
+import { SiteContact } from '@/components/sites/forms/types/contactTypes';
 
 // Type for the site contact form data
 export type SiteContactFormData = {
@@ -16,47 +17,108 @@ export type SiteContactFormData = {
 
 // Create a hook for handling contacts in the site form
 export const useSiteFormContacts = () => {
-  // Simple function to add a new empty contact (required for siteFormConfig compatibility)
+  const [contacts, setContacts] = useState<SiteContact[]>([]);
+  
+  // Simple function to add a new empty contact
   const addContact = useCallback(() => {
-    // This function will be implemented in the return value
-    console.log('addContact called');
-  }, []);
+    const newContact: SiteContact = {
+      id: uuidv4(),
+      name: '',
+      role: 'operations', // Default role
+      is_primary: contacts.length === 0 // First contact is primary by default
+    };
+    
+    setContacts(prev => [...prev, newContact]);
+  }, [contacts]);
   
   // Add a contact with data
   const addContactWithData = useCallback((contact: SiteContactFormData) => {
-    // This function will be implemented in the return value
-    console.log('addContactWithData called', contact);
-    return uuidv4();
-  }, []);
+    const newId = uuidv4();
+    const newContact: SiteContact = {
+      ...contact,
+      id: newId,
+      is_primary: contact.is_primary || contacts.length === 0 // First contact is primary by default
+    };
+    
+    setContacts(prev => [...prev, newContact]);
+    return newId;
+  }, [contacts]);
   
   // Update an existing contact in the form
   const updateContact = useCallback((index: number, data: Partial<SiteContactFormData>) => {
-    console.log('updateContact called', index, data);
+    setContacts(prev => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], ...data };
+      }
+      return updated;
+    });
   }, []);
   
   // Remove a contact from the form
   const removeContact = useCallback((index: number) => {
-    console.log('removeContact called', index);
+    setContacts(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      
+      // If we removed the primary contact and there are still contacts,
+      // make the first one primary
+      if (prev[index]?.is_primary && updated.length > 0) {
+        updated[0] = { ...updated[0], is_primary: true };
+      }
+      
+      return updated;
+    });
   }, []);
   
   // Set a contact as primary (and unset others)
   const setAsPrimary = useCallback((index: number) => {
-    console.log('setAsPrimary called', index);
+    setContacts(prev => {
+      return prev.map((contact, i) => ({
+        ...contact,
+        is_primary: i === index
+      }));
+    });
   }, []);
   
   // Handle contact change for compatibility with siteFormConfig
   const handleContactChange = useCallback((index: number, field: keyof ContactRecord, value: any) => {
-    console.log('handleContactChange called', index, field, value);
+    setContacts(prev => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { 
+          ...updated[index], 
+          [field]: value,
+          // If setting a contact as primary, unset others
+          ...(field === 'is_primary' && value === true 
+            ? { is_primary: true } 
+            : {})
+        };
+        
+        // If setting primary, unset others
+        if (field === 'is_primary' && value === true) {
+          updated.forEach((c, i) => {
+            if (i !== index) {
+              c.is_primary = false;
+            }
+          });
+        }
+      }
+      return updated;
+    });
   }, []);
   
   // Convert contacts to the format needed for the API
   const prepareContactsForSubmission = useCallback((siteId: string) => {
-    console.log('prepareContactsForSubmission called', siteId);
-    return [];
-  }, []);
+    return contacts.map(contact => ({
+      ...contact,
+      entity_id: siteId,
+      entity_type: 'site'
+    }));
+  }, [contacts]);
   
   return {
-    contacts: [],
+    contacts,
+    setContacts,
     addContact,
     addContactWithData,
     updateContact,

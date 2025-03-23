@@ -31,6 +31,11 @@ export function ContactsStep({
   addContact,
   removeContact
 }: ContactsStepProps) {
+  // Handler to add a contact
+  const handleAddContact = () => {
+    addContact();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -38,7 +43,7 @@ export function ContactsStep({
         <Button
           type="button"
           size="sm"
-          onClick={addContact}
+          onClick={handleAddContact}
           className="flex items-center"
         >
           <Plus className="mr-1 h-4 w-4" /> Add Contact
