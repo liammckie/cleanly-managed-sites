@@ -31,7 +31,7 @@ export const authApi = {
     }
   },
   
-  // Create new user (admin only function)
+  // Create new user (modified to use signUp instead of admin.createUser)
   async createUser(email: string, password: string, fullName: string, roleId: string) {
     console.log("Creating user with email:", email);
     
@@ -43,14 +43,27 @@ export const authApi = {
         throw new Error("You must be logged in to create users");
       }
       
-      // First create auth user with standard auth signup
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Check if current user has admin permissions
+      const { data: isAdmin, error: adminCheckError } = await supabase.rpc(
+        'get_user_admin_status',
+        { user_uuid: currentUser.id }
+      );
+      
+      if (!isAdmin && adminCheckError) {
+        console.error("Admin check failed:", adminCheckError);
+        throw new Error("You don't have permission to create users");
+      }
+      
+      // Use standard signup method instead of admin.createUser
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        email_confirm: true, // Skip email confirmation for admin-created users
-        user_metadata: {
-          full_name: fullName,
-        }
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/login?verified=true`
+        },
       });
       
       if (authError) {
@@ -64,25 +77,23 @@ export const authApi = {
 
       console.log("Auth user created successfully with ID:", authData.user.id);
       
-      // Use a raw query to call the RPC function since TypeScript doesn't know about it yet
-      const { data: profileData, error: profileError } = await supabase.rpc(
-        'create_user_profile' as any,
-        { 
-          user_id: authData.user.id,
-          user_email: email,
-          user_full_name: fullName,
-          user_role_id: roleId,
-          user_status: 'pending'
-        }
-      );
+      // Create the user profile directly
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          role_id: roleId,
+          status: 'pending',
+        })
+        .select()
+        .single();
       
       if (profileError) {
         console.error('Error creating user profile:', profileError);
         
-        // If we fail to create the profile, we should clean up the auth user
-        await supabase.auth.admin.deleteUser(authData.user.id);
-        
-        // Provide a more detailed error message
+        // Handle errors, but don't try to delete the auth user since we're using signUp
         if (profileError.message.includes('permission')) {
           throw new Error('Permission denied. You need admin privileges to create users.');
         } else {
@@ -90,53 +101,7 @@ export const authApi = {
         }
       }
       
-      // If RPC doesn't exist yet or fails, fall back to direct insert
-      // This requires admin role or appropriate permissions
-      if (!profileData) {
-        const { data: directData, error: directError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: authData.user.id,
-            email: email,
-            full_name: fullName,
-            role_id: roleId,
-            status: 'pending',
-          })
-          .select()
-          .single();
-        
-        if (directError) {
-          console.error('Error with direct profile creation:', directError);
-          
-          // Clean up auth user if profile creation fails
-          await supabase.auth.admin.deleteUser(authData.user.id);
-          
-          throw directError;
-        }
-        
-        console.log("User profile created directly:", directData);
-        return directData;
-      }
-      
-      console.log("User profile created via RPC:", profileData);
-      
-      // If profileData is not an object (could be just true or a string), fetch the user profile
-      if (typeof profileData !== 'object' || profileData === null) {
-        console.log("RPC returned non-object response, fetching user profile directly");
-        const { data: fetchedProfile, error: fetchError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-          
-        if (fetchError) {
-          console.error("Error fetching created profile:", fetchError);
-          throw fetchError;
-        }
-        
-        return fetchedProfile;
-      }
-      
+      console.log("User profile created:", profileData);
       return profileData;
     } catch (error) {
       console.error('Error in user creation flow:', error);
