@@ -160,9 +160,9 @@ export const getInitialFormData = (): SiteFormData => ({
     annualForecast: '',
     serviceDeliveryType: 'direct', // Service delivery type field
     annualContractorCost: 0, // Annual contractor cost field
-    weeklyContractorCost: 0, // Weekly contractor cost field (new)
-    monthlyContractorCost: 0, // Monthly contractor cost field (new)
-    contractorCostFrequency: 'annually', // Frequency for cost entry (new)
+    weeklyContractorCost: 0, // Weekly contractor cost field
+    monthlyContractorCost: 0, // Monthly contractor cost field
+    contractorCostFrequency: 'annually', // Frequency for cost entry
     contractorInvoiceFrequency: 'monthly', // Contractor invoice frequency
     weeklyBudget: 0, // Weekly budget for direct employees
     laborPlan: { // Labor plan for direct employees

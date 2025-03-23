@@ -47,6 +47,9 @@ export interface BillingDetails {
   annualForecast?: string;
   serviceDeliveryType?: 'direct' | 'contractor';
   annualContractorCost?: number;
+  weeklyContractorCost?: number; // Added property
+  monthlyContractorCost?: number; // Added property
+  contractorCostFrequency?: 'weekly' | 'monthly' | 'annually'; // Added property
   contractorInvoiceFrequency?: 'weekly' | 'monthly' | 'quarterly';
   weeklyBudget?: number;
   laborPlan?: LaborPlan;
