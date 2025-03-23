@@ -13,6 +13,8 @@ import { sitesApi } from '@/lib/api';
 import { SiteFormData, getInitialFormData } from './siteFormTypes';
 import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContractsApi';
 import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
+import { handleSiteContacts } from '@/lib/api/sites/siteContactsApi';
+import { ContactRecord } from '@/lib/types';
 
 // Define fallback functions for missing handlers
 const noop = () => {};
@@ -127,24 +129,49 @@ export function CreateSiteForm() {
       // Use the actual API to create the site
       const createdSite = await sitesApi.createSite(formHandlers.formData);
       
+      // Handle contacts if they exist
+      if (formHandlers.formData.contacts && 
+          formHandlers.formData.contacts.length > 0) {
+        try {
+          await handleSiteContacts(
+            createdSite.id,
+            formHandlers.formData.contacts as ContactRecord[],
+            createdSite.user_id
+          );
+        } catch (error) {
+          console.error('Error handling site contacts:', error);
+          // Continue with other operations
+        }
+      }
+      
       // Handle additional contracts if they exist
       if (formHandlers.formData.additionalContracts && 
           formHandlers.formData.additionalContracts.length > 0) {
-        await handleSiteAdditionalContracts(
-          createdSite.id, 
-          formHandlers.formData.additionalContracts,
-          createdSite.user_id
-        );
+        try {
+          await handleSiteAdditionalContracts(
+            createdSite.id, 
+            formHandlers.formData.additionalContracts,
+            createdSite.user_id
+          );
+        } catch (error) {
+          console.error('Error handling additional contracts:', error);
+          // Continue with other operations
+        }
       }
       
       // Handle billing lines if they exist
       if (formHandlers.formData.billingDetails && 
           formHandlers.formData.billingDetails.billingLines && 
           formHandlers.formData.billingDetails.billingLines.length > 0) {
-        await handleSiteBillingLines(
-          createdSite.id, 
-          formHandlers.formData.billingDetails.billingLines
-        );
+        try {
+          await handleSiteBillingLines(
+            createdSite.id, 
+            formHandlers.formData.billingDetails.billingLines
+          );
+        } catch (error) {
+          console.error('Error handling billing lines:', error);
+          // Continue with other operations
+        }
       }
       
       toast.success("Site has been created successfully!");

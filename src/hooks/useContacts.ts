@@ -5,9 +5,9 @@ import { contactsApi } from '@/lib/api/contactsApi';
 import { ContactRecord } from '@/lib/types';
 import { toast } from 'sonner';
 
-export function useContacts() {
+export function useContacts(entityType?: string) {
   const queryClient = useQueryClient();
-  const [activeEntityType, setActiveEntityType] = useState<string | undefined>(undefined);
+  const [activeEntityType, setActiveEntityType] = useState<string | undefined>(entityType);
   
   // Fetch all contacts
   const { 
@@ -110,6 +110,7 @@ export function useContacts() {
   };
 }
 
+// Function for getting contacts related to a specific entity
 export function useEntityContacts(entityId?: string, entityType?: 'client' | 'site' | 'supplier' | 'internal') {
   const queryClient = useQueryClient();
   

@@ -86,16 +86,54 @@ export const getSiteFormSteps = (
           formData={formData}
           errors={{}}
           handleContactChange={(index, field, value) => {
-            // Implement contact change handler
-            console.log(`Contact ${index} field ${field} changed to:`, value);
+            const updatedContacts = [...formData.contacts];
+            if (updatedContacts[index]) {
+              updatedContacts[index] = {
+                ...updatedContacts[index],
+                [field]: value
+              };
+              
+              // If setting as primary, update others
+              if (field === 'is_primary' && value === true) {
+                updatedContacts.forEach((contact, i) => {
+                  if (i !== index && contact.is_primary) {
+                    updatedContacts[i] = {
+                      ...contact,
+                      is_primary: false
+                    };
+                  }
+                });
+              }
+              
+              handleChange('contacts', updatedContacts);
+            }
           }}
           addContact={() => {
-            // Implement add contact handler
-            console.log("Add contact clicked");
+            const newContact = {
+              id: crypto.randomUUID(),
+              name: '',
+              role: 'operations',
+              entity_type: 'site',
+              is_primary: formData.contacts.length === 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            handleChange('contacts', [...formData.contacts, newContact]);
           }}
           removeContact={(index) => {
-            // Implement remove contact handler
-            console.log(`Remove contact at index ${index}`);
+            const updatedContacts = [...formData.contacts];
+            updatedContacts.splice(index, 1);
+            
+            // If we removed the primary contact and there are still contacts,
+            // make the first one primary
+            if (formData.contacts[index]?.is_primary && updatedContacts.length > 0) {
+              updatedContacts[0] = {
+                ...updatedContacts[0],
+                is_primary: true
+              };
+            }
+            
+            handleChange('contacts', updatedContacts);
           }}
         />
       ),
