@@ -28,16 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = new URL(window.location.href);
       const token = url.searchParams.get('token');
       const type = url.searchParams.get('type');
+      const email = url.searchParams.get('email');
       
-      if (token && type === 'signup') {
+      if (token && (type === 'signup' || type === 'recovery') && email) {
         try {
           setIsLoading(true);
+          // Use the correct verification method
           const { error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: 'signup',
+            email,
+            token,
+            type: type === 'signup' ? 'signup' : 'recovery',
           });
           
           if (error) {
+            console.error('Verification error:', error);
             toast.error('Verification failed: ' + error.message);
           } else {
             toast.success('Email verified successfully! You can now log in.');
@@ -56,9 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     handleVerification();
 
-    // Set up auth state change listener FIRST
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log('Auth state changed:', event);
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
@@ -75,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);

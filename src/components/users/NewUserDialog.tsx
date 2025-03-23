@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -32,6 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -58,6 +59,8 @@ interface NewUserDialogProps {
 export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
   const { roles } = useUserRoles();
   const { createUser, isLoading } = useCreateUser();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -72,6 +75,7 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
 
   const onSubmit = async (data: FormData) => {
     try {
+      setError(null);
       await createUser({
         email: data.email,
         full_name: data.full_name,
@@ -79,11 +83,17 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
         password: data.password,
       });
       
-      toast.success('User created successfully');
+      setSuccess(true);
       form.reset();
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(`Failed to create user: ${error.message}`);
+      
+      // Keep dialog open for 3 seconds to show success message, then close
+      setTimeout(() => {
+        onOpenChange(false);
+        setSuccess(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error in form submission:', error);
+      setError(error.message || 'Failed to create user');
     }
   };
 
@@ -93,9 +103,24 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
           <DialogDescription>
-            Add a new user to the system. They will receive an email to set up their account.
+            Add a new user to the system. They will receive an email to verify their account.
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert className="bg-green-50 border-green-200">
+            <AlertDescription className="text-green-800">
+              User created successfully! An email verification has been sent to the user.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -194,8 +219,8 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Creating...' : 'Create User'}
+              <Button type="submit" disabled={isLoading || success}>
+                {isLoading ? 'Creating...' : success ? 'Created!' : 'Create User'}
               </Button>
             </DialogFooter>
           </form>

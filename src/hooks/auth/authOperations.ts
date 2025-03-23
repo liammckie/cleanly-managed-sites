@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,19 +22,27 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 // Sign up with email and password
 export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
-  const { error } = await supabase.auth.signUp({
+  const { error, data } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
       },
+      emailRedirectTo: `${window.location.origin}/login?verified=true`
     },
   });
 
   if (error) throw error;
   
-  toast.success('Account created successfully! Please check your email for confirmation.');
+  // Check if user needs to confirm their email
+  if (data.user && !data.user.email_confirmed_at) {
+    toast.success('Account created successfully! Please check your email for confirmation.');
+  } else {
+    toast.success('Account created successfully!');
+  }
+  
+  return data;
 };
 
 // Sign out
