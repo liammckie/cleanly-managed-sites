@@ -59,6 +59,17 @@ export function ContractDetailsStep({
         isRecurring: true
       }]);
     }
+
+    // Update monthly revenue on the site record
+    if (cycle === 'monthly') {
+      handleNestedChange('monthlyRevenue', '', value);
+    } else if (cycle === 'weekly') {
+      handleNestedChange('monthlyRevenue', '', value * 4.33);
+    } else if (cycle === 'quarterly') {
+      handleNestedChange('monthlyRevenue', '', value / 3);
+    } else if (cycle === 'annually') {
+      handleNestedChange('monthlyRevenue', '', value / 12);
+    }
   }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
 
   // Calculate annual direct cost based on weekly budget
@@ -67,6 +78,9 @@ export function ContractDetailsStep({
       const weeklyBudget = formData.billingDetails.weeklyBudget || 0;
       const annualCost = weeklyBudget * 52;
       setAnnualDirectCost(annualCost);
+      
+      // Update monthly cost on the site record
+      handleNestedChange('monthlyCost', '', weeklyBudget * 4.33);
       
       // Calculate profit margin
       if (annualValue > 0) {
@@ -82,6 +96,9 @@ export function ContractDetailsStep({
     if (formData.billingDetails.serviceDeliveryType === 'contractor') {
       const contractorCost = formData.billingDetails.annualContractorCost || 0;
       setAnnualContractorCost(contractorCost);
+      
+      // Update monthly cost on the site record based on the annual cost
+      handleNestedChange('monthlyCost', '', contractorCost / 12);
       
       // Calculate profit margin
       if (annualValue > 0) {

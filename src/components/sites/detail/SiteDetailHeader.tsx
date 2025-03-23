@@ -38,6 +38,15 @@ export function SiteDetailHeader({ site }: SiteDetailHeaderProps) {
     ? ((margin / site.monthly_revenue) * 100).toFixed(1) 
     : '0';
 
+  // Calculate weekly and annual figures
+  const weeklyRevenue = site.monthly_revenue ? (site.monthly_revenue / 4.33).toFixed(2) : '0.00';
+  const weeklyCost = site.monthly_cost ? (site.monthly_cost / 4.33).toFixed(2) : '0.00';
+  const weeklyMargin = hasFinancials ? (margin / 4.33).toFixed(2) : '0.00';
+  
+  const annualRevenue = site.monthly_revenue ? (site.monthly_revenue * 12).toFixed(2) : '0.00';
+  const annualCost = site.monthly_cost ? (site.monthly_cost * 12).toFixed(2) : '0.00';
+  const annualMargin = hasFinancials ? (margin * 12).toFixed(2) : '0.00';
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -78,23 +87,67 @@ export function SiteDetailHeader({ site }: SiteDetailHeaderProps) {
             <h3 className="text-md font-medium">Financial Summary</h3>
           </div>
           
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-              <p className="text-lg font-semibold">${site.monthly_revenue?.toFixed(2) || '0.00'}</p>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground font-medium">Weekly</p>
+              <div className="grid grid-cols-1 gap-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Revenue</span>
+                  <span className="text-sm">${weeklyRevenue}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Cost</span>
+                  <span className="text-sm">${weeklyCost}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Margin</span>
+                  <span className="text-sm">${weeklyMargin}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Monthly Cost</p>
-              <p className="text-lg font-semibold">${site.monthly_cost?.toFixed(2) || '0.00'}</p>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground font-medium">Monthly</p>
+              <div className="grid grid-cols-1 gap-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Revenue</span>
+                  <span className="text-sm">${site.monthly_revenue?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Cost</span>
+                  <span className="text-sm">${site.monthly_cost?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Margin</span>
+                  <span className="text-sm">${margin.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Monthly Margin</p>
-              <p className="text-lg font-semibold">${margin.toFixed(2)}</p>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground font-medium">Annual</p>
+              <div className="grid grid-cols-1 gap-1">
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Revenue</span>
+                  <span className="text-sm">${annualRevenue}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Cost</span>
+                  <span className="text-sm">${annualCost}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-xs text-muted-foreground">Margin</span>
+                  <span className="text-sm">${annualMargin}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Margin %</p>
-              <p className="text-lg font-semibold">{marginPercentage}%</p>
-            </div>
+          </div>
+          
+          <div className="flex justify-between p-2 bg-slate-100 rounded">
+            <span className="text-sm font-medium">Margin Percentage:</span>
+            <span className={`text-sm font-bold ${parseFloat(marginPercentage) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {marginPercentage}%
+            </span>
           </div>
         </CardContent>
       </Card>

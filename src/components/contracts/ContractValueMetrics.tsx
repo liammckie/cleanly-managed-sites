@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useContractForecast } from '@/hooks/useContractForecast';
@@ -29,6 +30,7 @@ export function ContractValueMetrics() {
   const annualCost = (parseFloat(monthlyCost) * 12).toFixed(2);
   const annualProfit = (parseFloat(monthlyProfit) * 12).toFixed(2);
   const weeklyProfit = (parseFloat(monthlyProfit) / 4.33).toFixed(2);
+  const weeklyCost = (parseFloat(monthlyCost) / 4.33).toFixed(2);
   
   return (
     <div className="space-y-6">
@@ -46,7 +48,7 @@ export function ContractValueMetrics() {
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Cost:</span>
-              <span className="font-medium">${(parseFloat(monthlyCost) / 4.33).toFixed(2)}</span>
+              <span className="font-medium">${weeklyCost}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Profit:</span>
