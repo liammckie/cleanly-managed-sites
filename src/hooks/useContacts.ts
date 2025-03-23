@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contactsApi } from '@/lib/api/contactsApi'; // Import directly from the source file
+import { contactsApi } from '@/lib/api'; // Import from api.ts which now correctly exports contactsApi
 import { ContactRecord } from '@/lib/types';
 import { toast } from 'sonner';
 

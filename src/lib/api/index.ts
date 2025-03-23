@@ -1,7 +1,7 @@
 
 import { clientsApi } from './clientsApi';
 import { sitesApi } from './sites';
-import { workOrdersApi } from './workorders/workOrdersApi';
+import { workOrdersApi } from './workorders';
 import { authApi } from './authApi';
 import { 
   getBusinessDetails, 
