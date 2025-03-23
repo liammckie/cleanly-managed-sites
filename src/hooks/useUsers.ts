@@ -43,10 +43,9 @@ const fetchUsers = async (): Promise<SystemUser[]> => {
     
     // Map user data to our SystemUser type with field transformations
     const users = usersData.map(user => {
-      // Extract first and last name from full_name if they don't exist
-      const nameParts = user.full_name ? user.full_name.split(' ') : ['', ''];
-      const firstName = user.first_name || nameParts[0] || '';
-      const lastName = user.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      // Get first and last name from the database fields
+      const firstName = user.first_name || '';
+      const lastName = user.last_name || '';
       
       const role = user.role_id ? rolesMap[user.role_id] : {
         id: '',
@@ -128,10 +127,9 @@ export function useCreateUser() {
         throw new Error("Failed to create user profile properly");
       }
       
-      // Extract name parts for consistency
-      const nameParts = newUserProfile.full_name ? newUserProfile.full_name.split(' ') : ['', ''];
-      const firstName = newUserProfile.first_name || userData.firstName || nameParts[0] || '';
-      const lastName = newUserProfile.last_name || userData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      // Extract name parts
+      const firstName = newUserProfile.first_name || userData.firstName || '';
+      const lastName = newUserProfile.last_name || userData.lastName || '';
       
       // Update local cache with new user
       queryClient.setQueryData(['users'], (oldData: SystemUser[] = []) => {

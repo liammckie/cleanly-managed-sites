@@ -802,14 +802,17 @@ export type Database = {
           custom_id: string | null
           daily_summary: boolean | null
           email: string
+          first_name: string | null
           full_name: string
           id: string
           last_login: string | null
+          last_name: string | null
           notes: string | null
           phone: string | null
           role_id: string | null
           status: string
           territories: string[] | null
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -818,14 +821,17 @@ export type Database = {
           custom_id?: string | null
           daily_summary?: boolean | null
           email: string
+          first_name?: string | null
           full_name: string
           id: string
           last_login?: string | null
+          last_name?: string | null
           notes?: string | null
           phone?: string | null
           role_id?: string | null
           status?: string
           territories?: string[] | null
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -834,14 +840,17 @@ export type Database = {
           custom_id?: string | null
           daily_summary?: boolean | null
           email?: string
+          first_name?: string | null
           full_name?: string
           id?: string
           last_login?: string | null
+          last_name?: string | null
           notes?: string | null
           phone?: string | null
           role_id?: string | null
           status?: string
           territories?: string[] | null
+          title?: string | null
           updated_at?: string
         }
         Relationships: [

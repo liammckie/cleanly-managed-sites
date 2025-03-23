@@ -45,10 +45,9 @@ const Profile = () => {
         throw error;
       }
       
-      // Extract first and last name from full_name if they don't exist in the database
-      const nameParts = data.full_name ? data.full_name.split(' ') : ['', ''];
-      const firstName = data.first_name || nameParts[0] || '';
-      const lastName = data.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+      // Use first_name and last_name from the database if they exist
+      const firstName = data.first_name || '';
+      const lastName = data.last_name || '';
       
       setProfile(data);
       setFormData({

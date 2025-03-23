@@ -36,9 +36,8 @@ const fetchUser = async (id?: string): Promise<SystemUser | null> => {
   }
   
   // Extract first and last name from full_name if they don't exist
-  const nameParts = userData.full_name ? userData.full_name.split(' ') : ['', ''];
-  const firstName = userData.first_name || nameParts[0] || '';
-  const lastName = userData.last_name || (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
+  const firstName = userData.first_name || '';
+  const lastName = userData.last_name || '';
   
   // Map the data to our SystemUser type
   const user: SystemUser = {
