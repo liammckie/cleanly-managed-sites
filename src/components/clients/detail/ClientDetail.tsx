@@ -63,6 +63,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
       
       <ClientContactsCard clientId={clientId} />
       
+      {/* Modify this line - pass sites array instead of clientId */}
       <ClientSitesCard sites={sites} clientId={clientId} />
     </div>
   );
