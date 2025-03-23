@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -16,7 +17,7 @@ import { Mail, Phone, Star, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ClientContactsCardProps {
-  clientId: string;  // Add this prop to fix the type error
+  clientId: string;
 }
 
 export function ClientContactsCard({ clientId }: ClientContactsCardProps) {
