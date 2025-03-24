@@ -6,7 +6,7 @@ export const useSiteFormAdditionalContracts = (
   formData: SiteFormData,
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) => {
-  // Add new additional contract
+  // Add a new additional contract
   const addAdditionalContract = () => {
     const newContract: ContractDetails = {
       startDate: '',
@@ -24,39 +24,36 @@ export const useSiteFormAdditionalContracts = (
     }));
   };
   
-  // Update additional contract
-  const updateAdditionalContract = (index: number, field: string, value: any) => {
-    if (!formData.additionalContracts) return;
-    
-    const updatedContracts = [...formData.additionalContracts];
-    
-    updatedContracts[index] = {
-      ...updatedContracts[index],
-      [field]: value
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      additionalContracts: updatedContracts
-    }));
+  // Remove an additional contract
+  const removeAdditionalContract = (index: number) => {
+    setFormData(prev => {
+      const updatedContracts = [...(prev.additionalContracts || [])];
+      updatedContracts.splice(index, 1);
+      return {
+        ...prev,
+        additionalContracts: updatedContracts
+      };
+    });
   };
   
-  // Remove additional contract
-  const removeAdditionalContract = (index: number) => {
-    if (!formData.additionalContracts) return;
-    
-    const updatedContracts = [...formData.additionalContracts];
-    updatedContracts.splice(index, 1);
-    
-    setFormData(prev => ({
-      ...prev,
-      additionalContracts: updatedContracts
-    }));
+  // Update an additional contract field
+  const updateAdditionalContract = (index: number, field: string, value: any) => {
+    setFormData(prev => {
+      const updatedContracts = [...(prev.additionalContracts || [])];
+      updatedContracts[index] = {
+        ...updatedContracts[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        additionalContracts: updatedContracts
+      };
+    });
   };
   
   return {
     addAdditionalContract,
-    updateAdditionalContract,
-    removeAdditionalContract
+    removeAdditionalContract,
+    updateAdditionalContract
   };
 };
