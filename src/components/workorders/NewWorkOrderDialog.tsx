@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -324,7 +325,7 @@ export const NewWorkOrderDialog = ({ sites: allSites, onSuccess }: NewWorkOrderD
                     <SelectValue placeholder="All clients" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All clients</SelectItem>
+                    <SelectItem value="all-clients">All clients</SelectItem>
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
@@ -344,7 +345,7 @@ export const NewWorkOrderDialog = ({ sites: allSites, onSuccess }: NewWorkOrderD
                     <SelectValue placeholder="All states" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All states</SelectItem>
+                    <SelectItem value="all-states">All states</SelectItem>
                     {availableStates.map((state) => (
                       <SelectItem key={state} value={state}>
                         {state}
@@ -415,3 +416,4 @@ export const NewWorkOrderDialog = ({ sites: allSites, onSuccess }: NewWorkOrderD
     </div>
   );
 };
+
