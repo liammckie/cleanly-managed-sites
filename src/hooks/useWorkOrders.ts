@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -10,7 +11,8 @@ import {
   assignWorkOrder,
   getSiteWorkOrders,
   addWorkOrderAttachment,
-  removeWorkOrderAttachment 
+  removeWorkOrderAttachment,
+  completeWorkOrder
 } from '@/lib/api/workorders/workOrdersApi';
 import { WorkOrderStatus, CreateWorkOrderData, UpdateWorkOrderData } from '@/lib/api/workorders/types';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
