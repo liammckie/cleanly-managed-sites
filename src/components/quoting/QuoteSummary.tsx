@@ -104,7 +104,7 @@ export function QuoteSummary({
         )}
         
         {subcontractors.length === 0 && (
-          <Alert>
+          <Alert variant="default">
             <Info className="h-4 w-4" />
             <AlertTitle>No Subcontractors</AlertTitle>
             <AlertDescription>
@@ -114,7 +114,7 @@ export function QuoteSummary({
         )}
         
         {summary.totalPrice > 0 && (
-          <Alert>
+          <Alert variant="default">
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <AlertTitle>Quote Ready</AlertTitle>
             <AlertDescription>
