@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ContactRecord } from '@/lib/types';
 import { ContactForm } from './ContactForm';
 
@@ -12,7 +12,7 @@ export interface ContactDialogProps {
   entityId?: string;
   isSubmitting?: boolean;
   title?: string;
-  onSubmit: (contactData: Partial<ContactRecord>) => Promise<void>;
+  onSubmit: (contactData: Partial<ContactRecord>) => Promise<void | boolean>;
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
@@ -30,12 +30,17 @@ export function ContactDialog({
   onSuccess,
 }: ContactDialogProps) {
   const [isOpen, setIsOpen] = useState(open || false);
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(isSubmitting);
 
   useEffect(() => {
     if (open !== undefined) {
       setIsOpen(open);
     }
   }, [open]);
+
+  useEffect(() => {
+    setIsSubmittingLocal(isSubmitting);
+  }, [isSubmitting]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setIsOpen(newOpen);
@@ -46,14 +51,20 @@ export function ContactDialog({
 
   const handleSubmit = async (values: Partial<ContactRecord>) => {
     try {
-      await onSubmit(values);
-      handleOpenChange(false);
-      
-      if (onSuccess) {
-        onSuccess();
+      setIsSubmittingLocal(true);
+      const result = await onSubmit(values);
+      // If onSubmit returns true or void (undefined), consider it successful
+      if (result !== false) {
+        handleOpenChange(false);
+        
+        if (onSuccess) {
+          onSuccess();
+        }
       }
     } catch (error) {
       console.error('Error saving contact:', error);
+    } finally {
+      setIsSubmittingLocal(false);
     }
   };
 
@@ -65,6 +76,9 @@ export function ContactDialog({
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>{contact ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
+              <DialogDescription>
+                {contact ? `Edit ${title.toLowerCase()} details below` : `Enter ${title.toLowerCase()} details below`}
+              </DialogDescription>
             </DialogHeader>
             
             <ContactForm
@@ -73,7 +87,7 @@ export function ContactDialog({
               entityId={entityId}
               onSubmit={handleSubmit}
               onCancel={() => handleOpenChange(false)}
-              isSubmitting={isSubmitting}
+              isSubmitting={isSubmittingLocal}
             />
           </DialogContent>
         </Dialog>
@@ -86,6 +100,9 @@ export function ContactDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{contact ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
+          <DialogDescription>
+            {contact ? `Edit ${title.toLowerCase()} details below` : `Enter ${title.toLowerCase()} details below`}
+          </DialogDescription>
         </DialogHeader>
         
         <ContactForm
@@ -94,7 +111,7 @@ export function ContactDialog({
           entityId={entityId}
           onSubmit={handleSubmit}
           onCancel={() => handleOpenChange(false)}
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmittingLocal}
         />
       </DialogContent>
     </Dialog>

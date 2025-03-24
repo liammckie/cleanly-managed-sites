@@ -4,18 +4,30 @@ import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { useNavigate } from 'react-router-dom';
 import { useContacts } from '@/hooks/useContacts';
+import { toast } from 'sonner';
 
 const CreateContact = () => {
   const navigate = useNavigate();
   const { createContact } = useContacts();
   
   const handleSuccess = () => {
+    toast.success('Contact created successfully');
+    navigate('/contacts');
+  };
+  
+  const handleCancel = () => {
     navigate('/contacts');
   };
   
   // Create a wrapper function to handle the type mismatch
   const handleSubmit = async (contactData: any) => {
-    await createContact(contactData);
+    try {
+      await createContact(contactData);
+      return true;
+    } catch (error) {
+      console.error('Error creating contact:', error);
+      return false;
+    }
   };
   
   return (
@@ -25,7 +37,9 @@ const CreateContact = () => {
         
         <ContactDialog 
           open={true}
-          onOpenChange={() => navigate('/contacts')}
+          onOpenChange={(open) => {
+            if (!open) handleCancel();
+          }}
           title="Contact"
           onSubmit={handleSubmit}
           onSuccess={handleSuccess}
