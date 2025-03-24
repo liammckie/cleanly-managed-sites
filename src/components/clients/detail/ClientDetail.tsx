@@ -1,5 +1,5 @@
 
-import React, { ErrorInfo, useState } from 'react';
+import React, { useState } from 'react';
 import { useClientDetails } from '@/hooks/useClients';
 import { useNavigate } from 'react-router-dom';
 import { ClientHeader } from './ClientHeader';
@@ -16,36 +16,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 interface ClientDetailProps {
   clientId: string;
-}
-
-// Error boundary for the contacts card
-class ContactsErrorBoundary extends React.Component<
-  { children: React.ReactNode; fallback: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(_: Error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Contacts component failed:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-
-    return this.props.children;
-  }
 }
 
 // Fallback component for when contacts can't be loaded
@@ -115,11 +89,11 @@ export function ClientDetail({ clientId }: ClientDetailProps) {
         <ClientNotesCard notes={client.notes} clientId={clientId} />
       </div>
       
-      <ContactsErrorBoundary
+      <ErrorBoundary
         fallback={<ContactsFallback clientId={clientId} />}
       >
         <ClientContactsCard clientId={clientId} />
-      </ContactsErrorBoundary>
+      </ErrorBoundary>
       
       <ClientSitesCard sites={sites} clientId={clientId} />
     </div>
