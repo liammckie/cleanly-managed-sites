@@ -7,10 +7,10 @@ export * from './api/subcontractorsApi';
 export * from './api/authApi';
 export * from './api/workorders';
 export * from './api/contractors';
-export * from './api/contactsApi';
+export * from './api/contacts'; // Updated to use the new modular contacts API
 
 // Also directly export the contactsApi object for backward compatibility
-import { contactsApi } from './api/contactsApi';
+import { contactsApi } from './api/contacts';
 export { contactsApi };
 
 // Export types but avoid duplication by using the types from api/types
