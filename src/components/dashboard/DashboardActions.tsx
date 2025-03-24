@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Users, Building2, Phone, FileText, FileContract } from 'lucide-react';
+import { PlusCircle, Users, Building2, Phone, FileText, FileLock } from 'lucide-react';
 
 export function DashboardActions() {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export function DashboardActions() {
         className="bg-slate-50 hover:bg-slate-100 border-slate-200"
         onClick={() => navigate('/contracts/create')}
       >
-        <FileContract className="mr-2 h-4 w-4" />
+        <FileLock className="mr-2 h-4 w-4" />
         Create Contract
       </Button>
       
