@@ -16,10 +16,6 @@ import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
 import { handleSiteContacts } from '@/lib/api/sites/siteContactsApi';
 import { ContactRecord } from '@/lib/types';
 
-// Define fallback functions for missing handlers
-const noop = () => {};
-const noopWithParams = (...args: any[]) => {};
-
 export function CreateSiteForm() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,57 +58,84 @@ export function CreateSiteForm() {
     console.log(`Updating subcontractor ${index} field ${field}:`, value);
   });
   
-  const addSubcontractor = formHandlers.addSubcontractor || noop;
-  const removeSubcontractor = formHandlers.removeSubcontractor || noopWithParams;
+  const addSubcontractor = formHandlers.addSubcontractor || (() => {});
+  const removeSubcontractor = formHandlers.removeSubcontractor || ((index: number) => {});
   
-  const addReplenishable = formHandlers.addReplenishable || noop;
-  const updateReplenishable = formHandlers.updateReplenishable || noopWithParams;
-  const removeReplenishable = formHandlers.removeReplenishable || noopWithParams;
+  const addReplenishable = formHandlers.addReplenishable || (() => {});
+  const updateReplenishable = formHandlers.updateReplenishable || ((index: number, field: string, value: any) => {});
+  const removeReplenishable = formHandlers.removeReplenishable || ((index: number) => {});
   
-  const addBillingLine = formHandlers.addBillingLine || noop;
-  const updateBillingLine = formHandlers.updateBillingLine || noopWithParams;
-  const removeBillingLine = formHandlers.removeBillingLine || noopWithParams;
+  const addBillingLine = formHandlers.addBillingLine || (() => {});
+  const updateBillingLine = formHandlers.updateBillingLine || ((index: number, field: string, value: any) => {});
+  const removeBillingLine = formHandlers.removeBillingLine || ((index: number) => {});
   
-  const addContractTerm = formHandlers.addContractTerm || noop;
-  const updateContractTerm = formHandlers.updateContractTerm || noopWithParams;
-  const removeContractTerm = formHandlers.removeContractTerm || noopWithParams;
+  const addContractTerm = formHandlers.addContractTerm || (() => {});
+  const updateContractTerm = formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {});
+  const removeContractTerm = formHandlers.removeContractTerm || ((index: number) => {});
   
-  const addAdditionalContract = formHandlers.addAdditionalContract || noop;
-  const updateAdditionalContract = formHandlers.updateAdditionalContract || noopWithParams;
-  const removeAdditionalContract = formHandlers.removeAdditionalContract || noopWithParams;
+  const addAdditionalContract = formHandlers.addAdditionalContract || (() => {});
+  const updateAdditionalContract = formHandlers.updateAdditionalContract || ((index: number, field: string, value: any) => {});
+  const removeAdditionalContract = formHandlers.removeAdditionalContract || ((index: number) => {});
   
-  // Get steps configuration with defined handlers
-  const steps = getSiteFormSteps(
-    formHandlers.formData,
-    (field: string, value: any) => formHandlers.handleChange({ target: { name: field, value } } as any),
-    formHandlers.handleNestedChange,
-    handleArrayChange,
-    handleArrayUpdate,
-    formHandlers.handleDoubleNestedChange,
-    addArrayItem,
-    removeArrayItem,
-    addSubcontractor,
-    updateSubcontractor,
-    removeSubcontractor,
-    addReplenishable,
-    updateReplenishable,
-    removeReplenishable,
-    addBillingLine,
-    updateBillingLine,
-    removeBillingLine,
-    addContractTerm,
-    updateContractTerm,
-    removeContractTerm,
-    addAdditionalContract,
-    updateAdditionalContract,
-    removeAdditionalContract,
-    handleFileUpload,
-    handleFileRemove
-  );
+  // Create a custom version of getSiteFormSteps that includes the contact handlers
+  const getCustomSiteFormSteps = () => {
+    const steps = getSiteFormSteps(
+      formHandlers.formData,
+      (field: string, value: any) => formHandlers.handleChange({ target: { name: field, value } } as any),
+      formHandlers.handleNestedChange,
+      handleArrayChange,
+      handleArrayUpdate,
+      formHandlers.handleDoubleNestedChange,
+      addArrayItem,
+      removeArrayItem,
+      addSubcontractor,
+      updateSubcontractor,
+      removeSubcontractor,
+      addReplenishable,
+      updateReplenishable,
+      removeReplenishable,
+      addBillingLine,
+      updateBillingLine,
+      removeBillingLine,
+      addContractTerm,
+      updateContractTerm,
+      removeContractTerm,
+      addAdditionalContract,
+      updateAdditionalContract,
+      removeAdditionalContract,
+      handleFileUpload,
+      handleFileRemove
+    );
+    
+    // Find the contacts step and modify it to pass the addExistingContact prop
+    const contactsStepIndex = steps.findIndex(step => 
+      step.component && React.isValidElement(step.component) && 
+      step.component.type === require('./steps/ContactsStep').ContactsStep
+    );
+    
+    if (contactsStepIndex >= 0) {
+      const originalStep = steps[contactsStepIndex];
+      steps[contactsStepIndex] = {
+        ...originalStep,
+        component: React.cloneElement(
+          originalStep.component as React.ReactElement,
+          { 
+            addExistingContact: formHandlers.addExistingContact,
+            setAsPrimary: formHandlers.setAsPrimary 
+          }
+        )
+      };
+    }
+    
+    return steps;
+  };
+  
+  // Use the custom steps
+  const customSteps = getCustomSiteFormSteps();
   
   // Use stepper hook with validation
   const stepper = useSiteFormStepper({
-    steps,
+    steps: customSteps,
     validateStep: formHandlers.validateStep
   });
   

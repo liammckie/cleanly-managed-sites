@@ -5,7 +5,8 @@ import { SiteContact } from '../types/contactTypes';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, X, Star } from 'lucide-react';
+import { UserPlus, X, Star, UserCheck } from 'lucide-react';
+import { EntitySearchSelector } from '@/components/contacts/form/EntitySearchSelector';
 
 export interface ContactsStepProps {
   formData: SiteFormData;
@@ -13,6 +14,8 @@ export interface ContactsStepProps {
   handleContactChange: (index: number, field: string, value: any) => void;
   addContact: () => void;
   removeContact: (index: number) => void;
+  addExistingContact?: (contactId: string) => void;
+  setAsPrimary?: (index: number) => void;
 }
 
 export function ContactsStep({
@@ -20,48 +23,93 @@ export function ContactsStep({
   errors,
   handleContactChange,
   addContact,
-  removeContact
+  removeContact,
+  addExistingContact,
+  setAsPrimary
 }: ContactsStepProps) {
+  // Handle adding an existing contact
+  const handleExistingContactSelect = (contactId: string) => {
+    if (addExistingContact) {
+      addExistingContact(contactId);
+    }
+  };
+
+  // Handle setting a contact as primary
+  const handleSetAsPrimary = (index: number) => {
+    if (setAsPrimary) {
+      setAsPrimary(index);
+    } else {
+      // Fallback if setAsPrimary is not provided
+      formData.contacts.forEach((contact, i) => {
+        handleContactChange(i, 'is_primary', i === index);
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Site Contacts</h2>
-        <Button
-          type="button"
-          onClick={addContact}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-        >
-          <UserPlus className="h-4 w-4" />
-          Add Contact
-        </Button>
+        <div className="flex gap-2">
+          {addExistingContact && (
+            <div className="w-64">
+              <EntitySearchSelector 
+                entityType="contact"
+                onEntitySelect={handleExistingContactSelect}
+              />
+            </div>
+          )}
+          <Button
+            type="button"
+            onClick={addContact}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+          >
+            <UserPlus className="h-4 w-4" />
+            Add New Contact
+          </Button>
+        </div>
       </div>
       
       {formData.contacts && formData.contacts.length > 0 ? (
         <div className="grid gap-4">
           {formData.contacts.map((contact: SiteContact, index: number) => (
-            <Card key={index} className="p-4">
+            <Card key={index} className={`p-4 border-2 ${contact.is_primary ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`}>
               <div className="flex justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{contact.name || `Contact #${index + 1}`}</h3>
                   {contact.is_primary && (
-                    <Badge variant="secondary" className="flex items-center gap-1">
+                    <Badge variant="secondary" className="flex items-center gap-1 bg-yellow-100 text-yellow-800">
                       <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      Primary
+                      Primary Contact
                     </Badge>
                   )}
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeContact(index)}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Remove</span>
-                </Button>
+                <div className="flex gap-2">
+                  {!contact.is_primary && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSetAsPrimary(index)}
+                      className="text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 h-8"
+                    >
+                      <Star className="h-4 w-4 mr-1" />
+                      Make Primary
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeContact(index)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Remove</span>
+                  </Button>
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,9 +180,9 @@ export function ContactsStep({
                       type="checkbox"
                       checked={contact.is_primary || false}
                       onChange={(e) => handleContactChange(index, 'is_primary', e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 mr-2"
+                      className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 h-4 w-4 mr-2"
                     />
-                    <span className="text-sm font-medium">Set as primary contact</span>
+                    <span className="text-sm font-medium">Primary contact</span>
                   </label>
                 </div>
               </div>
@@ -144,15 +192,29 @@ export function ContactsStep({
       ) : (
         <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
           <p className="text-gray-500 mb-4">No contacts added yet.</p>
-          <Button
-            type="button"
-            onClick={addContact}
-            variant="outline"
-            className="flex items-center gap-1"
-          >
-            <UserPlus className="h-4 w-4" />
-            Add First Contact
-          </Button>
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+            <Button
+              type="button"
+              onClick={addContact}
+              variant="outline"
+              className="flex items-center gap-1"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add New Contact
+            </Button>
+            
+            {addExistingContact && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex items-center gap-1"
+                onClick={() => document.querySelector('[role="combobox"]')?.dispatchEvent(new MouseEvent('click'))}
+              >
+                <UserCheck className="h-4 w-4" />
+                Select Existing Contact
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>
