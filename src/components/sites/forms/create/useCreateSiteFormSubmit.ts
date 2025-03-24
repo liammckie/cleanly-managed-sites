@@ -1,30 +1,30 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { SiteFormData } from '../siteFormTypes';
-import { sitesApi } from '@/lib/api';
+import { useSiteOperations } from '@/hooks/useSiteOperations';
 
 export function useCreateSiteFormSubmit(formData: SiteFormData) {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createSite } = useSiteOperations();
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
     
     try {
-      // Use the API to create the site - the API handles all the related operations
-      const createdSite = await sitesApi.createSite(formData);
-      
-      toast.success("Site has been created successfully!");
+      await createSite(formData);
       navigate('/sites');
     } catch (error) {
-      console.error('Error creating site:', error);
-      toast.error("Failed to create site. Please try again.");
+      // Error handling is done in useSiteOperations
+      console.error('Site creation failed:', error);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [createSite, formData, navigate, isSubmitting]);
 
   return {
     handleSubmit,
