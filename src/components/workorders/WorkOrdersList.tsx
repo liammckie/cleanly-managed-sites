@@ -54,7 +54,7 @@ export const WorkOrdersList = ({
 }: WorkOrdersListProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = limit || 10;
-  const { subcontractors = [], isLoading: isSubcontractorsLoading } = useSubcontractors();
+  const { subcontractors = [] } = useSubcontractors(undefined);
   
   if (isLoading) {
     return (

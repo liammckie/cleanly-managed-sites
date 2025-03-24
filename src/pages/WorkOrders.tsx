@@ -36,7 +36,7 @@ const WorkOrders = () => {
   const { workOrders, isLoadingWorkOrders, workOrdersError, refetchWorkOrders } = useWorkOrders();
   const { sites } = useSites();
   const { clients } = useClients();
-  const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors();
+  const { subcontractors = [] } = useSubcontractors(undefined);
   
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -161,7 +161,7 @@ const WorkOrders = () => {
     setSiteFilter('all');
     setClientFilter('all');
     setSubcontractorFilter('all');
-    setDateRange({});
+    setDateRange({ from: undefined, to: undefined });
     setShowCompletedOnly(false);
     setShowUnbilledOnly(false);
     setShowUnpaidOnly(false);

@@ -1,16 +1,14 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { subcontractorsApi, SubcontractorRecord } from '@/lib/api/subcontractorsApi';
 
-export function useSubcontractors(siteId: string | undefined) {
+export function useSubcontractors(siteId?: string) {
   const queryClient = useQueryClient();
   
-  // Query for fetching subcontractors for a site
+  // Query for fetching subcontractors for a site or all subcontractors if no siteId is provided
   const subcontractorsQuery = useQuery({
     queryKey: ['subcontractors', siteId],
-    queryFn: () => siteId ? subcontractorsApi.getSubcontractors(siteId) : [],
-    enabled: !!siteId, // Only run the query if siteId is provided
+    queryFn: () => siteId ? subcontractorsApi.getSubcontractors(siteId) : subcontractorsApi.getAllSubcontractors(),
   });
   
   // Mutation for creating a new subcontractor
