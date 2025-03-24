@@ -40,9 +40,10 @@ export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Pa
       continue;
     }
     
+    // Make sure we're passing a single object, not an array
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert(subData) // Insert a single object, not an array
+      .insert([subData]) // Wrap in array for Supabase insert
       .select();
     
     if (error) {

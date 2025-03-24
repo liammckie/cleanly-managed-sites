@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -49,31 +48,22 @@ export function QuoteSummary({
     profitPercentage: 0
   });
   
-  // Calculate summary values whenever shifts, subcontractors, or percentages change
   useEffect(() => {
     if (!shifts.length && !subcontractors.length) return;
     
-    // Calculate labor costs from shifts
     const laborCost = calculateTotalCosts(shifts);
-    
-    // Calculate hours worked
     const totalHours = calculateTotalHours(shifts);
-    
-    // Calculate subcontractor costs
     const subcontractorCost = calculateSubcontractorMonthlyCost(subcontractors);
     
-    // Calculate overhead, margin, and total price
     const costCalculation = calculateTotalCostWithOverheadAndMargin(
       laborCost,
       overheadPercentage,
       marginPercentage
     );
     
-    // Include subcontractor cost in calculations
     const costBeforeMargin = costCalculation.totalCostBeforeMargin + subcontractorCost;
     const totalPrice = costCalculation.totalPrice + subcontractorCost;
     
-    // Calculate profit percentage
     const profitPercentage = (costCalculation.marginAmount / costBeforeMargin) * 100;
     
     setSummary({
@@ -91,7 +81,6 @@ export function QuoteSummary({
   
   return (
     <div className="space-y-6">
-      {/* Alerts Section */}
       <div className="space-y-3">
         {shifts.length === 0 && (
           <Alert variant="warning">
@@ -124,8 +113,8 @@ export function QuoteSummary({
         )}
         
         {summary.totalPrice > 0 && (
-          <Alert variant="success">
-            <CheckCircle2 className="h-4 w-4" />
+          <Alert variant="default">
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
             <AlertTitle>Quote Ready</AlertTitle>
             <AlertDescription>
               Your quote is ready with a total monthly cost of {formatCurrency(summary.totalPrice)}.
@@ -134,7 +123,6 @@ export function QuoteSummary({
         )}
       </div>
       
-      {/* Summary Section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <SummaryCard
           title="Labor Costs"
@@ -164,7 +152,7 @@ export function QuoteSummary({
         <SummaryCard
           title="Profit Margin"
           value={formatCurrency(summary.marginAmount)}
-          description={`${marginPercentage}% margin (${summary.profitPercentage.toFixed(2)}% of total)`}
+          description={`${marginPercentage}% margin (${summary.profitPercentage.toFixed(2)}% of total)}`}
         />
         
         <SummaryCard
@@ -175,7 +163,6 @@ export function QuoteSummary({
         />
       </div>
       
-      {/* Breakdown Section */}
       <Card>
         <CardHeader>
           <CardTitle>Cost Breakdown</CardTitle>

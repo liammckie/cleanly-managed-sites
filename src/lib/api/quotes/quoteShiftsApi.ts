@@ -41,9 +41,10 @@ export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift
       continue;
     }
     
+    // Make sure we're passing a single object, not an array
     const { data, error } = await supabase
       .from('quote_shifts')
-      .insert(shiftData) // Insert a single object, not an array
+      .insert([shiftData]) // Wrap in array for Supabase insert
       .select();
     
     if (error) {

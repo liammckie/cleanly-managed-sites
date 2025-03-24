@@ -94,10 +94,15 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
     createdBy: userId
   });
   
+  // Ensure name is present as it's required
+  if (!dbQuoteData.name) {
+    throw new Error('Quote name is required');
+  }
+  
   // Insert the quote
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
-    .insert(dbQuoteData)
+    .insert([dbQuoteData]) // Wrap in array for Supabase insert
     .select()
     .single();
   
@@ -118,9 +123,17 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
         quoteId: quote.id
       });
       
+      // Ensure required fields
+      if (!shiftWithQuoteId.day || !shiftWithQuoteId.employment_type || 
+          !shiftWithQuoteId.start_time || !shiftWithQuoteId.end_time ||
+          !shiftWithQuoteId.level) {
+        console.error('Missing required fields for shift:', shiftWithQuoteId);
+        continue;
+      }
+      
       const { error: shiftError } = await supabase
         .from('quote_shifts')
-        .insert(shiftWithQuoteId);
+        .insert([shiftWithQuoteId]); // Wrap in array for Supabase insert
       
       if (shiftError) {
         console.error('Error adding shift:', shiftError);
@@ -137,9 +150,15 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
         quoteId: quote.id
       });
       
+      // Ensure name is present
+      if (!subWithQuoteId.name) {
+        console.error('Missing name for subcontractor:', subWithQuoteId);
+        continue;
+      }
+      
       const { error: subError } = await supabase
         .from('quote_subcontractors')
-        .insert(subWithQuoteId);
+        .insert([subWithQuoteId]); // Wrap in array for Supabase insert
       
       if (subError) {
         console.error('Error adding subcontractor:', subError);
@@ -163,6 +182,11 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     ...restQuoteData,
     updatedAt: new Date().toISOString()
   });
+  
+  // Ensure name is present
+  if (!dbQuoteData.name) {
+    throw new Error('Quote name is required');
+  }
   
   // Update quote details
   const { data: quote, error: quoteError } = await supabase
@@ -198,9 +222,17 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
           quoteId: id
         });
         
+        // Ensure required fields
+        if (!shiftWithQuoteId.day || !shiftWithQuoteId.employment_type || 
+            !shiftWithQuoteId.start_time || !shiftWithQuoteId.end_time ||
+            !shiftWithQuoteId.level) {
+          console.error('Missing required fields for shift:', shiftWithQuoteId);
+          continue;
+        }
+        
         const { error: addShiftError } = await supabase
           .from('quote_shifts')
-          .insert(shiftWithQuoteId);
+          .insert([shiftWithQuoteId]); // Wrap in array for Supabase insert
         
         if (addShiftError) {
           console.error('Error adding shift:', addShiftError);
@@ -231,9 +263,15 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
           quoteId: id
         });
         
+        // Ensure name is present
+        if (!subWithQuoteId.name) {
+          console.error('Missing name for subcontractor:', subWithQuoteId);
+          continue;
+        }
+        
         const { error: addSubError } = await supabase
           .from('quote_subcontractors')
-          .insert(subWithQuoteId);
+          .insert([subWithQuoteId]); // Wrap in array for Supabase insert
         
         if (addSubError) {
           console.error('Error adding subcontractor:', addSubError);
