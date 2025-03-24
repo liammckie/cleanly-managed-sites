@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useSiteForm } from '@/hooks/useSiteForm';
@@ -89,7 +88,7 @@ export function CreateSiteForm() {
   const getCustomSiteFormSteps = () => {
     const steps = getSiteFormSteps(
       formHandlers.formData,
-      formHandlers.handleChange, // Fixed: Pass the full event handler, not just (field, value)
+      formHandlers.handleChange,
       formHandlers.handleNestedChange,
       handleArrayChange,
       handleArrayUpdate,
@@ -112,7 +111,8 @@ export function CreateSiteForm() {
       updateAdditionalContract,
       removeAdditionalContract,
       handleFileUpload,
-      handleFileRemove
+      handleFileRemove,
+      formHandlers.errors
     );
     
     // Find the contacts step and modify it to pass the addExistingContact prop
@@ -127,6 +127,7 @@ export function CreateSiteForm() {
         component: (
           <ContactsStep
             formData={formHandlers.formData}
+            errors={formHandlers.errors}
             handleContactChange={(index, field, value) => {
               const updatedContacts = [...formHandlers.formData.contacts];
               if (updatedContacts[index]) {

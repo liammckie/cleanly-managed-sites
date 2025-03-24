@@ -1,200 +1,118 @@
 
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import React from 'react';
 import { SiteFormData } from '../siteFormTypes';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { AreaSpecification } from '../types/jobSpecificationTypes';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 
 interface JobSpecificationsStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
 }
 
-export const JobSpecificationsStep: React.FC<JobSpecificationsStepProps> = ({ formData, handleNestedChange }) => {
-  // Local state for area management
-  const [areaName, setAreaName] = useState('');
-  const [areaDetails, setAreaDetails] = useState('');
-  
-  // Handle adding a new area
-  const handleAddArea = () => {
-    if (areaName.trim() === '') return;
-    
-    const newArea: AreaSpecification = {
-      name: areaName,
-      details: areaDetails
-    };
-    
-    const updatedAreas = [...(formData.jobSpecifications.areas || []), newArea];
-    handleNestedChange('jobSpecifications', 'areas', updatedAreas);
-    
-    // Reset inputs
-    setAreaName('');
-    setAreaDetails('');
-  };
-  
-  // Handle removing an area
-  const handleRemoveArea = (indexToRemove: number) => {
-    const updatedAreas = formData.jobSpecifications.areas?.filter(
-      (_, index) => index !== indexToRemove
-    );
-    handleNestedChange('jobSpecifications', 'areas', updatedAreas);
-  };
-
-  // Calculate hours per week
-  const hoursPerWeek = formData.jobSpecifications.daysPerWeek * formData.jobSpecifications.hoursPerDay;
+export function JobSpecificationsStep({ 
+  formData, 
+  handleNestedChange 
+}: JobSpecificationsStepProps) {
+  const jobSpecs = formData.jobSpecifications || {};
   
   return (
     <div className="space-y-6">
-      <div className="glass-card p-6 space-y-4">
-        <h3 className="text-xl font-semibold mb-4">Job Requirements</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="days-per-week">Days Per Week</Label>
-            <Input
-              id="days-per-week"
-              type="number"
-              min="1"
-              max="7"
-              value={formData.jobSpecifications.daysPerWeek}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'daysPerWeek', Number(e.target.value))}
-              className="glass-input"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="hours-per-day">Hours Per Day</Label>
-            <Input
-              id="hours-per-day"
-              type="number"
-              min="0.5"
-              step="0.5"
-              value={formData.jobSpecifications.hoursPerDay}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'hoursPerDay', Number(e.target.value))}
-              className="glass-input"
-            />
-          </div>
-        </div>
-        
-        <div className="bg-muted/50 p-3 rounded-md text-center my-4">
-          <p className="text-sm text-muted-foreground">Total Hours Per Week</p>
-          <p className="text-2xl font-bold">{hoursPerWeek}</p>
-        </div>
+      <Card className="p-6 space-y-4">
+        <h3 className="text-lg font-medium">Job Specifications</h3>
         
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Working Days</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                  <div key={day} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`day-${day}`}
-                      checked={formData.jobSpecifications.workingDays?.[day] || false}
-                      onCheckedChange={(checked) => {
-                        const workingDays = {
-                          ...(formData.jobSpecifications.workingDays || {}),
-                          [day]: checked
-                        };
-                        handleNestedChange('jobSpecifications', 'workingDays', workingDays);
-                      }}
-                    />
-                    <Label htmlFor={`day-${day}`} className="capitalize">{day}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Areas to Clean</Label>
-              <div className="flex flex-wrap gap-2">
-                {['Reception', 'Offices', 'Kitchen', 'Bathrooms', 'Warehouse', 'Common Areas', 'Exterior'].map((area) => (
-                  <div key={area} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`area-${area}`}
-                      checked={formData.jobSpecifications.areas?.some(a => a.name === area) || false}
-                      onCheckedChange={(checked) => {
-                        let areas = [...(formData.jobSpecifications.areas || [])];
-                        if (checked) {
-                          if (!areas.some(a => a.name === area)) {
-                            areas.push({ name: area, details: '' });
-                          }
-                        } else {
-                          areas = areas.filter(a => a.name !== area);
-                        }
-                        handleNestedChange('jobSpecifications', 'areas', areas);
-                      }}
-                    />
-                    <Label htmlFor={`area-${area}`}>{area}</Label>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="cleaning-frequency">Cleaning Frequency</Label>
+            <select 
+              id="cleaning-frequency"
+              className="w-full p-2 border rounded-md"
+              value={jobSpecs.cleaningFrequency || 'daily'}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'cleaningFrequency', e.target.value)}
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom</option>
+            </select>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="special-equipment"
-                checked={formData.jobSpecifications.requiresSpecialEquipment || false}
-                onCheckedChange={(checked) => {
-                  handleNestedChange('jobSpecifications', 'requiresSpecialEquipment', checked);
-                  if (!checked) {
-                    handleNestedChange('jobSpecifications', 'equipmentDetails', '');
-                  }
-                }}
+          {jobSpecs.cleaningFrequency === 'custom' && (
+            <div className="space-y-2">
+              <Label htmlFor="custom-frequency">Custom Frequency</Label>
+              <Input
+                id="custom-frequency"
+                placeholder="Specify custom frequency"
+                value={jobSpecs.customFrequency || ''}
+                onChange={(e) => handleNestedChange('jobSpecifications', 'customFrequency', e.target.value)}
+                className="w-full"
               />
-              <Label htmlFor="special-equipment">Requires Special Equipment</Label>
             </div>
-            
-            {formData.jobSpecifications.requiresSpecialEquipment && (
-              <Textarea
-                id="equipment-details"
-                placeholder="Describe the special equipment needed..."
-                rows={3}
-                value={formData.jobSpecifications.equipmentDetails || ''}
-                onChange={(e) => handleNestedChange('jobSpecifications', 'equipmentDetails', e.target.value)}
-                className="glass-input resize-none"
-              />
-            )}
-          </div>
+          )}
           
           <div className="space-y-2">
-            <Label htmlFor="cleaning-instructions">Cleaning Instructions</Label>
-            <Textarea
-              id="cleaning-instructions"
-              placeholder="Enter detailed cleaning instructions..."
-              rows={4}
-              value={formData.jobSpecifications.cleaningInstructions || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'cleaningInstructions', e.target.value)}
-              className="glass-input resize-none"
+            <Label htmlFor="service-days">Service Days</Label>
+            <Input
+              id="service-days"
+              placeholder="e.g., Monday, Wednesday, Friday"
+              value={jobSpecs.serviceDays || ''}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'serviceDays', e.target.value)}
+              className="w-full"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="job-notes">Additional Notes</Label>
+            <Label htmlFor="service-time">Service Time</Label>
+            <Input
+              id="service-time"
+              placeholder="e.g., After 5:00 PM"
+              value={jobSpecs.serviceTime || ''}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'serviceTime', e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="estimated-hours">Estimated Hours Per Service</Label>
+            <Input
+              id="estimated-hours"
+              type="number"
+              min="0"
+              step="0.5"
+              placeholder="0"
+              value={jobSpecs.estimatedHours || ''}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'estimatedHours', e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="equipment-required">Equipment Required</Label>
             <Textarea
-              id="job-notes"
-              placeholder="Enter any additional notes about the job specifications..."
+              id="equipment-required"
+              placeholder="List equipment needed for this job"
+              value={jobSpecs.equipmentRequired || ''}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'equipmentRequired', e.target.value)}
+              className="w-full"
               rows={3}
-              value={formData.jobSpecifications.notes}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'notes', e.target.value)}
-              className="glass-input resize-none"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="scope-notes">Scope Notes</Label>
+            <Textarea
+              id="scope-notes"
+              placeholder="Additional notes about job scope"
+              value={jobSpecs.scopeNotes || ''}
+              onChange={(e) => handleNestedChange('jobSpecifications', 'scopeNotes', e.target.value)}
+              className="w-full"
+              rows={4}
             />
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
-};
-
-export default JobSpecificationsStep;
+}

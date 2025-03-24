@@ -23,7 +23,7 @@ interface EditSiteFormProps {
 export function EditSiteForm({ site }: EditSiteFormProps) {
   // Get form state and handlers from the useSiteForm hook
   const siteForm = useSiteForm();
-  const { formData, setFormData, validateStep, form } = siteForm;
+  const { formData, setFormData, validateStep, form, errors } = siteForm;
   
   // Use our custom hooks to organize logic
   const { handleSubmit, isSaving } = useEditSiteActions(site, formData);
@@ -81,7 +81,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   // Initialize the stepper
   const steps = getSiteFormSteps(
     formData,
-    siteForm.handleChange, // Fixed: Pass the entire function, not a partial one
+    siteForm.handleChange,
     siteForm.handleNestedChange,
     handleArrayChange,
     handleArrayUpdate,
@@ -104,7 +104,8 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     updateAdditionalContract,
     removeAdditionalContract,
     handleFileUpload,
-    handleFileRemove
+    handleFileRemove,
+    errors // Pass errors object to the steps
   );
   
   // Use stepper hook with validation

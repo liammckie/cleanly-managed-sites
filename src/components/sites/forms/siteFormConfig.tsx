@@ -10,9 +10,6 @@ import { SubcontractorsStep } from './steps/SubcontractorsStep';
 import { PeriodicalsStep } from './steps/PeriodicalsStep';
 import { SiteFormData } from './siteFormTypes';
 
-// We were importing modules that don't exist - removing those imports
-// and we'll update the steps array to only include steps we have components for
-
 export interface StepConfig {
   id: string;
   title: string;
@@ -46,7 +43,8 @@ export const getSiteFormSteps = (
   updateAdditionalContract: (index: number, field: string, value: any) => void,
   removeAdditionalContract: (index: number) => void,
   handleFileUpload: (field: string, file: File) => void,
-  handleFileRemove: (field: string, fileName: string) => void
+  handleFileRemove: (field: string, fileName: string) => void,
+  errors: Record<string, string> = {} // Add default empty errors object
 ): StepConfig[] => [
   {
     id: 'basic-info',
@@ -55,6 +53,7 @@ export const getSiteFormSteps = (
     component: (
       <BasicInformationStep
         formData={formData}
+        errors={errors}
         handleChange={handleChange}
         handleStatusChange={(status) => handleChange({ target: { name: 'status', value: status } } as any)}
         handleClientChange={(clientId) => handleChange({ target: { name: 'clientId', value: clientId } } as any)}
@@ -69,6 +68,7 @@ export const getSiteFormSteps = (
     component: (
       <ContactsStep
         formData={formData}
+        errors={errors}
         handleContactChange={(index, field, value) => {}}
         addContact={() => {}}
         removeContact={(index) => {}}
@@ -83,8 +83,6 @@ export const getSiteFormSteps = (
       <ContractDetailsStep
         formData={formData}
         handleNestedChange={handleNestedChange}
-        handleFileUpload={handleFileUpload}
-        handleFileRemove={handleFileRemove}
         addContractTerm={addContractTerm}
         updateContractTerm={updateContractTerm}
         removeContractTerm={removeContractTerm}
@@ -100,7 +98,6 @@ export const getSiteFormSteps = (
         formData={formData}
         handleNestedChange={handleNestedChange}
         handleDoubleNestedChange={handleDoubleNestedChange}
-        handleToggle={(field, value) => handleNestedChange('billingDetails', field, value)}
         addBillingLine={addBillingLine}
         updateBillingLine={updateBillingLine}
         removeBillingLine={removeBillingLine}
@@ -115,7 +112,6 @@ export const getSiteFormSteps = (
       <JobSpecificationsStep
         formData={formData}
         handleNestedChange={handleNestedChange}
-        handleDoubleNestedChange={handleDoubleNestedChange}
       />
     )
   },
@@ -126,7 +122,6 @@ export const getSiteFormSteps = (
     component: (
       <PeriodicalsStep
         formData={formData}
-        handleNestedChange={handleNestedChange} 
         handleDoubleNestedChange={handleDoubleNestedChange}
       />
     )
@@ -138,9 +133,7 @@ export const getSiteFormSteps = (
     component: (
       <ReplenishablesStep
         formData={formData}
-        addReplenishable={addReplenishable}
-        updateReplenishable={updateReplenishable}
-        removeReplenishable={removeReplenishable}
+        handleNestedChange={handleNestedChange}
       />
     )
   },
@@ -151,8 +144,9 @@ export const getSiteFormSteps = (
     component: (
       <SubcontractorsStep
         formData={formData}
+        errors={errors}
+        handleSubcontractorChange={updateSubcontractor}
         addSubcontractor={addSubcontractor}
-        updateSubcontractor={updateSubcontractor}
         removeSubcontractor={removeSubcontractor}
       />
     )

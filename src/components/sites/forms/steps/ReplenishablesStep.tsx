@@ -10,12 +10,18 @@ import { SiteFormData } from '../siteFormTypes';
 interface ReplenishablesStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  addReplenishable?: () => void;
+  updateReplenishable?: (index: number, field: string, value: any) => void;
+  removeReplenishable?: (index: number) => void;
   handleStockChange?: (index: number, value: string) => void;
 }
 
 export function ReplenishablesStep({ 
   formData, 
   handleNestedChange,
+  addReplenishable,
+  updateReplenishable,
+  removeReplenishable,
   handleStockChange
 }: ReplenishablesStepProps) {
   const [newStockItem, setNewStockItem] = useState('');
@@ -43,6 +49,9 @@ export function ReplenishablesStep({
     }
   };
 
+  // If addReplenishable is provided, use it; otherwise, use addStockItem
+  const handleAddItem = addReplenishable || addStockItem;
+
   return (
     <div className="glass-card p-6 space-y-6">
       <h3 className="text-lg font-medium">Stock Items</h3>
@@ -62,42 +71,49 @@ export function ReplenishablesStep({
               variant="ghost" 
               size="icon" 
               onClick={() => removeStockItem(index)}
-              className="text-destructive hover:text-destructive/80"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               <Trash className="h-4 w-4" />
+              <span className="sr-only">Remove stock item</span>
             </Button>
           </div>
         ))}
+        
+        <div className="flex items-center gap-2">
+          <Input
+            id="new-stock-item"
+            placeholder="Add new stock item"
+            value={newStockItem}
+            onChange={(e) => setNewStockItem(e.target.value)}
+            className="glass-input flex-1"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddItem();
+              }
+            }}
+          />
+          <Button 
+            type="button" 
+            onClick={handleAddItem}
+            variant="outline"
+            className="flex items-center gap-1 shrink-0"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Add</span>
+          </Button>
+        </div>
       </div>
       
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Add new stock item..."
-          value={newStockItem}
-          onChange={(e) => setNewStockItem(e.target.value)}
-          className="glass-input flex-1"
-          onKeyDown={(e) => e.key === 'Enter' && addStockItem()}
-        />
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={addStockItem}
-          disabled={!newStockItem.trim()}
-        >
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Add
-        </Button>
-      </div>
-      
-      <div className="space-y-2 mt-6">
-        <Label htmlFor="stock-contact">Contact Details for Replenishment</Label>
+      <div className="space-y-2">
+        <Label htmlFor="replenishables-notes">Notes</Label>
         <Textarea
-          id="stock-contact"
-          placeholder="Enter contact details for stock replenishment..."
+          id="replenishables-notes"
+          placeholder="Add any notes about stock and replenishables..."
+          value={formData.replenishables.notes || ''}
+          onChange={(e) => handleNestedChange('replenishables', 'notes', e.target.value)}
+          className="glass-input"
           rows={3}
-          value={formData.replenishables.contactDetails}
-          onChange={(e) => handleNestedChange('replenishables', 'contactDetails', e.target.value)}
-          className="glass-input resize-none"
         />
       </div>
     </div>
