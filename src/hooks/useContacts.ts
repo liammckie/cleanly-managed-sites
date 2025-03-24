@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contactsApi } from '@/lib/api/contactsApi';
 import { ContactRecord } from '@/lib/types';
@@ -24,10 +24,16 @@ export function useContacts(initialFilters: ContactFilters = {}) {
     data: contacts = [], 
     isLoading, 
     error,
+    refetch
   } = useQuery({
     queryKey: ['contacts', filters],
     queryFn: () => contactsApi.getContacts(filters),
   });
+
+  // Refetch when filters change
+  useEffect(() => {
+    refetch();
+  }, [filters, refetch]);
 
   // Add contact mutation
   const addContactMutation = useMutation({
@@ -98,10 +104,20 @@ export function useContacts(initialFilters: ContactFilters = {}) {
     }
   };
 
+  // Calculate entity type counts
+  const contactTypeCount = {
+    all: contacts.length,
+    client: contacts.filter(c => c.entity_type === 'client').length,
+    site: contacts.filter(c => c.entity_type === 'site').length,
+    supplier: contacts.filter(c => c.entity_type === 'supplier').length,
+    internal: contacts.filter(c => c.entity_type === 'internal').length
+  };
+
   return {
     contacts,
     filters,
     setFilters,
+    contactTypeCount,
     isLoading: isLoading || addContactMutation.isPending || updateContactMutation.isPending || deleteContactMutation.isPending,
     error,
     isCreating: addContactMutation.isPending,

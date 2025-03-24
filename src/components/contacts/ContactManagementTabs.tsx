@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
-interface ContactCounts {
+export interface ContactCounts {
   all: number;
   client: number;
   site: number;

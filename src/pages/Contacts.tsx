@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ContactManagementTabs } from '@/components/contacts/ContactManagementTabs';
+import { ContactManagementTabs, ContactCounts } from '@/components/contacts/ContactManagementTabs';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { ContactsFilter } from '@/components/contacts/ContactsFilter';
 import { useContacts, ContactFilters } from '@/hooks/useContacts';
@@ -33,8 +33,7 @@ import {
 
 const Contacts = () => {
   const [filters, setFilters] = useState<ContactFilters>({
-    entityType: 'all',
-    search: ''
+    entityType: 'all'
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
@@ -43,6 +42,7 @@ const Contacts = () => {
   
   const { 
     contacts, 
+    contactTypeCount,
     isLoading, 
     error,
     addContact,
@@ -64,21 +64,26 @@ const Contacts = () => {
   }, [contacts]);
 
   const handleTabChange = (value: string) => {
-    setFilters({
+    console.log("Tab changed to:", value);
+    
+    const newFilters = {
       ...filters,
       entityType: value === 'all' ? undefined : value
-    });
+    };
+    
+    setFilters(newFilters);
+    setContactsFilters(newFilters);
   };
 
   const handleFilterChange = (newFilters: ContactFilters) => {
-    setFilters({
-      ...newFilters,
-      entityType: filters.entityType // Preserve entity type from tabs
-    });
-    setContactsFilters({
+    // Preserve entity type from tabs
+    const updatedFilters = {
       ...newFilters,
       entityType: filters.entityType
-    });
+    };
+    
+    setFilters(updatedFilters);
+    setContactsFilters(updatedFilters);
   };
 
   const handleAddContact = async (contactData: Partial<ContactRecord>) => {
@@ -149,7 +154,11 @@ const Contacts = () => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <ContactManagementTabs onValueChange={handleTabChange} />
+            <ContactManagementTabs 
+              onValueChange={handleTabChange} 
+              defaultValue={filters.entityType || 'all'}
+              counts={contactTypeCount as ContactCounts}
+            />
             
             <Card className="p-4">
               <ContactsFilter 
