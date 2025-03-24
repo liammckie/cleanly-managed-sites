@@ -24,10 +24,10 @@ export interface JobSpecifications {
   cleaningInstructions?: string;
   areas?: AreaSpecification[];
   workingDays?: WorkingDays;
-  serviceDeliveryType?: 'direct' | 'contractor'; // Added property
-  annualContractorCost?: number; // Added property
+  serviceDeliveryType?: 'direct' | 'contractor';
+  annualContractorCost?: number;
   
-  // Add missing properties from error messages
+  // Additional fields for the job specifications form
   cleaningFrequency?: string;
   customFrequency?: string;
   serviceDays?: string;

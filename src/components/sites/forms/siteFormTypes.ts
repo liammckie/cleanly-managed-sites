@@ -154,7 +154,7 @@ export const getInitialFormData = (): SiteFormData => ({
     stock: ['', '', '', '', ''],
     contactDetails: '',
     supplies: [],
-    notes: '' // Add notes field
+    notes: ''
   },
   
   contractDetails: {

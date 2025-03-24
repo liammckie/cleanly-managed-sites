@@ -39,7 +39,7 @@ export function JobSpecificationsStep({
             </select>
           </div>
           
-          {jobSpecs.cleaningFrequency === 'custom' && (
+          {(jobSpecs.cleaningFrequency || 'daily') === 'custom' && (
             <div className="space-y-2">
               <Label htmlFor="custom-frequency">Custom Frequency</Label>
               <Input

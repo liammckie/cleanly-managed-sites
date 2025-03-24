@@ -163,7 +163,7 @@ export function PeriodicalsStep({
             id="periodicals-notes"
             placeholder="Add any notes about periodical services..."
             value={periodicServices.notes || ''}
-            onChange={(e) => handleDoubleNestedChange('periodicals', 'notes', '', e.target.value)}
+            onChange={(e) => handleDoubleNestedChange('periodicals', '', 'notes', e.target.value)}
             className="glass-input"
             rows={3}
           />

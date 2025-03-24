@@ -25,7 +25,7 @@ export interface Periodicals {
   steamCleaning: SteamCleaning;
   tasks?: PeriodicalTask[];
   
-  // Add missing properties from error messages
+  // Added nested objects for category-specific settings
   carpet?: {
     cleaning?: boolean;
     shampooing?: boolean;
