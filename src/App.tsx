@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './lib/theme/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -33,8 +32,8 @@ import CreateContact from './pages/CreateContact';
 import CreateWorkOrder from './pages/CreateWorkOrder';
 import CreateContract from './pages/CreateContract';
 import QuickActions from './pages/QuickActions';
+import MyBusiness from './pages/MyBusiness';
 
-// Create the query client outside the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -80,6 +79,14 @@ function App() {
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/quickactions" element={<ProtectedRoute><QuickActions /></ProtectedRoute>} />
+              <Route
+                path="/my-business"
+                element={
+                  <ProtectedRoute>
+                    <MyBusiness />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
             <Toaster />

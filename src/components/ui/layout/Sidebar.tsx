@@ -14,7 +14,8 @@ import {
   Download,
   Briefcase,
   ShieldCheck,
-  Contact
+  Contact,
+  Building
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
@@ -68,6 +69,12 @@ export function Sidebar() {
       icon: <ClipboardList size={20} />,
       label: 'Work Orders',
       active: pathname.startsWith('/workorders')
+    },
+    {
+      href: '/my-business',
+      icon: <Building size={20} />,
+      label: 'My Business',
+      active: pathname.startsWith('/my-business')
     },
     {
       href: '/users',
