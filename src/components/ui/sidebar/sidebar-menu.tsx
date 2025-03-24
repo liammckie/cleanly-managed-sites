@@ -1,68 +1,87 @@
+import {
+  BarChart3,
+  Building2,
+  Calendar,
+  CheckSquare,
+  LayoutDashboard,
+  ListChecks,
+  Settings,
+  User2,
+  Calculator,
+} from "lucide-react"
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Icons } from "@/components/icons"
 
-export const SidebarMenu = React.forwardRef<
-  HTMLUListElement,
-  React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu"
-    className={cn("flex w-full min-w-0 flex-col gap-1", className)}
-    {...props}
-  />
-))
-SidebarMenu.displayName = "SidebarMenu"
+export interface SidebarNavItem {
+  title: string
+  disabled?: boolean
+  external?: boolean
+  icon?: keyof typeof Icons
+  path?: string
+  group?: "general" | "admin" | "operations"
+}
 
-export const SidebarMenuItem = React.forwardRef<
-  HTMLLIElement,
-  React.ComponentProps<"li">
->(({ className, ...props }, ref) => (
-  <li
-    ref={ref}
-    data-sidebar="menu-item"
-    className={cn("group/menu-item relative", className)}
-    {...props}
-  />
-))
-SidebarMenuItem.displayName = "SidebarMenuItem"
+export interface SidebarMenuSection {
+  title?: string
+  items: SidebarNavItem[]
+}
 
-export const SidebarMenuSkeleton = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    showIcon?: boolean
-  }
->(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`
-  }, [])
+export const SIDEBAR_MENU_SECTIONS: SidebarMenuSection[] = [
+  {
+    items: [
+      {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        path: "/dashboard",
+        group: "general",
+      },
+    ],
+  },
+  {
+    title: "Admin",
+    items: [
+      {
+        title: "Sites",
+        icon: Building2,
+        path: "/sites",
+        group: "admin",
+      },
+      {
+        title: "Clients",
+        icon: User2,
+        path: "/clients",
+        group: "admin",
+      },
+      {
+        title: "Settings",
+        icon: Settings,
+        path: "/settings",
+        group: "admin",
+      },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      {
+        title: "Work Orders",
+        icon: ListChecks,
+        path: "/workorders",
+        group: "operations",
+      },
+      {
+        title: "Quoting Tool",
+        icon: <Calculator className="h-4 w-4" />,
+        path: "/quoting",
+        group: "operations"
+      },
+    ],
+  },
+]
 
-  return (
-    <div
-      ref={ref}
-      data-sidebar="menu-skeleton"
-      className={cn("rounded-md h-8 flex gap-2 px-2 items-center", className)}
-      {...props}
-    >
-      {showIcon && (
-        <Skeleton
-          className="size-4 rounded-md"
-          data-sidebar="menu-skeleton-icon"
-        />
-      )}
-      <Skeleton
-        className="h-4 flex-1 max-w-[--skeleton-width]"
-        data-sidebar="menu-skeleton-text"
-        style={
-          {
-            "--skeleton-width": width,
-          } as React.CSSProperties
-        }
-      />
-    </div>
-  )
-})
-SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
+export const DEFAULT_SIDEBAR_ITEMS: SidebarNavItem[] = SIDEBAR_MENU_SECTIONS.reduce<SidebarNavItem[]>(
+  (acc, section) => {
+    return [...acc, ...section.items]
+  },
+  []
+)

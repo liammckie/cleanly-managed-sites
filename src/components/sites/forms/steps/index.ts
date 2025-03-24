@@ -10,3 +10,4 @@ export * from './ReviewStep';
 export * from './SecurityStep';
 export * from './SubcontractorsStep';
 export * from './contacts/ContactsStep';
+export * from './contacts';

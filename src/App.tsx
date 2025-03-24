@@ -1,97 +1,101 @@
-
-import { Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './lib/theme/ThemeProvider';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Dashboard from './pages/Dashboard';
-import Sites from './pages/Sites';
-import Clients from './pages/Clients';
-import Settings from './pages/Settings';
-import SiteDetail from './pages/SiteDetail';
-import SiteEdit from './pages/SiteEdit';
-import CreateSite from './pages/CreateSite';
-import ClientDetail from './pages/ClientDetail';
-import ClientEdit from './pages/ClientEdit';
-import ClientCreate from './pages/ClientCreate';
-import WorkOrders from './pages/WorkOrders';
-import Contractors from './pages/Contractors';
-import Subcontractors from './pages/Subcontractors';
-import Contacts from './pages/Contacts';
-import Users from './pages/Users';
-import WorkOrderDetail from './pages/WorkOrderDetail';
-import ContractorDetail from './pages/ContractorDetail';
-import ContactDetail from './pages/ContactDetail';
-import { ContractVariationPage } from './components/sites/contract/variation/ContractVariationPage';
-import { ErrorPage } from './pages/ErrorPage';
 import React from 'react';
-import ProtectedRoute from './components/ProtectedRoute';
-import Contracts from './pages/Contracts';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from './hooks/auth/AuthProvider';
-import Login from './pages/Login';
-import ResetPassword from './pages/ResetPassword';
-import CreateContact from './pages/CreateContact';
-import CreateWorkOrder from './pages/CreateWorkOrder';
-import CreateContract from './pages/CreateContract';
-import QuickActions from './pages/QuickActions';
-import MyBusiness from './pages/MyBusiness';
-import Employees from './pages/Employees';
-import AwardEngine from './pages/AwardEngine';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Sites } from './pages/Sites';
+import { Clients } from './pages/Clients';
+import { Settings } from './pages/Settings';
+import { Dashboard } from './pages/Dashboard';
+import { WorkOrders } from './pages/WorkOrders';
+import { Subcontractors } from './pages/Subcontractors';
+import { Login } from './pages/Login';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { SiteDetails } from './pages/SiteDetails';
+import { ClientDetails } from './pages/ClientDetails';
+import { CreateSite } from './pages/CreateSite';
+import { EditSite } from './pages/EditSite';
+import { CreateClient } from './pages/CreateClient';
+import { EditClient } from './pages/EditClient';
+import { QuotingTool } from './pages/QuotingTool';
 
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="project-ui-theme">
-          <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
-              <Route path="/sites/:id" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
-              <Route path="/sites/:siteId/edit" element={<ProtectedRoute><SiteEdit /></ProtectedRoute>} />
-              <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} /> 
-              <Route path="/sites/:siteId/variations" element={<ProtectedRoute><ContractVariationPage /></ProtectedRoute>} />
-              <Route path="/sites/:siteId/variations/:variationType" element={<ProtectedRoute><ContractVariationPage /></ProtectedRoute>} />
-              <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-              <Route path="/clients/:clientId" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
-              <Route path="/clients/:clientId/edit" element={<ProtectedRoute><ClientEdit /></ProtectedRoute>} />
-              <Route path="/clients/create" element={<ProtectedRoute><ClientCreate /></ProtectedRoute>} />
-              <Route path="/workorders" element={<ProtectedRoute><WorkOrders /></ProtectedRoute>} />
-              <Route path="/workorders/:workOrderId" element={<ProtectedRoute><WorkOrderDetail /></ProtectedRoute>} />
-              <Route path="/workorders/create" element={<ProtectedRoute><CreateWorkOrder /></ProtectedRoute>} />
-              <Route path="/contractors" element={<ProtectedRoute><Contractors /></ProtectedRoute>} />
-              <Route path="/contractors/:contractorId" element={<ProtectedRoute><ContractorDetail /></ProtectedRoute>} />
-              <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
-              <Route path="/contracts/create" element={<ProtectedRoute><CreateContract /></ProtectedRoute>} />
-              <Route path="/subcontractors" element={<ProtectedRoute><Subcontractors /></ProtectedRoute>} />
-              <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
-              <Route path="/contacts/create" element={<ProtectedRoute><CreateContact /></ProtectedRoute>} />
-              <Route path="/contacts/:contactId" element={<ProtectedRoute><ContactDetail /></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/quickactions" element={<ProtectedRoute><QuickActions /></ProtectedRoute>} />
-              <Route path="/my-business" element={<ProtectedRoute><MyBusiness /></ProtectedRoute>} />
-              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
-              <Route path="/award-engine" element={<ProtectedRoute><AwardEngine /></ProtectedRoute>} />
-              <Route path="*" element={<ErrorPage />} />
-            </Routes>
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/sites" element={
+            <ProtectedRoute>
+              <Sites />
+            </ProtectedRoute>
+          } />
+          <Route path="/sites/:siteId" element={
+            <ProtectedRoute>
+              <SiteDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/sites/create" element={
+            <ProtectedRoute>
+              <CreateSite />
+            </ProtectedRoute>
+          } />
+           <Route path="/sites/edit/:siteId" element={
+            <ProtectedRoute>
+              <EditSite />
+            </ProtectedRoute>
+          } />
+          <Route path="/clients" element={
+            <ProtectedRoute>
+              <Clients />
+            </ProtectedRoute>
+          } />
+           <Route path="/clients/:clientId" element={
+            <ProtectedRoute>
+              <ClientDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/clients/create" element={
+            <ProtectedRoute>
+              <CreateClient />
+            </ProtectedRoute>
+          } />
+          <Route path="/clients/edit/:clientId" element={
+            <ProtectedRoute>
+              <EditClient />
+            </ProtectedRoute>
+          } />
+          <Route path="/workorders/:siteId" element={
+            <ProtectedRoute>
+              <WorkOrders />
+            </ProtectedRoute>
+          } />
+          <Route path="/subcontractors/:siteId" element={
+            <ProtectedRoute>
+              <Subcontractors />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
+          <Route path="/quoting" element={
+            <ProtectedRoute>
+              <QuotingTool />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
