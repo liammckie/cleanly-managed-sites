@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Quote } from '@/lib/award/types';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Calendar, DollarSign, User, Building2, FileText, Copy, Eye, Edit, Trash2, Clock } from 'lucide-react';
+import { Calendar, DollarSign, User, Building2, FileText, Copy, Eye, Edit, Trash2, Clock, Plus } from 'lucide-react';
 
 interface QuoteListProps {
   quotes: Quote[];

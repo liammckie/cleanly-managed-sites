@@ -8,7 +8,7 @@ import { QuoteForm } from '@/components/quoting/QuoteForm';
 
 const EditQuote = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
-  const { quote, isLoading, error } = useQuote(quoteId!);
+  const { data: quote, isLoading, error } = useQuote(quoteId!);
   
   return (
     <PageLayout>

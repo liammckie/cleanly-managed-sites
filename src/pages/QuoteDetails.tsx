@@ -8,7 +8,7 @@ import { QuoteDetailView } from '@/components/quoting/QuoteDetailView';
 
 const QuoteDetails = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
-  const { quote, isLoading, error } = useQuote(quoteId!);
+  const { data: quote, isLoading, error } = useQuote(quoteId!);
   
   return (
     <PageLayout>

@@ -6,9 +6,18 @@ import { ShiftPlanner } from './ShiftPlanner';
 import { QuoteSummary } from './QuoteSummary';
 import { QuoteDetails } from './QuoteDetails';
 import { Calendar, FileText, DollarSign } from 'lucide-react';
+import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
 
 export function QuoteBuilder() {
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null);
+  const [shifts, setShifts] = useState<QuoteShift[]>([]);
+  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
+  const [overheadPercentage, setOverheadPercentage] = useState(15);
+  const [marginPercentage, setMarginPercentage] = useState(20);
+
+  const handleShiftsChange = (newShifts: QuoteShift[]) => {
+    setShifts(newShifts);
+  };
 
   return (
     <div className="space-y-6">
@@ -20,7 +29,7 @@ export function QuoteBuilder() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="shifts" className="space-y-4">
+          <Tabs defaultValue="details" className="space-y-4">
             <TabsList>
               <TabsTrigger value="details" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -44,11 +53,21 @@ export function QuoteBuilder() {
             </TabsContent>
             
             <TabsContent value="shifts">
-              <ShiftPlanner quoteId={activeQuoteId} />
+              <ShiftPlanner 
+                quoteId={activeQuoteId} 
+                shifts={shifts}
+                onShiftsChange={handleShiftsChange}
+              />
             </TabsContent>
             
             <TabsContent value="summary">
-              <QuoteSummary quoteId={activeQuoteId} />
+              <QuoteSummary 
+                quoteId={activeQuoteId}
+                shifts={shifts}
+                subcontractors={subcontractors}
+                overheadPercentage={overheadPercentage}
+                marginPercentage={marginPercentage}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
