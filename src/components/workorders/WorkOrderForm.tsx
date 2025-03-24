@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +25,7 @@ import { TemplateSelector } from './form/TemplateSelector';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getTemplateById } from '@/lib/templates/workOrderTemplates';
+import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 
 interface WorkOrderFormProps {
   site: SiteRecord;
@@ -108,11 +110,13 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <TemplateSelector 
-          onTemplateSelect={handleTemplateSelect} 
-          siteName={site.name}
-          dueDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined}
-        />
+        <ErrorBoundary>
+          <TemplateSelector 
+            onTemplateSelect={handleTemplateSelect} 
+            siteName={site.name}
+            dueDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined}
+          />
+        </ErrorBoundary>
         
         <Separator />
         

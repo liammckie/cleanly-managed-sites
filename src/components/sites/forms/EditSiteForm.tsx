@@ -15,6 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from './types/billingTypes';
 import { SiteRecord } from '@/lib/types';
 import { Form } from '@/components/ui/form';
+import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
+import { sitesApi } from '@/lib/api/sites/sitesApi';
 
 // Define fallback functions for missing handlers
 const noop = () => {};
@@ -171,6 +173,13 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       
       // Update the form data
       setFormData(updatedFormData);
+      
+      // Update the form in react-hook-form
+      Object.entries(updatedFormData).forEach(([key, value]) => {
+        if (typeof value !== 'object' || value === null) {
+          siteForm.form.setValue(key as any, value);
+        }
+      });
     }
   }, [site]);
   
@@ -180,8 +189,9 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     
     try {
       setIsSaving(true);
+      
       // Call API to update site data
-      // const response = await updateSite(formData);
+      await sitesApi.updateSite(site.id, formData);
       
       // Show success message
       toast.success('Site updated successfully');
@@ -197,55 +207,57 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   };
   
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Edit Site: {site.name}</h1>
-        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/sites/${site.id}`)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Site
-          </Button>
+    <ErrorBoundary>
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">Edit Site: {site.name}</h1>
           
-          <Button
-            type="button"
-            size="sm"
-            disabled={isSaving}
-            onClick={handleSubmit}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
-      </div>
-      
-      <FormProgressBar 
-        currentStep={stepper.currentStep}
-        totalSteps={stepper.totalSteps}
-        progress={stepper.progress}
-      />
-      
-      <Card className="p-6">
-        <Form {...siteForm.form}>
-          <form onSubmit={handleSubmit}>
-            <SiteFormStep
-              title={stepper.steps[stepper.currentStep].title}
-              description={stepper.steps[stepper.currentStep].description}
-              onNext={() => stepper.handleNext()}
-              onBack={stepper.handleBack}
-              isSubmitting={isSaving}
-              isLastStep={stepper.isLastStep}
-              isFirstStep={stepper.isFirstStep}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/sites/${site.id}`)}
             >
-              {stepper.steps[stepper.currentStep].component}
-            </SiteFormStep>
-          </form>
-        </Form>
-      </Card>
-    </div>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Site
+            </Button>
+            
+            <Button
+              type="button"
+              size="sm"
+              disabled={isSaving}
+              onClick={handleSubmit}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
+        </div>
+        
+        <FormProgressBar 
+          currentStep={stepper.currentStep}
+          totalSteps={stepper.totalSteps}
+          progress={stepper.progress}
+        />
+        
+        <Card className="p-6">
+          <Form {...siteForm.form}>
+            <form onSubmit={handleSubmit}>
+              <SiteFormStep
+                title={stepper.steps[stepper.currentStep].title}
+                description={stepper.steps[stepper.currentStep].description}
+                onNext={() => stepper.handleNext()}
+                onBack={stepper.handleBack}
+                isSubmitting={isSaving}
+                isLastStep={stepper.isLastStep}
+                isFirstStep={stepper.isFirstStep}
+              >
+                {stepper.steps[stepper.currentStep].component}
+              </SiteFormStep>
+            </form>
+          </Form>
+        </Card>
+      </div>
+    </ErrorBoundary>
   );
 }
