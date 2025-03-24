@@ -11,23 +11,34 @@ export function useAwardSettings() {
   const { data: settings = defaultAwardSettings, isLoading, error } = useQuery({
     queryKey: ['award-settings'],
     queryFn: async () => {
-      // In a real app, this would fetch from an API
-      // For now, retrieve from localStorage or use defaults
-      const savedSettings = localStorage.getItem('award-settings');
-      return savedSettings ? JSON.parse(savedSettings) : defaultAwardSettings;
+      try {
+        // In a real app, this would fetch from an API
+        // For now, retrieve from localStorage or use defaults
+        const savedSettings = localStorage.getItem('award-settings');
+        return savedSettings ? JSON.parse(savedSettings) : defaultAwardSettings;
+      } catch (error) {
+        console.error('Error loading award settings:', error);
+        toast.error('Failed to load award settings, using defaults');
+        return defaultAwardSettings;
+      }
     }
   });
   
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: AwardSettings) => {
-      // In a real app, this would be an API call
-      // For now, save to localStorage
-      const settingsToSave = {
-        ...newSettings,
-        lastUpdated: new Date().toISOString()
-      };
-      localStorage.setItem('award-settings', JSON.stringify(settingsToSave));
-      return settingsToSave;
+      try {
+        // In a real app, this would be an API call
+        // For now, save to localStorage
+        const settingsToSave = {
+          ...newSettings,
+          lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem('award-settings', JSON.stringify(settingsToSave));
+        return settingsToSave;
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['award-settings'] });
@@ -40,14 +51,19 @@ export function useAwardSettings() {
   
   const resetSettingsMutation = useMutation({
     mutationFn: async () => {
-      // In a real app, this would be an API call
-      // For now, reset to defaults in localStorage
-      const resetSettings = {
-        ...defaultAwardSettings,
-        lastUpdated: new Date().toISOString()
-      };
-      localStorage.setItem('award-settings', JSON.stringify(resetSettings));
-      return resetSettings;
+      try {
+        // In a real app, this would be an API call
+        // For now, reset to defaults in localStorage
+        const resetSettings = {
+          ...defaultAwardSettings,
+          lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem('award-settings', JSON.stringify(resetSettings));
+        return resetSettings;
+      } catch (error) {
+        console.error('Error resetting settings:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['award-settings'] });
