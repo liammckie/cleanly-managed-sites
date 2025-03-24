@@ -25,7 +25,7 @@ export interface Periodicals {
   steamCleaning: SteamCleaning;
   tasks?: PeriodicalTask[];
   
-  // Added nested objects for category-specific settings
+  // Add nested objects for category-specific settings
   carpet?: {
     cleaning?: boolean;
     shampooing?: boolean;

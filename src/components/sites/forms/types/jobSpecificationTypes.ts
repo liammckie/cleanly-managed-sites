@@ -27,7 +27,7 @@ export interface JobSpecifications {
   serviceDeliveryType?: 'direct' | 'contractor';
   annualContractorCost?: number;
   
-  // Additional fields for the job specifications form
+  // Add the missing properties
   cleaningFrequency?: string;
   customFrequency?: string;
   serviceDays?: string;
