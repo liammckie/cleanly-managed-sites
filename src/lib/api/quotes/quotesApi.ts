@@ -98,11 +98,36 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   if (!dbQuoteData.name) {
     throw new Error('Quote name is required');
   }
+
+  // Create a valid object for Supabase insert with all required fields
+  const validQuoteData = {
+    name: dbQuoteData.name, // Required field
+    client_name: dbQuoteData.client_name || '',
+    site_name: dbQuoteData.site_name || '',
+    status: dbQuoteData.status || 'draft',
+    start_date: dbQuoteData.start_date,
+    end_date: dbQuoteData.end_date,
+    expiry_date: dbQuoteData.expiry_date,
+    contract_length: dbQuoteData.contract_length,
+    contract_length_unit: dbQuoteData.contract_length_unit,
+    overhead_profile: dbQuoteData.overhead_profile,
+    overhead_percentage: dbQuoteData.overhead_percentage || 15,
+    margin_percentage: dbQuoteData.margin_percentage || 20,
+    notes: dbQuoteData.notes,
+    labor_cost: dbQuoteData.labor_cost || 0,
+    overhead_cost: dbQuoteData.overhead_cost || 0,
+    subcontractor_cost: dbQuoteData.subcontractor_cost || 0,
+    total_cost: dbQuoteData.total_cost || 0,
+    margin_amount: dbQuoteData.margin_amount || 0,
+    total_price: dbQuoteData.total_price || 0,
+    created_by: dbQuoteData.created_by,
+    user_id: dbQuoteData.user_id,
+  };
   
   // Insert the quote
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
-    .insert([dbQuoteData]) // Wrap in array for Supabase insert
+    .insert([validQuoteData])
     .select()
     .single();
   
@@ -131,9 +156,25 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
         continue;
       }
       
+      // Create a valid object for Supabase insert
+      const validShiftData = {
+        quote_id: shiftWithQuoteId.quote_id,
+        day: shiftWithQuoteId.day,
+        start_time: shiftWithQuoteId.start_time,
+        end_time: shiftWithQuoteId.end_time,
+        break_duration: shiftWithQuoteId.break_duration || 0,
+        level: shiftWithQuoteId.level,
+        employment_type: shiftWithQuoteId.employment_type,
+        number_of_cleaners: shiftWithQuoteId.number_of_cleaners || 1,
+        location: shiftWithQuoteId.location || '',
+        allowances: shiftWithQuoteId.allowances || [],
+        estimated_cost: shiftWithQuoteId.estimated_cost || 0,
+        notes: shiftWithQuoteId.notes || ''
+      };
+      
       const { error: shiftError } = await supabase
         .from('quote_shifts')
-        .insert([shiftWithQuoteId]); // Wrap in array for Supabase insert
+        .insert([validShiftData]);
       
       if (shiftError) {
         console.error('Error adding shift:', shiftError);
@@ -156,9 +197,20 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
         continue;
       }
       
+      // Create a valid object for Supabase insert
+      const validSubData = {
+        quote_id: subWithQuoteId.quote_id,
+        name: subWithQuoteId.name,
+        service: subWithQuoteId.service || '',
+        description: subWithQuoteId.description || '',
+        frequency: subWithQuoteId.frequency || 'monthly',
+        cost: subWithQuoteId.cost || 0,
+        notes: subWithQuoteId.notes || ''
+      };
+      
       const { error: subError } = await supabase
         .from('quote_subcontractors')
-        .insert([subWithQuoteId]); // Wrap in array for Supabase insert
+        .insert([validSubData]);
       
       if (subError) {
         console.error('Error adding subcontractor:', subError);
@@ -230,9 +282,25 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
           continue;
         }
         
+        // Create a valid object for Supabase insert
+        const validShiftData = {
+          quote_id: shiftWithQuoteId.quote_id,
+          day: shiftWithQuoteId.day,
+          start_time: shiftWithQuoteId.start_time,
+          end_time: shiftWithQuoteId.end_time,
+          break_duration: shiftWithQuoteId.break_duration || 0,
+          level: shiftWithQuoteId.level,
+          employment_type: shiftWithQuoteId.employment_type,
+          number_of_cleaners: shiftWithQuoteId.number_of_cleaners || 1,
+          location: shiftWithQuoteId.location || '',
+          allowances: shiftWithQuoteId.allowances || [],
+          estimated_cost: shiftWithQuoteId.estimated_cost || 0,
+          notes: shiftWithQuoteId.notes || ''
+        };
+        
         const { error: addShiftError } = await supabase
           .from('quote_shifts')
-          .insert([shiftWithQuoteId]); // Wrap in array for Supabase insert
+          .insert([validShiftData]);
         
         if (addShiftError) {
           console.error('Error adding shift:', addShiftError);
@@ -269,9 +337,20 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
           continue;
         }
         
+        // Create a valid object for Supabase insert
+        const validSubData = {
+          quote_id: subWithQuoteId.quote_id,
+          name: subWithQuoteId.name,
+          service: subWithQuoteId.service || '',
+          description: subWithQuoteId.description || '',
+          frequency: subWithQuoteId.frequency || 'monthly',
+          cost: subWithQuoteId.cost || 0,
+          notes: subWithQuoteId.notes || ''
+        };
+        
         const { error: addSubError } = await supabase
           .from('quote_subcontractors')
-          .insert([subWithQuoteId]); // Wrap in array for Supabase insert
+          .insert([validSubData]);
         
         if (addSubError) {
           console.error('Error adding subcontractor:', addSubError);
