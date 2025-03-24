@@ -5,12 +5,12 @@ import { Form } from '@/components/ui/form';
 import { FormProgressBar } from '../FormProgressBar';
 import { SiteFormStep } from '../SiteFormStep';
 import { SiteRecord } from '@/lib/types';
-import { UseSiteFormStepperReturnType } from '@/hooks/useSiteFormStepper';
+import { StepperState } from '@/hooks/useSiteFormStepper';
 
 interface EditSiteFormContainerProps {
   site: SiteRecord;
   form: any;
-  stepper: UseSiteFormStepperReturnType;
+  stepper: StepperState;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   isSaving: boolean;
   children?: React.ReactNode;
