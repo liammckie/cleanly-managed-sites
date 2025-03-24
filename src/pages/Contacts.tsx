@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { 
@@ -25,7 +26,8 @@ import {
   Building,
   Store,
   Truck,
-  Users
+  Users,
+  Globe
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -136,12 +138,28 @@ const Contacts = () => {
   };
 
   const getEntityName = (contact: ContactRecord) => {
+    if (contact.entity_id === 'all_sites') {
+      return 'All Sites';
+    }
+    
+    if (contact.entity_id === 'all_clients') {
+      return 'All Clients';
+    }
+    
     const entity = availableEntities.find(e => e.id === contact.entity_id && e.type === contact.entity_type);
     return entity ? entity.name : '';
   };
 
-  const getEntityIcon = (entityType: string) => {
-    switch (entityType) {
+  const getEntityIcon = (contact: ContactRecord) => {
+    if (contact.entity_id === 'all_sites') {
+      return <Globe className="h-4 w-4 mr-1" />;
+    }
+    
+    if (contact.entity_id === 'all_clients') {
+      return <Globe className="h-4 w-4 mr-1" />;
+    }
+    
+    switch (contact.entity_type) {
       case 'client':
         return <Building className="h-4 w-4 mr-1" />;
       case 'site':
@@ -224,7 +242,7 @@ const Contacts = () => {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               {contact.name}
-                              {contact.is_primary && (
+                              {contact.is_primary && contact.entity_id !== 'all_sites' && contact.entity_id !== 'all_clients' && (
                                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                               )}
                             </div>
@@ -256,12 +274,18 @@ const Contacts = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {getEntityName(contact) && (
-                              <div className="flex items-center">
-                                {getEntityIcon(contact.entity_type)}
-                                <span>{getEntityName(contact)}</span>
-                              </div>
-                            )}
+                            <div className="flex items-center">
+                              {getEntityIcon(contact)}
+                              <span>
+                                {getEntityName(contact) || (contact.entity_type === 'internal' ? 'Internal' : '')}
+                                {contact.entity_id === 'all_sites' && (
+                                  <Badge variant="outline" className="ml-2">Bulk Assignment</Badge>
+                                )}
+                                {contact.entity_id === 'all_clients' && (
+                                  <Badge variant="outline" className="ml-2">Bulk Assignment</Badge>
+                                )}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">
@@ -280,7 +304,9 @@ const Contacts = () => {
                                 <DropdownMenuItem onClick={() => handleOpenDialog(contact)}>
                                   Edit Contact
                                 </DropdownMenuItem>
-                                {!contact.is_primary && contact.entity_id && (
+                                {!contact.is_primary && contact.entity_id && 
+                                 contact.entity_id !== 'all_sites' && 
+                                 contact.entity_id !== 'all_clients' && (
                                   <DropdownMenuItem onSelect={() => handleSetPrimary(contact)}>
                                     Set as Primary
                                   </DropdownMenuItem>

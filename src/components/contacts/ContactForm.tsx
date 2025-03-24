@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ContactRecord } from '@/lib/types';
-import { contactSchema, ContactFormValues } from './contactSchema';
+import { contactSchema, ContactFormValues, EntityType, assignmentTypes, AssignmentType } from './contactSchema';
 import {
   Form,
   FormControl,
@@ -23,18 +23,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@/components/ui/radio-group';
 import { 
   Building, 
   Store, 
   Truck, 
   Users, 
-  Search 
+  Search,
+  AlertCircle
 } from 'lucide-react';
 import { contactsApi } from '@/lib/api/contactsApi';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface ContactFormProps {
   contact?: ContactRecord;
-  entityType?: 'site' | 'client' | 'supplier' | 'internal';
+  entityType?: EntityType;
   entityId?: string;
   onSubmit: (values: Partial<ContactRecord>) => Promise<void>;
   onCancel?: () => void;
@@ -49,13 +55,18 @@ export function ContactForm({
   onCancel,
   isSubmitting = false,
 }: ContactFormProps) {
-  const [entityType, setEntityType] = useState<'site' | 'client' | 'supplier' | 'internal'>(
-    (initialEntityType || contact?.entity_type || 'client') as 'site' | 'client' | 'supplier' | 'internal'
+  const [entityType, setEntityType] = useState<EntityType>(
+    (initialEntityType || contact?.entity_type || 'client') as EntityType
   );
   const [entityId, setEntityId] = useState<string>(initialEntityId || contact?.entity_id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [assignmentType, setAssignmentType] = useState<AssignmentType>(
+    !contact?.entity_id ? 'single' :
+    contact.entity_id === 'all_sites' ? 'all_sites' :
+    contact.entity_id === 'all_clients' ? 'all_clients' : 'single'
+  );
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -71,17 +82,33 @@ export function ContactForm({
   });
 
   // Handle entity type change
-  const handleEntityTypeChange = (value: 'site' | 'client' | 'supplier' | 'internal') => {
+  const handleEntityTypeChange = (value: EntityType) => {
     setEntityType(value);
     setEntityId('');
     setSearchResults([]);
     setSearchTerm('');
+    setAssignmentType('single');
+  };
+
+  // Handle assignment type change
+  const handleAssignmentTypeChange = (value: AssignmentType) => {
+    setAssignmentType(value);
+    if (value === 'all_sites') {
+      setEntityId('all_sites');
+      setSearchTerm('All Sites');
+    } else if (value === 'all_clients') {
+      setEntityId('all_clients');
+      setSearchTerm('All Clients');
+    } else {
+      setEntityId('');
+      setSearchTerm('');
+    }
   };
 
   // Perform search for entities
   useEffect(() => {
     const searchEntities = async () => {
-      if (searchTerm.length < 2 || entityType === 'internal') return;
+      if (searchTerm.length < 2 || entityType === 'internal' || assignmentType !== 'single') return;
       
       setIsSearching(true);
       try {
@@ -99,7 +126,7 @@ export function ContactForm({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, entityType]);
+  }, [searchTerm, entityType, assignmentType]);
 
   const handleSubmit = async (values: ContactFormValues) => {
     try {
@@ -110,7 +137,7 @@ export function ContactForm({
         ...(contact?.id ? { id: contact.id } : {}),
       };
       
-      await onSubmit(entityData);
+      await onSubmit(entityData as Partial<ContactRecord>);
     } catch (error) {
       console.error('Error saving contact:', error);
     }
@@ -134,7 +161,7 @@ export function ContactForm({
             <FormLabel>Associated With</FormLabel>
             <Select
               value={entityType}
-              onValueChange={handleEntityTypeChange}
+              onValueChange={(value: EntityType) => handleEntityTypeChange(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select entity type" />
@@ -169,6 +196,43 @@ export function ContactForm({
           </div>
 
           {entityType !== 'internal' && (
+            <div className="space-y-2">
+              <FormLabel>Assignment Type</FormLabel>
+              <RadioGroup 
+                defaultValue={assignmentType} 
+                value={assignmentType}
+                onValueChange={(value: AssignmentType) => handleAssignmentTypeChange(value)}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="single" id="single" />
+                  <label htmlFor="single" className="cursor-pointer text-sm">
+                    Single {entityType}
+                  </label>
+                </div>
+                
+                {entityType === 'site' && (
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all_sites" id="all_sites" />
+                    <label htmlFor="all_sites" className="cursor-pointer text-sm">
+                      All Sites
+                    </label>
+                  </div>
+                )}
+                
+                {entityType === 'client' && (
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all_clients" id="all_clients" />
+                    <label htmlFor="all_clients" className="cursor-pointer text-sm">
+                      All Clients
+                    </label>
+                  </div>
+                )}
+              </RadioGroup>
+            </div>
+          )}
+
+          {entityType !== 'internal' && assignmentType === 'single' && (
             <div className="space-y-2">
               <FormLabel>Select {entityType}</FormLabel>
               <div className="relative">
@@ -215,6 +279,15 @@ export function ContactForm({
                 </div>
               )}
             </div>
+          )}
+
+          {entityType !== 'internal' && assignmentType !== 'single' && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This contact will be associated with {assignmentType === 'all_sites' ? 'all sites' : 'all clients'}.
+              </AlertDescription>
+            </Alert>
           )}
         </div>
         
@@ -304,7 +377,7 @@ export function ContactForm({
           )}
         />
         
-        {entityType !== 'internal' && (
+        {entityType !== 'internal' && assignmentType === 'single' && (
           <FormField
             control={form.control}
             name="is_primary"
@@ -335,7 +408,7 @@ export function ContactForm({
           )}
           <Button 
             type="submit" 
-            disabled={isSubmitting || (entityType !== 'internal' && !entityId)}
+            disabled={isSubmitting || (entityType !== 'internal' && assignmentType === 'single' && !entityId)}
           >
             {isSubmitting ? 'Saving...' : (contact ? 'Update Contact' : 'Add Contact')}
           </Button>

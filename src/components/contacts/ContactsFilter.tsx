@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,7 +109,7 @@ export function ContactsFilter({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search contacts..."
+            placeholder="Search contact name, email, site, or client..."
             className="pl-9"
             value={filters.search || ''}
             onChange={handleSearchChange}
@@ -189,6 +188,8 @@ export function ContactsFilter({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="any-entity">Any entity</SelectItem>
+                          <SelectItem value="all_sites">All Sites</SelectItem>
+                          <SelectItem value="all_clients">All Clients</SelectItem>
                           {availableEntities.map(entity => (
                             <SelectItem key={entity.id} value={entity.id}>
                               {entity.name} ({entity.type})

@@ -15,15 +15,58 @@ export const contactsApi = {
       query = query.eq('entity_type', filters.entityType);
     }
     
-    // Apply entity ID filter
+    // Apply entity ID filter - special handling for "all_sites" and "all_clients"
     if (filters.entityId) {
-      query = query.eq('entity_id', filters.entityId);
+      if (filters.entityId === 'all_sites' || filters.entityId === 'all_clients') {
+        query = query.eq('entity_id', filters.entityId);
+      } else {
+        query = query.eq('entity_id', filters.entityId);
+      }
     }
     
     // Apply search filter
     if (filters.search && filters.search.trim() !== '') {
       const searchTerm = `%${filters.search.toLowerCase()}%`;
-      query = query.or(`name.ilike.${searchTerm},email.ilike.${searchTerm},role.ilike.${searchTerm},department.ilike.${searchTerm},phone.ilike.${searchTerm}`);
+      
+      // First, get a list of site and client IDs that match the search term
+      let matchingEntityIds: string[] = [];
+      
+      // Search in client entities
+      const { data: clientMatches } = await supabase
+        .from('clients')
+        .select('id')
+        .ilike('name', searchTerm);
+      
+      // Search in site entities
+      const { data: siteMatches } = await supabase
+        .from('sites')
+        .select('id')
+        .ilike('name', searchTerm);
+      
+      // Search in supplier entities
+      const { data: supplierMatches } = await supabase
+        .from('contractors')
+        .select('id')
+        .ilike('business_name', searchTerm);
+      
+      // Compile all matching entity IDs
+      matchingEntityIds = [
+        ...(clientMatches || []).map(c => c.id),
+        ...(siteMatches || []).map(s => s.id),
+        ...(supplierMatches || []).map(s => s.id)
+      ];
+      
+      // Create a complex OR filter to search in contacts or related entities
+      if (matchingEntityIds.length > 0) {
+        query = query.or(
+          `name.ilike.${searchTerm},email.ilike.${searchTerm},role.ilike.${searchTerm},department.ilike.${searchTerm},phone.ilike.${searchTerm},entity_id.in.(${matchingEntityIds.join(',')})`
+        );
+      } else {
+        // No matching entities, just search in contact fields
+        query = query.or(
+          `name.ilike.${searchTerm},email.ilike.${searchTerm},role.ilike.${searchTerm},department.ilike.${searchTerm},phone.ilike.${searchTerm}`
+        );
+      }
     }
     
     // Apply role filter
@@ -80,34 +123,50 @@ export const contactsApi = {
   async getContactEntities(): Promise<Array<{id: string, name: string, type: string}>> {
     let entities: Array<{id: string, name: string, type: string}> = [];
     
+    // Add special entries for "all sites" and "all clients"
+    entities.push({
+      id: 'all_sites',
+      name: 'All Sites',
+      type: 'site'
+    });
+    
+    entities.push({
+      id: 'all_clients',
+      name: 'All Clients',
+      type: 'client'
+    });
+    
     // First fetch contact entity IDs by type
     const { data: clientContactIds, error: clientIdsError } = await supabase
       .from('contacts')
       .select('entity_id')
-      .eq('entity_type', 'client');
+      .eq('entity_type', 'client')
+      .not('entity_id', 'in', ['all_sites', 'all_clients']);
     
     if (clientIdsError) {
       console.error('Error fetching client contact IDs:', clientIdsError);
     } else {
       // Then fetch clients that match those IDs
       if (clientContactIds && clientContactIds.length > 0) {
-        const clientIds = clientContactIds.map(row => row.entity_id);
-        const { data: clients, error: clientError } = await supabase
-          .from('clients')
-          .select('id, name')
-          .in('id', clientIds);
-        
-        if (clientError) {
-          console.error('Error fetching client entities:', clientError);
-        } else if (clients) {
-          entities = [
-            ...entities,
-            ...clients.map(client => ({
-              id: client.id,
-              name: client.name,
-              type: 'client'
-            }))
-          ];
+        const clientIds = clientContactIds.map(row => row.entity_id).filter(Boolean);
+        if (clientIds.length > 0) {
+          const { data: clients, error: clientError } = await supabase
+            .from('clients')
+            .select('id, name')
+            .in('id', clientIds);
+          
+          if (clientError) {
+            console.error('Error fetching client entities:', clientError);
+          } else if (clients) {
+            entities = [
+              ...entities,
+              ...clients.map(client => ({
+                id: client.id,
+                name: client.name,
+                type: 'client'
+              }))
+            ];
+          }
         }
       }
     }
@@ -116,30 +175,33 @@ export const contactsApi = {
     const { data: siteContactIds, error: siteIdsError } = await supabase
       .from('contacts')
       .select('entity_id')
-      .eq('entity_type', 'site');
+      .eq('entity_type', 'site')
+      .not('entity_id', 'in', ['all_sites', 'all_clients']);
     
     if (siteIdsError) {
       console.error('Error fetching site contact IDs:', siteIdsError);
     } else {
       // Then fetch sites that match those IDs
       if (siteContactIds && siteContactIds.length > 0) {
-        const siteIds = siteContactIds.map(row => row.entity_id);
-        const { data: sites, error: siteError } = await supabase
-          .from('sites')
-          .select('id, name')
-          .in('id', siteIds);
-        
-        if (siteError) {
-          console.error('Error fetching site entities:', siteError);
-        } else if (sites) {
-          entities = [
-            ...entities,
-            ...sites.map(site => ({
-              id: site.id,
-              name: site.name,
-              type: 'site'
-            }))
-          ];
+        const siteIds = siteContactIds.map(row => row.entity_id).filter(Boolean);
+        if (siteIds.length > 0) {
+          const { data: sites, error: siteError } = await supabase
+            .from('sites')
+            .select('id, name')
+            .in('id', siteIds);
+          
+          if (siteError) {
+            console.error('Error fetching site entities:', siteError);
+          } else if (sites) {
+            entities = [
+              ...entities,
+              ...sites.map(site => ({
+                id: site.id,
+                name: site.name,
+                type: 'site'
+              }))
+            ];
+          }
         }
       }
     }
@@ -148,33 +210,36 @@ export const contactsApi = {
     const { data: supplierContactIds, error: supplierIdsError } = await supabase
       .from('contacts')
       .select('entity_id')
-      .eq('entity_type', 'supplier');
+      .eq('entity_type', 'supplier')
+      .not('entity_id', 'in', ['all_sites', 'all_clients']);
     
     if (supplierIdsError) {
       console.error('Error fetching supplier contact IDs:', supplierIdsError);
     } else {
       // Then fetch contractors that match those IDs
       if (supplierContactIds && supplierContactIds.length > 0) {
-        const supplierIds = supplierContactIds.map(row => row.entity_id);
-        try {
-          const { data: contractors, error: contractorError } = await supabase
-            .from('contractors')
-            .select('id, business_name')
-            .in('id', supplierIds);
-          
-          if (contractorError) {
-            console.error('Error fetching supplier entities:', contractorError);
-          } else if (contractors && Array.isArray(contractors)) {
-            const contractorResults = contractors.map(contractor => ({
-              id: contractor.id,
-              name: contractor.business_name,
-              type: 'supplier'
-            }));
+        const supplierIds = supplierContactIds.map(row => row.entity_id).filter(Boolean);
+        if (supplierIds.length > 0) {
+          try {
+            const { data: contractors, error: contractorError } = await supabase
+              .from('contractors')
+              .select('id, business_name')
+              .in('id', supplierIds);
             
-            entities = [...entities, ...contractorResults];
+            if (contractorError) {
+              console.error('Error fetching supplier entities:', contractorError);
+            } else if (contractors && Array.isArray(contractors)) {
+              const contractorResults = contractors.map(contractor => ({
+                id: contractor.id,
+                name: contractor.business_name,
+                type: 'supplier'
+              }));
+              
+              entities = [...entities, ...contractorResults];
+            }
+          } catch (error) {
+            console.error('Error in contractor search:', error);
           }
-        } catch (error) {
-          console.error('Error in contractor search:', error);
         }
       }
     }
@@ -194,10 +259,16 @@ export const contactsApi = {
       throw new Error('Missing required contact data: name and role are required');
     }
     
-    // For internal contacts, entity_id can be null
-    const entity_id = contactData.entity_type === 'internal' ? null : 
-                      (contactData.entity_id && contactData.entity_id.trim() !== '' ? 
-                       contactData.entity_id : null);
+    // Special handling for bulk assignments and internal contacts
+    let entity_id;
+    if (contactData.entity_type === 'internal') {
+      entity_id = null;
+    } else if (['all_sites', 'all_clients'].includes(contactData.entity_id as string)) {
+      entity_id = contactData.entity_id;
+    } else {
+      entity_id = contactData.entity_id && contactData.entity_id.trim() !== '' ? 
+                  contactData.entity_id : null;
+    }
     
     // Prepare services field as JSON
     const preparedContactData = {
@@ -225,10 +296,16 @@ export const contactsApi = {
   
   // Update an existing contact
   async updateContact(id: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
-    // For internal contacts, entity_id can be null
-    const entity_id = contactData.entity_type === 'internal' ? null : 
-                      (contactData.entity_id && contactData.entity_id.trim() !== '' ? 
-                       contactData.entity_id : null);
+    // Special handling for bulk assignments and internal contacts
+    let entity_id;
+    if (contactData.entity_type === 'internal') {
+      entity_id = null;
+    } else if (['all_sites', 'all_clients'].includes(contactData.entity_id as string)) {
+      entity_id = contactData.entity_id;
+    } else {
+      entity_id = contactData.entity_id && contactData.entity_id.trim() !== '' ? 
+                  contactData.entity_id : null;
+    }
     
     // Ensure services is properly handled
     const preparedData = {
