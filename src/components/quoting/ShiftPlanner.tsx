@@ -1,220 +1,201 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { QuoteShift } from '@/lib/award/types';
-import useShiftManagement from '@/hooks/useShiftManagement';
+import { v4 as uuidv4 } from 'uuid';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, CalendarDays, List, PlusCircle } from 'lucide-react';
+import { QuoteShift, Subcontractor } from '@/lib/award/types';
+import { calculateTotalCosts, detectOvertimeHours, detectBrokenShifts } from '@/lib/award/utils';
+import { useShiftManagement } from '@/hooks/useShiftManagement';
+import { useAllowances } from '@/hooks/quotes/useAllowances';
 import { ShiftScheduler } from './shift-planner/ShiftScheduler';
-import { useAllowances } from '@/hooks/useQuotes';
-import { calculateShiftCost } from '@/lib/award/shiftCalculations';
-import { fetchQuoteShifts, updateQuoteShifts } from '@/lib/api/quotes';
-import { toast } from 'sonner';
+import { ShiftSummary } from './shift-planner/ShiftSummary';
+import { ShiftWarnings } from './shift-planner/ShiftWarnings';
+import { ShiftTemplates } from './shift-planner/ShiftTemplates';
+import { WarningSection } from './shift-planner/WarningSection';
 
 interface ShiftPlannerProps {
-  quoteId?: string | null;
-  shifts?: QuoteShift[];
-  onShiftsChange?: (shifts: QuoteShift[]) => void;
+  quoteId: string | null;
+  shifts: QuoteShift[];
+  onShiftsChange: (shifts: QuoteShift[]) => void;
 }
 
-export function ShiftPlanner({ quoteId, shifts: externalShifts, onShiftsChange }: ShiftPlannerProps) {
+export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerProps) {
   const [activeView, setActiveView] = useState<'calendar' | 'list' | 'add'>('list');
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: allowances = [], isLoading: isLoadingAllowances } = useAllowances();
   
-  // Get allowances for shift costing
-  const { data: allowances, isLoading: isLoadingAllowances } = useAllowances();
-  
-  // Initialize with external shifts if provided, otherwise empty array
-  const { 
-    shifts, 
-    addShift: addShiftToState, 
-    updateShift, 
-    deleteShift, 
-    setShifts 
-  } = useShiftManagement(externalShifts || [], quoteId || undefined);
-  
-  // State for the new shift being added
-  const [newShift, setNewShift] = useState<Partial<QuoteShift>>({
+  const initialShift: Partial<QuoteShift> = {
+    id: uuidv4(),
+    quoteId: quoteId || '',
     day: 'monday',
     startTime: '09:00',
     endTime: '17:00',
     breakDuration: 30,
     level: 1,
-    employmentType: 'full-time',
+    employmentType: 'full_time',
     numberOfCleaners: 1,
+    allowances: [],
+    estimatedCost: 0,
     location: '',
-    allowances: []
-  });
-  
-  // Load shifts for the quote if quoteId is provided but no external shifts
-  useEffect(() => {
-    if (quoteId && !externalShifts) {
-      setIsLoading(true);
-      fetchQuoteShifts(quoteId)
-        .then(fetchedShifts => {
-          setShifts(fetchedShifts);
-          setIsLoading(false);
-        })
-        .catch(error => {
-          console.error('Error loading shifts:', error);
-          toast.error('Failed to load shifts');
-          setIsLoading(false);
-        });
-    }
-  }, [quoteId, externalShifts, setShifts]);
-  
-  // Update parent component if shifts change
-  useEffect(() => {
-    if (onShiftsChange) {
-      onShiftsChange(shifts);
-    }
-  }, [shifts, onShiftsChange]);
-  
-  // Save shifts to database if quoteId is provided and local state changes
-  const saveShifts = async () => {
-    if (!quoteId) return;
-    
-    setIsLoading(true);
-    try {
-      await updateQuoteShifts(quoteId, shifts);
-      toast.success('Shifts saved successfully');
-    } catch (error) {
-      console.error('Error saving shifts:', error);
-      toast.error('Failed to save shifts');
-    } finally {
-      setIsLoading(false);
-    }
+    notes: ''
   };
   
-  // Handle adding a new shift
-  const handleAddShift = () => {
-    // Calculate estimated cost for the shift
-    const costEstimate = calculateShiftCost(newShift);
-    
-    // Add the shift to state
-    addShiftToState();
-    
-    // Reset the newShift form
-    setNewShift({
-      day: 'monday',
-      startTime: '09:00',
-      endTime: '17:00',
-      breakDuration: 30,
-      level: 1,
-      employmentType: 'full-time',
-      numberOfCleaners: 1,
-      location: '',
-      allowances: []
-    });
-    
-    // Switch back to list view
-    setActiveView('list');
-    
-    // Save to database if quoteId is provided
-    if (quoteId) {
-      saveShifts();
-    }
-  };
+  const [newShift, setNewShift] = useState(initialShift);
   
-  // Handle form field changes for new shift
+  // Calculate total cost
+  const totalCost = calculateTotalCosts(shifts);
+  
+  // Detect overtime hours
+  const overtimeHours = detectOvertimeHours(shifts);
+  
+  // Detect broken shifts
+  const brokenShiftDays = detectBrokenShifts(shifts);
+  
   const handleShiftChange = (field: string, value: any) => {
-    setNewShift(prev => {
-      const updated = { ...prev, [field]: value };
-      
-      // Recalculate cost if relevant fields change
-      if (['day', 'startTime', 'endTime', 'breakDuration', 'level', 'employmentType', 'numberOfCleaners'].includes(field)) {
-        return {
-          ...updated,
-          estimatedCost: calculateShiftCost(updated)
-        };
-      }
-      
-      return updated;
-    });
+    setNewShift(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
   
-  // Handle toggling allowances for the new shift
   const handleAllowanceToggle = (allowanceId: string) => {
     setNewShift(prev => {
       const currentAllowances = prev.allowances || [];
-      const allowanceIndex = currentAllowances.indexOf(allowanceId);
       
-      let updatedAllowances;
-      if (allowanceIndex >= 0) {
-        // Remove allowance if it exists
-        updatedAllowances = [
-          ...currentAllowances.slice(0, allowanceIndex),
-          ...currentAllowances.slice(allowanceIndex + 1)
-        ];
-      } else {
-        // Add allowance if it doesn't exist
-        updatedAllowances = [...currentAllowances, allowanceId];
-      }
-      
-      return {
-        ...prev,
-        allowances: updatedAllowances,
-        estimatedCost: calculateShiftCost({
+      if (currentAllowances.includes(allowanceId)) {
+        return {
           ...prev,
-          allowances: updatedAllowances
-        })
-      };
+          allowances: currentAllowances.filter(id => id !== allowanceId)
+        };
+      } else {
+        return {
+          ...prev,
+          allowances: [...currentAllowances, allowanceId]
+        };
+      }
     });
   };
   
-  // Handle deleting a shift
-  const handleDeleteShift = (shiftId: string) => {
-    deleteShift(shiftId);
-    
-    // Save to database if quoteId is provided
-    if (quoteId) {
-      saveShifts();
+  const handleAddShift = () => {
+    // Basic validation
+    if (!newShift.startTime || !newShift.endTime || !newShift.day || !newShift.employmentType) {
+      return;
     }
+    
+    const fullShift = {
+      ...newShift,
+      id: newShift.id || uuidv4(),
+      quoteId: quoteId || '',
+      employmentType: newShift.employmentType || 'full_time'
+    } as QuoteShift;
+    
+    onShiftsChange([...shifts, fullShift]);
+    setActiveView('list');
+    setNewShift(initialShift); // Reset form
   };
   
-  // Handle duplicating a shift
+  const handleDeleteShift = (shiftId: string) => {
+    onShiftsChange(shifts.filter(shift => shift.id !== shiftId));
+  };
+  
   const handleDuplicateShift = (shift: QuoteShift) => {
-    const duplicatedShift: QuoteShift = {
+    const duplicatedShift = {
       ...shift,
-      id: crypto.randomUUID(), // Generate a new ID
+      id: uuidv4()
     };
     
-    setShifts([...shifts, duplicatedShift]);
-    
-    // Save to database if quoteId is provided
-    if (quoteId) {
-      saveShifts();
-    }
+    onShiftsChange([...shifts, duplicatedShift]);
+  };
+  
+  const handleUpdateShift = (updatedShift: QuoteShift) => {
+    onShiftsChange(shifts.map(shift => 
+      shift.id === updatedShift.id ? updatedShift : shift
+    ));
+  };
+  
+  const handleCancel = () => {
+    setActiveView('list');
+    setNewShift(initialShift);
+  };
+  
+  const handleAddShiftClick = () => {
+    setActiveView('add');
+  };
+  
+  const handleApplyTemplate = (template: any) => {
+    setNewShift(prev => ({
+      ...prev,
+      startTime: template.startTime,
+      endTime: template.endTime,
+      breakDuration: template.breakDuration
+    }));
   };
   
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <Tabs value={activeView} onValueChange={(value) => setActiveView(value as any)}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="list">Shift List</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          </TabsList>
-          
-          <ShiftScheduler
-            activeView={activeView}
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={activeView === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveView('list')}
+          >
+            <List className="h-4 w-4 mr-2" />
+            List View
+          </Button>
+          <Button
+            variant={activeView === 'calendar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveView('calendar')}
+          >
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Calendar View
+          </Button>
+        </div>
+        
+        {activeView !== 'add' && (
+          <Button onClick={handleAddShiftClick} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Shift
+          </Button>
+        )}
+      </div>
+      
+      {activeView === 'add' && (
+        <ShiftTemplates 
+          onApplyTemplate={handleApplyTemplate}
+        />
+      )}
+      
+      <ShiftScheduler 
+        activeView={activeView}
+        shifts={shifts}
+        newShift={newShift}
+        allowances={allowances}
+        isLoadingAllowances={isLoadingAllowances}
+        onShiftChange={handleShiftChange}
+        onAllowanceToggle={handleAllowanceToggle}
+        onAddShift={handleAddShift}
+        onDeleteShift={handleDeleteShift}
+        onDuplicateShift={handleDuplicateShift}
+        onUpdateShift={handleUpdateShift}
+        onCancel={handleCancel}
+        onAddShiftClick={handleAddShiftClick}
+      />
+      
+      {shifts.length > 0 && (
+        <>
+          <ShiftSummary 
             shifts={shifts}
-            newShift={newShift}
-            allowances={allowances || []}
-            isLoadingAllowances={isLoadingAllowances}
-            onShiftChange={handleShiftChange}
-            onAllowanceToggle={handleAllowanceToggle}
-            onAddShift={handleAddShift}
-            onDeleteShift={handleDeleteShift}
-            onDuplicateShift={handleDuplicateShift}
-            onUpdateShift={(updatedShift) => {
-              updateShift(updatedShift.id, updatedShift);
-              if (quoteId) saveShifts();
-            }}
-            onCancel={() => setActiveView('list')}
-            onAddShiftClick={() => setActiveView('add')}
+            totalCost={totalCost}
           />
-        </Tabs>
-      </CardContent>
-    </Card>
+          
+          <WarningSection 
+            overtimeHours={overtimeHours}
+            brokenShiftDays={brokenShiftDays}
+          />
+        </>
+      )}
+    </div>
   );
 }

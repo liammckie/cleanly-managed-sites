@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -104,7 +103,7 @@ export function QuoteSummary({
         )}
         
         {subcontractors.length === 0 && (
-          <Alert variant="default">
+          <Alert>
             <Info className="h-4 w-4" />
             <AlertTitle>No Subcontractors</AlertTitle>
             <AlertDescription>
@@ -114,7 +113,7 @@ export function QuoteSummary({
         )}
         
         {summary.totalPrice > 0 && (
-          <Alert variant="default">
+          <Alert>
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <AlertTitle>Quote Ready</AlertTitle>
             <AlertDescription>

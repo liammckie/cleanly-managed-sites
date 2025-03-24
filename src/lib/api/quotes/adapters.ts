@@ -1,5 +1,5 @@
 
-import { QuoteShift, Subcontractor } from '@/lib/award/types';
+import { QuoteShift, Subcontractor, Quote, OverheadProfile } from '@/lib/award/types';
 import { Json } from '@/lib/types';
 
 // Database shape to application shape converters
@@ -40,6 +40,7 @@ export interface DbQuote {
   client_id?: string;
   client_name?: string;
   site_address?: string;
+  site_name?: string;
   start_date?: string;
   end_date?: string;
   contract_length?: number;
@@ -48,14 +49,30 @@ export interface DbQuote {
   status?: string;
   overhead_percentage?: number;
   margin_percentage?: number;
+  overhead_profile?: string;
   labor_cost?: number;
   overhead_amount?: number;
+  overhead_cost?: number;
   margin_amount?: number;
   total_price?: number;
+  total_cost?: number;
+  subcontractor_cost?: number;
   total_hours?: number;
   notes?: string;
   user_id?: string;
   created_by?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DbOverheadProfile {
+  id?: string;
+  name: string;
+  percentage?: number;
+  labor_percentage?: number;
+  description?: string;
+  is_default?: boolean;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -128,5 +145,99 @@ export const subcontractorToDb = (sub: Partial<Subcontractor>): Partial<DbQuoteS
     notes: sub.notes,
     created_at: sub.createdAt,
     updated_at: sub.updatedAt || new Date().toISOString()
+  };
+};
+
+export const dbToQuote = (dbQuote: DbQuote): Quote => {
+  return {
+    id: dbQuote.id || '',
+    name: dbQuote.name || '',
+    clientId: dbQuote.client_id,
+    clientName: dbQuote.client_name,
+    siteAddress: dbQuote.site_address,
+    siteName: dbQuote.site_name,
+    startDate: dbQuote.start_date,
+    endDate: dbQuote.end_date,
+    contractLength: dbQuote.contract_length,
+    contractLengthUnit: dbQuote.contract_length_unit as any,
+    expiryDate: dbQuote.expiry_date,
+    status: dbQuote.status as any || 'draft',
+    overheadProfile: dbQuote.overhead_profile,
+    overheadPercentage: dbQuote.overhead_percentage || 0,
+    marginPercentage: dbQuote.margin_percentage || 0,
+    laborCost: dbQuote.labor_cost || 0,
+    overheadAmount: dbQuote.overhead_amount || 0,
+    overheadCost: dbQuote.overhead_cost || 0,
+    marginAmount: dbQuote.margin_amount || 0,
+    totalPrice: dbQuote.total_price || 0,
+    totalCost: dbQuote.total_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost || 0,
+    totalHours: dbQuote.total_hours || 0,
+    notes: dbQuote.notes,
+    userId: dbQuote.user_id,
+    createdBy: dbQuote.created_by,
+    createdAt: dbQuote.created_at,
+    updatedAt: dbQuote.updated_at,
+  };
+};
+
+export const quoteToDb = (quote: Partial<Quote>): Partial<DbQuote> => {
+  return {
+    id: quote.id,
+    name: quote.name || '',
+    client_id: quote.clientId,
+    client_name: quote.clientName,
+    site_address: quote.siteAddress,
+    site_name: quote.siteName,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    contract_length: quote.contractLength,
+    contract_length_unit: quote.contractLengthUnit,
+    expiry_date: quote.expiryDate,
+    status: quote.status,
+    overhead_profile: quote.overheadProfile,
+    overhead_percentage: quote.overheadPercentage,
+    margin_percentage: quote.marginPercentage,
+    labor_cost: quote.laborCost,
+    overhead_amount: quote.overheadAmount,
+    overhead_cost: quote.overheadCost,
+    margin_amount: quote.marginAmount,
+    total_price: quote.totalPrice,
+    total_cost: quote.totalCost,
+    subcontractor_cost: quote.subcontractorCost,
+    total_hours: quote.totalHours,
+    notes: quote.notes,
+    user_id: quote.userId,
+    created_by: quote.createdBy,
+    created_at: quote.createdAt,
+    updated_at: quote.updatedAt || new Date().toISOString()
+  };
+};
+
+export const dbToOverheadProfile = (dbProfile: DbOverheadProfile): OverheadProfile => {
+  return {
+    id: dbProfile.id || '',
+    name: dbProfile.name,
+    percentage: dbProfile.percentage || 0,
+    laborPercentage: dbProfile.labor_percentage,
+    description: dbProfile.description,
+    isDefault: dbProfile.is_default,
+    userId: dbProfile.user_id,
+    createdAt: dbProfile.created_at,
+    updatedAt: dbProfile.updated_at
+  };
+};
+
+export const overheadProfileToDb = (profile: Partial<OverheadProfile>): Partial<DbOverheadProfile> => {
+  return {
+    id: profile.id,
+    name: profile.name || '',
+    percentage: profile.percentage,
+    labor_percentage: profile.laborPercentage,
+    description: profile.description,
+    is_default: profile.isDefault,
+    user_id: profile.userId,
+    created_at: profile.createdAt,
+    updated_at: profile.updatedAt || new Date().toISOString()
   };
 };

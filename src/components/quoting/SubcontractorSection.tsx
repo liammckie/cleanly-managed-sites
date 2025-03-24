@@ -1,22 +1,18 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Subcontractor } from '@/lib/award/types';
-import { toast } from 'sonner';
-import { Plus, Trash2, Edit } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertCircle, Edit, Plus, Trash2 } from 'lucide-react';
+import { Subcontractor, FrequencyType } from '@/lib/award/types';
+import { formatCurrency } from '@/lib/award/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface SubcontractorSectionProps {
   subcontractors: Subcontractor[];
@@ -24,284 +20,310 @@ interface SubcontractorSectionProps {
 }
 
 export function SubcontractorSection({ subcontractors, onSubcontractorsChange }: SubcontractorSectionProps) {
-  const [isAddingSubcontractor, setIsAddingSubcontractor] = useState(false);
-  const [newSubcontractor, setNewSubcontractor] = useState<Partial<Subcontractor>>({
-    name: '',
-    service: '',
-    cost: 0,
-    frequency: 'weekly',
-    description: '',
-    notes: ''
-  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [service, setService] = useState('');
+  const [description, setDescription] = useState('');
+  const [frequency, setFrequency] = useState<FrequencyType>('monthly');
+  const [cost, setCost] = useState('');
+  const [notes, setNotes] = useState('');
   
-  const handleInputChange = (field: string, value: any) => {
-    setNewSubcontractor(prev => ({ ...prev, [field]: value }));
+  const resetForm = () => {
+    setName('');
+    setService('');
+    setDescription('');
+    setFrequency('monthly');
+    setCost('');
+    setNotes('');
+    setEditingId(null);
   };
   
-  const handleAddSubcontractor = () => {
-    if (!newSubcontractor.name || !newSubcontractor.service || !newSubcontractor.cost) {
-      toast.error('Please fill in all required fields');
+  const handleAdd = () => {
+    setIsDialogOpen(true);
+  };
+  
+  const handleEdit = (id: string) => {
+    const subcontractor = subcontractors.find(s => s.id === id);
+    if (subcontractor) {
+      setName(subcontractor.name);
+      setService(subcontractor.service || '');
+      setDescription(subcontractor.description || '');
+      setFrequency(subcontractor.frequency);
+      setCost(subcontractor.cost.toString());
+      setNotes(subcontractor.notes || '');
+      setEditingId(id);
+      setIsDialogOpen(true);
+    }
+  };
+  
+  const handleDelete = (id: string) => {
+    onSubcontractorsChange(subcontractors.filter(s => s.id !== id));
+  };
+  
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    resetForm();
+  };
+  
+  const handleSave = () => {
+    if (!name.trim() || !cost.trim()) {
+      return; // Basic validation
+    }
+    
+    const costValue = parseFloat(cost);
+    
+    if (isNaN(costValue) || costValue < 0) {
       return;
     }
     
-    const subcontractorToAdd: Subcontractor = {
-      id: uuidv4(),
-      quoteId: '', // This will be set when saving to the database
-      name: newSubcontractor.name,
-      service: newSubcontractor.service,
-      cost: typeof newSubcontractor.cost === 'number' ? newSubcontractor.cost : parseFloat(newSubcontractor.cost as string),
-      frequency: newSubcontractor.frequency as Subcontractor['frequency'],
-      description: newSubcontractor.description || '',
-      notes: newSubcontractor.notes
-    };
-    
-    const updatedSubcontractors = [...subcontractors, subcontractorToAdd];
-    onSubcontractorsChange(updatedSubcontractors);
-    
-    // Reset form
-    setNewSubcontractor({
-      name: '',
-      service: '',
-      cost: 0,
-      frequency: 'weekly',
-      description: '',
-      notes: ''
-    });
-    
-    setIsAddingSubcontractor(false);
-    toast.success('Subcontractor added successfully');
-  };
-  
-  const handleDeleteSubcontractor = (subcontractorId: string) => {
-    const updatedSubcontractors = subcontractors.filter(s => s.id !== subcontractorId);
-    onSubcontractorsChange(updatedSubcontractors);
-    toast.success('Subcontractor removed');
-  };
-  
-  const formatFrequency = (frequency: string): string => {
-    switch (frequency) {
-      case 'daily': return 'Per day';
-      case 'weekly': return 'Per week';
-      case 'fortnightly': return 'Per fortnight';
-      case 'monthly': return 'Per month';
-      case 'quarterly': return 'Per quarter';
-      case 'yearly': return 'Per year';
-      case 'once-off': return 'Once off';
-      default: return frequency;
+    if (editingId) {
+      // Update existing
+      onSubcontractorsChange(
+        subcontractors.map(s => 
+          s.id === editingId 
+            ? {
+                ...s,
+                name,
+                service,
+                description,
+                frequency,
+                cost: costValue,
+                notes,
+                updatedAt: new Date().toISOString()
+              }
+            : s
+        )
+      );
+    } else {
+      // Add new
+      const newSubcontractor: Subcontractor = {
+        id: uuidv4(),
+        quoteId: '',
+        name,
+        service,
+        description,
+        frequency,
+        cost: costValue,
+        notes,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      onSubcontractorsChange([...subcontractors, newSubcontractor]);
     }
+    
+    handleDialogClose();
   };
   
-  const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number => {
-    switch (subcontractor.frequency) {
+  const calculateMonthlyEstimate = (sub: Subcontractor): number => {
+    switch (sub.frequency) {
       case 'daily':
-        return subcontractor.cost * 21.67; // Average work days per month
+        return sub.cost * 30; // Approx days per month
       case 'weekly':
-        return subcontractor.cost * 4.33; // Average weeks per month
+        return sub.cost * 4.33; // Weeks per month
       case 'fortnightly':
-        return subcontractor.cost * 2.167; // Average fortnights per month
+        return sub.cost * 2.17; // Fortnightly occurrences per month
       case 'monthly':
-        return subcontractor.cost;
+        return sub.cost;
       case 'quarterly':
-        return subcontractor.cost / 3; // Divide by 3 for monthly cost
-      case 'yearly':
-        return subcontractor.cost / 12; // Divide by 12 for monthly cost
-      case 'once-off':
-        return subcontractor.cost; // Just use the cost for once-off
+        return sub.cost / 3;
+      case 'annually':
+        return sub.cost / 12;
+      case 'one_time':
+        return sub.cost / 12; // Spread over a year by default
       default:
-        return subcontractor.cost;
+        return sub.cost;
     }
   };
   
-  const getTotalMonthlyCost = (): number => {
-    return subcontractors.reduce((total, subcontractor) => {
-      return total + calculateSubcontractorMonthlyCost(subcontractor);
-    }, 0);
-  };
+  const totalMonthly = subcontractors.reduce((total, sub) => total + calculateMonthlyEstimate(sub), 0);
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">Subcontractors</h3>
-          <p className="text-sm text-muted-foreground">
-            Add specialized services from subcontractors
-          </p>
-        </div>
-        
-        {!isAddingSubcontractor && (
-          <Button variant="outline" onClick={() => setIsAddingSubcontractor(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Subcontractor
-          </Button>
-        )}
+        <h3 className="text-lg font-medium">Subcontractors & Services</h3>
+        <Button onClick={handleAdd} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Subcontractor
+        </Button>
       </div>
       
-      {isAddingSubcontractor ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Add Subcontractor</CardTitle>
-            <CardDescription>
-              Add a subcontractor to your quote
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Subcontractor Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="Name of subcontractor"
-                  value={newSubcontractor.name}
-                  onChange={e => handleInputChange('name', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="service">Service Provided</Label>
-                <Input 
-                  id="service" 
-                  placeholder="E.g., Window cleaning, Carpet cleaning"
-                  value={newSubcontractor.service}
-                  onChange={e => handleInputChange('service', e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cost">Cost</Label>
-                <Input 
-                  id="cost" 
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Cost"
-                  value={newSubcontractor.cost?.toString()}
-                  onChange={e => handleInputChange('cost', parseFloat(e.target.value) || 0)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="frequency">Frequency</Label>
-                <Select 
-                  value={newSubcontractor.frequency as string} 
-                  onValueChange={v => handleInputChange('frequency', v)}
-                >
-                  <SelectTrigger id="frequency">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                    <SelectItem value="once-off">Once Off</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input 
-                id="description" 
-                placeholder="Brief description of service"
-                value={newSubcontractor.description || ''}
-                onChange={e => handleInputChange('description', e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Input 
-                id="notes" 
-                placeholder="Any additional notes about this subcontractor"
-                value={newSubcontractor.notes || ''}
-                onChange={e => handleInputChange('notes', e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => setIsAddingSubcontractor(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddSubcontractor}>
-              Add Subcontractor
-            </Button>
-          </CardFooter>
-        </Card>
+      {subcontractors.length === 0 ? (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>No Subcontractors Added</AlertTitle>
+          <AlertDescription>
+            Add subcontractors or specialized services that will be included in this quote.
+          </AlertDescription>
+        </Alert>
       ) : (
-        subcontractors.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center">
-              <h3 className="text-lg font-medium mb-2">No Subcontractors Added</h3>
-              <p className="text-muted-foreground mb-4">
-                Add subcontractors if you need specialized services as part of this quote.
-              </p>
-              <Button onClick={() => setIsAddingSubcontractor(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Subcontractor
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Subcontractors</CardTitle>
-              <CardDescription>
-                {subcontractors.length} subcontractor{subcontractors.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Cost</TableHead>
-                    <TableHead>Frequency</TableHead>
-                    <TableHead className="text-right">Monthly Cost</TableHead>
-                    <TableHead className="w-[80px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subcontractors.map(subcontractor => (
-                    <TableRow key={subcontractor.id}>
-                      <TableCell className="font-medium">{subcontractor.name}</TableCell>
-                      <TableCell>{subcontractor.service}</TableCell>
-                      <TableCell>${subcontractor.cost.toFixed(2)}</TableCell>
-                      <TableCell>{formatFrequency(subcontractor.frequency)}</TableCell>
-                      <TableCell className="text-right">
-                        ${calculateSubcontractorMonthlyCost(subcontractor).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteSubcontractor(subcontractor.id)}
-                        >
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Subcontractors</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Frequency</TableHead>
+                  <TableHead>Cost</TableHead>
+                  <TableHead>Monthly Est.</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subcontractors.map(sub => (
+                  <TableRow key={sub.id}>
+                    <TableCell className="font-medium">{sub.name}</TableCell>
+                    <TableCell>{sub.service}</TableCell>
+                    <TableCell>
+                      {sub.frequency === 'one_time' ? 'One-time' : 
+                       sub.frequency === 'annually' ? 'Yearly' : 
+                       sub.frequency.charAt(0).toUpperCase() + sub.frequency.slice(1)}
+                    </TableCell>
+                    <TableCell>{formatCurrency(sub.cost)}</TableCell>
+                    <TableCell>{formatCurrency(calculateMonthlyEstimate(sub))}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="icon" onClick={() => handleEdit(sub.id)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(sub.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter className="border-t justify-between">
-              <Button variant="outline" onClick={() => setIsAddingSubcontractor(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Another
-              </Button>
-              <div className="text-lg font-medium">
-                Total Monthly: ${getTotalMonthlyCost().toFixed(2)}
-              </div>
-            </CardFooter>
-          </Card>
-        )
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={4} className="text-right font-medium">
+                    Total Monthly Cost:
+                  </TableCell>
+                  <TableCell className="font-bold">{formatCurrency(totalMonthly)}</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[485px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? 'Edit Subcontractor' : 'Add Subcontractor'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+                placeholder="Subcontractor name"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="service" className="text-right">
+                Service
+              </Label>
+              <Input
+                id="service"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                className="col-span-3"
+                placeholder="Service provided"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="frequency" className="text-right">
+                Frequency
+              </Label>
+              <Select
+                value={frequency}
+                onValueChange={(value) => setFrequency(value as FrequencyType)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="one_time">One-time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="cost" className="text-right">
+                Cost
+              </Label>
+              <Input
+                id="cost"
+                type="number"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                className="col-span-3"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right align-top mt-2">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+                placeholder="Optional description"
+                rows={2}
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="notes" className="text-right align-top mt-2">
+                Notes
+              </Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="col-span-3"
+                placeholder="Any additional notes"
+                rows={2}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleDialogClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              {editingId ? 'Update' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
