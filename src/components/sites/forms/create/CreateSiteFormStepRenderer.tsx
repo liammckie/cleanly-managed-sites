@@ -19,6 +19,14 @@ export function CreateSiteFormStepRenderer({
   const handleNext = async () => {
     try {
       console.log("Attempting to move to next step...");
+      
+      // Check if we need to validate the current step
+      if (stepper.validateCurrentStep && !stepper.validateCurrentStep()) {
+        console.log("Step validation failed");
+        toast.error("Please complete all required fields before proceeding.");
+        return;
+      }
+      
       if (stepper.isLastStep) {
         console.log("On last step, submitting form");
         await onSubmit();

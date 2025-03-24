@@ -11,7 +11,8 @@ export interface StepperState {
   isLastStep: boolean;
   handleNext: (onSubmit?: () => Promise<void>) => void;
   handleBack: () => void;
-  goToStep: (stepIndex: number) => void; // Added this function to allow jumping to specific steps
+  goToStep: (stepIndex: number) => void;
+  validateCurrentStep?: () => boolean; // Added validation method for the current step
 }
 
 interface UseSiteFormStepperProps {
@@ -63,6 +64,11 @@ export const useSiteFormStepper = ({
     }
   };
   
+  // Add a function to validate the current step
+  const validateCurrentStep = () => {
+    return validateStep(currentStep);
+  };
+  
   return {
     steps,
     currentStep,
@@ -72,6 +78,7 @@ export const useSiteFormStepper = ({
     isLastStep,
     handleNext,
     handleBack,
-    goToStep
+    goToStep,
+    validateCurrentStep
   };
 };

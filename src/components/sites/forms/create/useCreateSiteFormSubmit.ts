@@ -31,6 +31,13 @@ export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
         return;
       }
       
+      // Also check for at least one contact
+      if (!formData.contacts || formData.contacts.length === 0) {
+        toast.error("At least one contact is required. Please add contacts in step 2.", { id: toastId });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Submit to API
       const result = await sitesApi.createSite(formData);
       

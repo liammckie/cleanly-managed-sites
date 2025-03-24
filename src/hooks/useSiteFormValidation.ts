@@ -21,8 +21,7 @@ export const useSiteFormValidation = () => {
       if (!formData.postcode) newErrors.postcode = 'Postcode is required';
       if (!formData.clientId) newErrors.clientId = 'Client is required';
       
-      // Remove the representative validation since it's been moved to step 2
-      // if (!formData.representative) newErrors.representative = 'Representative is required';
+      // Note: Representative validation has been moved to step 2 as per requirements
     }
     
     // Step 1: Site Contacts (Moved from the old Step 4)
@@ -41,9 +40,14 @@ export const useSiteFormValidation = () => {
           }
         });
       }
+      
+      // Validate representative
+      if (!formData.representative) {
+        newErrors.representative = 'Representative is required';
+      }
     }
     
-    // Step 2: Contract Details (Previously Step 1)
+    // Step 2: Contract Details
     else if (stepIndex === 2) {
       const { contractDetails } = formData;
       if (contractDetails) {
@@ -52,7 +56,7 @@ export const useSiteFormValidation = () => {
       }
     }
     
-    // Step 3: Billing Details (Previously Step 2)
+    // Step 3: Billing Details
     else if (stepIndex === 3) {
       const { billingDetails } = formData;
       if (billingDetails) {
