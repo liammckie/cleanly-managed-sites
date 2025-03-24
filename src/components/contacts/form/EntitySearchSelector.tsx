@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
@@ -16,23 +16,36 @@ interface EntitySearchSelectorProps {
   value?: string;
   onChange?: (value: string) => void;
   onSearchChange?: (value: string) => void;
-  onEntitySelect?: (id: string, name: string) => void;
+  onEntitySelect?: (id: string, name?: string) => void;
+  placeholder?: string;
 }
 
 export function EntitySearchSelector({ 
   entityType, 
   assignmentType = 'single',
   entityId,
-  searchTerm,
+  searchTerm: initialSearchTerm,
   value,
   onChange,
   onSearchChange,
-  onEntitySelect
+  onEntitySelect,
+  placeholder = "Select Entity..."
 }: EntitySearchSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(searchTerm || '');
+  const [searchQuery, setSearchQuery] = useState(initialSearchTerm || '');
   const [searchResults, setSearchResults] = useState<Array<{id: string, name: string, type: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEntityName, setSelectedEntityName] = useState<string | undefined>(undefined);
+
+  // When value changes, try to find the entity name in search results
+  useEffect(() => {
+    if (value) {
+      const entity = searchResults.find(entity => entity.id === value);
+      if (entity) {
+        setSelectedEntityName(entity.name);
+      }
+    }
+  }, [value, searchResults]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -68,6 +81,7 @@ export function EntitySearchSelector({
       onEntitySelect(entityId, entityName);
     }
     
+    setSelectedEntityName(entityName);
     setOpen(false);
   };
 
@@ -75,10 +89,10 @@ export function EntitySearchSelector({
   const getButtonText = () => {
     if (assignmentType === 'all_sites') return "All Sites";
     if (assignmentType === 'all_clients') return "All Clients";
-    if (searchTerm) return searchTerm;
+    if (selectedEntityName) return selectedEntityName;
     
     const selectedEntity = searchResults.find(entity => entity.id === (value || entityId));
-    return selectedEntity ? selectedEntity.name : "Select Entity...";
+    return selectedEntity ? selectedEntity.name : placeholder;
   };
 
   return (
@@ -98,7 +112,7 @@ export function EntitySearchSelector({
       <PopoverContent className="w-[300px] p-0">
         <Command>
           <CommandInput
-            placeholder="Search entity..."
+            placeholder={`Search ${entityType}...`}
             onValueChange={handleSearch}
             value={searchQuery}
           />
@@ -109,7 +123,7 @@ export function EntitySearchSelector({
                 Searching...
               </div>
             ) : (
-              "No entity found."
+              `No ${entityType} found.`
             )}
           </CommandEmpty>
           <ScrollArea className="max-h-[200px] overflow-y-auto">

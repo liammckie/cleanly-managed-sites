@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ContactRecord } from '@/lib/types';
 import { SiteContact, convertContactRecordToSiteContact } from '@/components/sites/forms/types/contactTypes';
 import { useContacts } from './useContacts';
+import { toast } from 'sonner';
 
 // Type for the site contact form data
 export type SiteContactFormData = {
@@ -19,7 +20,7 @@ export type SiteContactFormData = {
 // Create a hook for handling contacts in the site form
 export const useSiteFormContacts = () => {
   const [contacts, setContacts] = useState<SiteContact[]>([]);
-  const { contacts: existingContacts } = useContacts();
+  const { contacts: existingContacts, isLoading } = useContacts();
   
   // Simple function to add a new empty contact
   const addContact = useCallback(() => {
@@ -35,6 +36,7 @@ export const useSiteFormContacts = () => {
     };
     
     setContacts(prev => [...prev, newContact]);
+    console.log('Added new contact', newContact);
   }, [contacts]);
   
   // Add a contact with data
@@ -51,14 +53,23 @@ export const useSiteFormContacts = () => {
     };
     
     setContacts(prev => [...prev, newContact]);
+    console.log('Added contact with data', newContact);
     return newId;
   }, [contacts]);
   
   // Add an existing contact
   const addExistingContact = useCallback((contactId: string) => {
+    console.log('Looking for contact with ID:', contactId, 'in', existingContacts);
+    
+    if (isLoading) {
+      toast.error("Still loading contacts. Please try again in a moment.");
+      return;
+    }
+    
     const contactToAdd = existingContacts.find(c => c.id === contactId);
     
     if (contactToAdd) {
+      console.log('Found contact to add:', contactToAdd);
       const newContact: SiteContact = convertContactRecordToSiteContact(contactToAdd);
       // Ensure the contact is marked as a site contact regardless of its original entity_type
       newContact.entity_type = 'site';
@@ -68,8 +79,12 @@ export const useSiteFormContacts = () => {
       }
       
       setContacts(prev => [...prev, newContact]);
+      toast.success(`Added ${contactToAdd.name} as a contact`);
+    } else {
+      console.error('Could not find contact with ID:', contactId);
+      toast.error("Could not find the selected contact");
     }
-  }, [existingContacts, contacts]);
+  }, [existingContacts, contacts, isLoading]);
   
   // Update an existing contact in the form
   const updateContact = useCallback((index: number, data: Partial<SiteContactFormData>) => {

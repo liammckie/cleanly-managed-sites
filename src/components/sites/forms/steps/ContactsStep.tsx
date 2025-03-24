@@ -29,8 +29,11 @@ export function ContactsStep({
 }: ContactsStepProps) {
   // Handle adding an existing contact
   const handleExistingContactSelect = (contactId: string) => {
-    if (addExistingContact) {
+    if (addExistingContact && contactId) {
+      console.log('Adding existing contact with ID:', contactId);
       addExistingContact(contactId);
+    } else {
+      console.warn('Cannot add contact - either addExistingContact function is missing or contactId is invalid');
     }
   };
 
@@ -56,6 +59,7 @@ export function ContactsStep({
               <EntitySearchSelector 
                 entityType="contact"
                 onEntitySelect={handleExistingContactSelect}
+                placeholder="Search for a contact..."
               />
             </div>
           )}
@@ -75,7 +79,7 @@ export function ContactsStep({
       {formData.contacts && formData.contacts.length > 0 ? (
         <div className="grid gap-4">
           {formData.contacts.map((contact: SiteContact, index: number) => (
-            <Card key={index} className={`p-4 border-2 ${contact.is_primary ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`}>
+            <Card key={contact.id || index} className={`p-4 border-2 ${contact.is_primary ? 'border-yellow-300 bg-yellow-50' : 'border-gray-200'}`}>
               <div className="flex justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{contact.name || `Contact #${index + 1}`}</h3>

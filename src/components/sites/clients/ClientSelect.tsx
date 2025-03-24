@@ -49,9 +49,11 @@ export function ClientSelect({ value, onChange, error }: ClientSelectProps) {
               <SelectItem value="loading">Loading clients...</SelectItem>
             ) : clients.length > 0 ? (
               clients.map(client => (
-                <SelectItem key={client.id} value={client.id || `client-${client.name}`}>
-                  {client.name}
-                </SelectItem>
+                client.id ? (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name || "Unnamed Client"}
+                  </SelectItem>
+                ) : null
               ))
             ) : (
               <SelectItem value="no-clients">No clients found</SelectItem>
