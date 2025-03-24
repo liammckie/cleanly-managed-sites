@@ -24,6 +24,10 @@ export interface SystemUser {
   title?: string;
   phone?: string;
   status?: 'active' | 'pending' | 'inactive';
+  last_login?: string;
+  custom_id?: string;
+  note?: string;
+  territories?: string[];
 }
 
 export interface UserRole {
@@ -47,10 +51,12 @@ export interface UserRoleWithCount extends UserRole {
 export interface ClientRecord {
   id: string;
   name: string;
+  contact_name: string;
   address?: string;
   city?: string;
   state?: string;
   postal_code?: string;
+  postcode?: string;
   country?: string;
   phone?: string;
   email?: string;
@@ -58,7 +64,7 @@ export interface ClientRecord {
   notes?: string;
   logo_url?: string;
   industry?: string;
-  status?: 'active' | 'inactive' | 'prospect';
+  status?: 'active' | 'inactive' | 'prospect' | 'pending';
   client_since?: string;
   created_at?: string;
   updated_at?: string;
@@ -77,6 +83,8 @@ export interface ClientRecord {
   annual_revenue?: number;
   monthly_revenue?: number;
   total_sites?: number;
+  custom_id?: string;
+  contacts?: ContactRecord[];
 }
 
 // Contact related types
@@ -107,6 +115,7 @@ export interface SiteRecord {
   city?: string;
   state?: string;
   postal_code?: string;
+  postcode?: string;
   country?: string;
   client_id?: string;
   client_name?: string;
@@ -121,7 +130,7 @@ export interface SiteRecord {
   job_specifications?: Json;
   security_details?: Json;
   billing_details?: Json;
-  status?: string;
+  status?: 'active' | 'inactive' | 'pending' | 'on-hold';
   created_at?: string;
   updated_at?: string;
   replenishables?: Json;
@@ -133,22 +142,30 @@ export interface SiteRecord {
 export interface ContractorRecord {
   id: string;
   name: string;
+  business_name: string;
+  contact_name: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postal_code?: string;
-  business_name?: string;
+  postcode?: string;
   abn?: string;
+  tax_id?: string;
   insurance_details?: Json;
   payment_details?: Json;
   services?: string[];
   notes?: string;
-  status?: 'active' | 'inactive';
+  status?: 'active' | 'inactive' | 'pending';
   created_at?: string;
   updated_at?: string;
   document_ids?: string[];
+  contractor_type?: string;
+  hourly_rate?: number;
+  day_rate?: number;
+  specialty?: string[];
+  rating?: number;
 }
 
 export interface ContractorVersionHistoryEntry {
@@ -159,6 +176,8 @@ export interface ContractorVersionHistoryEntry {
   created_by?: string;
   notes?: string;
   version: number;
+  version_number?: number;
+  contractor_data?: Json;
 }
 
 // Site Contact type used in forms

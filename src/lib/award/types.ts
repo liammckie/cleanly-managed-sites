@@ -2,11 +2,11 @@
 import { Json } from "../types";
 
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
-export type PayCondition = 'weekday' | 'saturday' | 'sunday' | 'public_holiday' | 'evening' | 'early_morning' | 'overnight';
+export type PayCondition = 'weekday' | 'saturday' | 'sunday' | 'public_holiday' | 'evening' | 'early_morning' | 'overnight' | 'base' | 'shift-early-late' | 'overtime-first-2-hours' | 'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday';
 export type EmploymentType = 'full_time' | 'part_time' | 'casual';
 export type EmployeeLevel = 1 | 2 | 3;
 export type AllowanceType = 'laundry' | 'vehicle' | 'meal' | 'travel' | 'first_aid' | 'leading_hand' | 'broken_shift';
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'one_time' | 'per_event';
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one_time' | 'per_event';
 
 export interface RateDetails {
   rate: number;
@@ -20,6 +20,10 @@ export interface EmployeeLevelRates {
   baseRate: number;
   hourlyRate: number;
   rates: Record<PayCondition, RateDetails>;
+  // Legacy fields for compatibility
+  saturdayRate?: number;
+  sundayRate?: number;
+  publicHolidayRate?: number;
 }
 
 export interface AllowanceRate {
@@ -41,6 +45,14 @@ export interface AwardSettings {
   baseRateMultiplier: number;
   overheadPercentageDefault: number;
   marginPercentageDefault: number;
+  lastUpdated?: string;
+}
+
+export interface AwardData {
+  name: string;
+  version: string;
+  effectiveDate: string;
+  levels: EmployeeLevelRates[];
 }
 
 export interface CleaningServiceAward {
@@ -102,18 +114,23 @@ export interface Subcontractor {
   email?: string;
   phone?: string;
   services?: string[];
+  service?: string;
   rate?: number;
   frequency?: Frequency;
   notes?: string;
+  description?: string;
+  cost?: number;
+  quoteId?: string;
 }
 
 export interface Quote {
   id: string;
   title: string;
+  name?: string;
   clientName: string;
   siteName?: string;
   description?: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
   overheadPercentage: number;
   marginPercentage: number;
   totalPrice: number;
@@ -136,4 +153,17 @@ export interface Quote {
   terms?: string;
   notes?: string;
   created_by?: string;
+  
+  // Additional fields used in components
+  shifts?: QuoteShift[];
+  subcontractors?: Subcontractor[];
+  overheadCost?: number;
+  totalCost?: number;
+  marginAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  overheadProfile?: string;
 }

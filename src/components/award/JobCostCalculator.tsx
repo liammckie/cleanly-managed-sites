@@ -13,10 +13,14 @@ import { Loader2, Calculator } from 'lucide-react';
 
 const payConditionLabels: Record<PayCondition, string> = {
   'base': 'Regular Hours (Mon-Fri, 6am-6pm)',
+  'weekday': 'Weekday Rate',
   'shift-early-late': 'Early/Late Shift (before 6am/after 6pm)',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
-  'public-holiday': 'Public Holiday',
+  'public_holiday': 'Public Holiday',
+  'evening': 'Evening',
+  'early_morning': 'Early Morning',
+  'overnight': 'Overnight',
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
   'overtime-sunday': 'Sunday Overtime',
@@ -25,17 +29,23 @@ const payConditionLabels: Record<PayCondition, string> = {
 
 export function JobCostCalculator() {
   const { settings, isLoading: isSettingsLoading } = useAwardSettings();
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full-time');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
   const [level, setLevel] = useState<EmployeeLevel>(1);
   const [costBreakdown, setCostBreakdown] = useState<JobCostBreakdown | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<JobCostingParams>({
     defaultValues: {
-      employmentType: 'full-time',
+      employmentType: 'full_time',
       level: 1,
       hours: {
-        'base': 38,
+        'weekday': 38,
+        'saturday': 0,
+        'sunday': 0,
+        'public_holiday': 0,
+        'evening': 0,
+        'early_morning': 0,
+        'overnight': 0
       },
       overheadPercentage: settings?.overheadPercentageDefault || 25,
       marginPercentage: settings?.marginPercentageDefault || 15
@@ -93,8 +103,8 @@ export function JobCostCalculator() {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="full-time">Full-time</SelectItem>
-                    <SelectItem value="part-time">Part-time</SelectItem>
+                    <SelectItem value="full_time">Full-time</SelectItem>
+                    <SelectItem value="part_time">Part-time</SelectItem>
                     <SelectItem value="casual">Casual</SelectItem>
                   </SelectContent>
                 </Select>
@@ -149,7 +159,7 @@ export function JobCostCalculator() {
                   step="0.1"
                   min="0"
                   max="100"
-                  {...register('overheadPercentage', { 
+                  {...register('overheadPercentage' as any, { 
                     required: 'Overhead percentage is required',
                     min: { value: 0, message: 'Minimum overhead is 0%' },
                     max: { value: 100, message: 'Maximum overhead is 100%' },
@@ -169,7 +179,7 @@ export function JobCostCalculator() {
                   step="0.1"
                   min="0"
                   max="100"
-                  {...register('marginPercentage', { 
+                  {...register('marginPercentage' as any, { 
                     required: 'Margin percentage is required',
                     min: { value: 0, message: 'Minimum margin is 0%' },
                     max: { value: 100, message: 'Maximum margin is 100%' },
@@ -217,7 +227,7 @@ export function JobCostCalculator() {
               </div>
               
               <div className="divide-y">
-                {costBreakdown.hourlyBreakdown.map((item, index) => (
+                {costBreakdown.hourlyBreakdown && costBreakdown.hourlyBreakdown.map((item, index) => (
                   <div key={index} className="p-3 flex justify-between items-center">
                     <div>
                       <span className="font-medium">{payConditionLabels[item.condition]}</span>
@@ -243,7 +253,7 @@ export function JobCostCalculator() {
                 </div>
                 
                 <div className="p-3 flex justify-between">
-                  <span>Overhead ({watch('overheadPercentage')}%)</span>
+                  <span>Overhead ({watch('overheadPercentage' as any)}%)</span>
                   <span className="font-medium">${costBreakdown.overheadCost.toFixed(2)}</span>
                 </div>
                 
@@ -253,7 +263,7 @@ export function JobCostCalculator() {
                 </div>
                 
                 <div className="p-3 flex justify-between">
-                  <span>Margin ({watch('marginPercentage')}%)</span>
+                  <span>Margin ({watch('marginPercentage' as any)}%)</span>
                   <span className="font-medium">${costBreakdown.margin.toFixed(2)}</span>
                 </div>
                 

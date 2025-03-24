@@ -10,10 +10,14 @@ import { format } from 'date-fns';
 
 const payConditionLabels: Record<PayCondition, string> = {
   'base': 'Regular Hours (Mon-Fri)',
+  'weekday': 'Weekday Rate',
   'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
-  'public-holiday': 'Public Holiday',
+  'public_holiday': 'Public Holiday',
+  'evening': 'Evening',
+  'early_morning': 'Early Morning',
+  'overnight': 'Overnight',
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
   'overtime-sunday': 'Sunday Overtime',
@@ -21,7 +25,7 @@ const payConditionLabels: Record<PayCondition, string> = {
 };
 
 export function AwardRatesTable() {
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full-time');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
   const { settings } = useAwardSettings();
   
   // Get the rates for the selected employment type
@@ -56,8 +60,8 @@ export function AwardRatesTable() {
       <CardContent>
         <Tabs value={employmentType} onValueChange={(value) => setEmploymentType(value as EmploymentType)}>
           <TabsList className="mb-4">
-            <TabsTrigger value="full-time">Full-time</TabsTrigger>
-            <TabsTrigger value="part-time">Part-time</TabsTrigger>
+            <TabsTrigger value="full_time">Full-time</TabsTrigger>
+            <TabsTrigger value="part_time">Part-time</TabsTrigger>
             <TabsTrigger value="casual">Casual</TabsTrigger>
           </TabsList>
           
@@ -78,9 +82,9 @@ export function AwardRatesTable() {
                       <TableCell className="font-medium">{label}</TableCell>
                       {adjustedRates.map((level, index) => (
                         <TableCell key={index} className="text-right">
-                          ${level.rates[condition as PayCondition].rate.toFixed(2)}
+                          ${level.rates[condition as PayCondition]?.rate.toFixed(2) || "N/A"}
                           <span className="block text-xs text-muted-foreground">
-                            ({level.rates[condition as PayCondition].multiplier.toFixed(2)}x)
+                            ({level.rates[condition as PayCondition]?.multiplier.toFixed(2) || "N/A"}x)
                           </span>
                         </TableCell>
                       ))}
