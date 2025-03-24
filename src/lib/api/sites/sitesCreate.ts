@@ -4,6 +4,7 @@ import { SiteRecord } from '@/lib/types';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 import { handleSiteAdditionalContracts } from './additionalContractsApi';
 import { handleSiteBillingLines } from './billingLinesApi';
+import { handleSiteContacts } from './siteContactsApi';
 
 // Site creation API functions
 export const sitesCreate = {
@@ -31,6 +32,8 @@ export const sitesCreate = {
       client_id: siteData.clientId,
       monthly_cost: siteData.monthlyCost,
       monthly_revenue: siteData.monthlyRevenue,
+      weekly_revenue: siteData.weeklyRevenue,
+      annual_revenue: siteData.annualRevenue,
       // Store the detailed data as JSON
       security_details: JSON.stringify(siteData.securityDetails) as any,
       job_specifications: JSON.stringify(siteData.jobSpecifications) as any,
@@ -70,32 +73,35 @@ export const sitesCreate = {
       
       if (subError) {
         console.error('Error inserting subcontractors:', subError);
-        // We won't throw here to avoid rolling back the site creation
       }
     }
     
-    // If there are contacts, store them
+    // Handle contacts if they exist
     if (siteData.contacts && siteData.contacts.length > 0) {
-      const contactRecords = siteData.contacts.map(contact => ({
-        name: contact.name,
-        role: contact.role,
-        department: contact.department || null,
-        email: contact.email || null,
-        phone: contact.phone || null,
-        is_primary: contact.is_primary || false,
-        notes: contact.notes || null,
-        entity_id: data.id,
-        entity_type: 'site',
-        user_id: user.id
-      }));
-      
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .insert(contactRecords);
-      
-      if (contactError) {
-        console.error('Error inserting contacts:', contactError);
-        // We won't throw here to avoid rolling back the site creation
+      try {
+        await handleSiteContacts(data.id, siteData.contacts, user.id);
+      } catch (contactError) {
+        console.error('Error handling site contacts:', contactError);
+      }
+    }
+    
+    // Handle additional contracts if they exist
+    if (siteData.additionalContracts && siteData.additionalContracts.length > 0) {
+      try {
+        await handleSiteAdditionalContracts(data.id, siteData.additionalContracts, user.id);
+      } catch (contractError) {
+        console.error('Error handling additional contracts:', contractError);
+      }
+    }
+    
+    // Handle billing lines if they exist
+    if (siteData.billingDetails && 
+        siteData.billingDetails.billingLines && 
+        siteData.billingDetails.billingLines.length > 0) {
+      try {
+        await handleSiteBillingLines(data.id, siteData.billingDetails.billingLines);
+      } catch (billingError) {
+        console.error('Error handling billing lines:', billingError);
       }
     }
     
@@ -104,17 +110,6 @@ export const sitesCreate = {
       ...data,
       contacts: siteData.contacts || []
     } as SiteRecord;
-    
-    // Now handle additional contracts if they exist
-    if (siteData.additionalContracts && siteData.additionalContracts.length > 0) {
-      await handleSiteAdditionalContracts(data.id, siteData.additionalContracts, user?.id);
-    }
-    
-    // Handle billing lines if they exist
-    if (siteData.billingDetails && siteData.billingDetails.billingLines && 
-        siteData.billingDetails.billingLines.length > 0) {
-      await handleSiteBillingLines(data.id, siteData.billingDetails.billingLines);
-    }
     
     return result;
   }

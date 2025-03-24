@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Form } from "@/components/ui/form";
-import { FormProvider } from "react-hook-form";
+import { Card } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
+import { FormProgressBar } from '../FormProgressBar';
+import { SiteFormStep } from '../SiteFormStep';
 import { SiteFormData } from '../siteFormTypes';
 import { StepperState } from '@/hooks/useSiteFormStepper';
-import { CreateSiteFormHeader } from './CreateSiteFormHeader';
-import { CreateSiteFormStepRenderer } from './CreateSiteFormStepRenderer';
 
 interface CreateSiteFormContainerProps {
   form: any;
@@ -13,6 +13,7 @@ interface CreateSiteFormContainerProps {
   stepper: StepperState;
   isSubmitting: boolean;
   handleSubmit: () => Promise<void>;
+  children?: React.ReactNode;
 }
 
 export function CreateSiteFormContainer({
@@ -20,27 +21,39 @@ export function CreateSiteFormContainer({
   formData,
   stepper,
   isSubmitting,
-  handleSubmit
+  handleSubmit,
+  children
 }: CreateSiteFormContainerProps) {
   return (
-    <FormProvider {...form}>
-      <Form {...form}>
-        <form>
-          <div className="max-w-4xl mx-auto">
-            <CreateSiteFormHeader
-              currentStep={stepper.currentStep}
-              totalSteps={stepper.totalSteps}
-              progress={stepper.progress}
-            />
-            
-            <CreateSiteFormStepRenderer
-              stepper={stepper}
+    <div>
+      {children}
+      
+      <FormProgressBar 
+        currentStep={stepper.currentStep}
+        totalSteps={stepper.totalSteps}
+        progress={stepper.progress}
+      />
+      
+      <Card className="p-6">
+        <Form {...form}>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}>
+            <SiteFormStep
+              title={stepper.steps[stepper.currentStep].title}
+              description={stepper.steps[stepper.currentStep].description}
+              onNext={() => stepper.handleNext()}
+              onBack={stepper.handleBack}
               isSubmitting={isSubmitting}
-              onSubmit={handleSubmit}
-            />
-          </div>
-        </form>
-      </Form>
-    </FormProvider>
+              isLastStep={stepper.isLastStep}
+              isFirstStep={stepper.isFirstStep}
+            >
+              {stepper.steps[stepper.currentStep].component}
+            </SiteFormStep>
+          </form>
+        </Form>
+      </Card>
+    </div>
   );
 }

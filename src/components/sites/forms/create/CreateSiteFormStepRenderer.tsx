@@ -14,11 +14,20 @@ export function CreateSiteFormStepRenderer({
   isSubmitting, 
   onSubmit 
 }: CreateSiteFormStepRendererProps) {
+  // Handle next button clicks
+  const handleNext = async () => {
+    if (stepper.isLastStep) {
+      await onSubmit();
+    } else {
+      stepper.handleNext();
+    }
+  };
+
   return (
     <SiteFormStep
       title={stepper.steps[stepper.currentStep].title}
       description={stepper.steps[stepper.currentStep].description}
-      onNext={() => stepper.handleNext(onSubmit)}
+      onNext={handleNext}
       onBack={stepper.handleBack}
       isSubmitting={isSubmitting}
       isLastStep={stepper.isLastStep}
