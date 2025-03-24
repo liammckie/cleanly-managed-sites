@@ -13,6 +13,11 @@ const CreateContact = () => {
     navigate('/contacts');
   };
   
+  // Create a wrapper function to handle the type mismatch
+  const handleSubmit = async (contactData: any) => {
+    await createContact(contactData);
+  };
+  
   return (
     <PageLayout>
       <div className="p-6 max-w-4xl mx-auto">
@@ -22,7 +27,7 @@ const CreateContact = () => {
           open={true}
           onOpenChange={() => navigate('/contacts')}
           title="Contact"
-          onSubmit={createContact}
+          onSubmit={handleSubmit}
           onSuccess={handleSuccess}
         />
       </div>
