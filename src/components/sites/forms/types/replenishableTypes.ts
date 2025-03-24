@@ -9,6 +9,6 @@ export interface ReplenishableSupply {
 export interface Replenishables {
   stock: string[];
   contactDetails: string;
-  supplies?: ReplenishableSupply[];
-  notes?: string;
+  supplies: ReplenishableSupply[];
+  notes: string;
 }

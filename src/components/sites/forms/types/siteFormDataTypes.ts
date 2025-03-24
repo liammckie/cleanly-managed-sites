@@ -1,4 +1,3 @@
-
 import { SiteStatus } from '../../SiteCard';
 import { ContactRecord } from '@/lib/types';
 import { 
@@ -81,7 +80,27 @@ export const getInitialFormData = (): SiteFormData => ({
       frequency: 'semi-annually',
       lastCompleted: ''
     },
-    tasks: []
+    tasks: [],
+    carpet: {
+      cleaning: false,
+      shampooing: false
+    },
+    floor: {
+      buffing: false,
+      stripping: false
+    },
+    windows: {
+      internal: false,
+      external: false
+    },
+    highLevel: {
+      dusting: false
+    },
+    additional: {
+      upholstery: false,
+      pressureWashing: false
+    },
+    notes: ''
   },
   
   jobSpecifications: {
@@ -102,14 +121,22 @@ export const getInitialFormData = (): SiteFormData => ({
       saturday: false,
       sunday: false
     },
-    serviceDeliveryType: 'direct', // Add service delivery type
-    annualContractorCost: 0 // Add annual contractor cost
+    cleaningFrequency: 'daily',
+    customFrequency: '',
+    serviceDays: '',
+    serviceTime: '',
+    estimatedHours: '',
+    equipmentRequired: '',
+    scopeNotes: '',
+    serviceDeliveryType: 'direct',
+    annualContractorCost: 0
   },
   
   replenishables: {
     stock: ['', '', '', '', ''],
     contactDetails: '',
-    supplies: []
+    supplies: [],
+    notes: ''
   },
   
   securityDetails: {

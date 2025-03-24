@@ -24,26 +24,24 @@ export interface Periodicals {
   windowCleaning: WindowCleaning;
   steamCleaning: SteamCleaning;
   tasks?: PeriodicalTask[];
-  
-  // Add nested objects for category-specific settings
-  carpet?: {
-    cleaning?: boolean;
-    shampooing?: boolean;
+  carpet: {
+    cleaning: boolean;
+    shampooing: boolean;
   };
-  floor?: {
-    buffing?: boolean;
-    stripping?: boolean;
+  floor: {
+    buffing: boolean;
+    stripping: boolean;
   };
-  windows?: {
-    internal?: boolean;
-    external?: boolean;
+  windows: {
+    internal: boolean;
+    external: boolean;
   };
-  highLevel?: {
-    dusting?: boolean;
+  highLevel: {
+    dusting: boolean;
   };
-  additional?: {
-    upholstery?: boolean;
-    pressureWashing?: boolean;
+  additional: {
+    upholstery: boolean;
+    pressureWashing: boolean;
   };
-  notes?: string;
+  notes: string;
 }
