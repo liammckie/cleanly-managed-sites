@@ -17,5 +17,6 @@ export const workOrdersApi = {
   updateWorkOrderStatus: async (id: string, status: any) => import('./workOrdersWriteApi').then(m => m.updateWorkOrderStatus(id, status)),
   assignWorkOrder: async (id: string, subcontractorId: string) => import('./workOrdersWriteApi').then(m => m.assignWorkOrder(id, subcontractorId)),
   addWorkOrderAttachment: async (id: string, attachment: any) => import('./workOrdersWriteApi').then(m => m.addWorkOrderAttachment(id, attachment)),
-  removeWorkOrderAttachment: async (id: string, attachmentId: string) => import('./workOrdersWriteApi').then(m => m.removeWorkOrderAttachment(id, attachmentId))
+  removeWorkOrderAttachment: async (id: string, attachmentId: string) => import('./workOrdersWriteApi').then(m => m.removeWorkOrderAttachment(id, attachmentId)),
+  completeWorkOrder: async (id: string) => import('./workOrdersWriteApi').then(m => m.completeWorkOrder(id))
 };

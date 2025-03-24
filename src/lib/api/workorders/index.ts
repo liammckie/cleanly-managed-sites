@@ -20,5 +20,6 @@ export const workOrdersApi = {
   updateWorkOrderStatus: writeApi.updateWorkOrderStatus,
   assignWorkOrder: writeApi.assignWorkOrder,
   addWorkOrderAttachment: writeApi.addWorkOrderAttachment,
-  removeWorkOrderAttachment: writeApi.removeWorkOrderAttachment
+  removeWorkOrderAttachment: writeApi.removeWorkOrderAttachment,
+  completeWorkOrder: writeApi.completeWorkOrder
 };
