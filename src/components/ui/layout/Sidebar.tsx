@@ -15,12 +15,14 @@ import {
   Briefcase,
   ShieldCheck,
   Contact,
-  Building
+  Building,
+  Calculator
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile'; 
 import { Button } from '@/components/ui/button';
 import { SidebarContent } from '@/components/ui/sidebar/sidebar-sections';
 import { BusinessBranding } from '@/components/BusinessBranding';
+import { SIDEBAR_MENU_SECTIONS } from '@/components/ui/sidebar/sidebar-menu';
 
 export function Sidebar() {
   const { pathname } = useLocation();
@@ -69,6 +71,18 @@ export function Sidebar() {
       icon: <ClipboardList size={20} />,
       label: 'Work Orders',
       active: pathname.startsWith('/workorders')
+    },
+    {
+      href: '/quoting',
+      icon: <Calculator size={20} />,
+      label: 'Quoting Tool',
+      active: pathname.startsWith('/quoting')
+    },
+    {
+      href: '/award-calculator',
+      icon: <FileText size={20} />,
+      label: 'Award Calculator',
+      active: pathname.startsWith('/award-calculator')
     },
     {
       href: '/my-business',

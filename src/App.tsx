@@ -20,6 +20,7 @@ import QuotingTool from './pages/QuotingTool';
 import QuoteDetails from './pages/QuoteDetails';
 import CreateQuote from './pages/CreateQuote';
 import EditQuote from './pages/EditQuote';
+import AwardCalculator from './pages/AwardCalculator';
 
 function App() {
   return (
@@ -108,6 +109,11 @@ function App() {
       <Route path="/quoting/edit/:quoteId" element={
         <ProtectedRoute>
           <EditQuote />
+        </ProtectedRoute>
+      } />
+      <Route path="/award-calculator" element={
+        <ProtectedRoute>
+          <AwardCalculator />
         </ProtectedRoute>
       } />
     </Routes>

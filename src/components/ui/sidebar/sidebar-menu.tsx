@@ -76,6 +76,12 @@ export const SIDEBAR_MENU_SECTIONS: SidebarMenuSection[] = [
         path: "/quoting",
         group: "operations"
       },
+      {
+        title: "Award Calculator",
+        icon: FileText,
+        path: "/award-calculator",
+        group: "operations"
+      },
     ],
   },
 ]
