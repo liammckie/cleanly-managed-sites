@@ -1,5 +1,5 @@
 
-import { clientsApi } from './clientsApi';
+import { clientsApi } from './clients';  // Updated import path
 import { sitesApi } from './sites';
 import { workOrdersApi } from './workorders';
 import { authApi } from './authApi';
@@ -21,7 +21,7 @@ export {
   updateBusinessDetails,
   uploadBusinessLogo,
   contractorsApi,
-  contactsApi  // Make sure contactsApi is exported here
+  contactsApi
 };
 
 // Re-export types from the API modules

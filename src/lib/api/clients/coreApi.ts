@@ -1,7 +1,8 @@
-import { supabase } from '@/integrations/supabase/client';
-import { ClientRecord, SiteRecord, ContactRecord } from '../types';
 
-export const clientsApi = {
+import { supabase } from '@/integrations/supabase/client';
+import { ClientRecord } from '../../types';
+
+export const clientCoreApi = {
   async getClients(): Promise<ClientRecord[]> {
     const { data: clients, error } = await supabase
       .from('clients')
@@ -31,31 +32,6 @@ export const clientsApi = {
     }));
     
     return clientsWithContacts as ClientRecord[] || [];
-  },
-  
-  async getClientCountByStatus(): Promise<Record<string, number>> {
-    const { data: clients, error } = await supabase
-      .from('clients')
-      .select('status');
-    
-    if (error) {
-      console.error('Error fetching client status counts:', error);
-      throw error;
-    }
-    
-    const statusCount: Record<string, number> = {
-      active: 0,
-      inactive: 0,
-      pending: 0
-    };
-    
-    clients?.forEach(client => {
-      if (client.status in statusCount) {
-        statusCount[client.status] += 1;
-      }
-    });
-    
-    return statusCount;
   },
   
   async getClientById(id: string): Promise<ClientRecord | null> {
@@ -191,19 +167,29 @@ export const clientsApi = {
     }
   },
   
-  async getClientSites(clientId: string): Promise<SiteRecord[]> {
-    const { data, error } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('client_id', clientId)
-      .order('name');
+  async getClientCountByStatus(): Promise<Record<string, number>> {
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('status');
     
     if (error) {
-      console.error(`Error fetching sites for client ${clientId}:`, error);
+      console.error('Error fetching client status counts:', error);
       throw error;
     }
     
-    return data as SiteRecord[] || [];
+    const statusCount: Record<string, number> = {
+      active: 0,
+      inactive: 0,
+      pending: 0
+    };
+    
+    clients?.forEach(client => {
+      if (client.status in statusCount) {
+        statusCount[client.status] += 1;
+      }
+    });
+    
+    return statusCount;
   },
   
   async getClientsTotalCount(): Promise<number> {
@@ -218,74 +204,4 @@ export const clientsApi = {
     
     return count || 0;
   },
-  
-  async addClientContact(clientId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
-    if (!contactData.name || !contactData.role) {
-      throw new Error('Contact name and role are required fields');
-    }
-    
-    const contact = {
-      ...contactData,
-      name: contactData.name,
-      role: contactData.role,
-      entity_id: clientId,
-      entity_type: 'client',
-    };
-    
-    const { data, error } = await supabase
-      .from('contacts')
-      .insert(contact)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error adding contact to client:', error);
-      throw error;
-    }
-    
-    return data as ContactRecord;
-  },
-  
-  async updateClientContact(contactId: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
-    const { data, error } = await supabase
-      .from('contacts')
-      .update(contactData)
-      .eq('id', contactId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error updating client contact:', error);
-      throw error;
-    }
-    
-    return data as ContactRecord;
-  },
-  
-  async deleteClientContact(contactId: string): Promise<void> {
-    const { error } = await supabase
-      .from('contacts')
-      .delete()
-      .eq('id', contactId);
-    
-    if (error) {
-      console.error('Error deleting client contact:', error);
-      throw error;
-    }
-  },
-  
-  async getClientContacts(clientId: string): Promise<ContactRecord[]> {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('entity_id', clientId)
-      .eq('entity_type', 'client');
-    
-    if (error) {
-      console.error('Error fetching client contacts:', error);
-      throw error;
-    }
-    
-    return data as ContactRecord[];
-  }
 };
