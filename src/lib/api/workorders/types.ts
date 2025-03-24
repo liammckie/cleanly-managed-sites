@@ -1,4 +1,3 @@
-
 import { SiteRecord } from '@/lib/types';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
@@ -14,6 +13,17 @@ export type WorkOrderStatus =
   | 'cancelled';
 
 export type WorkOrderPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+/**
+ * Work order activity categories
+ */
+export type WorkOrderActivityType = 
+  | 'cleaning' 
+  | 'pest_control' 
+  | 'grounds_maintenance' 
+  | 'waste_management' 
+  | 'hygiene_services'
+  | 'other';
 
 export interface WorkOrderRecord {
   id: string;
@@ -70,4 +80,18 @@ export interface UpdateWorkOrderData {
   xero_purchase_order_id?: string;
   xero_invoice_id?: string;
   attachments?: WorkOrderAttachment[];
+}
+
+/**
+ * Work order template model
+ */
+export interface WorkOrderTemplate {
+  id: string;
+  title: string;
+  description: string;
+  activityType: WorkOrderActivityType;
+  estimatedCost?: number;
+  priority?: WorkOrderPriority;
+  requiresPurchaseOrder?: boolean;
+  billingAmount?: number;
 }

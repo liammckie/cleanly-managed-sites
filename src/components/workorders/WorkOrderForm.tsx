@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { CreateWorkOrderData } from '@/lib/api/workorders/types';
@@ -20,13 +20,19 @@ import { DateSelector } from './form/DateSelector';
 import { FileAttachments } from './form/FileAttachments';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 import { Checkbox } from '@/components/ui/checkbox';
+import { WorkOrderTemplate } from '@/lib/api/workorders/types';
+import { TemplateSelector } from './form/TemplateSelector';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { getTemplateById } from '@/lib/templates/workOrderTemplates';
 
 interface WorkOrderFormProps {
   site: SiteRecord;
   onSuccess?: () => void;
+  templateId?: string;
 }
 
-export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
+export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProps) => {
   const navigate = useNavigate();
   const { createWorkOrderMutation, createAndCompleteWorkOrderMutation } = useWorkOrders();
   const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors(site.id);
@@ -43,6 +49,38 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
       requires_purchase_order: site.billing_details?.purchaseOrderRequired || false,
     },
   });
+
+  // If templateId is provided, load that template on mount
+  useEffect(() => {
+    if (templateId) {
+      const template = getTemplateById(templateId);
+      if (template) {
+        handleTemplateSelect(template);
+      }
+    }
+  }, [templateId]);
+
+  const handleTemplateSelect = (template: WorkOrderTemplate) => {
+    // Apply template data to form
+    form.setValue('title', template.title);
+    form.setValue('description', template.description);
+    
+    if (template.priority) {
+      form.setValue('priority', template.priority);
+    }
+    
+    if (template.estimatedCost !== undefined) {
+      form.setValue('estimated_cost', template.estimatedCost);
+    }
+    
+    if (template.billingAmount !== undefined) {
+      form.setValue('billing_amount', template.billingAmount);
+    }
+    
+    if (template.requiresPurchaseOrder !== undefined) {
+      form.setValue('requires_purchase_order', template.requiresPurchaseOrder);
+    }
+  };
 
   const onSubmit = async (data: CreateWorkOrderData) => {
     // Format the date if selected
@@ -77,6 +115,18 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <TemplateSelector 
+              onTemplateSelect={handleTemplateSelect} 
+              siteName={site.name}
+              dueDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined}
+            />
+          </CardContent>
+        </Card>
+        
+        <Separator />
+        
         <BasicFields form={form} />
         
         <PriorityAndAssignmentFields 
