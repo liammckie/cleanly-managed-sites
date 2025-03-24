@@ -64,8 +64,8 @@ export const useWorkOrders = () => {
       // First create the work order
       const workOrder = await createWorkOrder(data);
       
-      // Then mark it as completed with today's completion date
-      return completeWorkOrder(workOrder.id);
+      // Then mark it as completed with the specified completion date or today's date
+      return completeWorkOrder(workOrder.id, data.completion_date);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
@@ -165,12 +165,13 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Mark work order as complete with current date
+  // Mark work order as complete with specified date
   const markWorkOrderCompleteMutation = useMutation({
-    mutationFn: completeWorkOrder,
-    onSuccess: (_, id) => {
+    mutationFn: (params: { id: string, completionDate?: string }) => 
+      completeWorkOrder(params.id, params.completionDate),
+    onSuccess: (_, params) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', params.id] });
       toast.success('Work order marked as complete');
     },
     onError: (error) => {

@@ -52,17 +52,18 @@ export const assignWorkOrder = async (id: string, subcontractorId: string): Prom
 };
 
 /**
- * Mark a work order as completed with current date
+ * Mark a work order as completed with specified completion date
  */
-export const completeWorkOrder = async (id: string): Promise<WorkOrderRecord> => {
+export const completeWorkOrder = async (id: string, completionDate?: string): Promise<WorkOrderRecord> => {
   try {
-    const completionDate = new Date().toISOString().split('T')[0];
+    // Use provided completion date or default to current date
+    const actualCompletionDate = completionDate || new Date().toISOString().split('T')[0];
     
     const { data, error } = await supabase
       .from('work_orders')
       .update({
         status: 'completed',
-        completion_date: completionDate
+        completion_date: actualCompletionDate
       })
       .eq('id', id)
       .select()

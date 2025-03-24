@@ -1,3 +1,4 @@
+
 import { SiteRecord } from '@/lib/types';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 
@@ -56,6 +57,7 @@ export interface CreateWorkOrderData {
   site_id: string;
   priority: WorkOrderPriority;
   due_date?: string;
+  completion_date?: string;
   estimated_cost?: number;
   billing_amount?: number;
   assigned_to?: string;

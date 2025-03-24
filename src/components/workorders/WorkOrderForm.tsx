@@ -38,6 +38,7 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   const { createWorkOrderMutation, createAndCompleteWorkOrderMutation } = useWorkOrders();
   const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors(site.id);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [completionDate, setCompletionDate] = useState<Date | undefined>(new Date());
   const [attachments, setAttachments] = useState<WorkOrderAttachment[]>([]);
   const [markAsCompleted, setMarkAsCompleted] = useState(false);
 
@@ -91,6 +92,11 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
     }
 
     if (markAsCompleted) {
+      // Add the completion date to the data when marked as completed
+      const completionDateValue = completionDate || new Date();
+      const formattedCompletionDate = format(completionDateValue, 'yyyy-MM-dd');
+      data.completion_date = formattedCompletionDate;
+      
       await createAndCompleteWorkOrderMutation.mutateAsync(data);
     } else {
       await createWorkOrderMutation.mutateAsync(data);
@@ -167,6 +173,16 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
             This job is already completed
           </label>
         </div>
+
+        {markAsCompleted && (
+          <div className="pt-2">
+            <DateSelector 
+              label="Completion Date" 
+              date={completionDate} 
+              onDateChange={setCompletionDate} 
+            />
+          </div>
+        )}
 
         <div className="flex justify-end space-x-3">
           <Button type="button" variant="outline" onClick={() => navigate(`/sites/${site.id}`)}>

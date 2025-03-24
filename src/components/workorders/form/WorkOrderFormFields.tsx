@@ -111,7 +111,7 @@ export const PriorityAndAssignmentFields = ({
             <FormLabel>Assign To</FormLabel>
             <Select 
               onValueChange={field.onChange} 
-              defaultValue={field.value}
+              defaultValue={field.value || ""}
             >
               <FormControl>
                 <SelectTrigger>
@@ -119,7 +119,7 @@ export const PriorityAndAssignmentFields = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
+                <SelectItem value="">Unassigned</SelectItem>
                 {subcontractors.map((sub) => (
                   <SelectItem key={sub.id} value={sub.id}>
                     {sub.business_name}
