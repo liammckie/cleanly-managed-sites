@@ -12,6 +12,7 @@ import { useSiteFormBillingLines } from './useSiteFormBillingLines';
 import { useSiteFormContractTerms } from './useSiteFormContractTerms';
 import { useSiteFormContacts } from './useSiteFormContacts';
 import { useSiteFormAdditionalContracts } from './useSiteFormAdditionalContracts';
+import { toast } from 'sonner';
 
 export const useSiteForm = () => {
   // Initialize form data with default values
@@ -38,7 +39,13 @@ export const useSiteForm = () => {
   
   // Validate a specific step
   const validateStep = (stepIndex: number): boolean => {
-    return validation.validateStep(formData, stepIndex, errors, setErrors);
+    const isValid = validation.validateStep(formData, stepIndex, errors, setErrors);
+    
+    if (!isValid) {
+      toast.error("Please fix the highlighted errors before proceeding");
+    }
+    
+    return isValid;
   };
   
   // Update the contacts from the useSiteFormContacts hook
@@ -70,12 +77,49 @@ export const useSiteForm = () => {
     updateBillingLines();
   }
   
+  // Get form completion percentage
+  const getCompletionPercentage = (): number => {
+    let completedFields = 0;
+    let totalRequiredFields = 0;
+    
+    // Basic info
+    const basicFields = ['name', 'address', 'city', 'state', 'postcode', 'clientId'];
+    basicFields.forEach(field => {
+      totalRequiredFields++;
+      if (formData[field as keyof SiteFormData]) completedFields++;
+    });
+    
+    // Contacts
+    totalRequiredFields++;
+    if (formData.contacts && formData.contacts.length > 0) completedFields++;
+    
+    // Contract details
+    const contractFields = ['contractDetails.startDate', 'contractDetails.endDate', 'contractDetails.contractNumber'];
+    contractFields.forEach(field => {
+      totalRequiredFields++;
+      const [section, key] = field.split('.');
+      if (formData[section as keyof SiteFormData]?.[key]) completedFields++;
+    });
+    
+    // Billing details
+    const billingFields = ['billingDetails.rate', 'billingDetails.billingFrequency'];
+    billingFields.forEach(field => {
+      totalRequiredFields++;
+      const [section, key] = field.split('.');
+      if (formData[section as keyof SiteFormData]?.[key]) completedFields++;
+    });
+    
+    // Return percentage
+    return Math.round((completedFields / totalRequiredFields) * 100);
+  };
+  
   return {
     formData,
     setFormData,
     errors,
     setErrors,
     validateStep,
+    getCompletionPercentage,
     form, // Return the form instance for FormProvider
     ...formHandlers,
     ...subcontractorHandlers,

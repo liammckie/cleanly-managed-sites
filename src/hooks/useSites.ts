@@ -11,6 +11,8 @@ export function useSites() {
   const sitesQuery = useQuery({
     queryKey: ['sites'],
     queryFn: sitesApi.getSites,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   // Mutation for creating a new site
@@ -23,7 +25,7 @@ export function useSites() {
     },
     onError: (error: any) => {
       console.error('Error creating site:', error);
-      toast.error(`Failed to create site: ${error.message}`);
+      toast.error(`Failed to create site: ${error.message || 'Unknown error'}`);
     },
   });
   
@@ -37,7 +39,7 @@ export function useSites() {
     },
     onError: (error: any) => {
       console.error('Error updating site:', error);
-      toast.error(`Failed to update site: ${error.message}`);
+      toast.error(`Failed to update site: ${error.message || 'Unknown error'}`);
     },
   });
   
@@ -50,7 +52,7 @@ export function useSites() {
     },
     onError: (error: any) => {
       console.error('Error deleting site:', error);
-      toast.error(`Failed to delete site: ${error.message}`);
+      toast.error(`Failed to delete site: ${error.message || 'Unknown error'}`);
     },
   });
   
@@ -74,14 +76,16 @@ export function useSiteDetails(siteId: string | undefined) {
   // Query for fetching a single site by ID
   const siteQuery = useQuery({
     queryKey: ['site', siteId],
-    queryFn: () => siteId ? sitesApi.getSiteById(siteId) : null,
+    queryFn: () => siteId ? sitesApi.getSiteById(siteId) : Promise.resolve(null),
     enabled: !!siteId, // Only run the query if siteId is provided
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
   // Mutation for updating a site
   const updateSiteMutation = useMutation({
     mutationFn: (data: Partial<SiteFormData>) => 
-      siteId ? sitesApi.updateSite(siteId, data) : Promise.reject('No site ID provided'),
+      siteId ? sitesApi.updateSite(siteId, data) : Promise.reject(new Error('No site ID provided')),
     onSuccess: () => {
       // Invalidate both the sites list and the current site detail
       queryClient.invalidateQueries({ queryKey: ['sites'] });
@@ -90,12 +94,12 @@ export function useSiteDetails(siteId: string | undefined) {
     },
     onError: (error: any) => {
       console.error('Error updating site:', error);
-      toast.error(`Failed to update site: ${error.message}`);
+      toast.error(`Failed to update site: ${error.message || 'Unknown error'}`);
     },
   });
   
   return {
-    site: siteQuery.data as any,
+    site: siteQuery.data,
     isLoading: siteQuery.isLoading,
     isError: siteQuery.isError,
     error: siteQuery.error,

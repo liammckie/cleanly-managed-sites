@@ -1,33 +1,51 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from "sonner";
+import { toast } from 'sonner';
 import { SiteFormData } from '../siteFormTypes';
-import { useSiteOperations } from '@/hooks/useSiteOperations';
+import { sitesApi } from '@/lib/api';
 
-export function useCreateSiteFormSubmit(formData: SiteFormData) {
-  const navigate = useNavigate();
+export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { createSite } = useSiteOperations();
+  const navigate = useNavigate();
 
-  const handleSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-    
-    setIsSubmitting(true);
-    
+  const handleSubmit = async () => {
     try {
-      await createSite(formData);
-      navigate('/sites');
-    } catch (error) {
-      // Error handling is done in useSiteOperations
-      console.error('Site creation failed:', error);
-    } finally {
+      setIsSubmitting(true);
+      
+      // Show initial toast
+      const toastId = toast.loading("Creating site...");
+      
+      // Process form data here
+      console.log('Submitting form data:', formData);
+      
+      // Submit to API
+      const result = await sitesApi.createSite(formData);
+      
+      // Update toast to success
+      toast.success("Site created successfully!", { id: toastId });
+      
+      // Redirect to the site detail page
+      setTimeout(() => {
+        navigate(`/sites/${result.id}`);
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('Error creating site:', error);
+      
+      // Show specific error message if available
+      if (error.message) {
+        toast.error(`Failed to create site: ${error.message}`);
+      } else {
+        toast.error("Failed to create site. Please try again.");
+      }
+      
       setIsSubmitting(false);
     }
-  }, [createSite, formData, navigate, isSubmitting]);
+  };
 
   return {
     handleSubmit,
     isSubmitting
   };
-}
+};

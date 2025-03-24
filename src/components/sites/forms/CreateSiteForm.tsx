@@ -8,6 +8,9 @@ import { SiteFormData, getInitialFormData } from './siteFormTypes';
 import { ContactsStep } from './steps/ContactsStep';
 import { CreateSiteFormContainer } from './create/CreateSiteFormContainer';
 import { useCreateSiteFormSubmit } from './create/useCreateSiteFormSubmit';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { FormStepGuidance } from './FormStepGuidance';
 
 export function CreateSiteForm() {
   // Initialize form with react-hook-form
@@ -202,13 +205,33 @@ export function CreateSiteForm() {
   // Use the form submission hook
   const { handleSubmit, isSubmitting } = useCreateSiteFormSubmit(formHandlers.formData);
 
+  // Calculate completion percentage
+  const completionPercentage = formHandlers.getCompletionPercentage ? 
+    formHandlers.getCompletionPercentage() : 
+    Math.round(((stepper.currentStep + 1) / stepper.totalSteps) * 100);
+
   return (
-    <CreateSiteFormContainer
-      form={formMethods}
-      formData={formHandlers.formData}
-      stepper={stepper}
-      isSubmitting={isSubmitting}
-      handleSubmit={handleSubmit}
-    />
+    <div className="space-y-6">
+      <Card className="p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-md font-medium">Site Creation Progress</h3>
+          <span className="text-sm text-muted-foreground">{completionPercentage}% Complete</span>
+        </div>
+        <Progress value={completionPercentage} className="h-2" />
+      </Card>
+      
+      <FormStepGuidance 
+        currentStep={stepper.currentStep} 
+        stepsConfig={customSteps}
+      />
+      
+      <CreateSiteFormContainer
+        form={formMethods}
+        formData={formHandlers.formData}
+        stepper={stepper}
+        isSubmitting={isSubmitting}
+        handleSubmit={handleSubmit}
+      />
+    </div>
   );
 }

@@ -11,8 +11,16 @@ const withErrorHandling = async <T>(operation: () => Promise<T>, errorMessage: s
     return await operation();
   } catch (error: any) {
     console.error(`${errorMessage}:`, error);
-    toast.error(errorMessage);
-    throw error;
+    
+    // Create a more informative error message
+    const detailedMessage = error.message || 'Unknown error occurred';
+    const enhancedError = new Error(`${errorMessage}: ${detailedMessage}`);
+    
+    // Preserve the original error's properties
+    if (error.status) enhancedError.cause = { status: error.status };
+    if (error.code) (enhancedError as any).code = error.code;
+    
+    throw enhancedError;
   }
 };
 
