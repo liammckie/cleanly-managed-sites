@@ -9,6 +9,8 @@ import { ShiftScheduler } from './shift-planner/ShiftScheduler';
 import { ShiftSummary } from './shift-planner/ShiftSummary';
 import { ShiftWarnings } from './shift-planner/ShiftWarnings';
 import { ShiftTemplates } from './shift-planner/ShiftTemplates';
+import { Button } from '@/components/ui/button';
+import { Plus, List, Calendar } from 'lucide-react';
 
 interface ShiftPlannerProps {
   quoteId: string | null;
@@ -51,6 +53,12 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     }
   };
 
+  // Switch to add shift view
+  const handleAddShiftClick = () => {
+    resetNewShift();
+    setActiveView('add');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -61,40 +69,38 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
           </p>
         </div>
         
-        <div className="flex space-x-2">
-          <button 
-            onClick={() => {
-              resetNewShift();
-              setActiveView('list');
-            }}
-            className={`px-4 py-2 rounded-md ${activeView === 'list' 
-              ? 'bg-primary text-white' 
-              : 'bg-secondary hover:bg-secondary/80'}`}
-          >
-            Shift List
-          </button>
-          <button 
-            onClick={() => {
-              resetNewShift();
-              setActiveView('add');
-            }}
-            className={`px-4 py-2 rounded-md ${activeView === 'add' 
-              ? 'bg-primary text-white' 
-              : 'bg-secondary hover:bg-secondary/80'}`}
-          >
+        <div className="flex space-x-3">
+          <div className="bg-secondary rounded-md p-1 flex">
+            <button 
+              onClick={() => {
+                resetNewShift();
+                setActiveView('list');
+              }}
+              className={`px-3 py-1.5 rounded-sm flex items-center gap-1.5 ${activeView === 'list' 
+                ? 'bg-primary text-white shadow-sm' 
+                : 'hover:bg-secondary/80'}`}
+            >
+              <List className="h-4 w-4" />
+              <span>List</span>
+            </button>
+            <button 
+              onClick={() => {
+                resetNewShift();
+                setActiveView('calendar');
+              }}
+              className={`px-3 py-1.5 rounded-sm flex items-center gap-1.5 ${activeView === 'calendar' 
+                ? 'bg-primary text-white shadow-sm' 
+                : 'hover:bg-secondary/80'}`}
+            >
+              <Calendar className="h-4 w-4" />
+              <span>Calendar</span>
+            </button>
+          </div>
+          
+          <Button onClick={handleAddShiftClick} variant="default">
+            <Plus className="mr-1.5 h-4 w-4" />
             Add Shift
-          </button>
-          <button 
-            onClick={() => {
-              resetNewShift();
-              setActiveView('calendar');
-            }}
-            className={`px-4 py-2 rounded-md ${activeView === 'calendar' 
-              ? 'bg-primary text-white' 
-              : 'bg-secondary hover:bg-secondary/80'}`}
-          >
-            Calendar View
-          </button>
+          </Button>
         </div>
       </div>
       
@@ -127,10 +133,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
           resetNewShift();
           setActiveView('list');
         }}
-        onAddShiftClick={() => {
-          resetNewShift();
-          setActiveView('add');
-        }}
+        onAddShiftClick={handleAddShiftClick}
       />
       
       {/* Summary component */}

@@ -132,7 +132,7 @@ export function ShiftList({
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle>Scheduled Shifts</CardTitle>
-          <Button size="sm" onClick={onAddShiftClick}>
+          <Button onClick={onAddShiftClick} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             Add Shift
           </Button>

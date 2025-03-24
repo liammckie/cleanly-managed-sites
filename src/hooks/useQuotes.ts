@@ -1,200 +1,275 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
 
-// Sample allowances data - in a real app, this would come from an API
-const SAMPLE_ALLOWANCES = [
-  {
-    id: 'broken-shift',
-    name: 'Broken Shift Allowance',
-    amount: 17.51,
-    unit: 'per-day',
-    description: 'For shifts with a break longer than 1 hour (excluding meal breaks)'
-  },
-  {
-    id: 'height',
-    name: 'Height Allowance',
-    amount: 0.85,
-    unit: 'per-hour',
-    description: 'For cleaning at height over 30 feet'
-  },
-  {
-    id: 'cold-places',
-    name: 'Cold Places Allowance',
-    amount: 0.70,
-    unit: 'per-hour',
-    description: 'For working in cold rooms or freezer rooms'
-  },
-  {
-    id: 'hot-places',
-    name: 'Hot Places Allowance',
-    amount: 0.70,
-    unit: 'per-hour',
-    description: 'For working in hot places where temperature exceeds 40°C'
-  },
-  {
-    id: 'leading-hand',
-    name: 'Leading Hand Allowance',
-    amount: 1.15,
-    unit: 'per-hour',
-    description: 'For supervising 1-10 employees'
-  },
-  {
-    id: 'leading-hand-large',
-    name: 'Leading Hand (Large Team)',
-    amount: 1.70,
-    unit: 'per-hour',
-    description: 'For supervising more than 10 employees'
-  },
-  {
-    id: 'refuse-collection',
-    name: 'Refuse Collection Allowance',
-    amount: 3.00,
-    unit: 'per-shift',
-    description: 'For collecting and removing refuse/garbage'
-  },
-  {
-    id: 'toilet-cleaning',
-    name: 'Toilet Cleaning Allowance',
-    amount: 2.93,
-    unit: 'per-shift',
-    description: 'For cleaners mainly engaged in toilet cleaning'
-  },
-  {
-    id: 'first-aid',
-    name: 'First Aid Allowance',
-    amount: 15.55,
-    unit: 'per-week',
-    description: 'For designated first aid officers with certification'
-  },
-  {
-    id: 'vehicle-mileage',
-    name: 'Vehicle Mileage',
-    amount: 0.78,
-    unit: 'per-km',
-    description: 'For using own vehicle for work travel'
-  }
-];
-
-// Sample overhead profiles
-const SAMPLE_OVERHEAD_PROFILES = [
-  {
-    id: 'standard',
-    name: 'Standard Overhead',
-    laborPercentage: 15,
-    description: 'Standard overhead rate for most sites'
-  },
-  {
-    id: 'high-security',
-    name: 'High Security Site',
-    laborPercentage: 18,
-    description: 'Higher overhead for secure facilities with additional requirements'
-  },
-  {
-    id: 'low-overhead',
-    name: 'Low Overhead',
-    laborPercentage: 12,
-    description: 'Reduced overhead for simple sites with minimal requirements'
-  },
-  {
-    id: 'custom',
-    name: 'Custom',
-    laborPercentage: 15,
-    description: 'Customizable overhead'
-  }
-];
-
-// Sample quotes for mock data
-const SAMPLE_QUOTES = [
-  {
-    id: '1',
-    name: 'Office Building Weekly Cleaning',
-    clientName: 'ABC Corporation',
-    siteName: 'CBD Office Tower',
-    status: 'draft',
-    startDate: '2025-01-01',
-    endDate: '2025-12-31',
-    expiryDate: '2024-12-15',
-    contractLength: 12,
-    contractLengthUnit: 'months',
-    overheadProfile: 'standard',
-    overheadPercentage: 15,
-    marginPercentage: 20,
-    notes: 'Weekly cleaning service for 3-floor office building',
-    shifts: [],
-    subcontractors: [],
-    laborCost: 0,
-    overheadCost: 0,
-    subcontractorCost: 0,
-    totalCost: 0,
-    marginAmount: 0,
-    totalPrice: 0,
-    createdAt: '2024-11-01',
-    updatedAt: '2024-11-01',
-    createdBy: 'user1'
-  }
-];
-
-// Mock fetch function that simulates API behavior
-const fetchAllowances = async () => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return SAMPLE_ALLOWANCES;
-};
-
-const fetchOverheadProfiles = async () => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return SAMPLE_OVERHEAD_PROFILES;
-};
-
+// Fetch quotes from Supabase
 const fetchQuotes = async () => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return SAMPLE_QUOTES;
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching quotes:', error);
+    throw new Error(error.message);
+  }
+  
+  return data || [];
 };
 
+// Fetch a single quote with its shifts and subcontractors
 const fetchQuote = async (quoteId: string) => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const quote = SAMPLE_QUOTES.find(q => q.id === quoteId);
+  if (!quoteId) throw new Error('Quote ID is required');
+  
+  // Fetch the quote
+  const { data: quote, error: quoteError } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('id', quoteId)
+    .single();
+  
+  if (quoteError) {
+    console.error('Error fetching quote:', quoteError);
+    throw new Error(quoteError.message);
+  }
   
   if (!quote) {
     throw new Error(`Quote with ID ${quoteId} not found`);
   }
   
+  // Fetch shifts for this quote
+  const { data: shifts, error: shiftsError } = await supabase
+    .from('quote_shifts')
+    .select('*')
+    .eq('quote_id', quoteId);
+  
+  if (shiftsError) {
+    console.error('Error fetching shifts:', shiftsError);
+    throw new Error(shiftsError.message);
+  }
+  
+  // Fetch subcontractors for this quote
+  const { data: subcontractors, error: subcontractorsError } = await supabase
+    .from('quote_subcontractors')
+    .select('*')
+    .eq('quote_id', quoteId);
+  
+  if (subcontractorsError) {
+    console.error('Error fetching subcontractors:', subcontractorsError);
+    throw new Error(subcontractorsError.message);
+  }
+  
+  // Combine all data into a quote object
+  return {
+    ...quote,
+    shifts: shifts || [],
+    subcontractors: subcontractors || []
+  };
+};
+
+// Create a new quote
+const createQuoteMutation = async (quoteData: Partial<Quote>) => {
+  const user = supabase.auth.getUser();
+  const userId = (await user).data.user?.id;
+  
+  if (!userId) {
+    throw new Error('User not authenticated');
+  }
+  
+  const { shifts, subcontractors, ...quoteDetails } = quoteData;
+  
+  // Insert the quote
+  const { data: quote, error: quoteError } = await supabase
+    .from('quotes')
+    .insert([{ ...quoteDetails, user_id: userId, created_by: userId }])
+    .select()
+    .single();
+  
+  if (quoteError) {
+    console.error('Error creating quote:', quoteError);
+    throw new Error(quoteError.message);
+  }
+  
+  if (!quote) {
+    throw new Error('Failed to create quote');
+  }
+  
+  // If shifts are provided, insert them
+  if (shifts && shifts.length > 0) {
+    const shiftsWithQuoteId = shifts.map(shift => ({
+      ...shift,
+      quote_id: quote.id
+    }));
+    
+    const { error: shiftsError } = await supabase
+      .from('quote_shifts')
+      .insert(shiftsWithQuoteId);
+    
+    if (shiftsError) {
+      console.error('Error adding shifts:', shiftsError);
+      // We don't throw here to avoid rolling back the entire transaction
+      toast.error('Error adding shifts: ' + shiftsError.message);
+    }
+  }
+  
+  // If subcontractors are provided, insert them
+  if (subcontractors && subcontractors.length > 0) {
+    const subcontractorsWithQuoteId = subcontractors.map(subcontractor => ({
+      ...subcontractor,
+      quote_id: quote.id
+    }));
+    
+    const { error: subcontractorsError } = await supabase
+      .from('quote_subcontractors')
+      .insert(subcontractorsWithQuoteId);
+    
+    if (subcontractorsError) {
+      console.error('Error adding subcontractors:', subcontractorsError);
+      toast.error('Error adding subcontractors: ' + subcontractorsError.message);
+    }
+  }
+  
   return quote;
 };
 
-const createQuoteMutation = async (quoteData: any) => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  const newQuote = {
-    ...quoteData,
-    id: Math.random().toString(36).substring(2, 10),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+// Update an existing quote
+const updateQuoteMutation = async (quoteData: Quote) => {
+  const { id, shifts, subcontractors, ...quoteDetails } = quoteData;
   
-  return newQuote;
+  if (!id) {
+    throw new Error('Quote ID is required for updates');
+  }
+  
+  // Update quote details
+  const { data: quote, error: quoteError } = await supabase
+    .from('quotes')
+    .update({ ...quoteDetails, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (quoteError) {
+    console.error('Error updating quote:', quoteError);
+    throw new Error(quoteError.message);
+  }
+  
+  // If shifts are provided, delete existing ones and insert new ones
+  if (shifts) {
+    // Delete existing shifts
+    const { error: deleteShiftsError } = await supabase
+      .from('quote_shifts')
+      .delete()
+      .eq('quote_id', id);
+    
+    if (deleteShiftsError) {
+      console.error('Error deleting shifts:', deleteShiftsError);
+      toast.error('Error updating shifts: ' + deleteShiftsError.message);
+    }
+    
+    // Insert new shifts if there are any
+    if (shifts.length > 0) {
+      const shiftsWithQuoteId = shifts.map(shift => ({
+        ...shift,
+        quote_id: id
+      }));
+      
+      const { error: addShiftsError } = await supabase
+        .from('quote_shifts')
+        .insert(shiftsWithQuoteId);
+      
+      if (addShiftsError) {
+        console.error('Error adding shifts:', addShiftsError);
+        toast.error('Error updating shifts: ' + addShiftsError.message);
+      }
+    }
+  }
+  
+  // If subcontractors are provided, delete existing ones and insert new ones
+  if (subcontractors) {
+    // Delete existing subcontractors
+    const { error: deleteSubcontractorsError } = await supabase
+      .from('quote_subcontractors')
+      .delete()
+      .eq('quote_id', id);
+    
+    if (deleteSubcontractorsError) {
+      console.error('Error deleting subcontractors:', deleteSubcontractorsError);
+      toast.error('Error updating subcontractors: ' + deleteSubcontractorsError.message);
+    }
+    
+    // Insert new subcontractors if there are any
+    if (subcontractors.length > 0) {
+      const subcontractorsWithQuoteId = subcontractors.map(subcontractor => ({
+        ...subcontractor,
+        quote_id: id
+      }));
+      
+      const { error: addSubcontractorsError } = await supabase
+        .from('quote_subcontractors')
+        .insert(subcontractorsWithQuoteId);
+      
+      if (addSubcontractorsError) {
+        console.error('Error adding subcontractors:', addSubcontractorsError);
+        toast.error('Error updating subcontractors: ' + addSubcontractorsError.message);
+      }
+    }
+  }
+  
+  // Fetch the updated quote with shifts and subcontractors
+  return fetchQuote(id);
 };
 
-const updateQuoteMutation = async (quoteData: any) => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return {
-    ...quoteData,
-    updatedAt: new Date().toISOString()
-  };
-};
-
+// Delete a quote
 const deleteQuoteMutation = async (quoteId: string) => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  if (!quoteId) {
+    throw new Error('Quote ID is required for deletion');
+  }
   
-  return { success: true };
+  // Delete the quote (shifts and subcontractors will be deleted automatically due to CASCADE)
+  const { error } = await supabase
+    .from('quotes')
+    .delete()
+    .eq('id', quoteId);
+  
+  if (error) {
+    console.error('Error deleting quote:', error);
+    throw new Error(error.message);
+  }
+  
+  return { success: true, id: quoteId };
 };
 
+// Fetch allowances
+const fetchAllowances = async () => {
+  const { data, error } = await supabase
+    .from('allowances')
+    .select('*');
+  
+  if (error) {
+    console.error('Error fetching allowances:', error);
+    throw new Error(error.message);
+  }
+  
+  return data || [];
+};
+
+// Fetch overhead profiles
+const fetchOverheadProfiles = async () => {
+  const { data, error } = await supabase
+    .from('overhead_profiles')
+    .select('*');
+  
+  if (error) {
+    console.error('Error fetching overhead profiles:', error);
+    throw new Error(error.message);
+  }
+  
+  return data || [];
+};
+
+// React Query hooks
 export function useAllowances() {
   return useQuery({
     queryKey: ['allowances'],
@@ -231,7 +306,11 @@ export function useCreateQuote() {
     mutationFn: createQuoteMutation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Quote created successfully');
     },
+    onError: (error: Error) => {
+      toast.error('Failed to create quote: ' + error.message);
+    }
   });
 }
 
@@ -243,7 +322,11 @@ export function useUpdateQuote() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote', data.id] });
+      toast.success('Quote updated successfully');
     },
+    onError: (error: Error) => {
+      toast.error('Failed to update quote: ' + error.message);
+    }
   });
 }
 
@@ -254,6 +337,10 @@ export function useDeleteQuote() {
     mutationFn: deleteQuoteMutation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Quote deleted successfully');
     },
+    onError: (error: Error) => {
+      toast.error('Failed to delete quote: ' + error.message);
+    }
   });
 }

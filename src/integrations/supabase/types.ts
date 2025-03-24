@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      allowances: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id: string
+          name: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_details: {
         Row: {
           address: string | null
@@ -705,6 +735,220 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      overhead_profiles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          labor_percentage: number
+          name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          labor_percentage?: number
+          name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          labor_percentage?: number
+          name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      quote_shifts: {
+        Row: {
+          allowances: Json | null
+          break_duration: number | null
+          created_at: string
+          day: string
+          employment_type: string
+          end_time: string
+          estimated_cost: number | null
+          id: string
+          level: number
+          location: string | null
+          notes: string | null
+          number_of_cleaners: number | null
+          quote_id: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          allowances?: Json | null
+          break_duration?: number | null
+          created_at?: string
+          day: string
+          employment_type: string
+          end_time: string
+          estimated_cost?: number | null
+          id?: string
+          level: number
+          location?: string | null
+          notes?: string | null
+          number_of_cleaners?: number | null
+          quote_id?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          allowances?: Json | null
+          break_duration?: number | null
+          created_at?: string
+          day?: string
+          employment_type?: string
+          end_time?: string
+          estimated_cost?: number | null
+          id?: string
+          level?: number
+          location?: string | null
+          notes?: string | null
+          number_of_cleaners?: number | null
+          quote_id?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_shifts_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_subcontractors: {
+        Row: {
+          cost: number
+          created_at: string
+          description: string | null
+          frequency: string | null
+          id: string
+          name: string
+          quote_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          quote_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          quote_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_subcontractors_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          client_name: string | null
+          contract_length: number | null
+          contract_length_unit: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string | null
+          expiry_date: string | null
+          id: string
+          labor_cost: number | null
+          margin_amount: number | null
+          margin_percentage: number | null
+          name: string
+          notes: string | null
+          overhead_cost: number | null
+          overhead_percentage: number | null
+          overhead_profile: string | null
+          site_name: string | null
+          start_date: string | null
+          status: string
+          subcontractor_cost: number | null
+          total_cost: number | null
+          total_price: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          client_name?: string | null
+          contract_length?: number | null
+          contract_length_unit?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          labor_cost?: number | null
+          margin_amount?: number | null
+          margin_percentage?: number | null
+          name: string
+          notes?: string | null
+          overhead_cost?: number | null
+          overhead_percentage?: number | null
+          overhead_profile?: string | null
+          site_name?: string | null
+          start_date?: string | null
+          status?: string
+          subcontractor_cost?: number | null
+          total_cost?: number | null
+          total_price?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          client_name?: string | null
+          contract_length?: number | null
+          contract_length_unit?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          labor_cost?: number | null
+          margin_amount?: number | null
+          margin_percentage?: number | null
+          name?: string
+          notes?: string | null
+          overhead_cost?: number | null
+          overhead_percentage?: number | null
+          overhead_profile?: string | null
+          site_name?: string | null
+          start_date?: string | null
+          status?: string
+          subcontractor_cost?: number | null
+          total_cost?: number | null
+          total_price?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       site_additional_contracts: {
         Row: {
