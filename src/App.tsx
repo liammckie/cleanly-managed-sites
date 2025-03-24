@@ -35,6 +35,7 @@ import CreateContract from './pages/CreateContract';
 import QuickActions from './pages/QuickActions';
 import MyBusiness from './pages/MyBusiness';
 import Employees from './pages/Employees';
+import AwardEngine from './pages/AwardEngine';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +84,7 @@ function App() {
               <Route path="/quickactions" element={<ProtectedRoute><QuickActions /></ProtectedRoute>} />
               <Route path="/my-business" element={<ProtectedRoute><MyBusiness /></ProtectedRoute>} />
               <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+              <Route path="/award-engine" element={<ProtectedRoute><AwardEngine /></ProtectedRoute>} />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
             <Toaster />

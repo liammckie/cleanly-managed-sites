@@ -10,7 +10,8 @@ import {
   Building2, 
   FileText, 
   Settings,
-  Briefcase 
+  Briefcase,
+  Calculator 
 } from 'lucide-react';
 import { useBusinessLocations } from '@/hooks/useBusinessLocations';
 
@@ -21,6 +22,10 @@ const MyBusiness = () => {
 
   const handleEmployeesClick = () => {
     navigate('/employees');
+  };
+
+  const handleAwardEngineClick = () => {
+    navigate('/award-engine');
   };
 
   return (
@@ -55,7 +60,11 @@ const MyBusiness = () => {
           </TabsList>
           
           <TabsContent value="overview">
-            <BusinessOverview locations={locations} />
+            <BusinessOverview 
+              locations={locations} 
+              onEmployeesClick={handleEmployeesClick}
+              onAwardEngineClick={handleAwardEngineClick}
+            />
           </TabsContent>
           
           <TabsContent value="locations">
@@ -79,7 +88,7 @@ const MyBusiness = () => {
   );
 };
 
-const BusinessOverview = ({ locations }) => {
+const BusinessOverview = ({ locations, onEmployeesClick, onAwardEngineClick }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
@@ -108,11 +117,13 @@ const BusinessOverview = ({ locations }) => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-2">
-            <Button variant="outline" className="justify-start" asChild>
-              <a href="/employees">
-                <Users className="mr-2 h-4 w-4" />
-                Manage Employees
-              </a>
+            <Button variant="outline" className="justify-start" onClick={onEmployeesClick}>
+              <Users className="mr-2 h-4 w-4" />
+              Manage Employees
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={onAwardEngineClick}>
+              <Calculator className="mr-2 h-4 w-4" />
+              Award Engine & Cost Calculator
             </Button>
             <Button variant="outline" className="justify-start">
               <Building2 className="mr-2 h-4 w-4" />
