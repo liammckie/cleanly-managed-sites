@@ -319,6 +319,20 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const brokenShiftDays = checkForBrokenShifts();
   const hasBrokenShifts = brokenShiftDays.length > 0;
   
+  // Function to log the current state of newShift for debugging
+  const debugCurrentForm = () => {
+    console.log("Current form state:", {
+      day: newShift.day,
+      startTime: newShift.startTime,
+      endTime: newShift.endTime,
+      breakDuration: newShift.breakDuration,
+      numberOfCleaners: newShift.numberOfCleaners,
+      employmentType: newShift.employmentType,
+      level: newShift.level,
+      allowances: newShift.allowances
+    });
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -639,7 +653,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
                   <div>
                     <Label htmlFor="level">Employee Level</Label>
                     <Select 
-                      value={newShift.level?.toString()} 
+                      value={String(newShift.level)} 
                       onValueChange={(value) => handleShiftChange('level', parseInt(value))}
                     >
                       <SelectTrigger id="level">
@@ -746,7 +760,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
             <Button variant="outline" onClick={() => setActiveTab('list')}>
               Cancel
             </Button>
-            <Button onClick={handleAddShift}>
+            <Button type="button" onClick={handleAddShift}>
               Add Shift
             </Button>
           </CardFooter>
