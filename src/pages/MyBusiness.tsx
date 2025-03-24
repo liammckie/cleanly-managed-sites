@@ -1,6 +1,23 @@
 
-// This code will be appended to the end of the existing file, right before the export default
+import React from 'react';
+import { PageLayout } from '@/components/ui/layout/PageLayout';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
 
+const MyBusiness = () => {
+  return (
+    <PageLayout>
+      <div className="p-6 space-y-6">
+        <h1 className="text-3xl font-bold">My Business</h1>
+        
+        <EmployeesContent />
+      </div>
+    </PageLayout>
+  );
+};
+
+// This code will be appended to the end of the existing file, right before the export default
 const EmployeesContent = () => {
   return (
     <div className="space-y-6">
@@ -26,3 +43,5 @@ const EmployeesContent = () => {
     </div>
   );
 };
+
+export default MyBusiness;
