@@ -1,287 +1,264 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Subcontractor, Frequency } from '@/lib/award/types';
-import { formatCurrency } from '@/lib/award/utils';
-import { Plus, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Trash2, Plus, DollarSign, AlertCircle } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-
-interface SubcontractorSectionProps {
-  subcontractors: Subcontractor[];
-  quoteId?: string;
-  onChange: (subcontractors: Subcontractor[]) => void;
-}
-
-export function SubcontractorSection({ subcontractors, quoteId, onChange }: SubcontractorSectionProps) {
-  const [isAdding, setIsAdding] = useState(false);
-  const [newSubcontractor, setNewSubcontractor] = useState<Partial<Subcontractor>>({
-    name: '',
-    services: [],
-    description: '',
-    cost: 0,
-    frequency: 'monthly',
-    email: '',
-    phone: ''
-  });
-
-  const handleAddSubcontractor = () => {
-    if (!newSubcontractor.name) return;
-
-    const subcontractor: Subcontractor = {
-      id: uuidv4(),
-      name: newSubcontractor.name,
-      services: newSubcontractor.services || [],
-      description: newSubcontractor.description || '',
-      cost: newSubcontractor.cost || 0,
-      frequency: newSubcontractor.frequency as Frequency || 'monthly',
-      email: newSubcontractor.email,
-      phone: newSubcontractor.phone,
-      notes: '',
-    };
-
-    onChange([...subcontractors, subcontractor]);
-    
-    // Reset the form
-    setNewSubcontractor({
-      name: '',
-      services: [],
-      description: '',
-      cost: 0,
-      frequency: 'monthly',
-      email: '',
-      phone: ''
-    });
-    
-    setIsAdding(false);
-  };
-
-  const handleRemoveSubcontractor = (id: string) => {
-    onChange(subcontractors.filter(s => s.id !== id));
-  };
-
-  const handleCancelAdd = () => {
-    setIsAdding(false);
-    setNewSubcontractor({
-      name: '',
-      services: [],
-      description: '',
-      cost: 0,
-      frequency: 'monthly'
-    });
-  };
-
-  const calculateMonthlyAmount = (subcontractor: Subcontractor): number => {
-    if (!subcontractor.cost) return 0;
-    
-    const cost = subcontractor.cost;
-    
-    switch (subcontractor.frequency) {
-      case 'daily':
-        return cost * 22; // Average working days in a month
-      case 'weekly':
-        return cost * 4.33; // Average weeks in a month
-      case 'fortnightly':
-        return cost * 2.17; // Average fortnights in a month
-      case 'monthly':
-        return cost;
-      case 'quarterly':
-        return cost / 3;
-      case 'annually':
-        return cost / 12;
-      default:
-        return cost; // Default to the cost value
-    }
-  };
-
-  const totalMonthlyAmount = subcontractors.reduce((total, sub) => 
-    total + calculateMonthlyAmount(sub), 0);
-
-  const totalAnnualAmount = totalMonthlyAmount * 12;
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Subcontractors & Services</CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setIsAdding(true)}
-          disabled={isAdding}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
-      </CardHeader>
-
-      <CardContent>
-        {subcontractors.length === 0 && !isAdding ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No additional services have been added to this quote.</p>
-            <p className="mt-1">Click "Add Service" to include subcontractors or additional services.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* List of existing subcontractors */}
-            {subcontractors.map((sub) => (
-              <div 
-                key={sub.id} 
-                className="p-4 border rounded-lg bg-card"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-medium text-lg">{sub.name}</h3>
-                    <p className="text-muted-foreground text-sm">{sub.services?.join(', ') || 'No services specified'}</p>
-                    <p className="mt-1">{sub.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold">
-                      {formatCurrency(sub.cost || 0)} / {sub.frequency === 'one_time' ? 'one time' : sub.frequency}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {sub.frequency !== 'one_time' && sub.frequency !== 'per_event' && (
-                        `${formatCurrency(calculateMonthlyAmount(sub))} monthly`
-                      )}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive hover:text-destructive mt-2"
-                      onClick={() => handleRemoveSubcontractor(sub.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Add new subcontractor form */}
-            {isAdding && (
-              <div className="p-4 border border-primary rounded-lg bg-primary/5">
-                <h3 className="font-medium mb-4">Add New Service or Subcontractor</h3>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="subName">Name</Label>
-                      <Input 
-                        id="subName" 
-                        value={newSubcontractor.name}
-                        onChange={(e) => setNewSubcontractor({...newSubcontractor, name: e.target.value})}
-                        placeholder="Subcontractor or service name"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="subServices">Services</Label>
-                      <Input 
-                        id="subServices" 
-                        value={newSubcontractor.services?.join(', ') || ''}
-                        onChange={(e) => setNewSubcontractor({...newSubcontractor, services: e.target.value.split(',').map(s => s.trim())})}
-                        placeholder="Service types, comma separated"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="subDescription">Description</Label>
-                    <Textarea 
-                      id="subDescription" 
-                      value={newSubcontractor.description || ''}
-                      onChange={(e) => setNewSubcontractor({...newSubcontractor, description: e.target.value})}
-                      placeholder="Describe the service or subcontractor work"
-                      rows={2}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="subCost">Cost</Label>
-                      <Input 
-                        id="subCost" 
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={newSubcontractor.cost || ''}
-                        onChange={(e) => setNewSubcontractor({...newSubcontractor, cost: parseFloat(e.target.value) || 0})}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="subFrequency">Frequency</Label>
-                      <Select 
-                        value={newSubcontractor.frequency as string} 
-                        onValueChange={(value) => setNewSubcontractor({...newSubcontractor, frequency: value as Frequency})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="annually">Annually</SelectItem>
-                            <SelectItem value="one_time">One Time</SelectItem>
-                            <SelectItem value="per_event">Per Event</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      onClick={handleCancelAdd}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddSubcontractor}
-                      disabled={!newSubcontractor.name}
-                    >
-                      Add Service
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Summary of costs */}
-            {subcontractors.length > 0 && (
-              <div className="mt-6 pt-4 border-t">
-                <div className="flex justify-between items-center mb-1">
-                  <div>Monthly Subcontractor/Services Cost:</div>
-                  <div className="font-semibold">{formatCurrency(totalMonthlyAmount)}</div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>Annual Subcontractor/Services Cost:</div>
-                  <div className="font-semibold">{formatCurrency(totalAnnualAmount)}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+import { Frequency, Subcontractor } from '@/lib/award/types';
 
 // Helper function to format currency
-function formatCurrency(value: number): string {
+export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-AU', {
     style: 'currency',
     currency: 'AUD',
-    minimumFractionDigits: 2
-  }).format(value);
+    minimumFractionDigits: 2,
+  }).format(amount);
+};
+
+export interface SubcontractorSectionProps {
+  subcontractors: Subcontractor[];
+  onSubcontractorsChange: (newSubcontractors: Subcontractor[]) => void;
+}
+
+export function SubcontractorSection({ 
+  subcontractors = [], 
+  onSubcontractorsChange 
+}: SubcontractorSectionProps) {
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [currentSubcontractor, setCurrentSubcontractor] = useState<Subcontractor>({
+    id: '',
+    name: '',
+    description: '',
+    cost: 0,
+    frequency: 'monthly',
+    services: [],
+  });
+
+  const handleInputChange = (field: keyof Subcontractor, value: any) => {
+    setCurrentSubcontractor(prev => ({
+      ...prev,
+      [field]: field === 'cost' ? parseFloat(value) || 0 : value
+    }));
+  };
+
+  const handleAddSubcontractor = () => {
+    const newSubcontractor: Subcontractor = {
+      ...currentSubcontractor,
+      id: editMode ? currentSubcontractor.id : uuidv4(),
+    };
+
+    if (editMode) {
+      onSubcontractorsChange(
+        subcontractors.map(s => s.id === newSubcontractor.id ? newSubcontractor : s)
+      );
+      setEditMode(false);
+    } else {
+      onSubcontractorsChange([...subcontractors, newSubcontractor]);
+    }
+
+    // Reset the form
+    setCurrentSubcontractor({
+      id: '',
+      name: '',
+      description: '',
+      cost: 0,
+      frequency: 'monthly',
+      services: [],
+    });
+  };
+
+  const handleEditSubcontractor = (subcontractor: Subcontractor) => {
+    setCurrentSubcontractor(subcontractor);
+    setEditMode(true);
+  };
+
+  const handleDeleteSubcontractor = (id: string) => {
+    onSubcontractorsChange(subcontractors.filter(s => s.id !== id));
+  };
+
+  const calculateMonthlyCost = (subcontractor: Subcontractor): number => {
+    if (!subcontractor.cost) return 0;
+    
+    switch (subcontractor.frequency) {
+      case 'daily':
+        return subcontractor.cost * 22; // Approx. working days in a month
+      case 'weekly':
+        return subcontractor.cost * 4.33; // Average weeks in a month
+      case 'fortnightly':
+        return subcontractor.cost * 2.17; // Fortnightly in a month
+      case 'monthly':
+        return subcontractor.cost;
+      case 'quarterly':
+        return subcontractor.cost / 3;
+      case 'annually':
+        return subcontractor.cost / 12;
+      case 'one_time':
+        return subcontractor.cost;
+      case 'per_event':
+        return subcontractor.cost;
+      default:
+        return subcontractor.cost;
+    }
+  };
+
+  const totalMonthlyCost = subcontractors.reduce(
+    (total, subcontractor) => total + calculateMonthlyCost(subcontractor),
+    0
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Subcontractors and Additional Services</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <Label htmlFor="name">Name/Company</Label>
+              <Input
+                id="name"
+                placeholder="Enter service provider name"
+                value={currentSubcontractor.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Service description"
+                value={currentSubcontractor.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="frequency">Frequency</Label>
+              <Select
+                value={currentSubcontractor.frequency}
+                onValueChange={(value) => handleInputChange('frequency', value)}
+              >
+                <SelectTrigger id="frequency">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="one_time">One-time</SelectItem>
+                  <SelectItem value="per_event">Per event</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="cost">
+                <div className="flex items-center">
+                  Cost <DollarSign className="h-3.5 w-3.5 ml-1" />
+                </div>
+              </Label>
+              <Input
+                id="cost"
+                type="number"
+                placeholder="0.00"
+                value={currentSubcontractor.cost || ''}
+                onChange={(e) => handleInputChange('cost', e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-2 flex items-end">
+              <Button 
+                onClick={handleAddSubcontractor} 
+                className="gap-2"
+                disabled={!currentSubcontractor.name || !currentSubcontractor.cost}
+              >
+                {editMode ? 'Update' : 'Add'} <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <Separator className="my-6" />
+
+          {subcontractors.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <AlertCircle className="mx-auto h-10 w-10 opacity-20 mb-2" />
+              <p>No subcontractors or services added yet</p>
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Frequency</TableHead>
+                    <TableHead>Cost</TableHead>
+                    <TableHead>Monthly Cost</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {subcontractors.map((subcontractor) => (
+                    <TableRow key={subcontractor.id}>
+                      <TableCell>{subcontractor.name}</TableCell>
+                      <TableCell>{subcontractor.description}</TableCell>
+                      <TableCell className="capitalize">
+                        {subcontractor.frequency === 'one_time' 
+                          ? 'One-time' 
+                          : subcontractor.frequency === 'per_event'
+                          ? 'Per event'
+                          : subcontractor.frequency}
+                      </TableCell>
+                      <TableCell>{formatCurrency(subcontractor.cost)}</TableCell>
+                      <TableCell>
+                        {subcontractor.frequency === 'one_time' || subcontractor.frequency === 'per_event'
+                          ? '—'
+                          : formatCurrency(calculateMonthlyCost(subcontractor))}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditSubcontractor(subcontractor)}
+                          >
+                            <span className="sr-only">Edit</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 20h9"></path>
+                              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteSubcontractor(subcontractor.id)}
+                          >
+                            <span className="sr-only">Delete</span>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <div className="flex justify-end mt-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <div className="text-sm text-muted-foreground mb-1">Monthly Total</div>
+                  <div className="text-xl font-semibold">{formatCurrency(totalMonthlyCost)}</div>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

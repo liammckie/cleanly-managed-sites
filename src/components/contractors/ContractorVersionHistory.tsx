@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { ContractorVersionHistoryEntry, ContractorRecord } from '@/lib/types';
+import { ContractorVersionHistoryEntry, ContractorRecord, Json } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { History, AlertTriangle } from 'lucide-react';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface ContractorVersionHistoryProps {
   history: ContractorVersionHistoryEntry[];
@@ -49,12 +50,24 @@ export const ContractorVersionHistory: React.FC<ContractorVersionHistoryProps> =
       </div>
 
       {history.map((entry, index) => {
-        const contractorData = entry.contractor_data as ContractorRecord;
+        // Safely convert the contractor_data to a ContractorRecord type
+        const contractorData = asJsonObject<ContractorRecord>(entry.contractor_data, {
+          id: '',
+          name: '',
+          business_name: '',
+          contact_name: '',
+          email: '',
+          phone: '',
+          status: 'active',
+        } as ContractorRecord);
+        
         const formattedDate = format(new Date(entry.created_at), 'PPpp');
         
         // For comparing what changed, we need the previous version
         const previousEntry = history[index + 1];
-        const previousData = previousEntry?.contractor_data as ContractorRecord | undefined;
+        const previousData = previousEntry ? 
+          asJsonObject<ContractorRecord>(previousEntry.contractor_data, {} as ContractorRecord) : 
+          undefined;
         
         // Determine what fields changed
         const changedFields: string[] = [];
@@ -118,22 +131,22 @@ export const ContractorVersionHistory: React.FC<ContractorVersionHistoryProps> =
                   <h4 className="text-sm font-medium mb-2">Business Details</h4>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">Type:</span> {contractorData.contractor_type}
+                      <span className="text-muted-foreground">Type:</span> {(contractorData as any).contractor_type || 'N/A'}
                     </div>
                     <div>
                       <span className="text-muted-foreground">ABN:</span> {contractorData.abn || 'N/A'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Tax ID:</span> {contractorData.tax_id || 'N/A'}
+                      <span className="text-muted-foreground">Tax ID:</span> {(contractorData as any).tax_id || 'N/A'}
                     </div>
-                    {contractorData.hourly_rate && (
+                    {(contractorData as any).hourly_rate && (
                       <div>
-                        <span className="text-muted-foreground">Hourly Rate:</span> ${contractorData.hourly_rate.toFixed(2)}
+                        <span className="text-muted-foreground">Hourly Rate:</span> ${(contractorData as any).hourly_rate.toFixed(2)}
                       </div>
                     )}
-                    {contractorData.day_rate && (
+                    {(contractorData as any).day_rate && (
                       <div>
-                        <span className="text-muted-foreground">Day Rate:</span> ${contractorData.day_rate.toFixed(2)}
+                        <span className="text-muted-foreground">Day Rate:</span> ${(contractorData as any).day_rate.toFixed(2)}
                       </div>
                     )}
                   </div>

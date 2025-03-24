@@ -1,18 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle2, AlertTriangle, Info } from 'lucide-react';
-import { QuoteShift, Subcontractor } from '@/lib/award/types';
-import { 
-  calculateTotalCosts, 
-  calculateSubcontractorMonthlyCost, 
-  calculateTotalCostWithOverheadAndMargin,
-  calculateTotalHours,
-  formatCurrency 
-} from '@/lib/award/utils';
 
-interface QuoteSummaryProps {
-  quoteId?: string | null;
+import React, { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { QuoteShift, Subcontractor } from '@/lib/award/types';
+import { calculateTotalCosts } from '@/lib/award/utils';
+
+// Helper function to format currency
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    minimumFractionDigits: 2,
+  }).format(amount);
+};
+
+// Helper function to calculate subcontractor monthly cost
+const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number => {
+  if (!subcontractor.cost) return 0;
+  
+  switch (subcontractor.frequency) {
+    case 'daily':
+      return subcontractor.cost * 22; // Approx. working days in a month
+    case 'weekly':
+      return subcontractor.cost * 4.33; // Average weeks in a month
+    case 'fortnightly':
+      return subcontractor.cost * 2.17; // Fortnightly in a month
+    case 'monthly':
+      return subcontractor.cost;
+    case 'quarterly':
+      return subcontractor.cost / 3;
+    case 'annually':
+      return subcontractor.cost / 12;
+    case 'one_time':
+      return subcontractor.cost;
+    case 'per_event':
+      return subcontractor.cost;
+    default:
+      return subcontractor.cost;
+  }
+};
+
+// Helper function to calculate total hours from shifts
+const calculateTotalHours = (shifts: QuoteShift[]): number => {
+  return shifts.reduce((total, shift) => {
+    const start = new Date(`1970-01-01T${shift.startTime}:00`);
+    const end = new Date(`1970-01-01T${shift.endTime}:00`);
+    let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    hours -= shift.breakDuration / 60; // Convert break minutes to hours
+    return total + (hours * shift.numberOfCleaners);
+  }, 0);
+};
+
+// Helper function to calculate total costs with overhead and margin
+const calculateTotalCostWithOverheadAndMargin = (
+  laborCost: number, 
+  subcontractorCost: number, 
+  overheadPercentage: number, 
+  marginPercentage: number
+) => {
+  const overheadCost = (laborCost * overheadPercentage) / 100;
+  const totalCost = laborCost + subcontractorCost + overheadCost;
+  const marginAmount = (totalCost * marginPercentage) / 100;
+  const totalPrice = totalCost + marginAmount;
+  
+  return {
+    laborCost,
+    subcontractorCost,
+    overheadCost,
+    totalCost,
+    marginAmount,
+    totalPrice
+  };
+};
+
+export interface QuoteSummaryProps {
+  quoteId: string | null;
   shifts: QuoteShift[];
   subcontractors: Subcontractor[];
   overheadPercentage: number;
@@ -20,215 +83,127 @@ interface QuoteSummaryProps {
 }
 
 export function QuoteSummary({ 
-  quoteId, 
   shifts, 
-  subcontractors, 
-  overheadPercentage,
-  marginPercentage 
+  subcontractors = [], 
+  overheadPercentage = 15, 
+  marginPercentage = 20 
 }: QuoteSummaryProps) {
-  const [summary, setSummary] = useState<{
-    laborCost: number;
-    subcontractorCost: number;
-    totalHours: number;
-    overheadCost: number;
-    costBeforeMargin: number;
-    totalCostBeforeMargin: number;
-    marginAmount: number;
-    totalPrice: number;
-    profitPercentage: number;
-  }>({
-    laborCost: 0,
-    subcontractorCost: 0,
-    totalHours: 0,
-    overheadCost: 0,
-    costBeforeMargin: 0,
-    totalCostBeforeMargin: 0,
-    marginAmount: 0,
-    totalPrice: 0,
-    profitPercentage: 0
-  });
   
-  useEffect(() => {
-    if (!shifts.length && !subcontractors.length) return;
-    
-    const laborCost = calculateTotalCosts(shifts);
-    const totalHours = calculateTotalHours(shifts);
-    const subcontractorCost = calculateSubcontractorMonthlyCost(subcontractors);
-    
-    const costCalculation = calculateTotalCostWithOverheadAndMargin(
-      laborCost,
-      overheadPercentage,
-      marginPercentage
-    );
-    
-    const costBeforeMargin = costCalculation.totalCostBeforeMargin + subcontractorCost;
-    const totalPrice = costCalculation.totalPrice + subcontractorCost;
-    
-    const profitPercentage = (costCalculation.marginAmount / costBeforeMargin) * 100;
-    
-    setSummary({
-      laborCost,
-      subcontractorCost,
-      totalHours,
-      overheadCost: costCalculation.overheadCost,
-      costBeforeMargin,
-      totalCostBeforeMargin: costCalculation.totalCostBeforeMargin,
-      marginAmount: costCalculation.marginAmount,
-      totalPrice,
-      profitPercentage
-    });
-  }, [shifts, subcontractors, overheadPercentage, marginPercentage]);
+  const laborCost = useMemo(() => 
+    shifts.reduce((sum, shift) => sum + (shift.estimatedCost || 0), 0),
+  [shifts]);
+  
+  const subcontractorCost = useMemo(() => 
+    subcontractors.reduce((sum, sub) => sum + (sub.cost || 0), 0),
+  [subcontractors]);
+  
+  const totalHours = useMemo(() => calculateTotalHours(shifts), [shifts]);
+  
+  const costSummary = useMemo(() => calculateTotalCostWithOverheadAndMargin(
+    laborCost,
+    subcontractorCost,
+    overheadPercentage,
+    marginPercentage
+  ), [laborCost, subcontractorCost, overheadPercentage, marginPercentage]);
   
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        {shifts.length === 0 && (
-          <Alert variant="warning">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>No Shifts Defined</AlertTitle>
-            <AlertDescription>
-              Add shifts to calculate labor costs and generate an accurate quote.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {shifts.length > 0 && summary.laborCost === 0 && (
-          <Alert variant="warning">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Zero Labor Cost</AlertTitle>
-            <AlertDescription>
-              Your shifts are not generating any labor costs. Check your shift details.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {subcontractors.length === 0 && (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>No Subcontractors</AlertTitle>
-            <AlertDescription>
-              You haven't added any subcontractors to this quote.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {summary.totalPrice > 0 && (
-          <Alert>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-            <AlertTitle>Quote Ready</AlertTitle>
-            <AlertDescription>
-              Your quote is ready with a total monthly cost of {formatCurrency(summary.totalPrice)}.
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <SummaryCard
-          title="Labor Costs"
-          value={formatCurrency(summary.laborCost)}
-          description={`Total for ${shifts.length} shifts`}
-          footer={summary.totalHours > 0 ? `${summary.totalHours.toFixed(2)} hours total` : ''}
-        />
-        
-        <SummaryCard
-          title="Subcontractor Costs"
-          value={formatCurrency(summary.subcontractorCost)}
-          description={`Total for ${subcontractors.length} subcontractors`}
-        />
-        
-        <SummaryCard
-          title="Overhead"
-          value={formatCurrency(summary.overheadCost)}
-          description={`${overheadPercentage}% of labor costs`}
-        />
-        
-        <SummaryCard
-          title="Cost Before Margin"
-          value={formatCurrency(summary.costBeforeMargin)}
-          description="Labor + Overhead + Subcontractors"
-        />
-        
-        <SummaryCard
-          title="Profit Margin"
-          value={formatCurrency(summary.marginAmount)}
-          description={`${marginPercentage}% margin (${summary.profitPercentage.toFixed(2)}% of total)}`}
-        />
-        
-        <SummaryCard
-          title="Total Monthly Price"
-          value={formatCurrency(summary.totalPrice)}
-          description="Final price including all costs"
-          highlight
-        />
-      </div>
-      
       <Card>
         <CardHeader>
-          <CardTitle>Cost Breakdown</CardTitle>
+          <CardTitle>Cost Summary</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-muted rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Labor</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.laborCost)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Total: {totalHours.toFixed(1)} hours
+              </div>
+            </div>
+            
+            <div className="bg-muted rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Overhead ({overheadPercentage}%)</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.overheadCost)}</div>
+            </div>
+            
+            <div className="bg-muted rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Subcontractors</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.subcontractorCost)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {subcontractors.length} service provider{subcontractors.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+            
+            <div className="bg-muted rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Total Cost</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.totalCost)}</div>
+            </div>
+          </div>
+          
+          <Separator className="my-6" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-muted rounded-lg p-4 md:col-span-2">
+              <div className="text-sm text-muted-foreground">Total Cost Before Margin</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.totalCost)}</div>
+            </div>
+            
+            <div className="bg-muted rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Margin ({marginPercentage}%)</div>
+              <div className="text-2xl font-semibold">{formatCurrency(costSummary.marginAmount)}</div>
+            </div>
+          </div>
+          
+          <div className="mt-6 bg-primary/10 rounded-lg p-6 text-center">
+            <div className="text-md text-primary-foreground/80 mb-2">Total Price</div>
+            <div className="text-3xl font-bold text-primary-foreground">
+              {formatCurrency(costSummary.totalPrice)}
+            </div>
+          </div>
+          
+          <Separator className="my-6" />
+          
           <div className="space-y-4">
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Labor Costs (Monthly)</span>
-              <span>{formatCurrency(summary.laborCost)}</span>
-            </div>
+            <h3 className="text-lg font-medium">Detailed Breakdown</h3>
             
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Subcontractor Costs (Monthly)</span>
-              <span>{formatCurrency(summary.subcontractorCost)}</span>
-            </div>
-            
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Overhead ({overheadPercentage}%)</span>
-              <span>{formatCurrency(summary.overheadCost)}</span>
-            </div>
-            
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Cost Before Margin</span>
-              <span>{formatCurrency(summary.costBeforeMargin)}</span>
-            </div>
-            
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Margin ({marginPercentage}%)</span>
-              <span>{formatCurrency(summary.marginAmount)}</span>
-            </div>
-            
-            <div className="flex justify-between py-2 font-bold">
-              <span>Total Monthly Price</span>
-              <span>{formatCurrency(summary.totalPrice)}</span>
-            </div>
-            
-            <div className="flex justify-between py-2 text-sm text-muted-foreground">
-              <span>Profit Percentage</span>
-              <span>{summary.profitPercentage.toFixed(2)}%</span>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Labor Cost</TableCell>
+                  <TableCell className="text-right">{formatCurrency(costSummary.laborCost)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Subcontractor Cost</TableCell>
+                  <TableCell className="text-right">{formatCurrency(costSummary.subcontractorCost)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Overhead ({overheadPercentage}% of labor)</TableCell>
+                  <TableCell className="text-right">{formatCurrency(costSummary.overheadCost)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Total Cost Before Margin</TableCell>
+                  <TableCell className="text-right font-medium">{formatCurrency(costSummary.totalCost)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Margin ({marginPercentage}%)</TableCell>
+                  <TableCell className="text-right">{formatCurrency(costSummary.marginAmount)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-bold">Total Price</TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(costSummary.totalPrice)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-interface SummaryCardProps {
-  title: string;
-  value: string;
-  description: string;
-  footer?: string;
-  highlight?: boolean;
-}
-
-function SummaryCard({ title, value, description, footer, highlight }: SummaryCardProps) {
-  return (
-    <Card className={highlight ? "border-primary" : ""}>
-      <CardContent className="p-6">
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-          <p className={`text-2xl font-bold ${highlight ? "text-primary" : ""}`}>{value}</p>
-          <p className="text-sm text-muted-foreground">{description}</p>
-          {footer && <p className="text-xs text-muted-foreground mt-4">{footer}</p>}
-        </div>
-      </CardContent>
-    </Card>
   );
 }

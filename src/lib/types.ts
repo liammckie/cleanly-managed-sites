@@ -93,7 +93,7 @@ export interface ContactRecord {
   name: string;
   email?: string;
   phone?: string;
-  role?: string;
+  role: string;
   department?: string;
   notes?: string;
   entity_id: string;
@@ -141,7 +141,7 @@ export interface SiteRecord {
 // Contractor related types
 export interface ContractorRecord {
   id: string;
-  name: string;
+  name?: string;
   business_name: string;
   contact_name: string;
   email?: string;
@@ -171,13 +171,11 @@ export interface ContractorRecord {
 export interface ContractorVersionHistoryEntry {
   id: string;
   contractor_id: string;
-  data: ContractorRecord;
+  contractor_data: Json;
   created_at: string;
   created_by?: string;
   notes?: string;
-  version: number;
-  version_number?: number;
-  contractor_data?: Json;
+  version_number: number;
 }
 
 // Site Contact type used in forms
@@ -195,3 +193,6 @@ export interface SiteContact {
   created_at?: string;
   updated_at?: string;
 }
+
+// Site Status enum
+export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold';

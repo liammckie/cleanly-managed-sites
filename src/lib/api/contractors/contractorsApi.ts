@@ -2,6 +2,33 @@
 import { supabase } from '@/lib/supabase';
 import { ContractorRecord } from '@/lib/types';
 
+// Helper function to adapt database contractor to ContractorRecord
+function dbToContractorRecord(dbContractor: any): ContractorRecord {
+  return {
+    id: dbContractor.id,
+    name: dbContractor.business_name, // Use business_name as name for compatibility
+    business_name: dbContractor.business_name,
+    contact_name: dbContractor.contact_name,
+    email: dbContractor.email,
+    phone: dbContractor.phone,
+    address: dbContractor.address,
+    city: dbContractor.city,
+    state: dbContractor.state,
+    postcode: dbContractor.postcode,
+    status: dbContractor.status,
+    abn: dbContractor.abn,
+    tax_id: dbContractor.tax_id,
+    notes: dbContractor.notes,
+    created_at: dbContractor.created_at,
+    updated_at: dbContractor.updated_at,
+    contractor_type: dbContractor.contractor_type,
+    hourly_rate: dbContractor.hourly_rate,
+    day_rate: dbContractor.day_rate,
+    specialty: dbContractor.specialty,
+    rating: dbContractor.rating
+  };
+}
+
 // Contractor API functions
 export const contractorsApi = {
   // Get all contractors for the current user
@@ -16,7 +43,7 @@ export const contractorsApi = {
       throw error;
     }
     
-    return contractors as ContractorRecord[] || [];
+    return (contractors || []).map(dbToContractorRecord);
   },
   
   // Get contractor count by status
@@ -58,7 +85,7 @@ export const contractorsApi = {
       throw error;
     }
     
-    return data as ContractorRecord;
+    return data ? dbToContractorRecord(data) : null;
   },
   
   // Create a new contractor
@@ -110,7 +137,7 @@ export const contractorsApi = {
       throw error;
     }
     
-    return data as ContractorRecord;
+    return dbToContractorRecord(data);
   },
   
   // Update an existing contractor
@@ -171,7 +198,7 @@ export const contractorsApi = {
       console.warn('Contractor updated but history creation failed');
     }
     
-    return updatedContractor as ContractorRecord;
+    return dbToContractorRecord(updatedContractor);
   },
   
   // Delete a contractor

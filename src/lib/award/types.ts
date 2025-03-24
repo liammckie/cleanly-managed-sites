@@ -2,7 +2,7 @@
 import { Json } from "../types";
 
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
-export type PayCondition = 'weekday' | 'saturday' | 'sunday' | 'public_holiday' | 'evening' | 'early_morning' | 'overnight' | 'base' | 'shift-early-late' | 'overtime-first-2-hours' | 'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday';
+export type PayCondition = 'weekday' | 'saturday' | 'sunday' | 'public_holiday' | 'evening' | 'early_morning' | 'overnight' | 'base' | 'shift-early-late' | 'overtime-first-2-hours' | 'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday' | 'standard';
 export type EmploymentType = 'full_time' | 'part_time' | 'casual';
 export type EmployeeLevel = 1 | 2 | 3;
 export type AllowanceType = 'laundry' | 'vehicle' | 'meal' | 'travel' | 'first_aid' | 'leading_hand' | 'broken_shift';
@@ -115,12 +115,12 @@ export interface Subcontractor {
   phone?: string;
   services?: string[];
   service?: string;
-  rate?: number;
   frequency?: Frequency;
   notes?: string;
   description?: string;
-  cost?: number;
+  cost: number;
   quoteId?: string;
+  rate?: number;
 }
 
 export interface Quote {

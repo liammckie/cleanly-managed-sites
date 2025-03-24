@@ -8,6 +8,7 @@ import { SiteRecord } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { getJsonProperty } from '@/lib/utils/json';
 
 interface ContractExpiryListProps {
   sites: SiteRecord[];
@@ -21,9 +22,12 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
     if (!sites) return [];
     
     return sites
-      .filter(site => site.contract_details?.endDate)
+      .filter(site => {
+        const endDate = getJsonProperty<string>(site.contract_details, 'endDate', '');
+        return !!endDate;
+      })
       .map(site => {
-        const endDate = parseISO(site.contract_details.endDate);
+        const endDate = parseISO(getJsonProperty<string>(site.contract_details, 'endDate', ''));
         const daysUntilExpiry = differenceInDays(endDate, today);
         return {
           ...site,
@@ -93,8 +97,8 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
             {contractsWithExpiry.map((site) => (
               <TableRow key={site.id}>
                 <TableCell className="font-medium">{site.name}</TableCell>
-                <TableCell>{site.contract_details.contractNumber || 'N/A'}</TableCell>
-                <TableCell>{format(parseISO(site.contract_details.endDate), 'MMM d, yyyy')}</TableCell>
+                <TableCell>{getJsonProperty(site.contract_details, 'contractNumber', 'N/A')}</TableCell>
+                <TableCell>{format(parseISO(getJsonProperty<string>(site.contract_details, 'endDate', '')), 'MMM d, yyyy')}</TableCell>
                 <TableCell>
                   <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>
                     {site.daysUntilExpiry < 0
@@ -103,7 +107,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(addDays(parseISO(site.contract_details.endDate), -90), 'MMM d, yyyy')}
+                  {format(addDays(parseISO(getJsonProperty<string>(site.contract_details, 'endDate', '')), -90), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell>
                   <Link to={`/sites/${site.id}`} className="text-primary hover:underline">

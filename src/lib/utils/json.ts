@@ -73,3 +73,24 @@ export function hasJsonProperty(json: Json | undefined, property: string): boole
   
   return property in json;
 }
+
+// Helper function to safely cast Json to an object type
+export function asJsonObject<T>(json: Json | undefined, defaultValue: T): T {
+  if (!json) return defaultValue;
+  
+  // Handle string JSON
+  if (typeof json === 'string') {
+    try {
+      json = JSON.parse(json);
+    } catch {
+      return defaultValue;
+    }
+  }
+  
+  // Handle non-object JSON types
+  if (typeof json !== 'object' || json === null) {
+    return defaultValue;
+  }
+  
+  return json as T;
+}

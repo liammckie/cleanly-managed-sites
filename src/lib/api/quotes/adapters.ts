@@ -43,6 +43,38 @@ export interface DbQuote {
   overhead_profile?: string;
 }
 
+export interface DbQuoteShift {
+  id: string;
+  quote_id: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  break_duration: number;
+  number_of_cleaners: number;
+  employment_type: string;
+  level: number;
+  allowances: string[];
+  estimated_cost: number;
+  location: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DbSubcontractor {
+  id: string;
+  quote_id?: string;
+  name: string;
+  description?: string;
+  cost: number;
+  frequency: string;
+  created_at: string;
+  updated_at: string;
+  email?: string;
+  phone?: string;
+  services?: string[];
+}
+
 export interface DbOverheadProfile {
   id: string;
   name: string;
@@ -53,53 +85,55 @@ export interface DbOverheadProfile {
   user_id?: string;
 }
 
-export function adaptQuoteFromDatabase(data: any): Quote {
+// Adapter functions to convert database objects to application objects
+export function dbToQuote(dbQuote: DbQuote): Quote {
   return {
-    id: data.id || '',
-    title: data.name || '',
-    name: data.name || '',
-    clientName: data.client_name || '',
-    siteName: data.site_name || '',
-    description: data.description || '',
-    status: data.status || 'draft',
-    overheadPercentage: data.overhead_percentage || 0,
-    marginPercentage: data.margin_percentage || 0,
-    totalPrice: data.total_price || 0,
-    laborCost: data.labor_cost || 0,
-    suppliesCost: data.supplies_cost || 0,
-    equipmentCost: data.equipment_cost || 0,
-    subcontractorCost: data.subcontractor_cost || 0,
-    createdAt: data.created_at || '',
-    updatedAt: data.updated_at || '',
-    quoteNumber: data.quote_number || '',
-    validUntil: data.valid_until || '',
-    clientId: data.client_id || '',
-    clientContact: data.client_contact || '',
-    clientEmail: data.client_email || '',
-    clientPhone: data.client_phone || '',
-    siteAddress: data.site_address || '',
-    siteId: data.site_id || '',
-    frequency: data.frequency || '',
-    scope: data.scope || '',
-    terms: data.terms || '',
-    notes: data.notes || '',
-    created_by: data.created_by || '',
-    overheadCost: data.overhead_cost || 0,
-    totalCost: data.total_cost || 0,
-    marginAmount: data.margin_amount || 0,
-    startDate: data.start_date || null,
-    endDate: data.end_date || null,
-    expiryDate: data.expiry_date || null,
-    contractLength: data.contract_length || null,
-    contractLengthUnit: data.contract_length_unit || null,
-    overheadProfile: data.overhead_profile || 'standard',
+    id: dbQuote.id,
+    title: dbQuote.name,
+    name: dbQuote.name,
+    clientName: dbQuote.client_name,
+    siteName: dbQuote.site_name,
+    description: dbQuote.description,
+    status: dbQuote.status as any,
+    overheadPercentage: dbQuote.overhead_percentage,
+    marginPercentage: dbQuote.margin_percentage,
+    totalPrice: dbQuote.total_price,
+    laborCost: dbQuote.labor_cost,
+    suppliesCost: dbQuote.supplies_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost,
+    createdAt: dbQuote.created_at,
+    updatedAt: dbQuote.updated_at,
+    quoteNumber: dbQuote.quote_number,
+    validUntil: dbQuote.valid_until,
+    clientId: dbQuote.client_id,
+    clientContact: dbQuote.client_contact,
+    clientEmail: dbQuote.client_email,
+    clientPhone: dbQuote.client_phone,
+    siteAddress: dbQuote.site_address,
+    siteId: dbQuote.site_id,
+    frequency: dbQuote.frequency,
+    scope: dbQuote.scope,
+    terms: dbQuote.terms,
+    notes: dbQuote.notes,
+    created_by: dbQuote.created_by,
+    overheadCost: dbQuote.overhead_cost,
+    totalCost: dbQuote.total_cost,
+    marginAmount: dbQuote.margin_amount,
+    startDate: dbQuote.start_date,
+    endDate: dbQuote.end_date,
+    expiryDate: dbQuote.expiry_date,
+    contractLength: dbQuote.contract_length,
+    contractLengthUnit: dbQuote.contract_length_unit,
+    overheadProfile: dbQuote.overhead_profile
   };
 }
 
-export function adaptQuoteForDatabase(quote: Quote): any {
+// Adapter functions to convert application objects to database objects
+export function quoteToDb(quote: Quote): DbQuote {
   return {
     id: quote.id,
-    name: quote.title || quote.name,
+    name: quote.name || quote.title,
     client_name: quote.clientName,
     site_name: quote.siteName,
     description: quote.description,
@@ -111,6 +145,8 @@ export function adaptQuoteForDatabase(quote: Quote): any {
     supplies_cost: quote.suppliesCost,
     equipment_cost: quote.equipmentCost,
     subcontractor_cost: quote.subcontractorCost,
+    created_at: quote.createdAt,
+    updated_at: quote.updatedAt,
     quote_number: quote.quoteNumber,
     valid_until: quote.validUntil,
     client_id: quote.clientId,
@@ -132,29 +168,29 @@ export function adaptQuoteForDatabase(quote: Quote): any {
     expiry_date: quote.expiryDate,
     contract_length: quote.contractLength,
     contract_length_unit: quote.contractLengthUnit,
-    overhead_profile: quote.overheadProfile,
+    overhead_profile: quote.overheadProfile
   };
 }
 
-export function adaptShiftFromDatabase(data: any): QuoteShift {
+export function dbToQuoteShift(dbShift: DbQuoteShift): QuoteShift {
   return {
-    id: data.id || '',
-    quoteId: data.quote_id || '',
-    day: data.day || 'monday',
-    startTime: data.start_time || '09:00',
-    endTime: data.end_time || '17:00',
-    breakDuration: data.break_duration || 30,
-    numberOfCleaners: data.number_of_cleaners || 1,
-    employmentType: data.employment_type || 'full_time',
-    level: data.level || 1,
-    allowances: data.allowances || [],
-    estimatedCost: data.estimated_cost || 0,
-    location: data.location || '',
-    notes: data.notes || '',
+    id: dbShift.id,
+    quoteId: dbShift.quote_id,
+    day: dbShift.day as any,
+    startTime: dbShift.start_time,
+    endTime: dbShift.end_time,
+    breakDuration: dbShift.break_duration,
+    numberOfCleaners: dbShift.number_of_cleaners,
+    employmentType: dbShift.employment_type as any,
+    level: dbShift.level as any,
+    allowances: Array.isArray(dbShift.allowances) ? dbShift.allowances : [],
+    estimatedCost: dbShift.estimated_cost,
+    location: dbShift.location,
+    notes: dbShift.notes
   };
 }
 
-export function adaptShiftForDatabase(shift: QuoteShift): any {
+export function quoteShiftToDb(shift: QuoteShift): DbQuoteShift {
   return {
     id: shift.id,
     quote_id: shift.quoteId,
@@ -165,76 +201,53 @@ export function adaptShiftForDatabase(shift: QuoteShift): any {
     number_of_cleaners: shift.numberOfCleaners,
     employment_type: shift.employmentType,
     level: shift.level,
-    allowances: shift.allowances || [],
+    allowances: shift.allowances,
     estimated_cost: shift.estimatedCost,
-    location: shift.location || '',
-    notes: shift.notes || '',
+    location: shift.location,
+    notes: shift.notes,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
 }
 
-export function dbToQuoteShift(data: any): QuoteShift {
-  return adaptShiftFromDatabase(data);
-}
-
-export function quoteShiftToDb(shift: QuoteShift): any {
-  return adaptShiftForDatabase(shift);
-}
-
-export function adaptSubcontractorFromDatabase(data: any): Subcontractor {
+export function dbToSubcontractor(dbSub: DbSubcontractor): Subcontractor {
   return {
-    id: data.id || '',
-    name: data.name || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    services: data.services || [],
-    service: Array.isArray(data.services) && data.services.length > 0 ? data.services[0] : '',
-    rate: data.rate || 0,
-    frequency: data.frequency || 'weekly',
-    notes: data.notes || '',
-    description: data.description || '',
-    cost: data.cost || 0,
+    id: dbSub.id,
+    name: dbSub.name,
+    description: dbSub.description,
+    cost: dbSub.cost,
+    frequency: dbSub.frequency as any,
+    quoteId: dbSub.quote_id,
+    email: dbSub.email,
+    phone: dbSub.phone,
+    services: dbSub.services
   };
 }
 
-export function adaptSubcontractorForDatabase(subcontractor: Subcontractor): any {
+export function subcontractorToDb(sub: Subcontractor): DbSubcontractor {
   return {
-    id: subcontractor.id,
-    name: subcontractor.name,
-    email: subcontractor.email || '',
-    phone: subcontractor.phone || '',
-    services: subcontractor.services || (subcontractor.service ? [subcontractor.service] : []),
-    rate: subcontractor.rate || 0,
-    frequency: subcontractor.frequency || 'weekly',
-    notes: subcontractor.notes || '',
-    description: subcontractor.description || '',
-    cost: subcontractor.cost || 0,
+    id: sub.id,
+    name: sub.name,
+    description: sub.description,
+    cost: sub.cost,
+    frequency: sub.frequency as string,
+    quote_id: sub.quoteId,
+    email: sub.email,
+    phone: sub.phone,
+    services: sub.services,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
 }
 
-export function dbToSubcontractor(data: any): Subcontractor {
-  return adaptSubcontractorFromDatabase(data);
-}
-
-export function subcontractorToDb(subcontractor: Subcontractor): any {
-  return adaptSubcontractorForDatabase(subcontractor);
-}
-
-export function dbToQuote(data: any): Quote {
-  return adaptQuoteFromDatabase(data);
-}
-
-export function quoteToDb(quote: Quote): any {
-  return adaptQuoteForDatabase(quote);
-}
-
-export function dbToOverheadProfile(data: any): any {
+export function dbToOverheadProfile(dbProfile: DbOverheadProfile) {
   return {
-    id: data.id,
-    name: data.name,
-    description: data.description,
-    laborPercentage: data.labor_percentage,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    userId: data.user_id,
+    id: dbProfile.id,
+    name: dbProfile.name,
+    description: dbProfile.description,
+    laborPercentage: dbProfile.labor_percentage,
+    createdAt: dbProfile.created_at,
+    updatedAt: dbProfile.updated_at,
+    userId: dbProfile.user_id
   };
 }
