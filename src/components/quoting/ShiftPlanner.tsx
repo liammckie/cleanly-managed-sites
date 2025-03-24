@@ -46,6 +46,9 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     }
   };
 
+  console.log("Current new shift state:", newShift); // Debug log
+  console.log("Current shifts:", shifts); // Debug log
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

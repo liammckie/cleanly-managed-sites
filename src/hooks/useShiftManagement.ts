@@ -1,25 +1,45 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { QuoteShift, EmploymentType, EmployeeLevel } from '@/lib/award/types';
 import { calculateShiftCost } from '@/lib/award/shiftCalculations';
 
+// Default new shift values
+const DEFAULT_NEW_SHIFT = {
+  day: 'monday',
+  startTime: '08:00',
+  endTime: '16:00',
+  breakDuration: 30,
+  numberOfCleaners: 1,
+  employmentType: 'full-time',
+  level: 1,
+  allowances: [],
+  estimatedCost: 0,
+  location: '',
+  notes: ''
+};
+
 export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: (shifts: QuoteShift[]) => void) {
   const [shiftBeingEdited, setShiftBeingEdited] = useState<QuoteShift | null>(null);
-  const [newShift, setNewShift] = useState<Partial<QuoteShift>>({
-    day: 'monday',
-    startTime: '08:00',
-    endTime: '16:00',
-    breakDuration: 30,
-    numberOfCleaners: 1,
-    employmentType: 'full-time',
-    level: 1,
-    allowances: [],
-    estimatedCost: 0,
-    location: '',
-    notes: ''
-  });
+  const [newShift, setNewShift] = useState<Partial<QuoteShift>>({ ...DEFAULT_NEW_SHIFT });
+  
+  // Update estimated cost whenever relevant shift properties change
+  useEffect(() => {
+    if (newShift.startTime && newShift.endTime && newShift.employmentType && newShift.level) {
+      const estimatedCost = calculateShiftCost(newShift);
+      setNewShift(prev => ({ ...prev, estimatedCost }));
+    }
+  }, [
+    newShift.day,
+    newShift.startTime,
+    newShift.endTime,
+    newShift.breakDuration,
+    newShift.numberOfCleaners,
+    newShift.employmentType,
+    newShift.level,
+    newShift.allowances
+  ]);
   
   const handleShiftChange = (field: string, value: any) => {
     setNewShift(prev => ({ ...prev, [field]: value }));
@@ -36,47 +56,71 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     });
   };
   
-  const handleAddShift = () => {
-    if (!newShift.day || !newShift.startTime || !newShift.endTime || !newShift.employmentType || !newShift.level) {
-      toast.error("Please fill in all required fields");
+  const validateShift = (shift: Partial<QuoteShift>): boolean => {
+    if (!shift.day) {
+      toast.error("Please select a day");
+      return false;
+    }
+    
+    if (!shift.startTime) {
+      toast.error("Please select a start time");
+      return false;
+    }
+    
+    if (!shift.endTime) {
+      toast.error("Please select an end time");
+      return false;
+    }
+    
+    if (!shift.employmentType) {
+      toast.error("Please select an employment type");
+      return false;
+    }
+    
+    if (!shift.level) {
+      toast.error("Please select an employee level");
+      return false;
+    }
+    
+    return true;
+  };
+  
+  const handleAddShift = (): boolean => {
+    console.log("Adding shift with data:", newShift);
+    
+    if (!validateShift(newShift)) {
       return false;
     }
     
     // Calculate the estimated cost of the shift
     const estimatedCost = calculateShiftCost(newShift);
     
+    // Create the full shift object with all required properties
     const shiftToAdd: QuoteShift = {
       id: uuidv4(),
       day: newShift.day as 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public-holiday',
-      startTime: newShift.startTime,
-      endTime: newShift.endTime,
+      startTime: newShift.startTime!,
+      endTime: newShift.endTime!,
       breakDuration: newShift.breakDuration || 30,
       numberOfCleaners: newShift.numberOfCleaners || 1,
       employmentType: newShift.employmentType as EmploymentType,
       level: newShift.level as EmployeeLevel,
       allowances: newShift.allowances || [],
-      estimatedCost,
+      estimatedCost: estimatedCost,
       location: newShift.location || '',
       notes: newShift.notes || ''
     };
     
+    console.log("Final shift to add:", shiftToAdd);
+    
+    // Update the shifts array
     const updatedShifts = [...initialShifts, shiftToAdd];
     onShiftsChange(updatedShifts);
     
     toast.success('Shift added successfully');
     
-    // Reset form
-    setNewShift({
-      day: 'monday',
-      startTime: '08:00',
-      endTime: '16:00',
-      breakDuration: 30,
-      numberOfCleaners: 1,
-      employmentType: 'full-time',
-      level: 1,
-      allowances: [],
-      estimatedCost: 0
-    });
+    // Reset form to default values
+    setNewShift({ ...DEFAULT_NEW_SHIFT });
     
     return true;
   };
@@ -116,6 +160,7 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     ];
     
     onShiftsChange(updatedShifts);
+    toast.success('Shift updated');
   };
   
   const applyShiftTemplate = (template: { 
