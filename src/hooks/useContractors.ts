@@ -7,25 +7,39 @@ import { ContractorRecord } from '@/lib/types';
 export function useContractors() {
   const queryClient = useQueryClient();
   
-  // Query for fetching all contractors
+  // Get all contractors
   const contractorsQuery = useQuery({
     queryKey: ['contractors'],
     queryFn: contractorsApi.getContractors,
   });
   
-  // Query for contractor status counts
-  const contractorStatusCountsQuery = useQuery({
-    queryKey: ['contractorStatusCounts'],
-    queryFn: contractorsApi.getContractorCountByStatus,
+  // Get contractor count by status
+  const contractorCountsQuery = useQuery({
+    queryKey: ['contractor-counts'],
+    queryFn: async () => {
+      const statusCounts = await contractorsApi.getContractorCountByStatus();
+      
+      // Calculate total active contractors
+      const activeContractors = statusCounts['active'] || 0;
+      
+      // For now, hard-code expiring documents to 0 until we implement document tracking
+      const expiringDocuments = 0;
+      
+      return {
+        totalContractors: Object.values(statusCounts).reduce((sum, count) => sum + count, 0),
+        activeContractors,
+        expiringDocuments
+      };
+    },
+    enabled: contractorsQuery.isSuccess,
   });
-  
-  // Mutation for creating a new contractor
+
+  // Create contractor mutation
   const createContractorMutation = useMutation({
-    mutationFn: (contractorData: Partial<ContractorRecord>) => contractorsApi.createContractor(contractorData),
+    mutationFn: (data: Partial<ContractorRecord>) => contractorsApi.createContractor(data),
     onSuccess: () => {
-      // Invalidate the contractors query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['contractors'] });
-      queryClient.invalidateQueries({ queryKey: ['contractorStatusCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['contractor-counts'] });
       toast.success('Contractor created successfully');
     },
     onError: (error: any) => {
@@ -33,17 +47,14 @@ export function useContractors() {
       toast.error(`Failed to create contractor: ${error.message}`);
     },
   });
-  
-  // Mutation for updating a contractor
+
+  // Update contractor mutation
   const updateContractorMutation = useMutation({
-    mutationFn: (data: { id: string; data: Partial<ContractorRecord> }) => 
-      contractorsApi.updateContractor(data),
-    onSuccess: (_, variables) => {
-      // Invalidate both contractors list and the specific contractor
+    mutationFn: ({ id, data }: { id: string; data: Partial<ContractorRecord> }) => 
+      contractorsApi.updateContractor({ id, data }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contractors'] });
-      queryClient.invalidateQueries({ queryKey: ['contractor', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['contractorStatusCounts'] });
-      queryClient.invalidateQueries({ queryKey: ['contractor-history', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['contractor-counts'] });
       toast.success('Contractor updated successfully');
     },
     onError: (error: any) => {
@@ -51,13 +62,13 @@ export function useContractors() {
       toast.error(`Failed to update contractor: ${error.message}`);
     },
   });
-  
-  // Mutation for deleting a contractor
+
+  // Delete contractor mutation
   const deleteContractorMutation = useMutation({
     mutationFn: (id: string) => contractorsApi.deleteContractor(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contractors'] });
-      queryClient.invalidateQueries({ queryKey: ['contractorStatusCounts'] });
+      queryClient.invalidateQueries({ queryKey: ['contractor-counts'] });
       toast.success('Contractor deleted successfully');
     },
     onError: (error: any) => {
@@ -65,50 +76,39 @@ export function useContractors() {
       toast.error(`Failed to delete contractor: ${error.message}`);
     },
   });
-  
-  // Calculate the derived contractorCounts prop that pages are looking for
-  const contractorCounts = {
-    totalContractors: contractorsQuery.data?.length || 0,
-    activeContractors: contractorsQuery.data?.filter(c => c.status === 'active')?.length || 0,
-    expiringDocuments: 0 // This is a placeholder as we don't have document expiry logic yet
-  };
-  
+
   return {
     contractors: contractorsQuery.data || [],
-    statusCounts: contractorStatusCountsQuery.data || { active: 0, inactive: 0, pending: 0 },
-    isLoading: contractorsQuery.isLoading || contractorStatusCountsQuery.isLoading,
+    isLoading: contractorsQuery.isLoading,
     isError: contractorsQuery.isError,
     error: contractorsQuery.error,
-    createContractor: createContractorMutation.mutateAsync,
-    updateContractor: updateContractorMutation.mutateAsync,
-    deleteContractor: deleteContractorMutation.mutateAsync,
+    contractorCounts: contractorCountsQuery.data,
+    createContractor: createContractorMutation.mutate,
+    updateContractor: updateContractorMutation.mutate,
+    deleteContractor: deleteContractorMutation.mutate,
     isCreating: createContractorMutation.isPending,
     isUpdating: updateContractorMutation.isPending,
     isDeleting: deleteContractorMutation.isPending,
-    contractorCounts // Add the derived contractor counts
   };
 }
 
-export function useContractorDetails(contractorId: string | undefined) {
+export function useContractorDetails(contractorId: string) {
   const queryClient = useQueryClient();
   
-  // Query for fetching a single contractor by ID
+  // Get contractor by ID
   const contractorQuery = useQuery({
     queryKey: ['contractor', contractorId],
-    queryFn: () => contractorId ? contractorsApi.getContractorById(contractorId) : null,
-    enabled: !!contractorId, // Only run the query if contractorId is provided
+    queryFn: () => contractorsApi.getContractorById(contractorId),
+    enabled: !!contractorId,
   });
-  
-  // Mutation for updating a contractor
+
+  // Update contractor mutation
   const updateContractorMutation = useMutation({
     mutationFn: (data: Partial<ContractorRecord>) => 
-      contractorId ? contractorsApi.updateContractor({ id: contractorId, data }) : Promise.reject('No contractor ID provided'),
+      contractorsApi.updateContractor({ id: contractorId, data }),
     onSuccess: () => {
-      // Invalidate both the contractors list and the current contractor detail
       queryClient.invalidateQueries({ queryKey: ['contractors'] });
       queryClient.invalidateQueries({ queryKey: ['contractor', contractorId] });
-      queryClient.invalidateQueries({ queryKey: ['contractorStatusCounts'] });
-      queryClient.invalidateQueries({ queryKey: ['contractor-history', contractorId] });
       toast.success('Contractor updated successfully');
     },
     onError: (error: any) => {
@@ -116,9 +116,9 @@ export function useContractorDetails(contractorId: string | undefined) {
       toast.error(`Failed to update contractor: ${error.message}`);
     },
   });
-  
+
   return {
-    contractor: contractorQuery.data as ContractorRecord | null,
+    contractor: contractorQuery.data,
     isLoading: contractorQuery.isLoading,
     isError: contractorQuery.isError,
     error: contractorQuery.error,

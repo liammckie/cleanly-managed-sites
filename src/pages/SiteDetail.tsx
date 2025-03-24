@@ -4,13 +4,13 @@ import { useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SiteDetailView } from '@/components/sites/SiteDetailView';
-import { useSite } from '@/hooks/useSite';
+import { useSiteDetails } from '@/hooks/useSites';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { site, isLoading, error } = useSite(id);
+  const { site, isLoading, error } = useSiteDetails(id);
   
   return (
     <SidebarProvider>
@@ -28,7 +28,7 @@ const SiteDetail = () => {
             ) : error ? (
               <div className="text-center text-destructive">
                 <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
-                <p>{error.message || 'Unable to load site details'}</p>
+                <p>{(error as any)?.message || 'Unable to load site details'}</p>
               </div>
             ) : site ? (
               <SiteDetailView site={site} />
