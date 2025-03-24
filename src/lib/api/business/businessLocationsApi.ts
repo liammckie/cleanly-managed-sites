@@ -25,6 +25,15 @@ export type BusinessLocationRecord = {
   contacts?: any[];
 };
 
+// Type for the document API responses
+export type BusinessDocumentRecord = BusinessDocument & {
+  id: string;
+  location_id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};
+
 export const businessLocationsApi = {
   // Fetch all business locations
   async getBusinessLocations(): Promise<BusinessLocationRecord[]> {
@@ -43,21 +52,32 @@ export const businessLocationsApi = {
   
   // Fetch a single business location by ID
   async getBusinessLocationById(id: string): Promise<BusinessLocationRecord | null> {
-    const { data, error } = await supabase
+    const { data: location, error: locationError } = await supabase
       .from('business_locations')
-      .select(`
-        *,
-        documents:business_documents(*)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
-    if (error) {
-      console.error(`Error fetching business location with ID ${id}:`, error);
-      throw error;
+    if (locationError) {
+      console.error(`Error fetching business location with ID ${id}:`, locationError);
+      throw locationError;
     }
     
-    return data as BusinessLocationRecord;
+    // Fetch documents for this location
+    const { data: documents, error: documentsError } = await supabase
+      .from('business_documents')
+      .select('*')
+      .eq('location_id', id);
+    
+    if (documentsError) {
+      console.error(`Error fetching documents for location with ID ${id}:`, documentsError);
+      throw documentsError;
+    }
+    
+    return {
+      ...location as BusinessLocationRecord,
+      documents: documents as BusinessDocument[] || []
+    };
   },
   
   // Create a new business location

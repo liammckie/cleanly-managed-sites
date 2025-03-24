@@ -60,6 +60,125 @@ export type Database = {
         }
         Relationships: []
       }
+      business_documents: {
+        Row: {
+          created_at: string
+          document_number: string | null
+          expiry_date: string | null
+          file_url: string | null
+          id: string
+          issue_date: string | null
+          issuer: string | null
+          location_id: string
+          name: string
+          notes: string | null
+          reminder_days: number | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_number?: string | null
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          location_id: string
+          name: string
+          notes?: string | null
+          reminder_days?: number | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_number?: string | null
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          location_id?: string
+          name?: string
+          notes?: string | null
+          reminder_days?: number | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_documents_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "business_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_locations: {
+        Row: {
+          address: string
+          city: string | null
+          country: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          manager_id: string | null
+          name: string
+          notes: string | null
+          opening_hours: string | null
+          phone: string | null
+          postcode: string | null
+          state: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name: string
+          notes?: string | null
+          opening_hours?: string | null
+          phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          manager_id?: string | null
+          name?: string
+          notes?: string | null
+          opening_hours?: string | null
+          phone?: string | null
+          postcode?: string | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           address: string | null
