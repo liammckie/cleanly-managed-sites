@@ -15,14 +15,21 @@ export function PeriodicalsStep({
   formData, 
   handleDoubleNestedChange 
 }: PeriodicalsStepProps) {
-  const periodicServices = formData.periodicals || {};
+  const periodicServices = formData.periodicals || {
+    carpet: { cleaning: false, shampooing: false },
+    floor: { buffing: false, stripping: false },
+    windows: { internal: false, external: false },
+    highLevel: { dusting: false },
+    additional: { upholstery: false, pressureWashing: false },
+    notes: ''
+  };
   
   // Initialize objects if they don't exist to prevent errors
-  const carpet = periodicServices.carpet || {};
-  const floor = periodicServices.floor || {};
-  const windows = periodicServices.windows || {};
-  const highLevel = periodicServices.highLevel || {};
-  const additional = periodicServices.additional || {};
+  const carpet = periodicServices.carpet || { cleaning: false, shampooing: false };
+  const floor = periodicServices.floor || { buffing: false, stripping: false };
+  const windows = periodicServices.windows || { internal: false, external: false };
+  const highLevel = periodicServices.highLevel || { dusting: false };
+  const additional = periodicServices.additional || { upholstery: false, pressureWashing: false };
   
   const handleToggle = (section: string, field: string, value: boolean) => {
     handleDoubleNestedChange('periodicals', section, field, value);

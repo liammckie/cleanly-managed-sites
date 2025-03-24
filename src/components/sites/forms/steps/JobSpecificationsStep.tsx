@@ -15,7 +15,15 @@ export function JobSpecificationsStep({
   formData, 
   handleNestedChange 
 }: JobSpecificationsStepProps) {
-  const jobSpecs = formData.jobSpecifications || {};
+  const jobSpecs = formData.jobSpecifications || {
+    cleaningFrequency: 'daily',
+    customFrequency: '',
+    serviceDays: '',
+    serviceTime: '',
+    estimatedHours: '',
+    equipmentRequired: '',
+    scopeNotes: ''
+  };
   
   return (
     <div className="space-y-6">

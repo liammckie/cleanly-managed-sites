@@ -17,7 +17,13 @@ export function ReplenishablesStep({
   formData,
   handleNestedChange
 }: ReplenishablesStepProps) {
-  const replenishables = formData.replenishables || {};
+  const replenishables = formData.replenishables || {
+    stock: ['', '', '', '', ''],
+    contactDetails: '',
+    supplies: [],
+    notes: ''
+  };
+  
   const supplies = replenishables.supplies || [];
   
   // Add a new empty supply
