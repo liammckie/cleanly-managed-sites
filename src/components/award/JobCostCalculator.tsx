@@ -1,281 +1,135 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EmploymentType, EmployeeLevel, JobCostingParams, JobCostBreakdown, PayCondition } from '@/lib/award/types';
-import { calculateJobCost } from '@/lib/award/awardEngine';
-import { useAwardSettings } from '@/hooks/useAwardSettings';
-import { Loader2, Calculator } from 'lucide-react';
+import { EmploymentType, PayCondition } from '@/lib/award/types';
+import { cleaningServicesAward } from '@/lib/award/awardData';
 
-const payConditionLabels: Record<PayCondition, string> = {
-  'base': 'Regular Hours (Mon-Fri, 6am-6pm)',
-  'weekday': 'Weekday Rate',
-  'shift-early-late': 'Early/Late Shift (before 6am/after 6pm)',
+// Display names for the pay conditions
+const payConditionDisplayNames: Record<PayCondition, string> = {
+  'base': 'Base Rate',
+  'standard': 'Standard',
+  'weekday': 'Weekday',
+  'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
   'public_holiday': 'Public Holiday',
-  'evening': 'Evening',
   'early_morning': 'Early Morning',
+  'evening': 'Evening',
+  'night': 'Night',
   'overnight': 'Overnight',
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
-  'overtime-sunday': 'Sunday Overtime',
-  'overtime-public-holiday': 'Public Holiday Overtime'
+  'overtime-sunday': 'Overtime (Sunday)',
+  'overtime-public-holiday': 'Overtime (Public Holiday)'
 };
 
 export function JobCostCalculator() {
-  const { settings, isLoading: isSettingsLoading } = useAwardSettings();
   const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
-  const [level, setLevel] = useState<EmployeeLevel>(1);
-  const [costBreakdown, setCostBreakdown] = useState<JobCostBreakdown | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-  
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<JobCostingParams>({
-    defaultValues: {
-      employmentType: 'full_time',
-      level: 1,
-      hours: {
-        'weekday': 38,
-        'saturday': 0,
-        'sunday': 0,
-        'public_holiday': 0,
-        'evening': 0,
-        'early_morning': 0,
-        'overnight': 0
-      },
-      overheadPercentage: settings?.overheadPercentageDefault || 25,
-      marginPercentage: settings?.marginPercentageDefault || 15
-    }
+  const [level, setLevel] = useState<number>(1);
+  const [hours, setHours] = useState<Record<PayCondition, number>>({
+    'base': 0,
+    'standard': 0,
+    'weekday': 0,
+    'saturday': 0,
+    'sunday': 0,
+    'public_holiday': 0,
+    'early_morning': 0,
+    'evening': 0,
+    'night': 0,
+    'overnight': 0,
+    'shift-early-late': 0,
+    'overtime-first-2-hours': 0,
+    'overtime-after-2-hours': 0,
+    'overtime-sunday': 0,
+    'overtime-public-holiday': 0
   });
   
-  // Update default values when settings load
-  React.useEffect(() => {
-    if (!isSettingsLoading && settings) {
-      setValue('overheadPercentage', settings.overheadPercentageDefault);
-      setValue('marginPercentage', settings.marginPercentageDefault);
-    }
-  }, [isSettingsLoading, settings, setValue]);
+  // Get the selected level's rates
+  const selectedLevel = cleaningServicesAward.levels.find(
+    l => l.level === level && l.employmentType === employmentType
+  );
   
-  const handleEmploymentTypeChange = (value: string) => {
-    setEmploymentType(value as EmploymentType);
-    setValue('employmentType', value as EmploymentType);
-  };
-  
-  const handleLevelChange = (value: string) => {
-    setLevel(parseInt(value) as EmployeeLevel);
-    setValue('level', parseInt(value) as EmployeeLevel);
-  };
-  
-  const onSubmit = (data: JobCostingParams) => {
-    setIsCalculating(true);
-    try {
-      const result = calculateJobCost(data, settings.baseRateMultiplier);
-      setCostBreakdown(result);
-    } catch (error) {
-      console.error('Error calculating job cost:', error);
-    } finally {
-      setIsCalculating(false);
-    }
-  };
+  // Calculate the total cost
+  const totalCost = selectedLevel 
+    ? Object.entries(hours).reduce((total, [condition, hours]) => {
+        return total + (selectedLevel.rates[condition as PayCondition].rate * hours);
+      }, 0)
+    : 0;
   
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Labor Cost Calculator</CardTitle>
-          <CardDescription>Calculate labor costs based on the Cleaning Services Award</CardDescription>
-        </CardHeader>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+          <select 
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            value={employmentType}
+            onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
+          >
+            <option value="full_time">Full Time</option>
+            <option value="part_time">Part Time</option>
+            <option value="casual">Casual</option>
+          </select>
+        </div>
         
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="employmentType">Employment Type</Label>
-                <Select 
-                  value={employmentType} 
-                  onValueChange={handleEmploymentTypeChange}
-                >
-                  <SelectTrigger id="employmentType">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full-time</SelectItem>
-                    <SelectItem value="part_time">Part-time</SelectItem>
-                    <SelectItem value="casual">Casual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="level">Employee Level</Label>
-                <Select 
-                  value={level.toString()} 
-                  onValueChange={handleLevelChange}
-                >
-                  <SelectTrigger id="level">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Level 1</SelectItem>
-                    <SelectItem value="2">Level 2</SelectItem>
-                    <SelectItem value="3">Level 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="py-2">
-              <h3 className="text-md font-medium mb-2">Hours Distribution</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                {Object.entries(payConditionLabels).map(([condition, label]) => (
-                  <div key={condition} className="flex items-center gap-2">
-                    <Label htmlFor={`hours-${condition}`} className="flex-grow">{label}</Label>
-                    <Input
-                      id={`hours-${condition}`}
-                      className="w-20"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      {...register(`hours.${condition as PayCondition}` as any, { 
-                        valueAsNumber: true,
-                        min: { value: 0, message: 'Must be at least 0' }
-                      })}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="overheadPercentage">Overhead Percentage (%)</Label>
-                <Input
-                  id="overheadPercentage"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  {...register('overheadPercentage' as any, { 
-                    required: 'Overhead percentage is required',
-                    min: { value: 0, message: 'Minimum overhead is 0%' },
-                    max: { value: 100, message: 'Maximum overhead is 100%' },
-                    valueAsNumber: true
-                  })}
-                />
-                {errors.overheadPercentage && (
-                  <p className="text-sm text-destructive">{errors.overheadPercentage.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="marginPercentage">Margin Percentage (%)</Label>
-                <Input
-                  id="marginPercentage"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="100"
-                  {...register('marginPercentage' as any, { 
-                    required: 'Margin percentage is required',
-                    min: { value: 0, message: 'Minimum margin is 0%' },
-                    max: { value: 100, message: 'Maximum margin is 100%' },
-                    valueAsNumber: true
-                  })}
-                />
-                {errors.marginPercentage && (
-                  <p className="text-sm text-destructive">{errors.marginPercentage.message}</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter>
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isCalculating || isSettingsLoading}
-            >
-              {isCalculating ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Calculator className="h-4 w-4 mr-2" />
-              )}
-              Calculate Cost
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
+          <select 
+            className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+            value={level}
+            onChange={(e) => setLevel(parseInt(e.target.value))}
+          >
+            <option value={1}>Level 1</option>
+            <option value={2}>Level 2</option>
+            <option value={3}>Level 3</option>
+          </select>
+        </div>
+      </div>
       
-      {costBreakdown && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Cost Breakdown</CardTitle>
-            <CardDescription>
-              Based on {employmentType}, level {level} award rates
-              {settings.baseRateMultiplier !== 1.0 && ` (adjusted by ${settings.baseRateMultiplier.toFixed(2)}x multiplier)`}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            <div className="border rounded-md divide-y">
-              <div className="p-3 bg-muted/30">
-                <h3 className="font-medium">Labor Hours Breakdown</h3>
-              </div>
-              
-              <div className="divide-y">
-                {costBreakdown.hourlyBreakdown && costBreakdown.hourlyBreakdown.map((item, index) => (
-                  <div key={index} className="p-3 flex justify-between items-center">
-                    <div>
-                      <span className="font-medium">{payConditionLabels[item.condition]}</span>
-                      <div className="text-sm text-muted-foreground">
-                        {item.hours.toFixed(1)} hours @ ${item.rate.toFixed(2)}/hour
-                      </div>
-                    </div>
-                    <div className="text-right font-medium">${item.cost.toFixed(2)}</div>
-                  </div>
-                ))}
-              </div>
+      <div>
+        <h3 className="text-lg font-medium mb-2">Hours by Pay Condition</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(payConditionDisplayNames).map(([condition, displayName]) => (
+            <div key={condition}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{displayName}</label>
+              <input 
+                type="number" 
+                min="0"
+                step="0.5"
+                className="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                value={hours[condition as PayCondition] || 0}
+                onChange={(e) => setHours(prev => ({
+                  ...prev,
+                  [condition]: parseFloat(e.target.value) || 0
+                }))}
+              />
             </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 p-4 rounded-md">
+        <h3 className="text-lg font-medium mb-2">Cost Calculation</h3>
+        <div className="space-y-2">
+          {Object.entries(hours).map(([condition, hours]) => {
+            if (hours <= 0) return null;
             
-            <div className="border rounded-md divide-y">
-              <div className="p-3 bg-muted/30">
-                <h3 className="font-medium">Cost Summary</h3>
+            const rate = selectedLevel?.rates[condition as PayCondition].rate || 0;
+            const cost = rate * hours;
+            
+            return (
+              <div key={condition} className="flex justify-between">
+                <span>{payConditionDisplayNames[condition as PayCondition]} ({hours} hours)</span>
+                <span>${cost.toFixed(2)}</span>
               </div>
-              
-              <div className="divide-y">
-                <div className="p-3 flex justify-between">
-                  <span>Direct Labor Cost</span>
-                  <span className="font-medium">${costBreakdown.laborCost.toFixed(2)}</span>
-                </div>
-                
-                <div className="p-3 flex justify-between">
-                  <span>Overhead ({watch('overheadPercentage' as any)}%)</span>
-                  <span className="font-medium">${costBreakdown.overheadCost.toFixed(2)}</span>
-                </div>
-                
-                <div className="p-3 flex justify-between">
-                  <span>Cost Before Margin</span>
-                  <span className="font-medium">${costBreakdown.totalCostBeforeMargin.toFixed(2)}</span>
-                </div>
-                
-                <div className="p-3 flex justify-between">
-                  <span>Margin ({watch('marginPercentage' as any)}%)</span>
-                  <span className="font-medium">${costBreakdown.margin.toFixed(2)}</span>
-                </div>
-                
-                <div className="p-3 flex justify-between font-bold">
-                  <span>Total Price</span>
-                  <span>${costBreakdown.totalPrice.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            );
+          })}
+          
+          <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+            <span>Total Cost</span>
+            <span>${totalCost.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

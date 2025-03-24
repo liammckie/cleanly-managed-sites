@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -26,14 +25,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getTemplateById } from '@/lib/templates/workOrderTemplates';
 import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface WorkOrderFormProps {
   site: SiteRecord;
   onSuccess?: () => void;
   templateId?: string;
+  workOrder?: WorkOrderRecord;
 }
 
-export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProps) => {
+export const WorkOrderForm = ({ site, onSuccess, templateId, workOrder }: WorkOrderFormProps) => {
   const navigate = useNavigate();
   const { createWorkOrderMutation, createAndCompleteWorkOrderMutation } = useWorkOrders();
   const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors(site.id);
@@ -112,6 +113,12 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   const tempWorkOrderId = React.useMemo(() => crypto.randomUUID(), []);
 
   const isPending = createWorkOrderMutation.isPending || createAndCompleteWorkOrderMutation.isPending;
+
+  // Get the initial attachments and purchaseOrderRequired values using asJsonObject
+  const initialAttachments = workOrder ? asJsonObject(workOrder.attachments, []) : [];
+  const initialPurchaseOrderRequired = workOrder 
+    ? asJsonObject(workOrder.requires_purchase_order, false) 
+    : false;
 
   return (
     <Form {...form}>

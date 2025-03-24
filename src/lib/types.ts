@@ -28,6 +28,7 @@ export interface SystemUser {
   custom_id?: string;
   note?: string;
   territories?: string[];
+  permissions?: string[]; // Add permissions property
 }
 
 export interface UserRole {
@@ -184,7 +185,7 @@ export interface SiteContact {
   name: string;
   email?: string;
   phone?: string;
-  role?: string;
+  role: string;
   department?: string;
   notes?: string;
   entity_id?: string;

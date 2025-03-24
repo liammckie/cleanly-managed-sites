@@ -4,6 +4,7 @@ import { SiteRecord } from '@/lib/api';
 import { FileIcon } from 'lucide-react';
 import { ContractHistoryTable } from '../../contract/ContractHistoryTable';
 import { useContractHistory } from '@/hooks/useContractHistory';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface ContractsTabProps {
   site: SiteRecord;
@@ -11,6 +12,7 @@ interface ContractsTabProps {
 
 export function ContractsTab({ site }: ContractsTabProps) {
   const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
+  const contractDetails = asJsonObject(site.contract_details, {});
   
   return (
     <div className="space-y-6">
@@ -23,27 +25,27 @@ export function ContractsTab({ site }: ContractsTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <p className="text-sm text-muted-foreground">Contract Number</p>
-            <p className="font-medium">{site.contract_details?.contractNumber || 'Not specified'}</p>
+            <p className="font-medium">{contractDetails.contractNumber || 'Not specified'}</p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Start Date</p>
-            <p className="font-medium">{site.contract_details?.startDate || 'Not specified'}</p>
+            <p className="font-medium">{contractDetails.startDate || 'Not specified'}</p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">End Date</p>
-            <p className="font-medium">{site.contract_details?.endDate || 'Not specified'}</p>
+            <p className="font-medium">{contractDetails.endDate || 'Not specified'}</p>
           </div>
           
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Termination Period</p>
-            <p className="font-medium">{site.contract_details?.terminationPeriod || 'Not specified'}</p>
+            <p className="font-medium">{contractDetails.terminationPeriod || 'Not specified'}</p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Renewal Terms</p>
-            <p className="font-medium line-clamp-3">{site.contract_details?.renewalTerms || 'Not specified'}</p>
+            <p className="font-medium line-clamp-3">{contractDetails.renewalTerms || 'Not specified'}</p>
           </div>
         </div>
       </div>

@@ -1,101 +1,70 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React from 'react';
+import { EmploymentType, PayCondition } from '@/lib/award/types';
 import { cleaningServicesAward } from '@/lib/award/awardData';
-import { PayCondition, EmploymentType, EmployeeLevel, EmployeeLevelRates } from '@/lib/award/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAwardSettings } from '@/hooks/useAwardSettings';
-import { format } from 'date-fns';
 
-const payConditionLabels: Record<PayCondition, string> = {
-  'base': 'Regular Hours (Mon-Fri)',
-  'weekday': 'Weekday Rate',
+// Display names for the pay conditions
+const payConditionDisplayNames: Record<PayCondition, string> = {
+  'base': 'Base Rate',
+  'standard': 'Standard',
+  'weekday': 'Weekday',
   'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
   'public_holiday': 'Public Holiday',
-  'evening': 'Evening',
   'early_morning': 'Early Morning',
+  'evening': 'Evening',
+  'night': 'Night',
   'overnight': 'Overnight',
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
-  'overtime-sunday': 'Sunday Overtime',
-  'overtime-public-holiday': 'Public Holiday Overtime'
+  'overtime-sunday': 'Overtime (Sunday)',
+  'overtime-public-holiday': 'Overtime (Public Holiday)'
 };
 
-export function AwardRatesTable() {
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
-  const { settings } = useAwardSettings();
-  
-  // Get the rates for the selected employment type
-  const rates = cleaningServicesAward.levels.filter(level => level.employmentType === employmentType);
-  
-  // Apply the settings multiplier to the rates
-  const adjustedRates = rates.map(levelRates => {
-    const adjustedLevel = { ...levelRates };
-    adjustedLevel.baseRate = adjustedLevel.baseRate * settings.baseRateMultiplier;
-    
-    Object.keys(adjustedLevel.rates).forEach(conditionKey => {
-      const condition = conditionKey as PayCondition;
-      adjustedLevel.rates[condition] = {
-        ...adjustedLevel.rates[condition],
-        rate: adjustedLevel.rates[condition].rate * settings.baseRateMultiplier
-      };
-    });
-    
-    return adjustedLevel;
-  });
+interface AwardRatesTableProps {
+  employmentType?: EmploymentType;
+}
+
+export function AwardRatesTable({ employmentType = 'full_time' }: AwardRatesTableProps) {
+  // Filter the award data based on employment type
+  const employmentTypeRates = cleaningServicesAward.levels.filter(
+    level => level.employmentType === employmentType
+  );
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Cleaning Services Award Rates</CardTitle>
-        <CardDescription>
-          MA000022 - Effective {format(new Date(cleaningServicesAward.effectiveDate), 'PPP')}
-          {settings.baseRateMultiplier !== 1.0 && ` (adjusted by ${settings.baseRateMultiplier.toFixed(2)}x multiplier)`}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <Tabs value={employmentType} onValueChange={(value) => setEmploymentType(value as EmploymentType)}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="full_time">Full-time</TabsTrigger>
-            <TabsTrigger value="part_time">Part-time</TabsTrigger>
-            <TabsTrigger value="casual">Casual</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={employmentType}>
-            <div className="border rounded-md overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Pay Condition</TableHead>
-                    {adjustedRates.map((level, index) => (
-                      <TableHead key={index} className="text-right">Level {level.level}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Object.entries(payConditionLabels).map(([condition, label]) => (
-                    <TableRow key={condition}>
-                      <TableCell className="font-medium">{label}</TableCell>
-                      {adjustedRates.map((level, index) => (
-                        <TableCell key={index} className="text-right">
-                          ${level.rates[condition as PayCondition]?.rate.toFixed(2) || "N/A"}
-                          <span className="block text-xs text-muted-foreground">
-                            ({level.rates[condition as PayCondition]?.multiplier.toFixed(2) || "N/A"}x)
-                          </span>
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Pay Condition
+            </th>
+            {employmentTypeRates.map(level => (
+              <th key={level.level} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Level {level.level} Rate
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {Object.entries(payConditionDisplayNames).map(([condition, displayName]) => (
+            <tr key={condition}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {displayName}
+              </td>
+              {employmentTypeRates.map(level => (
+                <td key={level.level} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  ${level.rates[condition as PayCondition].rate.toFixed(2)} 
+                  <span className="text-gray-400 ml-1">
+                    ({level.rates[condition as PayCondition].multiplier.toFixed(2)}x)
+                  </span>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

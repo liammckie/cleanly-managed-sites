@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, CalendarDays, List, PlusCircle } from 'lucide-react';
 import { QuoteShift, Subcontractor } from '@/lib/award/types';
-import { calculateTotalCosts, detectOvertimeHours, detectBrokenShifts } from '@/lib/award/utils';
+import { calculateTotalCosts, detectOvertimeHours } from '@/lib/award/utils';
 import useShiftManagement from '@/hooks/useShiftManagement';
 import { useAllowances } from '@/hooks/quotes/useAllowances';
 import { ShiftScheduler } from './shift-planner/ShiftScheduler';
@@ -12,6 +13,29 @@ import { ShiftSummary } from './shift-planner/ShiftSummary';
 import { ShiftWarnings } from './shift-planner/ShiftWarnings';
 import { ShiftTemplates } from './shift-planner/ShiftTemplates';
 import { WarningSection } from './shift-planner/WarningSection';
+
+// Custom function to detect broken shifts (multiple shifts in same day)
+const detectBrokenShifts = (shifts: QuoteShift[]): Record<string, number> => {
+  const daysWithMultipleShifts: Record<string, number> = {};
+  
+  // Count shifts per day
+  shifts.forEach(shift => {
+    if (!daysWithMultipleShifts[shift.day]) {
+      daysWithMultipleShifts[shift.day] = 1;
+    } else {
+      daysWithMultipleShifts[shift.day]++;
+    }
+  });
+  
+  // Filter to only days with multiple shifts
+  Object.keys(daysWithMultipleShifts).forEach(day => {
+    if (daysWithMultipleShifts[day] <= 1) {
+      delete daysWithMultipleShifts[day];
+    }
+  });
+  
+  return daysWithMultipleShifts;
+};
 
 interface ShiftPlannerProps {
   quoteId: string | null;

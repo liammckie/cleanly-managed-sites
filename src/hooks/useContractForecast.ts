@@ -1,137 +1,149 @@
 
 import { useState, useEffect } from 'react';
-import { ContractForecast, ContractSummary } from '@/components/sites/forms/types/contractTypes';
+import { useSites } from '@/hooks/useSites';
 import { SiteRecord } from '@/lib/types';
+import { startOfMonth, addMonths, startOfDay, parseISO, isValid, compareAsc, format } from 'date-fns';
+import { asJsonObject } from '@/lib/utils/json';
 
-export const useContractForecast = (siteIdOrSites?: string | SiteRecord[]) => {
-  const [forecastData, setForecastData] = useState<ContractForecast[]>([]);
-  const [summaryData, setSummaryData] = useState<ContractSummary>({
-    totalValue: 0,
-    activeContracts: 0,
-    expiringContracts: 0,
-    avgContractValue: 0
+// Type definition for contract data
+interface ContractData {
+  id: string;
+  siteId: string;
+  siteName: string;
+  clientName: string;
+  contractNumber?: string;
+  totalMonthlyValue: number;
+  expiryDate: Date;
+  expiryFormatted: string;
+  timeToExpiry: number; // In months
+  status: 'active' | 'expiring-soon' | 'expired' | 'pending';
+}
+
+// Type definition for grouped contract data
+interface GroupedContracts {
+  expiringSoon: ContractData[];
+  activeContracts: ContractData[];
+  pendingContracts: ContractData[];
+  expiredContracts: ContractData[];
+}
+
+// Helper to determine contract status based on expiry date
+function determineContractStatus(expiryDate: Date): 'active' | 'expiring-soon' | 'expired' | 'pending' {
+  const now = startOfDay(new Date());
+  const threeMonthsFromNow = addMonths(now, 3);
+  
+  if (compareAsc(expiryDate, now) < 0) {
+    return 'expired';
+  } else if (compareAsc(expiryDate, threeMonthsFromNow) <= 0) {
+    return 'expiring-soon';
+  } else {
+    return 'active';
+  }
+}
+
+// Custom hook to get contract forecasts
+export function useContractForecast() {
+  const { sites, isLoading } = useSites();
+  const [contractData, setContractData] = useState<ContractData[]>([]);
+  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({
+    expiringSoon: [],
+    activeContracts: [],
+    pendingContracts: [],
+    expiredContracts: []
   });
-  const [isForecastLoading, setIsForecastLoading] = useState(false);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-
+  
   useEffect(() => {
-    const fetchForecastData = async () => {
-      let siteId: string | undefined;
-      
-      if (typeof siteIdOrSites === 'string') {
-        siteId = siteIdOrSites;
-      } else if (Array.isArray(siteIdOrSites) && siteIdOrSites.length > 0) {
-        // Use the first site's ID as a reference or handle aggregated data
-        siteId = siteIdOrSites[0]?.id;
-      }
-      
-      // Only proceed if we have a siteId or sites array
-      if (!siteId && !Array.isArray(siteIdOrSites)) return;
-      
-      setIsForecastLoading(true);
-      // Fetch forecast data logic would go here
-      // For now, using mock data
-      const mockForecast = generateMockForecastData();
-      setForecastData(mockForecast);
-      setIsForecastLoading(false);
-    };
-
-    const fetchSummaryData = async () => {
-      setIsSummaryLoading(true);
-      
-      // Generate a base summary with default values
-      const mockSummary = generateMockSummaryData();
-      
-      // If sites array is provided, calculate aggregate values
-      if (Array.isArray(siteIdOrSites) && siteIdOrSites.length > 0) {
-        mockSummary.activeContracts = siteIdOrSites.length;
-        
-        // Count expiring contracts
-        const today = new Date();
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(today.getDate() + 30);
-        
-        const ninetyDaysFromNow = new Date();
-        ninetyDaysFromNow.setDate(today.getDate() + 90);
-        
-        let expiringWithin30Days = 0;
-        let expiringWithin90Days = 0;
-        
-        siteIdOrSites.forEach(site => {
-          const endDateStr = site.contract_details?.endDate;
-          if (endDateStr) {
-            const endDate = new Date(endDateStr);
-            if (endDate <= thirtyDaysFromNow) {
-              expiringWithin30Days++;
-            } else if (endDate <= ninetyDaysFromNow) {
-              expiringWithin90Days++;
-            }
-          }
-        });
-        
-        mockSummary.expiringWithin30Days = expiringWithin30Days;
-        mockSummary.expiringWithin90Days = expiringWithin90Days;
-        mockSummary.expiringContracts = expiringWithin30Days + expiringWithin90Days;
-        
-        // Calculate aggregate contract value
-        mockSummary.totalValue = siteIdOrSites.reduce((sum, site) => {
-          const value = site.contract_details?.value || site.monthly_revenue || 0;
-          return sum + value;
-        }, 0);
-        
-        mockSummary.avgContractValue = mockSummary.totalValue / Math.max(1, siteIdOrSites.length);
-      } else if (typeof siteIdOrSites === 'string') {
-        // If a single siteId is provided, we'd fetch data for that site
-        // For now we'll just use the mock data
-      } else {
-        // If no sites are provided, we'll use the default mock data
-      }
-      
-      setSummaryData(mockSummary);
-      setIsSummaryLoading(false);
-    };
-
-    fetchForecastData();
-    fetchSummaryData();
-  }, [siteIdOrSites]);
-
-  // Mock data generation for development
-  const generateMockForecastData = (): ContractForecast[] => {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
+    if (!sites || isLoading) return;
     
-    return months.map((month, index) => ({
-      month,
-      value: Math.floor(Math.random() * 10000) + 5000,
-      revenue: Math.floor(Math.random() * 8000) + 4000,
-      cost: Math.floor(Math.random() * 3000) + 1000,
-      profit: Math.floor(Math.random() * 5000) + 2000,
-      date: new Date(2023, index, 1)
-    }));
-  };
-
-  const generateMockSummaryData = (): ContractSummary => {
-    return {
-      totalValue: Math.floor(Math.random() * 500000) + 100000,
-      activeContracts: Math.floor(Math.random() * 50) + 10,
-      expiringContracts: Math.floor(Math.random() * 10) + 1,
-      avgContractValue: Math.floor(Math.random() * 20000) + 5000,
-      expiringWithin30Days: Math.floor(Math.random() * 5) + 1,
-      expiringWithin90Days: Math.floor(Math.random() * 10) + 5,
-      averageContractLength: Math.floor(Math.random() * 24) + 6,
-      renewalRate: Math.floor((Math.random() * 30) + 60) // Convert to percentage value
+    const extractedContracts: ContractData[] = [];
+    
+    sites.forEach(site => {
+      if (!site.contract_details) return;
+      
+      const contractDetails = asJsonObject(site.contract_details, {});
+      const endDateStr = contractDetails.endDate;
+      
+      // Skip if no end date or invalid date
+      if (!endDateStr) return;
+      
+      const endDate = parseISO(endDateStr);
+      if (!isValid(endDate)) return;
+      
+      const contract: ContractData = {
+        id: `${site.id}-main`,
+        siteId: site.id,
+        siteName: site.name,
+        clientName: site.client_name || 'Unknown Client',
+        contractNumber: contractDetails.contractNumber,
+        totalMonthlyValue: site.monthly_revenue || 0,
+        expiryDate: endDate,
+        expiryFormatted: format(endDate, 'dd MMM yyyy'),
+        timeToExpiry: Math.round(
+          (endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)
+        ),
+        status: determineContractStatus(endDate)
+      };
+      
+      extractedContracts.push(contract);
+      
+      // Check for additional contracts if available
+      if (site.additional_contracts && Array.isArray(site.additional_contracts)) {
+        site.additional_contracts.forEach((additionalContract, index) => {
+          const additionalContractObj = asJsonObject(additionalContract, {});
+          if (!additionalContractObj.end_date) return;
+          
+          const additionalEndDate = parseISO(additionalContractObj.end_date);
+          if (!isValid(additionalEndDate)) return;
+          
+          const additionalContractData: ContractData = {
+            id: `${site.id}-additional-${index}`,
+            siteId: site.id,
+            siteName: site.name,
+            clientName: site.client_name || 'Unknown Client',
+            contractNumber: additionalContractObj.contract_number,
+            totalMonthlyValue: additionalContractObj.monthly_value || 0,
+            expiryDate: additionalEndDate,
+            expiryFormatted: format(additionalEndDate, 'dd MMM yyyy'),
+            timeToExpiry: Math.round(
+              (additionalEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)
+            ),
+            status: determineContractStatus(additionalEndDate)
+          };
+          
+          extractedContracts.push(additionalContractData);
+        });
+      }
+    });
+    
+    setContractData(extractedContracts);
+    
+    // Group contracts by status
+    const grouped: GroupedContracts = {
+      expiringSoon: [],
+      activeContracts: [],
+      pendingContracts: [],
+      expiredContracts: []
     };
-  };
-
-  return { 
-    forecastData, 
-    summaryData, 
-    isForecastLoading, 
-    isSummaryLoading,
-    // Add these aliases to maintain backward compatibility
-    forecast: forecastData,
-    summary: summaryData
-  };
-};
+    
+    extractedContracts.forEach(contract => {
+      switch (contract.status) {
+        case 'expiring-soon':
+          grouped.expiringSoon.push(contract);
+          break;
+        case 'active':
+          grouped.activeContracts.push(contract);
+          break;
+        case 'pending':
+          grouped.pendingContracts.push(contract);
+          break;
+        case 'expired':
+          grouped.expiredContracts.push(contract);
+          break;
+      }
+    });
+    
+    setGroupedContracts(grouped);
+  }, [sites, isLoading]);
+  
+  return { contractData, groupedContracts, isLoading };
+}

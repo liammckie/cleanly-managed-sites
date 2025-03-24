@@ -41,6 +41,7 @@ export interface DbQuote {
   contract_length?: number;
   contract_length_unit?: string;
   overhead_profile?: string;
+  user_id?: string;
 }
 
 export interface DbQuoteShift {
@@ -73,6 +74,8 @@ export interface DbSubcontractor {
   email?: string;
   phone?: string;
   services?: string[];
+  notes?: string;
+  service?: string;
 }
 
 export interface DbOverheadProfile {
@@ -125,7 +128,8 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     expiryDate: dbQuote.expiry_date,
     contractLength: dbQuote.contract_length,
     contractLengthUnit: dbQuote.contract_length_unit,
-    overheadProfile: dbQuote.overhead_profile
+    overheadProfile: dbQuote.overhead_profile,
+    userId: dbQuote.user_id
   };
 }
 
@@ -142,8 +146,8 @@ export function quoteToDb(quote: Quote): DbQuote {
     margin_percentage: quote.marginPercentage,
     total_price: quote.totalPrice,
     labor_cost: quote.laborCost,
-    supplies_cost: quote.suppliesCost,
-    equipment_cost: quote.equipmentCost,
+    supplies_cost: quote.suppliesCost || 0,
+    equipment_cost: quote.equipmentCost || 0,
     subcontractor_cost: quote.subcontractorCost,
     created_at: quote.createdAt,
     updated_at: quote.updatedAt,
@@ -168,7 +172,8 @@ export function quoteToDb(quote: Quote): DbQuote {
     expiry_date: quote.expiryDate,
     contract_length: quote.contractLength,
     contract_length_unit: quote.contractLengthUnit,
-    overhead_profile: quote.overheadProfile
+    overhead_profile: quote.overheadProfile,
+    user_id: quote.userId
   };
 }
 
@@ -220,7 +225,9 @@ export function dbToSubcontractor(dbSub: DbSubcontractor): Subcontractor {
     quoteId: dbSub.quote_id,
     email: dbSub.email,
     phone: dbSub.phone,
-    services: dbSub.services
+    services: dbSub.services,
+    service: dbSub.service,
+    notes: dbSub.notes
   };
 }
 
@@ -229,12 +236,14 @@ export function subcontractorToDb(sub: Subcontractor): DbSubcontractor {
     id: sub.id,
     name: sub.name,
     description: sub.description,
-    cost: sub.cost,
-    frequency: sub.frequency as string,
+    cost: sub.cost || 0,
+    frequency: sub.frequency as string || 'monthly',
     quote_id: sub.quoteId,
     email: sub.email,
     phone: sub.phone,
     services: sub.services,
+    service: sub.service,
+    notes: sub.notes,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

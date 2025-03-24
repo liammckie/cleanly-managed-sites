@@ -2,12 +2,15 @@
 import { supabase } from '@/lib/supabase';
 import { Quote } from '@/lib/award/types';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   DbQuote, 
   dbToQuote, 
   quoteToDb, 
   quoteShiftToDb, 
-  subcontractorToDb 
+  subcontractorToDb, 
+  dbToQuoteShift,
+  dbToSubcontractor
 } from './adapters';
 
 // Fetch quotes from Supabase
@@ -22,7 +25,7 @@ export const fetchQuotes = async () => {
     throw new Error(error.message);
   }
   
-  return (data || []).map(dbToQuote);
+  return (data || []).map((item) => dbToQuote(item as DbQuote));
 };
 
 // Fetch a single quote with its shifts and subcontractors
@@ -67,14 +70,14 @@ export const fetchQuote = async (quoteId: string) => {
     throw new Error(subcontractorsError.message);
   }
   
-  // Combine all data into a quote object
-  const fullQuote = {
-    ...quote,
-    shifts: shifts || [],
-    subcontractors: subcontractors || []
-  };
+  // Create enhanced quote object with all related data
+  const fullQuote = dbToQuote(quote as DbQuote);
   
-  return dbToQuote(fullQuote as DbQuote);
+  // Add shifts and subcontractors
+  fullQuote.shifts = (shifts || []).map(shift => dbToQuoteShift(shift as any));
+  fullQuote.subcontractors = (subcontractors || []).map(sub => dbToSubcontractor(sub as any));
+  
+  return fullQuote;
 };
 
 // Create a new quote
@@ -86,13 +89,18 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
     throw new Error('User not authenticated');
   }
   
-  const { shifts, subcontractors, ...restQuoteData } = quoteData;
+  const { shifts, subcontractors, ...restQuoteData } = quoteData as any;
   
-  const dbQuoteData = quoteToDb({
+  const newQuote: Quote = {
     ...restQuoteData,
-    userId,
-    createdBy: userId
-  });
+    id: restQuoteData.id || uuidv4(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    userId, // Use userId property from Quote type
+    created_by: userId
+  } as Quote;
+  
+  const dbQuoteData = quoteToDb(newQuote);
   
   // Ensure name is present as it's required
   if (!dbQuoteData.name) {
@@ -101,6 +109,7 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
 
   // Create a valid object for Supabase insert with all required fields
   const validQuoteData = {
+    id: dbQuoteData.id,
     name: dbQuoteData.name, // Required field
     client_name: dbQuoteData.client_name || '',
     site_name: dbQuoteData.site_name || '',
@@ -121,7 +130,9 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
     margin_amount: dbQuoteData.margin_amount || 0,
     total_price: dbQuoteData.total_price || 0,
     created_by: dbQuoteData.created_by,
-    user_id: dbQuoteData.user_id,
+    user_id: dbQuoteData.user_id || userId,
+    supplies_cost: dbQuoteData.supplies_cost || 0,
+    equipment_cost: dbQuoteData.equipment_cost || 0,
   };
   
   // Insert the quote
@@ -143,10 +154,13 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   // If shifts are provided, insert them
   if (shifts && shifts.length > 0) {
     for (const shift of shifts) {
-      const shiftWithQuoteId = quoteShiftToDb({
+      const completeShift: QuoteShift = {
         ...shift,
+        id: shift.id || uuidv4(),
         quoteId: quote.id
-      });
+      } as QuoteShift;
+      
+      const shiftWithQuoteId = quoteShiftToDb(completeShift);
       
       // Ensure required fields
       if (!shiftWithQuoteId.day || !shiftWithQuoteId.employment_type || 
@@ -158,6 +172,7 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
       
       // Create a valid object for Supabase insert
       const validShiftData = {
+        id: shiftWithQuoteId.id,
         quote_id: shiftWithQuoteId.quote_id,
         day: shiftWithQuoteId.day,
         start_time: shiftWithQuoteId.start_time,
@@ -186,10 +201,13 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   // If subcontractors are provided, insert them
   if (subcontractors && subcontractors.length > 0) {
     for (const subcontractor of subcontractors) {
-      const subWithQuoteId = subcontractorToDb({
+      const completeSubcontractor: Subcontractor = {
         ...subcontractor,
+        id: subcontractor.id || uuidv4(),
         quoteId: quote.id
-      });
+      } as Subcontractor;
+      
+      const subWithQuoteId = subcontractorToDb(completeSubcontractor);
       
       // Ensure name is present
       if (!subWithQuoteId.name) {
@@ -199,12 +217,15 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
       
       // Create a valid object for Supabase insert
       const validSubData = {
+        id: subWithQuoteId.id,
         quote_id: subWithQuoteId.quote_id,
         name: subWithQuoteId.name,
-        service: subWithQuoteId.service || '',
+        services: subWithQuoteId.services || [],
         description: subWithQuoteId.description || '',
         frequency: subWithQuoteId.frequency || 'monthly',
         cost: subWithQuoteId.cost || 0,
+        email: subWithQuoteId.email || '',
+        phone: subWithQuoteId.phone || '',
         notes: subWithQuoteId.notes || ''
       };
       
@@ -230,10 +251,13 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     throw new Error('Quote ID is required for updates');
   }
   
-  const dbQuoteData = quoteToDb({
+  const updatedQuote: Quote = {
     ...restQuoteData,
+    id,
     updatedAt: new Date().toISOString()
-  });
+  } as Quote;
+  
+  const dbQuoteData = quoteToDb(updatedQuote);
   
   // Ensure name is present
   if (!dbQuoteData.name) {
@@ -269,10 +293,13 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     // Insert new shifts if there are any
     if (shifts.length > 0) {
       for (const shift of shifts) {
-        const shiftWithQuoteId = quoteShiftToDb({
+        const completeShift: QuoteShift = {
           ...shift,
+          id: shift.id || uuidv4(),
           quoteId: id
-        });
+        } as QuoteShift;
+        
+        const shiftWithQuoteId = quoteShiftToDb(completeShift);
         
         // Ensure required fields
         if (!shiftWithQuoteId.day || !shiftWithQuoteId.employment_type || 
@@ -284,6 +311,7 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
         
         // Create a valid object for Supabase insert
         const validShiftData = {
+          id: shiftWithQuoteId.id,
           quote_id: shiftWithQuoteId.quote_id,
           day: shiftWithQuoteId.day,
           start_time: shiftWithQuoteId.start_time,
@@ -326,10 +354,13 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     // Insert new subcontractors if there are any
     if (subcontractors.length > 0) {
       for (const subcontractor of subcontractors) {
-        const subWithQuoteId = subcontractorToDb({
+        const completeSubcontractor: Subcontractor = {
           ...subcontractor,
+          id: subcontractor.id || uuidv4(),
           quoteId: id
-        });
+        } as Subcontractor;
+        
+        const subWithQuoteId = subcontractorToDb(completeSubcontractor);
         
         // Ensure name is present
         if (!subWithQuoteId.name) {
@@ -339,12 +370,15 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
         
         // Create a valid object for Supabase insert
         const validSubData = {
+          id: subWithQuoteId.id,
           quote_id: subWithQuoteId.quote_id,
           name: subWithQuoteId.name,
-          service: subWithQuoteId.service || '',
+          services: subWithQuoteId.services || [],
           description: subWithQuoteId.description || '',
           frequency: subWithQuoteId.frequency || 'monthly',
           cost: subWithQuoteId.cost || 0,
+          email: subWithQuoteId.email || '',
+          phone: subWithQuoteId.phone || '',
           notes: subWithQuoteId.notes || ''
         };
         

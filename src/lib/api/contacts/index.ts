@@ -1,29 +1,28 @@
 
-// Re-export all contact-related APIs from a single entry point
-export * from './types';
-export * from './contactsCore';
-export * from './contactsRead';
-export * from './contactsWrite';
-export * from './contactsSearch';
+import { getEntityContacts, getContactById, getAllContacts } from './contactsRead';
+import { addContact, updateContactRecord, removeContact, makePrimaryContact } from './contactsWrite';
 
-// Export the combined contactsApi object for backward compatibility
-import { getContacts, getContactById, getContactsByEntityId, getContactEntities } from './contactsRead';
-import { createContact, updateContact, deleteContact, setPrimaryContact } from './contactsWrite';
-import { searchEntities } from './contactsSearch';
-
+// Export as contactsApi object for backward compatibility
 export const contactsApi = {
   // Read operations
-  getContacts,
+  getEntityContacts,
   getContactById,
-  getContactsByEntityId,
-  getContactEntities,
+  getAllContacts,
   
   // Write operations
-  createContact,
-  updateContact,
-  deleteContact,
-  setPrimaryContact,
-  
-  // Search operations
-  searchEntities
+  createContact: addContact,
+  updateContact: updateContactRecord,
+  deleteContact: removeContact,
+  setPrimaryContact: makePrimaryContact
+};
+
+// Also export individual functions
+export {
+  getEntityContacts,
+  getContactById,
+  getAllContacts,
+  addContact,
+  updateContactRecord,
+  removeContact,
+  makePrimaryContact
 };

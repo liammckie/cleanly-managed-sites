@@ -57,40 +57,37 @@ export function safeParseJson(jsonString: string | Json | null | undefined, fall
 export function hasJsonProperty(json: Json | undefined, property: string): boolean {
   if (!json) return false;
   
-  // Handle string JSON
+  if (typeof json === 'object' && json !== null) {
+    return property in json;
+  }
+  
   if (typeof json === 'string') {
     try {
-      json = JSON.parse(json);
+      const parsed = JSON.parse(json);
+      return typeof parsed === 'object' && parsed !== null && property in parsed;
     } catch {
       return false;
     }
   }
   
-  // Handle non-object JSON types
-  if (typeof json !== 'object' || json === null) {
-    return false;
-  }
-  
-  return property in json;
+  return false;
 }
 
-// Helper function to safely cast Json to an object type
+// Convert JSON to a strongly typed object for better TypeScript support
 export function asJsonObject<T>(json: Json | undefined, defaultValue: T): T {
   if (!json) return defaultValue;
   
-  // Handle string JSON
   if (typeof json === 'string') {
     try {
-      json = JSON.parse(json);
+      return JSON.parse(json) as T;
     } catch {
       return defaultValue;
     }
   }
   
-  // Handle non-object JSON types
-  if (typeof json !== 'object' || json === null) {
-    return defaultValue;
+  if (typeof json === 'object' && json !== null) {
+    return json as unknown as T;
   }
   
-  return json as T;
+  return defaultValue;
 }
