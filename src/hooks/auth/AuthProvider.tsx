@@ -23,6 +23,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize authentication state
   useEffect(() => {
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log('Auth state changed:', event);
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          navigate('/dashboard');
+        } else if (event === 'SIGNED_OUT') {
+          navigate('/login');
+        } else if (event === 'USER_UPDATED') {
+          // Handle user updates, including email confirmation
+          if (newSession?.user?.email_confirmed_at) {
+            toast.success('Email confirmed successfully!');
+          }
+        }
+      }
+    );
+
     // Process any verification tokens in the URL
     const handleVerification = async () => {
       const url = new URL(window.location.href);
@@ -58,34 +78,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    handleVerification();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log('Auth state changed:', event);
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          navigate('/dashboard');
-        } else if (event === 'SIGNED_OUT') {
-          navigate('/login');
-        } else if (event === 'USER_UPDATED') {
-          // Handle user updates, including email confirmation
-          if (newSession?.user?.email_confirmed_at) {
-            toast.success('Email confirmed successfully!');
-          }
-        }
-      }
-    );
-
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
-    });
+    const initSession = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('Initial session:', currentSession ? 'Found' : 'None');
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+      } catch (error) {
+        console.error('Error getting session:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleVerification();
+    initSession();
 
     return () => {
       subscription.unsubscribe();
