@@ -7,3 +7,4 @@ export * from './ClientSitesCard';
 export * from './ClientErrorState';
 export * from './ClientNotFoundState';
 export * from './ClientContactsCard';
+export * from './contacts';
