@@ -5,7 +5,7 @@ import { useSiteForm } from '@/hooks/useSiteForm';
 import { getSiteFormSteps } from './siteFormConfig';
 import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { SiteFormData, getInitialFormData } from './siteFormTypes';
-import { ContactsStep } from './steps/ContactsStep';
+import { ContactsStep } from './steps';
 import { CreateSiteFormContainer } from './create/CreateSiteFormContainer';
 import { useCreateSiteFormSubmit } from './create/useCreateSiteFormSubmit';
 import { Card } from '@/components/ui/card';

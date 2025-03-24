@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
-import { ContactsStep } from './steps/ContactsStep';
+import { ContactsStep } from './steps';
 import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
