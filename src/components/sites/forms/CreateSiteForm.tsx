@@ -15,6 +15,7 @@ import { handleSiteAdditionalContracts } from '@/lib/api/sites/additionalContrac
 import { handleSiteBillingLines } from '@/lib/api/sites/billingLinesApi';
 import { handleSiteContacts } from '@/lib/api/sites/siteContactsApi';
 import { ContactRecord } from '@/lib/types';
+import { ContactsStep } from './steps/ContactsStep';
 
 export function CreateSiteForm() {
   const navigate = useNavigate();
@@ -66,8 +67,23 @@ export function CreateSiteForm() {
   const removeReplenishable = formHandlers.removeReplenishable || ((index: number) => {});
   
   const addBillingLine = formHandlers.addBillingLine || (() => {});
-  const updateBillingLine = formHandlers.updateBillingLine || ((index: number, field: string, value: any) => {});
-  const removeBillingLine = formHandlers.removeBillingLine || ((index: number) => {});
+  
+  // Fix the type issue by creating a function with consistent parameter types
+  const updateBillingLine = (id: string, field: string, value: any) => {
+    if (formHandlers.updateBillingLine) {
+      formHandlers.updateBillingLine(id, field, value);
+    } else {
+      console.log(`Updating billing line ${id} field ${field}:`, value);
+    }
+  };
+  
+  const removeBillingLine = (id: string) => {
+    if (formHandlers.removeBillingLine) {
+      formHandlers.removeBillingLine(id);
+    } else {
+      console.log(`Removing billing line ${id}`);
+    }
+  };
   
   const addContractTerm = formHandlers.addContractTerm || (() => {});
   const updateContractTerm = formHandlers.updateContractTerm || ((index: number, field: string, value: any) => {});
@@ -109,20 +125,75 @@ export function CreateSiteForm() {
     
     // Find the contacts step and modify it to pass the addExistingContact prop
     const contactsStepIndex = steps.findIndex(step => 
-      step.component && React.isValidElement(step.component) && 
-      step.component.type === require('./steps/ContactsStep').ContactsStep
+      step.id === 'contacts'
     );
     
     if (contactsStepIndex >= 0) {
       const originalStep = steps[contactsStepIndex];
       steps[contactsStepIndex] = {
         ...originalStep,
-        component: React.cloneElement(
-          originalStep.component as React.ReactElement,
-          { 
-            addExistingContact: formHandlers.addExistingContact,
-            setAsPrimary: formHandlers.setAsPrimary 
-          }
+        component: (
+          <ContactsStep
+            formData={formHandlers.formData}
+            errors={{}}
+            handleContactChange={(index, field, value) => {
+              const updatedContacts = [...formHandlers.formData.contacts];
+              if (updatedContacts[index]) {
+                updatedContacts[index] = {
+                  ...updatedContacts[index],
+                  [field]: value
+                };
+                
+                // If setting as primary, update others
+                if (field === 'is_primary' && value === true) {
+                  updatedContacts.forEach((contact, i) => {
+                    if (i !== index && contact.is_primary) {
+                      updatedContacts[i] = {
+                        ...contact,
+                        is_primary: false
+                      };
+                    }
+                  });
+                }
+                
+                formHandlers.handleChange({ target: { name: 'contacts', value: updatedContacts } } as any);
+              }
+            }}
+            addContact={() => {
+              const newContact = {
+                id: crypto.randomUUID(),
+                name: '',
+                role: 'operations',
+                entity_type: 'site',
+                is_primary: formHandlers.formData.contacts.length === 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+              formHandlers.handleChange({ 
+                target: { 
+                  name: 'contacts', 
+                  value: [...formHandlers.formData.contacts, newContact] 
+                } 
+              } as any);
+            }}
+            removeContact={(index) => {
+              const updatedContacts = [...formHandlers.formData.contacts];
+              updatedContacts.splice(index, 1);
+              
+              // If we removed the primary contact and there are still contacts,
+              // make the first one primary
+              if (formHandlers.formData.contacts[index]?.is_primary && updatedContacts.length > 0) {
+                updatedContacts[0] = {
+                  ...updatedContacts[0],
+                  is_primary: true
+                };
+              }
+              
+              formHandlers.handleChange({ target: { name: 'contacts', value: updatedContacts } } as any);
+            }}
+            addExistingContact={formHandlers.addExistingContact}
+            setAsPrimary={formHandlers.setAsPrimary}
+          />
         )
       };
     }
