@@ -131,9 +131,9 @@ export function BillingVariationForm() {
       
       // Create deep copy of existing data to avoid reference issues
       const updatedSite = JSON.parse(JSON.stringify(site));
-      const updatedContractDetails = { ...updatedSite.contract_details } || {};
-      const updatedBillingDetails = { ...updatedSite.billing_details } || {};
-      const updatedJobSpecifications = { ...updatedSite.job_specifications } || {};
+      const updatedContractDetails = { ...(updatedSite.contract_details || {}) };
+      const updatedBillingDetails = { ...(updatedSite.billing_details || {}) };
+      const updatedJobSpecifications = { ...(updatedSite.job_specifications || {}) };
       
       // Format the variation notes for the history entry
       const variationNotes = `

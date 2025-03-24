@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSite } from '@/hooks/useSite';
@@ -108,8 +109,8 @@ export function ContractorChangeForm() {
       
       // Create deep copy of existing data to avoid reference issues
       const updatedSite = JSON.parse(JSON.stringify(site));
-      const updatedContractDetails = { ...updatedSite.contract_details } || {};
-      const updatedJobSpecifications = { ...updatedSite.job_specifications } || {};
+      const updatedContractDetails = { ...(updatedSite.contract_details || {}) };
+      const updatedJobSpecifications = { ...(updatedSite.job_specifications || {}) };
       
       // Update subcontractors array
       const newSubcontractors = updatedSite.subcontractors ? [...updatedSite.subcontractors] : [];

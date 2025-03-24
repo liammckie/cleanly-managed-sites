@@ -64,7 +64,7 @@ export const useWorkOrders = () => {
       // First create the work order with status completed
       const workOrderData = {
         ...data,
-        status: 'completed'
+        status: 'completed' as WorkOrderStatus
       };
       return createWorkOrder(workOrderData);
     },
