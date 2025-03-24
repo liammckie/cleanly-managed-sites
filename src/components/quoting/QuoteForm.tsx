@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -84,7 +83,6 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
     }
   });
   
-  // Update end date when start date and contract length change
   useEffect(() => {
     const startDate = form.watch('startDate');
     const contractLength = form.watch('contractLength');
@@ -112,7 +110,6 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
     }
   }, [form.watch('startDate'), form.watch('contractLength'), form.watch('contractLengthUnit')]);
   
-  // Update overhead percentage when profile changes
   useEffect(() => {
     const overheadProfileId = form.watch('overheadProfile');
     const selectedProfile = overheadProfiles.find(p => p.id === overheadProfileId);
@@ -124,7 +121,6 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
   
   const onSubmit = async (data: any) => {
     try {
-      // Calculate costs based on the shifts, subcontractors, and overhead/margin
       const laborCost = shifts.reduce((sum, shift) => sum + shift.estimatedCost, 0);
       const subcontractorCost = subcontractors.reduce((sum, sub) => sum + sub.cost, 0);
       const overheadCost = (laborCost * data.overheadPercentage) / 100;
@@ -145,7 +141,7 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
         startDate: data.startDate ? format(data.startDate, 'yyyy-MM-dd') : undefined,
         endDate: data.endDate ? format(data.endDate, 'yyyy-MM-dd') : undefined,
         expiryDate: data.expiryDate ? format(data.expiryDate, 'yyyy-MM-dd') : undefined,
-        createdBy: 'user1' // In a real app, this would be the current user's ID
+        createdBy: 'user1'
       };
       
       if (isEditMode && initialData) {
@@ -454,6 +450,7 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
                     <AccordionTrigger>Shift Planner</AccordionTrigger>
                     <AccordionContent>
                       <ShiftPlanner
+                        quoteId={quoteId || null}
                         shifts={shifts}
                         onShiftsChange={setShifts}
                       />
@@ -577,6 +574,7 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Quote Summary</h3>
                   <QuoteSummary 
+                    quoteId={quoteId || null}
                     shifts={shifts}
                     subcontractors={subcontractors}
                     overheadPercentage={form.watch('overheadPercentage')}
