@@ -23,7 +23,9 @@ import {
   calculateSubcontractorMonthlyCost,
   formatCurrency,
   getTimeframeFactor,
-  calculateDaysPerWeek
+  calculateDaysPerWeek,
+  calculateTotalCosts,
+  detectBrokenShifts
 } from '@/lib/award/utils';
 import { useAwardSettings } from '@/hooks/useAwardSettings';
 import { 
@@ -33,7 +35,9 @@ import {
   Calendar, 
   BarChart3, 
   PrinterIcon, 
-  InfoIcon 
+  InfoIcon,
+  PieChart,
+  Calculator
 } from 'lucide-react';
 import { 
   Tooltip,
@@ -66,6 +70,8 @@ export function QuoteSummary({
   const [marginPercentage, setMarginPercentage] = useState(initialMarginPercentage);
   const [activeTimeframe, setActiveTimeframe] = useState<'weekly' | 'monthly' | 'annual'>('monthly');
   const [applyOverheadToSubcontractors, setApplyOverheadToSubcontractors] = useState(false);
+  const [consumablesPerHour, setConsumablesPerHour] = useState(1.5);
+  const [equipmentPerHour, setEquipmentPerHour] = useState(1.0);
   const { settings } = useAwardSettings();
   
   // Update when props change
@@ -74,51 +80,63 @@ export function QuoteSummary({
     setMarginPercentage(initialMarginPercentage);
   }, [initialOverheadPercentage, initialMarginPercentage]);
   
-  // Calculate total labor cost
-  const totalLaborCost = shifts.reduce((total, shift) => total + shift.estimatedCost, 0);
+  // Calculate costs for the current timeframe
+  const costs = calculateTotalCosts(shifts, subcontractors, activeTimeframe);
   
-  // Calculate total subcontractor cost (monthly)
-  const totalSubcontractorMonthlyCost = subcontractors.reduce(
-    (total, subcontractor) => total + calculateSubcontractorMonthlyCost(subcontractor),
-    0
-  );
+  // Calculate additional overhead costs for consumables and equipment
+  const totalHours = costs.totalHours;
+  const consumablesCost = totalHours * consumablesPerHour;
+  const equipmentCost = totalHours * equipmentPerHour;
+  const additionalOverheadCost = consumablesCost + equipmentCost;
   
-  // Calculate total hours
-  const totalHours = shifts.reduce((total, shift) => {
-    const shiftHours = calculateShiftHours(shift);
-    return total + (shiftHours * shift.numberOfCleaners);
-  }, 0);
+  // Detect broken shifts
+  const brokenShiftDays = detectBrokenShifts(shifts);
+  const hasBrokenShifts = brokenShiftDays.length > 0;
   
-  // Calculate unique days per week
+  // Calculate days per week
   const daysPerWeek = calculateDaysPerWeek(shifts);
-  
-  // Calculate costs based on timeframe
-  const timeframeFactor = getTimeframeFactor(activeTimeframe);
-  const displayLaborCost = totalLaborCost * timeframeFactor;
-  
-  let displaySubcontractorCost: number;
-  switch (activeTimeframe) {
-    case 'weekly':
-      displaySubcontractorCost = totalSubcontractorMonthlyCost / 4.33;
-      break;
-    case 'monthly':
-      displaySubcontractorCost = totalSubcontractorMonthlyCost;
-      break;
-    case 'annual':
-      displaySubcontractorCost = totalSubcontractorMonthlyCost * 12;
-      break;
-    default:
-      displaySubcontractorCost = totalSubcontractorMonthlyCost;
-  }
   
   // Use the enhanced calculation utility
   const costSummary = calculateTotalCostWithOverheadAndMargin(
-    displayLaborCost,
-    displaySubcontractorCost,
+    costs.laborCost,
+    costs.subcontractorCost,
     overheadPercentage,
     marginPercentage,
     applyOverheadToSubcontractors
   );
+  
+  // Adjust cost summary to include additional overhead costs
+  const adjustedCostSummary = {
+    ...costSummary,
+    overheadCost: costSummary.overheadCost + additionalOverheadCost,
+    costBeforeMargin: costSummary.costBeforeMargin + additionalOverheadCost,
+  };
+  
+  // Recalculate margin and total price
+  adjustedCostSummary.marginAmount = (adjustedCostSummary.costBeforeMargin * marginPercentage) / 100;
+  adjustedCostSummary.totalPrice = adjustedCostSummary.costBeforeMargin + adjustedCostSummary.marginAmount;
+  
+  // Calculate profit percentage
+  adjustedCostSummary.profitPercentage = adjustedCostSummary.totalPrice > 0 
+    ? ((adjustedCostSummary.marginAmount) / adjustedCostSummary.totalPrice) * 100 
+    : 0;
+  
+  // Calculate percentages for the cost breakdown chart
+  const laborPercentage = adjustedCostSummary.totalPrice > 0 
+    ? (adjustedCostSummary.laborCost / adjustedCostSummary.totalPrice) * 100 
+    : 0;
+  
+  const overheadPercentageOfTotal = adjustedCostSummary.totalPrice > 0 
+    ? (adjustedCostSummary.overheadCost / adjustedCostSummary.totalPrice) * 100 
+    : 0;
+  
+  const subcontractorPercentage = adjustedCostSummary.totalPrice > 0 
+    ? (adjustedCostSummary.subcontractorCost / adjustedCostSummary.totalPrice) * 100 
+    : 0;
+  
+  const marginPercentageOfTotal = adjustedCostSummary.totalPrice > 0 
+    ? (adjustedCostSummary.marginAmount / adjustedCostSummary.totalPrice) * 100 
+    : 0;
   
   return (
     <div className="space-y-6">
@@ -178,9 +196,9 @@ export function QuoteSummary({
                         {totalHours.toFixed(1)} hours {activeTimeframe === 'weekly' ? 'per week' : activeTimeframe === 'monthly' ? 'per month' : 'per year'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(costSummary.laborCost)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(adjustedCostSummary.laborCost)}</TableCell>
                     <TableCell className="text-right">
-                      {costSummary.totalPrice > 0 ? ((costSummary.laborCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
+                      {laborPercentage.toFixed(1)}%
                     </TableCell>
                   </TableRow>
                   
@@ -188,12 +206,13 @@ export function QuoteSummary({
                     <TableCell>
                       <div className="font-medium">Overhead</div>
                       <div className="text-xs text-muted-foreground">
-                        {overheadPercentage}% of {applyOverheadToSubcontractors ? 'all costs' : 'labor cost only'}
+                        <div>{overheadPercentage}% of {applyOverheadToSubcontractors ? 'all costs' : 'labor cost only'}</div>
+                        <div>+ ${consumablesPerHour}/hr consumables, ${equipmentPerHour}/hr equipment</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(costSummary.overheadCost)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(adjustedCostSummary.overheadCost)}</TableCell>
                     <TableCell className="text-right">
-                      {costSummary.totalPrice > 0 ? ((costSummary.overheadCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
+                      {overheadPercentageOfTotal.toFixed(1)}%
                     </TableCell>
                   </TableRow>
                   
@@ -205,18 +224,18 @@ export function QuoteSummary({
                           {subcontractors.length} subcontractor{subcontractors.length !== 1 ? 's' : ''}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(costSummary.subcontractorCost)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(adjustedCostSummary.subcontractorCost)}</TableCell>
                       <TableCell className="text-right">
-                        {costSummary.totalPrice > 0 ? ((costSummary.subcontractorCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
+                        {subcontractorPercentage.toFixed(1)}%
                       </TableCell>
                     </TableRow>
                   )}
                   
                   <TableRow>
                     <TableCell className="font-medium">Cost Before Margin</TableCell>
-                    <TableCell className="text-right">{formatCurrency(costSummary.costBeforeMargin)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(adjustedCostSummary.costBeforeMargin)}</TableCell>
                     <TableCell className="text-right">
-                      {costSummary.totalPrice > 0 ? ((costSummary.costBeforeMargin / costSummary.totalPrice) * 100).toFixed(1) : 0}%
+                      {((adjustedCostSummary.costBeforeMargin / adjustedCostSummary.totalPrice) * 100).toFixed(1)}%
                     </TableCell>
                   </TableRow>
                   
@@ -227,9 +246,9 @@ export function QuoteSummary({
                         {marginPercentage}% of cost before margin
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(costSummary.marginAmount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(adjustedCostSummary.marginAmount)}</TableCell>
                     <TableCell className="text-right">
-                      {costSummary.totalPrice > 0 ? ((costSummary.marginAmount / costSummary.totalPrice) * 100).toFixed(1) : 0}%
+                      {marginPercentageOfTotal.toFixed(1)}%
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -238,7 +257,7 @@ export function QuoteSummary({
             <CardFooter className="border-t">
               <div className="w-full flex justify-between items-center">
                 <span className="font-bold text-lg">Total Price</span>
-                <span className="font-bold text-lg">{formatCurrency(costSummary.totalPrice)}</span>
+                <span className="font-bold text-lg">{formatCurrency(adjustedCostSummary.totalPrice)}</span>
               </div>
             </CardFooter>
           </Card>
@@ -277,6 +296,9 @@ export function QuoteSummary({
                         <TableRow key={shift.id}>
                           <TableCell className="capitalize">
                             {shift.day}
+                            {brokenShiftDays.includes(shift.day) && (
+                              <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700">Broken Shift</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             {shift.startTime} - {shift.endTime}
@@ -311,7 +333,7 @@ export function QuoteSummary({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <div className="text-4xl font-bold">{formatCurrency(costSummary.totalPrice)}</div>
+                <div className="text-4xl font-bold">{formatCurrency(adjustedCostSummary.totalPrice)}</div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Total {activeTimeframe === 'weekly' ? 'Weekly' : activeTimeframe === 'monthly' ? 'Monthly' : 'Annual'} Price
                 </div>
@@ -322,26 +344,66 @@ export function QuoteSummary({
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>Labor & Overhead:</span>
-                    <span>{formatCurrency(costSummary.laborCost + costSummary.overheadCost)}</span>
+                    <span>Labor:</span>
+                    <span>{formatCurrency(adjustedCostSummary.laborCost)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Overhead & Supplies:</span>
+                    <span>{formatCurrency(adjustedCostSummary.overheadCost)}</span>
                   </div>
                   
                   {subcontractors.length > 0 && (
                     <div className="flex justify-between text-sm mb-1">
                       <span>Subcontractors:</span>
-                      <span>{formatCurrency(costSummary.subcontractorCost)}</span>
+                      <span>{formatCurrency(adjustedCostSummary.subcontractorCost)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between text-sm mb-1">
                     <span>Profit:</span>
-                    <span>{formatCurrency(costSummary.marginAmount)}</span>
+                    <span>{formatCurrency(adjustedCostSummary.marginAmount)}</span>
                   </div>
                   
                   <div className="flex justify-between font-medium">
                     <span>Profit Margin:</span>
-                    <span>{costSummary.profitPercentage.toFixed(1)}%</span>
+                    <span>{adjustedCostSummary.profitPercentage.toFixed(1)}%</span>
                   </div>
+                </div>
+              </div>
+              
+              {/* Visual cost breakdown */}
+              <div className="mt-4">
+                <div className="text-sm font-medium mb-2 flex items-center">
+                  <PieChart className="h-4 w-4 mr-1" />
+                  <span>Cost Breakdown</span>
+                </div>
+                <div className="h-4 w-full rounded-full overflow-hidden flex">
+                  <div 
+                    className="bg-blue-500" 
+                    style={{ width: `${laborPercentage}%` }}
+                    title={`Labor: ${laborPercentage.toFixed(1)}%`}
+                  />
+                  <div 
+                    className="bg-green-500" 
+                    style={{ width: `${overheadPercentageOfTotal}%` }}
+                    title={`Overhead: ${overheadPercentageOfTotal.toFixed(1)}%`}
+                  />
+                  <div 
+                    className="bg-orange-500" 
+                    style={{ width: `${subcontractorPercentage}%` }}
+                    title={`Subcontractors: ${subcontractorPercentage.toFixed(1)}%`}
+                  />
+                  <div 
+                    className="bg-purple-500" 
+                    style={{ width: `${marginPercentageOfTotal}%` }}
+                    title={`Margin: ${marginPercentageOfTotal.toFixed(1)}%`}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span className="flex items-center"><span className="h-2 w-2 bg-blue-500 rounded-full mr-1"></span> Labor</span>
+                  <span className="flex items-center"><span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span> Overhead</span>
+                  <span className="flex items-center"><span className="h-2 w-2 bg-purple-500 rounded-full mr-1"></span> Profit</span>
                 </div>
               </div>
             </CardContent>
@@ -350,7 +412,10 @@ export function QuoteSummary({
           {/* Margin & Overhead Controls */}
           <Card>
             <CardHeader>
-              <CardTitle>Quote Settings</CardTitle>
+              <CardTitle className="flex items-center">
+                <Calculator className="h-5 w-5 mr-2" />
+                Quote Settings
+              </CardTitle>
               <CardDescription>
                 Adjust overhead and margins
               </CardDescription>
@@ -358,20 +423,54 @@ export function QuoteSummary({
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="overhead">Overhead Percentage: {overheadPercentage}%</Label>
+                  <Label htmlFor="overhead">Overhead: {overheadPercentage}%</Label>
                 </div>
                 <Slider
                   id="overhead"
                   min={0}
-                  max={100}
-                  step={1}
+                  max={50}
+                  step={0.5}
                   value={[overheadPercentage]}
                   onValueChange={(values) => setOverheadPercentage(values[0])}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>0%</span>
+                  <span>25%</span>
                   <span>50%</span>
-                  <span>100%</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Consumables & Equipment</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label htmlFor="consumables" className="text-xs">Consumables</Label>
+                      <span className="text-xs">${consumablesPerHour.toFixed(2)}/hr</span>
+                    </div>
+                    <Slider
+                      id="consumables"
+                      min={0}
+                      max={5}
+                      step={0.25}
+                      value={[consumablesPerHour]}
+                      onValueChange={(values) => setConsumablesPerHour(values[0])}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label htmlFor="equipment" className="text-xs">Equipment</Label>
+                      <span className="text-xs">${equipmentPerHour.toFixed(2)}/hr</span>
+                    </div>
+                    <Slider
+                      id="equipment"
+                      min={0}
+                      max={5}
+                      step={0.25}
+                      value={[equipmentPerHour]}
+                      onValueChange={(values) => setEquipmentPerHour(values[0])}
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -401,20 +500,20 @@ export function QuoteSummary({
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label htmlFor="margin">Margin Percentage: {marginPercentage}%</Label>
+                  <Label htmlFor="margin">Margin: {marginPercentage}%</Label>
                 </div>
                 <Slider
                   id="margin"
                   min={0}
-                  max={100}
-                  step={1}
+                  max={50}
+                  step={0.5}
                   value={[marginPercentage]}
                   onValueChange={(values) => setMarginPercentage(values[0])}
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>0%</span>
+                  <span>25%</span>
                   <span>50%</span>
-                  <span>100%</span>
                 </div>
               </div>
             </CardContent>

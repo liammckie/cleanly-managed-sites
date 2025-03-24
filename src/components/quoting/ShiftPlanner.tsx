@@ -19,7 +19,15 @@ import { QuoteShift, EmploymentType, EmployeeLevel, AllowanceType } from '@/lib/
 import { calculateJobCost, getAwardRates } from '@/lib/award/awardEngine';
 import { useAllowances } from '@/hooks/useQuotes';
 import { toast } from 'sonner';
-import { Plus, Trash2, Copy, Clock, DollarSign, AlertTriangle } from 'lucide-react';
+import { 
+  Plus, 
+  Trash2, 
+  Copy, 
+  Clock, 
+  DollarSign, 
+  AlertTriangle,
+  Calculator
+} from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +37,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { 
+  calculateHourDifference, 
+  hasEarlyLateHours, 
+  calculateOvertimeHours 
+} from '@/lib/award/utils';
 
 // Days of the week
 const DAYS_OF_WEEK = [
@@ -42,69 +55,44 @@ const DAYS_OF_WEEK = [
   { value: 'public-holiday', label: 'Public Holiday', isWeekend: false },
 ];
 
-// Function to calculate time difference in hours
-const calculateHourDifference = (startTime: string, endTime: string, breakDuration: number): number => {
-  const start = new Date(`2000-01-01T${startTime}`);
-  const end = new Date(`2000-01-01T${endTime}`);
-  
-  // If end time is earlier than start time, add 1 day to end time (overnight shift)
-  if (end < start) {
-    end.setDate(end.getDate() + 1);
+// Pre-built shift templates
+const SHIFT_TEMPLATES = [
+  { 
+    name: "Standard 8hr Day", 
+    startTime: "09:00", 
+    endTime: "17:00", 
+    breakDuration: 30,
+    description: "Regular 8-hour shift with 30min break" 
+  },
+  { 
+    name: "Early Morning 6hr", 
+    startTime: "05:00", 
+    endTime: "11:00", 
+    breakDuration: 0,
+    description: "Early morning 6-hour shift with no break" 
+  },
+  { 
+    name: "Evening 4hr", 
+    startTime: "18:00", 
+    endTime: "22:00", 
+    breakDuration: 0,
+    description: "Evening 4-hour shift with no break" 
+  },
+  { 
+    name: "Split Shift", 
+    startTime: "06:00", 
+    endTime: "10:00", 
+    breakDuration: 0,
+    description: "Morning portion of a split shift" 
+  },
+  { 
+    name: "Weekend Half Day", 
+    startTime: "08:00", 
+    endTime: "12:00", 
+    breakDuration: 0,
+    description: "4-hour weekend morning shift" 
   }
-  
-  const diffMs = end.getTime() - start.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
-  
-  // Subtract break duration (convert minutes to hours)
-  return diffHours - (breakDuration / 60);
-};
-
-// Function to determine if a shift spans early/late hours (before 6am or after 6pm)
-const hasEarlyLateHours = (startTime: string, endTime: string): boolean => {
-  const earlyStartHour = 6; // 6am
-  const lateEndHour = 18; // 6pm
-  
-  const start = new Date(`2000-01-01T${startTime}`);
-  const end = new Date(`2000-01-01T${endTime}`);
-  
-  // If end time is earlier than start time, add 1 day to end time (overnight shift)
-  if (end < start) {
-    end.setDate(end.getDate() + 1);
-  }
-  
-  const startHour = start.getHours();
-  const endHour = end.getHours();
-  
-  return startHour < earlyStartHour || endHour >= lateEndHour;
-};
-
-// Function to calculate overtime hours
-const calculateOvertimeHours = (shifts: QuoteShift[]): Record<string, number> => {
-  // Group shifts by employment type + level (employee profile)
-  const employeeShifts: Record<string, number> = {};
-  
-  shifts.forEach(shift => {
-    const employeeKey = `${shift.employmentType}-${shift.level}-${shift.numberOfCleaners}`;
-    const shiftHours = calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
-    
-    if (!employeeShifts[employeeKey]) {
-      employeeShifts[employeeKey] = 0;
-    }
-    
-    employeeShifts[employeeKey] += shiftHours;
-  });
-  
-  // Calculate overtime hours
-  const overtimeHours: Record<string, number> = {};
-  
-  Object.entries(employeeShifts).forEach(([employeeKey, totalHours]) => {
-    if (totalHours > 38) {
-      overtimeHours[employeeKey] = totalHours - 38;
-    }
-  });
-  
-  return overtimeHours;
-};
+];
 
 interface ShiftPlannerProps {
   quoteId: string | null;
@@ -218,13 +206,18 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   };
   
   const handleAddShift = () => {
+    if (!newShift.day || !newShift.startTime || !newShift.endTime || !newShift.employmentType || !newShift.level) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    
     const estimatedCost = calculateShiftCost(newShift);
     
     const shiftToAdd: QuoteShift = {
       id: uuidv4(),
       day: newShift.day as 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public-holiday',
-      startTime: newShift.startTime || '08:00',
-      endTime: newShift.endTime || '16:00',
+      startTime: newShift.startTime,
+      endTime: newShift.endTime,
       breakDuration: newShift.breakDuration || 30,
       numberOfCleaners: newShift.numberOfCleaners || 1,
       employmentType: newShift.employmentType as EmploymentType,
@@ -271,6 +264,17 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     toast.success('Shift duplicated');
   };
   
+  const applyShiftTemplate = (template: typeof SHIFT_TEMPLATES[0]) => {
+    setNewShift(prev => ({
+      ...prev,
+      startTime: template.startTime,
+      endTime: template.endTime,
+      breakDuration: template.breakDuration
+    }));
+    
+    toast.success(`Applied template: ${template.name}`);
+  };
+  
   const getDayLabel = (day: string): string => {
     const dayItem = DAYS_OF_WEEK.find(d => d.value === day);
     return dayItem ? dayItem.label : day;
@@ -284,6 +288,36 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
       return allowance ? allowance.name : id;
     }).join(', ');
   };
+  
+  const checkForBrokenShifts = () => {
+    // Group shifts by day and employee type
+    const shiftsByDayAndType: Record<string, QuoteShift[]> = {};
+    
+    shifts.forEach(shift => {
+      const key = `${shift.day}-${shift.employmentType}-${shift.level}`;
+      if (!shiftsByDayAndType[key]) {
+        shiftsByDayAndType[key] = [];
+      }
+      shiftsByDayAndType[key].push(shift);
+    });
+    
+    // Check for days with multiple shifts (potential broken shifts)
+    const brokenShiftDays: string[] = [];
+    
+    Object.entries(shiftsByDayAndType).forEach(([key, dayShifts]) => {
+      if (dayShifts.length > 1) {
+        const [day] = key.split('-');
+        if (!brokenShiftDays.includes(day)) {
+          brokenShiftDays.push(day);
+        }
+      }
+    });
+    
+    return brokenShiftDays;
+  };
+  
+  const brokenShiftDays = checkForBrokenShifts();
+  const hasBrokenShifts = brokenShiftDays.length > 0;
   
   return (
     <div className="space-y-6">
@@ -305,32 +339,60 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
         </div>
       </div>
       
-      {/* Overtime warnings */}
-      {hasOvertimeWarnings && (
-        <Card className="bg-amber-50 border-amber-300">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-amber-800">Overtime Warning</h4>
-                <p className="text-sm text-amber-700">
-                  Some employees are scheduled for more than 38 hours per week, triggering overtime rates:
-                </p>
-                <ul className="mt-2 text-sm text-amber-700 list-disc pl-5">
-                  {Object.entries(overtimeHours).map(([employeeKey, hours], index) => {
-                    const [type, level, count] = employeeKey.split('-');
-                    return (
-                      <li key={index}>
-                        {count} x Level {level} {type} employee: {hours.toFixed(1)} hours of overtime
-                      </li>
-                    );
-                  })}
-                </ul>
+      {/* Warnings section */}
+      <div className="space-y-4">
+        {/* Overtime warnings */}
+        {hasOvertimeWarnings && (
+          <Card className="bg-amber-50 border-amber-300">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-amber-800">Overtime Warning</h4>
+                  <p className="text-sm text-amber-700">
+                    Some employees are scheduled for more than 38 hours per week, triggering overtime rates:
+                  </p>
+                  <ul className="mt-2 text-sm text-amber-700 list-disc pl-5">
+                    {Object.entries(overtimeHours).map(([employeeKey, hours], index) => {
+                      const [type, level, count] = employeeKey.split('-');
+                      return (
+                        <li key={index}>
+                          {count} × Level {level} {type} employee: {hours.toFixed(1)} hours of overtime
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Broken shift detection */}
+        {hasBrokenShifts && (
+          <Card className="bg-blue-50 border-blue-300">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-2">
+                <Clock className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-800">Broken Shifts Detected</h4>
+                  <p className="text-sm text-blue-700">
+                    Multiple shifts on the same day for the same employee type may qualify for broken shift allowances:
+                  </p>
+                  <ul className="mt-2 text-sm text-blue-700 list-disc pl-5">
+                    {brokenShiftDays.map((day, index) => (
+                      <li key={index}>{getDayLabel(day)}</li>
+                    ))}
+                  </ul>
+                  <p className="text-sm text-blue-700 mt-2">
+                    Consider adding the "broken-shift" allowance when finalizing your quote.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
       
       <TabsContent value="list" className="m-0">
         {shifts.length === 0 ? (
@@ -462,6 +524,34 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Shift templates */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Quick Templates</h4>
+              <div className="flex flex-wrap gap-2">
+                {SHIFT_TEMPLATES.map((template, idx) => (
+                  <TooltipProvider key={idx}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => applyShiftTemplate(template)}
+                        >
+                          {template.name}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="w-60">
+                        <p className="text-sm">{template.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {template.startTime} - {template.endTime} ({template.breakDuration}min break)
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>

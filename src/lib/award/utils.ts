@@ -221,3 +221,91 @@ export const getFrequencyMultiplier = (
   
   return toDailyMultipliers[fromFrequency] * fromDailyMultipliers[toFrequency];
 };
+
+/**
+ * Detect broken shifts in a schedule
+ * Broken shifts occur when the same employee type works multiple separate shifts on the same day
+ */
+export const detectBrokenShifts = (shifts: QuoteShift[]): string[] => {
+  // Group shifts by day and employee type
+  const shiftsByDayAndType: Record<string, QuoteShift[]> = {};
+  
+  shifts.forEach(shift => {
+    const key = `${shift.day}-${shift.employmentType}-${shift.level}`;
+    if (!shiftsByDayAndType[key]) {
+      shiftsByDayAndType[key] = [];
+    }
+    shiftsByDayAndType[key].push(shift);
+  });
+  
+  // Check for days with multiple shifts (potential broken shifts)
+  const brokenShiftDays: string[] = [];
+  
+  Object.entries(shiftsByDayAndType).forEach(([key, dayShifts]) => {
+    if (dayShifts.length > 1) {
+      const [day] = key.split('-');
+      if (!brokenShiftDays.includes(day)) {
+        brokenShiftDays.push(day);
+      }
+    }
+  });
+  
+  return brokenShiftDays;
+};
+
+/**
+ * Calculate total labor and cleaning costs
+ * @param shifts All shifts in the schedule
+ * @param subcontractors All subcontractors
+ * @param timeframe The desired timeframe for calculation (weekly, monthly, annual)
+ */
+export const calculateTotalCosts = (
+  shifts: QuoteShift[],
+  subcontractors: Subcontractor[],
+  timeframe: 'weekly' | 'monthly' | 'annual' = 'monthly'
+): {
+  laborCost: number;
+  subcontractorCost: number;
+  totalCost: number;
+  totalHours: number;
+} => {
+  // Calculate total labor cost
+  const totalLaborCost = shifts.reduce((total, shift) => total + shift.estimatedCost, 0);
+  
+  // Calculate total hours
+  const totalHours = shifts.reduce((total, shift) => {
+    const shiftHours = calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
+    return total + (shiftHours * shift.numberOfCleaners);
+  }, 0);
+  
+  // Calculate total subcontractor cost based on timeframe
+  let totalSubcontractorCost = 0;
+  
+  if (timeframe === 'weekly') {
+    totalSubcontractorCost = subcontractors.reduce(
+      (total, subcontractor) => total + calculateSubcontractorWeeklyCost(subcontractor),
+      0
+    );
+  } else if (timeframe === 'monthly') {
+    totalSubcontractorCost = subcontractors.reduce(
+      (total, subcontractor) => total + calculateSubcontractorMonthlyCost(subcontractor),
+      0
+    );
+  } else if (timeframe === 'annual') {
+    totalSubcontractorCost = subcontractors.reduce(
+      (total, subcontractor) => total + calculateSubcontractorMonthlyCost(subcontractor) * 12,
+      0
+    );
+  }
+  
+  // Apply timeframe multiplier to labor costs
+  const timeframeFactor = getTimeframeFactor(timeframe);
+  const adjustedLaborCost = totalLaborCost * timeframeFactor;
+  
+  return {
+    laborCost: adjustedLaborCost,
+    subcontractorCost: totalSubcontractorCost,
+    totalCost: adjustedLaborCost + totalSubcontractorCost,
+    totalHours: totalHours * timeframeFactor
+  };
+};
