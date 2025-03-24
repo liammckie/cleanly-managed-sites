@@ -11,6 +11,7 @@ const withErrorHandling = async <T>(operation: () => Promise<T>, errorMessage: s
     return await operation();
   } catch (error: any) {
     console.error(`${errorMessage}:`, error);
+    toast.error(errorMessage);
     throw error;
   }
 };

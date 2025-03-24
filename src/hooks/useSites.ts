@@ -1,6 +1,7 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { sitesApi, SiteRecord } from '@/lib/api';
+import { sitesApi } from '@/lib/api';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
 export function useSites() {
@@ -9,13 +10,7 @@ export function useSites() {
   // Query for fetching all sites
   const sitesQuery = useQuery({
     queryKey: ['sites'],
-    queryFn: async () => {
-      // Test Supabase connection
-      console.log('Testing Supabase connection...');
-      const result = await sitesApi.getSites();
-      console.log('Supabase connection successful:', result);
-      return result;
-    },
+    queryFn: sitesApi.getSites,
   });
   
   // Mutation for creating a new site
@@ -100,7 +95,7 @@ export function useSiteDetails(siteId: string | undefined) {
   });
   
   return {
-    site: siteQuery.data as SiteRecord | null,
+    site: siteQuery.data as any,
     isLoading: siteQuery.isLoading,
     isError: siteQuery.isError,
     error: siteQuery.error,

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -68,7 +69,7 @@ export function SitesList() {
       field: "service_delivery_type", 
       headerFilter: "list", 
       headerFilterParams: { values: { direct: "Direct", contractor: "Contractor" } },
-      formatter: "text",
+      formatter: "plaintext", // Changed from "text" to "plaintext"
       mutator: function(value: any, data: any) {
         return data.service_delivery_type || 'direct';
       }
