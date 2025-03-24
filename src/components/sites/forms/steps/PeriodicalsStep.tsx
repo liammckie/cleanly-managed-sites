@@ -17,6 +17,13 @@ export function PeriodicalsStep({
 }: PeriodicalsStepProps) {
   const periodicServices = formData.periodicals || {};
   
+  // Initialize objects if they don't exist to prevent errors
+  const carpet = periodicServices.carpet || {};
+  const floor = periodicServices.floor || {};
+  const windows = periodicServices.windows || {};
+  const highLevel = periodicServices.highLevel || {};
+  const additional = periodicServices.additional || {};
+  
   const handleToggle = (section: string, field: string, value: boolean) => {
     handleDoubleNestedChange('periodicals', section, field, value);
   };
@@ -34,7 +41,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="carpet-cleaning"
-              checked={periodicServices.carpet?.cleaning || false}
+              checked={carpet.cleaning || false}
               onCheckedChange={(checked) => handleToggle('carpet', 'cleaning', checked)}
             />
           </div>
@@ -46,7 +53,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="carpet-shampooing"
-              checked={periodicServices.carpet?.shampooing || false}
+              checked={carpet.shampooing || false}
               onCheckedChange={(checked) => handleToggle('carpet', 'shampooing', checked)}
             />
           </div>
@@ -58,7 +65,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="floor-buffing"
-              checked={periodicServices.floor?.buffing || false}
+              checked={floor.buffing || false}
               onCheckedChange={(checked) => handleToggle('floor', 'buffing', checked)}
             />
           </div>
@@ -70,7 +77,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="floor-stripping"
-              checked={periodicServices.floor?.stripping || false}
+              checked={floor.stripping || false}
               onCheckedChange={(checked) => handleToggle('floor', 'stripping', checked)}
             />
           </div>
@@ -88,7 +95,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="window-internal"
-              checked={periodicServices.windows?.internal || false}
+              checked={windows.internal || false}
               onCheckedChange={(checked) => handleToggle('windows', 'internal', checked)}
             />
           </div>
@@ -100,7 +107,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="window-external"
-              checked={periodicServices.windows?.external || false}
+              checked={windows.external || false}
               onCheckedChange={(checked) => handleToggle('windows', 'external', checked)}
             />
           </div>
@@ -112,7 +119,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="high-dusting"
-              checked={periodicServices.highLevel?.dusting || false}
+              checked={highLevel.dusting || false}
               onCheckedChange={(checked) => handleToggle('highLevel', 'dusting', checked)}
             />
           </div>
@@ -130,7 +137,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="upholstery-cleaning"
-              checked={periodicServices.additional?.upholstery || false}
+              checked={additional.upholstery || false}
               onCheckedChange={(checked) => handleToggle('additional', 'upholstery', checked)}
             />
           </div>
@@ -142,7 +149,7 @@ export function PeriodicalsStep({
             </div>
             <Switch 
               id="pressure-washing"
-              checked={periodicServices.additional?.pressureWashing || false}
+              checked={additional.pressureWashing || false}
               onCheckedChange={(checked) => handleToggle('additional', 'pressureWashing', checked)}
             />
           </div>

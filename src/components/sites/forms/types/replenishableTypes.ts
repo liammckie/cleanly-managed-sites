@@ -10,4 +10,5 @@ export interface Replenishables {
   stock: string[];
   contactDetails: string;
   supplies?: ReplenishableSupply[];
+  notes?: string; // Add missing property
 }

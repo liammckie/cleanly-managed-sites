@@ -26,4 +26,13 @@ export interface JobSpecifications {
   workingDays?: WorkingDays;
   serviceDeliveryType?: 'direct' | 'contractor'; // Added property
   annualContractorCost?: number; // Added property
+  
+  // Add missing properties from error messages
+  cleaningFrequency?: string;
+  customFrequency?: string;
+  serviceDays?: string;
+  serviceTime?: string;
+  estimatedHours?: string | number;
+  equipmentRequired?: string;
+  scopeNotes?: string;
 }

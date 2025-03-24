@@ -24,4 +24,26 @@ export interface Periodicals {
   windowCleaning: WindowCleaning;
   steamCleaning: SteamCleaning;
   tasks?: PeriodicalTask[];
+  
+  // Add missing properties from error messages
+  carpet?: {
+    cleaning?: boolean;
+    shampooing?: boolean;
+  };
+  floor?: {
+    buffing?: boolean;
+    stripping?: boolean;
+  };
+  windows?: {
+    internal?: boolean;
+    external?: boolean;
+  };
+  highLevel?: {
+    dusting?: boolean;
+  };
+  additional?: {
+    upholstery?: boolean;
+    pressureWashing?: boolean;
+  };
+  notes?: string;
 }
