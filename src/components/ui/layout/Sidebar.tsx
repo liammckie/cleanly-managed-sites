@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/auth/useAuth';
 import { 
   LayoutDashboard, 
   Users, 

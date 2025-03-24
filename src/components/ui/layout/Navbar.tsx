@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/hooks/auth'; // Fix the import path
+import { useAuth } from '@/hooks/auth/useAuth';
 import {
   DropdownMenu,
   DropdownMenuContent,
