@@ -67,6 +67,7 @@ export const useSiteFormValidation = () => {
     
     // Set any new errors
     setErrors(newErrors);
+    console.log("Validation for step", stepIndex, "has errors:", Object.keys(newErrors).length > 0, newErrors);
     
     // Return true if no errors
     return Object.keys(newErrors).length === 0;

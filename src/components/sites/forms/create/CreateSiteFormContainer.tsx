@@ -24,6 +24,8 @@ export function CreateSiteFormContainer({
   handleSubmit,
   children
 }: CreateSiteFormContainerProps) {
+  console.log("Rendering form container, current step:", stepper.currentStep);
+  
   return (
     <div>
       {children}

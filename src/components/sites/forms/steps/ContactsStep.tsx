@@ -62,7 +62,7 @@ export function ContactsStep({
         <FormItem className="flex items-center space-x-2">
           <Switch 
             id="useClientInfo" 
-            checked={formData.useClientInfo}
+            checked={formData.useClientInfo || false}
             onCheckedChange={(value) => {
               if (toggleUseClientInfo) {
                 toggleUseClientInfo(value);

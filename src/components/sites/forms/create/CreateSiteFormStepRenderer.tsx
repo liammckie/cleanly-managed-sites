@@ -19,6 +19,7 @@ export function CreateSiteFormStepRenderer({
   const handleNext = async () => {
     try {
       console.log("Attempting to move to next step...");
+      console.log("Current step:", stepper.currentStep);
       
       // Check if we need to validate the current step
       if (stepper.validateCurrentStep && !stepper.validateCurrentStep()) {
@@ -40,6 +41,7 @@ export function CreateSiteFormStepRenderer({
     }
   };
 
+  // Make sure we always render the SiteFormStep component with all required props
   return (
     <SiteFormStep
       title={stepper.steps[stepper.currentStep].title}
