@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { contractorDocumentsApi, ContractorDocument } from '@/lib/api/contractors/contractorHistoryApi';
 
 // Define the document types
 const DOCUMENT_TYPES = [
@@ -65,36 +64,10 @@ const documentSchema = z.object({
 
 type DocumentFormValues = z.infer<typeof documentSchema>;
 
-// Define the document type
-interface ContractorDocument {
-  id: string;
-  contractor_id: string;
-  name: string;
-  document_type: string;
-  file_path?: string;
-  issue_date?: string;
-  expiry_date?: string;
-  reminder_days?: number;
-  status: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 // Function to fetch contractor documents
 const fetchContractorDocuments = async (contractorId: string) => {
-  const { data, error } = await supabase
-    .from('contractor_documents')
-    .select('*')
-    .eq('contractor_id', contractorId)
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching contractor documents:', error);
-    throw error;
-  }
-
-  return data as ContractorDocument[];
+  if (!contractorId) return [];
+  return await contractorDocumentsApi.getContractorDocuments(contractorId);
 };
 
 // Document Form component
@@ -126,23 +99,16 @@ const DocumentForm = ({
   // Create document mutation
   const createDocumentMutation = useMutation({
     mutationFn: async (values: DocumentFormValues) => {
-      const { data, error } = await supabase
-        .from('contractor_documents')
-        .insert([
-          {
-            contractor_id: contractorId,
-            ...values,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating document:', error);
-        throw error;
-      }
-
-      return data;
+      return await contractorDocumentsApi.createDocument({
+        contractor_id: contractorId,
+        name: values.name,
+        document_type: values.document_type,
+        file_path: values.file_path,
+        issue_date: values.issue_date,
+        expiry_date: values.expiry_date,
+        reminder_days: values.reminder_days,
+        notes: values.notes
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contractor-documents', contractorId] });
@@ -159,19 +125,15 @@ const DocumentForm = ({
     mutationFn: async (values: DocumentFormValues) => {
       if (!document) return null;
 
-      const { data, error } = await supabase
-        .from('contractor_documents')
-        .update(values)
-        .eq('id', document.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating document:', error);
-        throw error;
-      }
-
-      return data;
+      return await contractorDocumentsApi.updateDocument(document.id, {
+        name: values.name,
+        document_type: values.document_type,
+        file_path: values.file_path,
+        issue_date: values.issue_date,
+        expiry_date: values.expiry_date,
+        reminder_days: values.reminder_days,
+        notes: values.notes
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contractor-documents', contractorId] });
@@ -472,15 +434,7 @@ export const ContractorDocuments = ({ contractorId }: { contractorId: string }) 
   // Delete document mutation
   const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await supabase
-        .from('contractor_documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (error) {
-        console.error('Error deleting document:', error);
-        throw error;
-      }
+      await contractorDocumentsApi.deleteDocument(documentId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contractor-documents', contractorId] });
