@@ -4,7 +4,7 @@ import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { useSites } from '@/hooks/useSites';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardMetrics } from '@/components/dashboard/DashboardMetrics';
-import { QuickActions } from '@/components/dashboard/QuickActions';
+import { DashboardActions } from '@/components/dashboard/DashboardActions';
 import { BusinessOverview } from '@/components/dashboard/BusinessOverview';
 import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 
@@ -18,13 +18,13 @@ const Dashboard = () => {
           <DashboardHeader />
         </ErrorBoundary>
         
-        <div className="space-y-8">
+        <ErrorBoundary>
+          <DashboardActions />
+        </ErrorBoundary>
+        
+        <div className="space-y-8 mt-6">
           <ErrorBoundary>
             <DashboardMetrics />
-          </ErrorBoundary>
-          
-          <ErrorBoundary>
-            <QuickActions sites={sites} />
           </ErrorBoundary>
           
           <ErrorBoundary>
