@@ -2,7 +2,7 @@
 import { Json } from '../types';
 
 export type CleaningLevel = 1 | 2 | 3;
-export type EmploymentType = 'casual' | 'part_time' | 'full_time';
+export type EmploymentType = 'full_time' | 'part_time' | 'casual';
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
 export type PublicHoliday = string; // ISO date string
 export type AllowanceType = 'leading_hand' | 'first_aid' | 'broken_shift' | 'meal_allowance' | 'laundry' | 'travel' | 'toilet_cleaning' | 'other';
@@ -10,8 +10,24 @@ export type FrequencyType = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'qu
 
 // Additional types needed by components
 export type EmployeeLevel = CleaningLevel;
-export type PayCondition = 'standard' | 'saturday' | 'sunday' | 'public_holiday' | 'early_morning' | 'evening' | 'night';
-export type ShiftDay = Day | 'public_holiday';
+export type PayCondition = 'standard' | 'saturday' | 'sunday' | 'public_holiday' | 'early_morning' | 'evening' | 'night' | 'base' | 'shift-early-late' | 'overtime-first-2-hours' | 'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday';
+export type ShiftDay = Day;
+
+export interface RateInfo {
+  rate: number;
+  multiplier: number;
+}
+
+export interface EmployeeLevelRates {
+  level: CleaningLevel;
+  employmentType: EmploymentType;
+  baseRate: number;
+  hourlyRate: number;
+  saturdayRate?: number;
+  sundayRate?: number;
+  publicHolidayRate?: number;
+  rates: Record<PayCondition, RateInfo>;
+}
 
 export interface AwardSettings {
   useModernAward: boolean;
@@ -19,22 +35,27 @@ export interface AwardSettings {
   includeAllowances: boolean;
   awardVersion: string;
   customRates: boolean;
-}
-
-export interface EmployeeLevelRates {
-  level: CleaningLevel;
-  hourlyRate: number;
-  saturdayRate?: number;
-  sundayRate?: number;
-  publicHolidayRate?: number;
+  baseRateMultiplier: number;
+  lastUpdated?: string;
+  overheadPercentageDefault: number;
+  marginPercentageDefault: number;
 }
 
 export interface JobCostingParams {
   employmentType: EmploymentType;
   level: EmployeeLevel;
-  hours: number;
+  hours: Record<PayCondition, number>;
   dayType: PayCondition;
   allowances?: string[];
+  overheadPercentage: number;
+  marginPercentage: number;
+}
+
+export interface JobCostBreakdownItem {
+  condition: PayCondition;
+  hours: number;
+  rate: number;
+  cost: number;
 }
 
 export interface JobCostBreakdown {
@@ -43,6 +64,12 @@ export interface JobCostBreakdown {
   totalCost: number;
   penaltyMultiplier?: number;
   allowanceCosts?: Record<string, number>;
+  laborCost: number;
+  overheadCost: number;
+  totalCostBeforeMargin: number;
+  margin: number;
+  totalPrice: number;
+  hourlyBreakdown: JobCostBreakdownItem[];
 }
 
 export interface AwardRate {
@@ -81,13 +108,14 @@ export interface Allowance {
 
 export interface AwardData {
   name?: string;
+  code?: string;
   effectiveDate?: string;
-  levels?: EmployeeLevelRates[];
-  rates: AwardRate[];
-  penalties: Penalty[];
-  overtime: AwardOvertime[];
-  allowances: Allowance[];
-  public_holidays: PublicHoliday[];
+  levels: EmployeeLevelRates[];
+  rates?: AwardRate[];
+  penalties?: Penalty[];
+  overtime?: AwardOvertime[];
+  allowances?: Allowance[];
+  public_holidays?: PublicHoliday[];
 }
 
 export interface ShiftTime {

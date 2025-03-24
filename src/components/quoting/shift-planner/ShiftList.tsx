@@ -52,7 +52,7 @@ export function ShiftList({
       { value: 'friday', label: 'Friday' },
       { value: 'saturday', label: 'Saturday' },
       { value: 'sunday', label: 'Sunday' },
-      { value: 'public-holiday', label: 'Public Holiday' },
+      { value: 'public_holiday', label: 'Public Holiday' },
     ];
     
     const dayItem = DAYS_OF_WEEK.find(d => d.value === day);
@@ -158,7 +158,7 @@ export function ShiftList({
               {shifts.map(shift => (
                 <TableRow key={shift.id}>
                   <TableCell>
-                    <Badge variant={shift.day === 'saturday' || shift.day === 'sunday' || shift.day === 'public-holiday' ? "destructive" : "secondary"}>
+                    <Badge variant={shift.day === 'saturday' || shift.day === 'sunday' || shift.day === 'public_holiday' ? "destructive" : "secondary"}>
                       {getDayLabel(shift.day)}
                     </Badge>
                   </TableCell>
@@ -178,7 +178,7 @@ export function ShiftList({
                         {shift.numberOfCleaners} × Level {shift.level}
                       </span>
                       <span className="text-xs text-muted-foreground capitalize">
-                        {shift.employmentType.replace('-', ' ')}
+                        {shift.employmentType.replace('_', ' ')}
                       </span>
                     </div>
                   </TableCell>

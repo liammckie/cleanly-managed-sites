@@ -1,89 +1,63 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, Clock } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { QuoteShift } from '@/lib/award/types';
+import { AlertTriangle, Clock } from 'lucide-react';
 
 interface WarningSectionProps {
   overtimeHours: Record<string, number>;
-  brokenShiftDays: string[];
+  brokenShiftDays: QuoteShift[][];
 }
 
 export function WarningSection({ overtimeHours, brokenShiftDays }: WarningSectionProps) {
-  const hasOvertimeWarnings = Object.keys(overtimeHours).length > 0;
-  const hasBrokenShifts = brokenShiftDays.length > 0;
-  
-  const getDayLabel = (day: string): string => {
-    const DAYS_OF_WEEK = [
-      { value: 'monday', label: 'Monday' },
-      { value: 'tuesday', label: 'Tuesday' },
-      { value: 'wednesday', label: 'Wednesday' },
-      { value: 'thursday', label: 'Thursday' },
-      { value: 'friday', label: 'Friday' },
-      { value: 'saturday', label: 'Saturday' },
-      { value: 'sunday', label: 'Sunday' },
-      { value: 'public-holiday', label: 'Public Holiday' },
-    ];
-    
-    const dayItem = DAYS_OF_WEEK.find(d => d.value === day);
-    return dayItem ? dayItem.label : day;
-  };
-
-  if (!hasOvertimeWarnings && !hasBrokenShifts) {
+  if (overtimeHours.total === 0 && brokenShiftDays.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-4">
-      {hasOvertimeWarnings && (
-        <Card className="bg-amber-50 border-amber-300">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-amber-800">Overtime Warning</h4>
-                <p className="text-sm text-amber-700">
-                  Some employees are scheduled for more than 38 hours per week, triggering overtime rates:
+    <Card>
+      <CardContent className="p-6 space-y-4">
+        {overtimeHours.total > 0 && (
+          <Alert variant="warning">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Potential Overtime Required</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>
+                The current schedule requires approximately {overtimeHours.total.toFixed(1)} hours of overtime.
+              </p>
+              {overtimeHours.fullTime > 0 && (
+                <p className="text-sm">
+                  • Full-time staff: {overtimeHours.fullTime.toFixed(1)} hours over standard 38-hour week
                 </p>
-                <ul className="mt-2 text-sm text-amber-700 list-disc pl-5">
-                  {Object.entries(overtimeHours).map(([employeeKey, hours], index) => {
-                    const [type, level, count] = employeeKey.split('-');
-                    return (
-                      <li key={index}>
-                        {count} × Level {level} {type} employee: {hours.toFixed(1)} hours of overtime
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {hasBrokenShifts && (
-        <Card className="bg-blue-50 border-blue-300">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-2">
-              <Clock className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-blue-800">Broken Shifts Detected</h4>
-                <p className="text-sm text-blue-700">
-                  Multiple shifts on the same day for the same employee type may qualify for broken shift allowances:
+              )}
+              {overtimeHours.partTime > 0 && (
+                <p className="text-sm">
+                  • Part-time staff: {overtimeHours.partTime.toFixed(1)} hours over contracted hours
                 </p>
-                <ul className="mt-2 text-sm text-blue-700 list-disc pl-5">
-                  {brokenShiftDays.map((day, index) => (
-                    <li key={index}>{getDayLabel(day)}</li>
-                  ))}
-                </ul>
-                <p className="text-sm text-blue-700 mt-2">
-                  Consider adding the "broken-shift" allowance when finalizing your quote.
+              )}
+              {overtimeHours.casual > 0 && (
+                <p className="text-sm">
+                  • Casual staff: {overtimeHours.casual.toFixed(1)} hours over standard limits
                 </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {brokenShiftDays.length > 0 && (
+          <Alert variant="warning">
+            <Clock className="h-4 w-4" />
+            <AlertTitle>Broken Shifts Detected</AlertTitle>
+            <AlertDescription>
+              <p>
+                Broken shifts (multiple shifts for the same employee in one day) found on {brokenShiftDays.length} days.
+                This may require additional allowances as per the award.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }

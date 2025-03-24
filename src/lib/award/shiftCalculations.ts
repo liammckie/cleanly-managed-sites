@@ -39,9 +39,9 @@ export const calculateShiftCost = (shift: Partial<QuoteShift>): number => {
   } else if (shift.day === 'sunday') {
     condition = 'sunday';
     hourlyRate = rateInfo.rates.sunday.rate;
-  } else if (shift.day === 'public-holiday') {
-    condition = 'public-holiday';
-    hourlyRate = rateInfo.rates['public-holiday'].rate;
+  } else if (shift.day === 'public_holiday') {
+    condition = 'public_holiday';
+    hourlyRate = rateInfo.rates.public_holiday.rate;
   } else if (hasEarlyLateHours(shift.startTime, shift.endTime)) {
     condition = 'shift-early-late';
     hourlyRate = rateInfo.rates['shift-early-late'].rate;
@@ -67,7 +67,7 @@ export const calculateShiftCostWithAllowances = (
     id: string;
     type: AllowanceType;
     amount: number;
-    unit: 'per-hour' | 'per-shift' | 'per-day' | 'per-week' | 'per-km';
+    unit: 'per_hour' | 'per_shift' | 'per_day' | 'per_week' | 'per_km';
     description?: string;
   }>
 ): number => {
@@ -83,11 +83,11 @@ export const calculateShiftCostWithAllowances = (
     shift.allowances.forEach(allowanceId => {
       const allowance = allowances.find(a => a.id === allowanceId);
       if (allowance) {
-        if (allowance.unit === 'per-hour') {
+        if (allowance.unit === 'per_hour') {
           allowanceCost += allowance.amount * hours;
-        } else if (allowance.unit === 'per-shift') {
+        } else if (allowance.unit === 'per_shift') {
           allowanceCost += allowance.amount;
-        } else if (allowance.unit === 'per-day') {
+        } else if (allowance.unit === 'per_day') {
           allowanceCost += allowance.amount;
         }
       }

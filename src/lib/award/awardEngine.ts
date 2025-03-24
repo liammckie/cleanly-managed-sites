@@ -1,5 +1,5 @@
 
-import { PayCondition, EmploymentType, EmployeeLevel, JobCostingParams, JobCostBreakdown, EmployeeLevelRates } from './types';
+import { PayCondition, EmploymentType, EmployeeLevel, JobCostingParams, JobCostBreakdown, EmployeeLevelRates, JobCostBreakdownItem } from './types';
 import { cleaningServicesAward, defaultAwardSettings } from './awardData';
 import { toast } from 'sonner';
 
@@ -23,14 +23,14 @@ export function calculateJobCost(params: JobCostingParams, settingsMultiplier: n
   }
   
   let totalLaborCost = 0;
-  const hourlyBreakdown: JobCostBreakdown['hourlyBreakdown'] = [];
+  const hourlyBreakdown: JobCostBreakdownItem[] = [];
   
   // Calculate cost for each pay condition
   Object.keys(hours).forEach(conditionKey => {
     const condition = conditionKey as PayCondition;
     const hoursForCondition = hours[condition] || 0;
     
-    if (hoursForCondition > 0) {
+    if (hoursForCondition > 0 && rateInfo.rates[condition]) {
       // Apply the settings multiplier to adjust base rates
       const adjustedRate = rateInfo.rates[condition].rate * settingsMultiplier;
       const cost = adjustedRate * hoursForCondition;
@@ -59,6 +59,9 @@ export function calculateJobCost(params: JobCostingParams, settingsMultiplier: n
   const totalPrice = totalCostBeforeMargin + margin;
   
   return {
+    baseRate: rateInfo.baseRate,
+    hourlyRate: rateInfo.hourlyRate,
+    totalCost: totalLaborCost,
     laborCost: totalLaborCost,
     overheadCost,
     totalCostBeforeMargin,
@@ -86,6 +89,7 @@ export function recalculateRatesWithMultiplier(multiplier: number) {
       level.rates[condition].rate = originalRate * level.rates[condition].multiplier * multiplier;
     });
     level.baseRate = level.baseRate * multiplier;
+    level.hourlyRate = level.hourlyRate * multiplier;
   });
   
   return updatedAward;

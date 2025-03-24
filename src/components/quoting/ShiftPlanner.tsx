@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, CalendarDays, List, PlusCircle } from 'lucide-react';
 import { QuoteShift, Subcontractor } from '@/lib/award/types';
 import { calculateTotalCosts, detectOvertimeHours, detectBrokenShifts } from '@/lib/award/utils';
-import { useShiftManagement } from '@/hooks/useShiftManagement';
+import useShiftManagement from '@/hooks/useShiftManagement';
 import { useAllowances } from '@/hooks/quotes/useAllowances';
 import { ShiftScheduler } from './shift-planner/ShiftScheduler';
 import { ShiftSummary } from './shift-planner/ShiftSummary';

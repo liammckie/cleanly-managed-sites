@@ -1,3 +1,4 @@
+
 import { QuoteShift, Subcontractor } from './types';
 
 // Calculate the difference in hours between two times, accounting for break
@@ -50,8 +51,8 @@ export function calculateTotalHours(shifts: QuoteShift[]): number {
   }, 0);
 }
 
-// Calculate overtime hours from a set of shifts
-export function calculateOvertimeHours(shifts: QuoteShift[]): Record<string, number> {
+// Detect overtime hours from a set of shifts
+export function detectOvertimeHours(shifts: QuoteShift[]): Record<string, number> {
   // Group shifts by employee type and day
   const shiftsByTypeAndDay = new Map<string, QuoteShift[]>();
   
@@ -75,7 +76,7 @@ export function calculateOvertimeHours(shifts: QuoteShift[]): Record<string, num
     const totalHours = calculateTotalHours(employeeShifts);
     
     // For full-time employees, overtime is hours over 38 per week
-    if (key.startsWith('full-time')) {
+    if (key.startsWith('full_time')) {
       const overtime = Math.max(0, totalHours - 38);
       overtimeHours.fullTime += overtime;
       overtimeHours.total += overtime;
@@ -83,7 +84,7 @@ export function calculateOvertimeHours(shifts: QuoteShift[]): Record<string, num
     
     // For part-time employees, overtime depends on contracted hours
     // For this example, assume part-time is 20 hours per week
-    else if (key.startsWith('part-time')) {
+    else if (key.startsWith('part_time')) {
       const overtime = Math.max(0, totalHours - 20);
       overtimeHours.partTime += overtime;
       overtimeHours.total += overtime;
@@ -114,9 +115,9 @@ export function calculateMonthlyCost(cost: number, frequency: string): number {
       return cost;
     case 'quarterly':
       return cost / 3;
-    case 'yearly':
+    case 'annually':
       return cost / 12;
-    case 'once-off':
+    case 'one_time':
       return cost; // For once-off, just use the full cost
     default:
       return cost;
@@ -136,9 +137,9 @@ export function calculateYearlyCost(cost: number, frequency: string): number {
       return cost * 12;
     case 'quarterly':
       return cost * 4;
-    case 'yearly':
+    case 'annually':
       return cost;
-    case 'once-off':
+    case 'one_time':
       return cost; // For once-off, just use the full cost
     default:
       return cost;
@@ -201,8 +202,8 @@ export function getTimeframeFactor(fromTimeframe: string, toTimeframe: string): 
     fortnightly: 1/2.167,
     monthly: 1,
     quarterly: 3,
-    yearly: 12,
-    'once-off': 1 // Treating once-off as monthly by default
+    annually: 12,
+    one_time: 1 // Treating once-off as monthly by default
   };
   
   // Conversion from monthly to target timeframe
@@ -212,8 +213,8 @@ export function getTimeframeFactor(fromTimeframe: string, toTimeframe: string): 
     fortnightly: 2.167,
     monthly: 1,
     quarterly: 1/3,
-    yearly: 1/12,
-    'once-off': 1 // Treating once-off as monthly by default
+    annually: 1/12,
+    one_time: 1 // Treating once-off as monthly by default
   };
   
   // Convert to monthly then to target timeframe

@@ -1,17 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { QuoteShift, EmploymentType, EmployeeLevel } from '@/lib/award/types';
-
-type ShiftDay =
-  | 'monday'
-  | 'tuesday'
-  | 'wednesday'
-  | 'thursday'
-  | 'friday'
-  | 'saturday'
-  | 'sunday'
-  | 'public-holiday';
+import { QuoteShift, EmploymentType, EmployeeLevel, Day } from '@/lib/award/types';
 
 const useShiftManagement = (initialShifts: QuoteShift[] = [], quoteId?: string) => {
   const [shifts, setShifts] = useState<QuoteShift[]>(initialShifts);
@@ -21,12 +11,12 @@ const useShiftManagement = (initialShifts: QuoteShift[] = [], quoteId?: string) 
     const defaultShift = {
       id: uuidv4(),
       quoteId: quoteId || '',  // Add quoteId property
-      day: 'monday' as ShiftDay,
+      day: 'monday' as Day,
       startTime: '09:00',
       endTime: '17:00',
       breakDuration: 30,
       numberOfCleaners: 1,
-      employmentType: 'full-time' as EmploymentType,
+      employmentType: 'full_time' as EmploymentType,
       level: 1 as EmployeeLevel,
       allowances: [],
       estimatedCost: 0,
