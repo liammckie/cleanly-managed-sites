@@ -45,7 +45,7 @@ export function ClientDashboard() {
               <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                 Active
               </Badge>
-              {' '}clients with ongoing contracts
+              {' '}clients with status "active"
             </p>
           </CardContent>
         </Card>
@@ -61,7 +61,7 @@ export function ClientDashboard() {
               <Badge variant="outline" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                 Inactive
               </Badge>
-              {' '}clients with no active contracts
+              {' '}clients with status "inactive"
             </p>
           </CardContent>
         </Card>

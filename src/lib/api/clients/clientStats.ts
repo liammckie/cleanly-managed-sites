@@ -12,15 +12,18 @@ export const clientStatsApi = {
       throw error;
     }
     
+    // Initialize status count with zeros for all expected statuses
     const statusCount: Record<string, number> = {
       active: 0,
       inactive: 0,
       pending: 0
     };
     
+    // Only count clients with valid status values that match our expected statuses
     clients?.forEach(client => {
-      if (client.status in statusCount) {
-        statusCount[client.status] += 1;
+      const status = client.status?.toLowerCase();
+      if (status && status in statusCount) {
+        statusCount[status] += 1;
       }
     });
     
