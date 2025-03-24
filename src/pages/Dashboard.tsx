@@ -10,13 +10,19 @@ import { ContractorsDashboard } from '@/components/contractors/ContractorsDashbo
 import { WorkOrderMetrics } from '@/components/workorders/WorkOrderMetrics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ClipboardList } from 'lucide-react';
 import { WorkOrderTemplate } from '@/lib/api/workorders/types';
 import { getAllTemplates } from '@/lib/templates/workOrderTemplates';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSites } from '@/hooks/useSites';
 import { SiteSelector } from '@/components/workorders/site-selection/SiteSelector';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +30,7 @@ const Dashboard = () => {
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WorkOrderTemplate | null>(null);
   
+  // Get only the first few templates for quick actions
   const popularTemplates = getAllTemplates()
     .filter(template => template.activityType === 'cleaning')
     .slice(0, 4);
@@ -62,10 +69,36 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-medium">Quick Actions</h3>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/workorders/create')}>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    New Work Order
-                  </Button>
+                  
+                  <div className="flex gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <ClipboardList className="h-4 w-4 mr-2" />
+                          Templates
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        {getAllTemplates()
+                          .filter(template => template.activityType === 'cleaning')
+                          .slice(0, 10)
+                          .map((template) => (
+                            <DropdownMenuItem 
+                              key={template.id}
+                              onClick={() => handleTemplateSelect(template)}
+                            >
+                              {template.title}
+                            </DropdownMenuItem>
+                          ))
+                        }
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
+                    <Button variant="outline" size="sm" onClick={() => navigate('/workorders/create')}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      New Work Order
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -85,10 +118,6 @@ const Dashboard = () => {
                         <CardDescription className="line-clamp-2 h-10">
                           {template.description}
                         </CardDescription>
-                        <div className="mt-2 flex justify-between text-xs">
-                          <span>Est. Cost: ${template.estimatedCost}</span>
-                          <span>Billing: ${template.billingAmount}</span>
-                        </div>
                       </CardContent>
                     </Card>
                   ))}

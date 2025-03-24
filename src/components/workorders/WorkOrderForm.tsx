@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +49,6 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
     },
   });
 
-  // If templateId is provided, load that template on mount
   useEffect(() => {
     if (templateId) {
       const template = getTemplateById(templateId);
@@ -61,7 +59,6 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   }, [templateId]);
 
   const handleTemplateSelect = (template: WorkOrderTemplate) => {
-    // Apply template data to form
     form.setValue('title', template.title);
     form.setValue('description', template.description);
     
@@ -83,17 +80,14 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   };
 
   const onSubmit = async (data: CreateWorkOrderData) => {
-    // Format the date if selected
     if (selectedDate) {
       data.due_date = format(selectedDate, 'yyyy-MM-dd');
     }
 
-    // Add attachments to the data
     if (attachments.length > 0) {
       data.attachments = attachments;
     }
 
-    // Determine whether to create a regular work order or a completed one
     if (markAsCompleted) {
       await createAndCompleteWorkOrderMutation.mutateAsync(data);
     } else {
@@ -107,7 +101,6 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
     }
   };
 
-  // For storing a temporary workOrderId to use with file uploads before the work order is created
   const tempWorkOrderId = React.useMemo(() => crypto.randomUUID(), []);
 
   const isPending = createWorkOrderMutation.isPending || createAndCompleteWorkOrderMutation.isPending;
@@ -115,15 +108,11 @@ export const WorkOrderForm = ({ site, onSuccess, templateId }: WorkOrderFormProp
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Card>
-          <CardContent className="pt-6">
-            <TemplateSelector 
-              onTemplateSelect={handleTemplateSelect} 
-              siteName={site.name}
-              dueDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined}
-            />
-          </CardContent>
-        </Card>
+        <TemplateSelector 
+          onTemplateSelect={handleTemplateSelect} 
+          siteName={site.name}
+          dueDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined}
+        />
         
         <Separator />
         
