@@ -1,5 +1,5 @@
 
-import { QuoteShift } from './types';
+import { QuoteShift, Subcontractor } from './types';
 
 // Calculate the difference in hours between two times, accounting for break
 export function calculateHourDifference(
@@ -144,4 +144,101 @@ export function calculateYearlyCost(cost: number, frequency: string): number {
     default:
       return cost;
   }
+}
+
+// Format currency for displaying
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    minimumFractionDigits: 2
+  }).format(amount);
+}
+
+// Calculate total costs from shifts
+export function calculateTotalCosts(shifts: QuoteShift[]): number {
+  return shifts.reduce((total, shift) => {
+    return total + (shift.estimatedCost || 0);
+  }, 0);
+}
+
+// Calculate total cost with overhead and margin
+export function calculateTotalCostWithOverheadAndMargin(
+  laborCost: number, 
+  overheadPercentage: number, 
+  marginPercentage: number
+): {
+  overheadCost: number;
+  totalCostBeforeMargin: number;
+  marginAmount: number;
+  totalPrice: number;
+} {
+  const overheadCost = laborCost * (overheadPercentage / 100);
+  const totalCostBeforeMargin = laborCost + overheadCost;
+  const marginAmount = totalCostBeforeMargin * (marginPercentage / 100);
+  const totalPrice = totalCostBeforeMargin + marginAmount;
+  
+  return {
+    overheadCost,
+    totalCostBeforeMargin,
+    marginAmount,
+    totalPrice
+  };
+}
+
+// Calculate subcontractor monthly cost
+export function calculateSubcontractorMonthlyCost(subcontractors: Subcontractor[]): number {
+  return subcontractors.reduce((total, sub) => {
+    return total + calculateMonthlyCost(sub.cost, sub.frequency);
+  }, 0);
+}
+
+// Get timeframe factor for converting between timeframes
+export function getTimeframeFactor(fromTimeframe: string, toTimeframe: string): number {
+  // Conversion factors to monthly
+  const toMonthlyFactors: Record<string, number> = {
+    daily: 1/21.67,
+    weekly: 1/4.33,
+    fortnightly: 1/2.167,
+    monthly: 1,
+    quarterly: 3,
+    yearly: 12,
+    'once-off': 1 // Treating once-off as monthly by default
+  };
+  
+  // Conversion from monthly to target timeframe
+  const fromMonthlyFactors: Record<string, number> = {
+    daily: 21.67,
+    weekly: 4.33,
+    fortnightly: 2.167,
+    monthly: 1,
+    quarterly: 1/3,
+    yearly: 1/12,
+    'once-off': 1 // Treating once-off as monthly by default
+  };
+  
+  // Convert to monthly then to target timeframe
+  return toMonthlyFactors[fromTimeframe] * fromMonthlyFactors[toTimeframe];
+}
+
+// Calculate days per week based on shifts
+export function calculateDaysPerWeek(shifts: QuoteShift[]): number {
+  // Get unique days
+  const uniqueDays = new Set(shifts.map(shift => shift.day));
+  return uniqueDays.size;
+}
+
+// Detect broken shifts (multiple shifts for the same cleaner on the same day)
+export function detectBrokenShifts(shifts: QuoteShift[]): QuoteShift[][] {
+  const shiftsByDayAndLevel: Record<string, QuoteShift[]> = {};
+  
+  shifts.forEach(shift => {
+    const key = `${shift.day}-${shift.level}-${shift.employmentType}`;
+    if (!shiftsByDayAndLevel[key]) {
+      shiftsByDayAndLevel[key] = [];
+    }
+    shiftsByDayAndLevel[key].push(shift);
+  });
+  
+  return Object.values(shiftsByDayAndLevel).filter(dayShifts => dayShifts.length > 1);
 }

@@ -24,20 +24,26 @@ export const fetchQuoteShifts = async (quoteId: string) => {
 export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift>[]) => {
   if (!quoteId || !shifts.length) return [];
   
-  const shiftsWithQuoteId = shifts.map(shift => 
-    quoteShiftToDb({
-      ...shift,
-      quoteId
-    })
-  );
-  
   // Insert shifts one by one to avoid Supabase type validation issues
   let allInsertedShifts: QuoteShift[] = [];
   
-  for (const shiftData of shiftsWithQuoteId) {
+  for (const shift of shifts) {
+    // Create the DB representation with quote_id
+    const shiftData = quoteShiftToDb({
+      ...shift,
+      quoteId
+    });
+    
+    // Ensure required fields are present
+    if (!shiftData.day || !shiftData.employment_type || !shiftData.start_time || 
+        !shiftData.end_time || !shiftData.level) {
+      console.error('Missing required fields for shift:', shiftData);
+      continue;
+    }
+    
     const { data, error } = await supabase
       .from('quote_shifts')
-      .insert(shiftData)
+      .insert([shiftData]) // Make sure this is an array
       .select();
     
     if (error) {

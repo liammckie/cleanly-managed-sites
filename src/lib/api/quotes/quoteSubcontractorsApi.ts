@@ -24,20 +24,25 @@ export const fetchQuoteSubcontractors = async (quoteId: string) => {
 export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Partial<Subcontractor>[]) => {
   if (!quoteId || !subcontractors.length) return [];
   
-  const subcontractorsWithQuoteId = subcontractors.map(sub => 
-    subcontractorToDb({
-      ...sub,
-      quoteId
-    })
-  );
-  
   // Insert subcontractors one by one to avoid Supabase type validation issues
   let allInsertedSubcontractors: Subcontractor[] = [];
   
-  for (const subData of subcontractorsWithQuoteId) {
+  for (const sub of subcontractors) {
+    // Create the DB representation with quote_id
+    const subData = subcontractorToDb({
+      ...sub,
+      quoteId
+    });
+    
+    // Ensure required fields are present
+    if (!subData.name) {
+      console.error('Missing required fields for subcontractor:', subData);
+      continue;
+    }
+    
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert(subData)
+      .insert([subData]) // Make sure this is an array
       .select();
     
     if (error) {

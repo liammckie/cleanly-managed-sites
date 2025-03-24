@@ -29,10 +29,10 @@ export const createOverheadProfile = async (name: string, laborPercentage: numbe
     user_id: userId
   };
   
-  // Now the properly typed data
+  // Insert as an array with a single object
   const { data, error } = await supabase
     .from('overhead_profiles')
-    .insert(profileData) // Use the direct object instead of an array
+    .insert([profileData]) 
     .select()
     .single();
   
