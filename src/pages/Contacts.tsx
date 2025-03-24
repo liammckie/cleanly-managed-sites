@@ -22,7 +22,11 @@ import {
   Star, 
   Mail, 
   Phone,
-  MoreHorizontal 
+  MoreHorizontal,
+  Building,
+  Store,
+  Truck,
+  Users
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -43,6 +47,7 @@ const Contacts = () => {
   const { 
     contacts, 
     contactTypeCount,
+    availableEntities,
     isLoading, 
     error,
     addContact,
@@ -133,6 +138,28 @@ const Contacts = () => {
     }
   };
 
+  // Helper to get the entity name for a contact
+  const getEntityName = (contact: ContactRecord) => {
+    const entity = availableEntities.find(e => e.id === contact.entity_id && e.type === contact.entity_type);
+    return entity ? entity.name : '';
+  };
+
+  // Helper to render entity icon
+  const getEntityIcon = (entityType: string) => {
+    switch (entityType) {
+      case 'client':
+        return <Building className="h-4 w-4 mr-1" />;
+      case 'site':
+        return <Store className="h-4 w-4 mr-1" />;
+      case 'supplier':
+        return <Truck className="h-4 w-4 mr-1" />;
+      case 'internal':
+        return <Users className="h-4 w-4 mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <PageLayout>
       <div className="container py-6">
@@ -166,6 +193,7 @@ const Contacts = () => {
                 onFilterChange={handleFilterChange}
                 availableRoles={availableRoles}
                 availableDepartments={availableDepartments}
+                availableEntities={availableEntities}
               />
             </Card>
             
@@ -177,6 +205,7 @@ const Contacts = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Contact Details</TableHead>
                       <TableHead>Department/Role</TableHead>
+                      <TableHead>Associated With</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -184,13 +213,13 @@ const Contacts = () => {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           Loading contacts...
                         </TableCell>
                       </TableRow>
                     ) : contacts.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           No contacts found. Add your first contact to get started.
                         </TableCell>
                       </TableRow>
@@ -230,6 +259,14 @@ const Contacts = () => {
                                 </span>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {getEntityName(contact) && (
+                              <div className="flex items-center">
+                                {getEntityIcon(contact.entity_type)}
+                                <span>{getEntityName(contact)}</span>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">

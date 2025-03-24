@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 export type ContactFilters = {
   entityType?: string;
+  entityId?: string;
   search?: string;
   department?: string;
   role?: string;
@@ -18,6 +19,7 @@ export type ContactFilters = {
 export function useContacts(initialFilters: ContactFilters = {}) {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<ContactFilters>(initialFilters);
+  const [availableEntities, setAvailableEntities] = useState<Array<{id: string, name: string, type: string}>>([]);
   
   // Fetch all contacts
   const { 
@@ -29,6 +31,22 @@ export function useContacts(initialFilters: ContactFilters = {}) {
     queryKey: ['contacts', filters],
     queryFn: () => contactsApi.getContacts(filters),
   });
+
+  // Fetch entities for the dropdown
+  const { 
+    data: entities = [],
+    isLoading: isLoadingEntities
+  } = useQuery({
+    queryKey: ['contact-entities'],
+    queryFn: () => contactsApi.getContactEntities(),
+  });
+
+  // Set available entities when data is loaded
+  useEffect(() => {
+    if (entities.length > 0) {
+      setAvailableEntities(entities);
+    }
+  }, [entities]);
 
   // Refetch when filters change
   useEffect(() => {
@@ -118,7 +136,8 @@ export function useContacts(initialFilters: ContactFilters = {}) {
     filters,
     setFilters,
     contactTypeCount,
-    isLoading: isLoading || addContactMutation.isPending || updateContactMutation.isPending || deleteContactMutation.isPending,
+    availableEntities,
+    isLoading: isLoading || addContactMutation.isPending || updateContactMutation.isPending || deleteContactMutation.isPending || isLoadingEntities,
     error,
     isCreating: addContactMutation.isPending,
     isUpdating: updateContactMutation.isPending,

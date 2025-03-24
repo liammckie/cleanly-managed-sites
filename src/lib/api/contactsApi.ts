@@ -16,6 +16,11 @@ export const contactsApi = {
       query = query.eq('entity_type', filters.entityType);
     }
     
+    // Apply entity ID filter
+    if (filters.entityId) {
+      query = query.eq('entity_id', filters.entityId);
+    }
+    
     // Apply search filter
     if (filters.search && filters.search.trim() !== '') {
       const searchTerm = `%${filters.search.toLowerCase()}%`;
@@ -70,6 +75,70 @@ export const contactsApi = {
     }
     
     return data as ContactRecord;
+  },
+
+  // Get all entities that have contacts
+  async getContactEntities(): Promise<Array<{id: string, name: string, type: string}>> {
+    let entities: Array<{id: string, name: string, type: string}> = [];
+    
+    // Fetch clients with contacts
+    const { data: clients, error: clientError } = await supabase
+      .from('clients')
+      .select('id, name')
+      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'client'));
+    
+    if (clientError) {
+      console.error('Error fetching client entities:', clientError);
+    } else if (clients) {
+      entities = [
+        ...entities,
+        ...clients.map(client => ({
+          id: client.id,
+          name: client.name,
+          type: 'client'
+        }))
+      ];
+    }
+    
+    // Fetch sites with contacts
+    const { data: sites, error: siteError } = await supabase
+      .from('sites')
+      .select('id, name')
+      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'site'));
+    
+    if (siteError) {
+      console.error('Error fetching site entities:', siteError);
+    } else if (sites) {
+      entities = [
+        ...entities,
+        ...sites.map(site => ({
+          id: site.id,
+          name: site.name,
+          type: 'site'
+        }))
+      ];
+    }
+    
+    // Fetch suppliers (contractors) with contacts
+    const { data: contractors, error: contractorError } = await supabase
+      .from('contractors')
+      .select('id, business_name')
+      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'supplier'));
+    
+    if (contractorError) {
+      console.error('Error fetching supplier entities:', contractorError);
+    } else if (contractors) {
+      entities = [
+        ...entities,
+        ...contractors.map(contractor => ({
+          id: contractor.id,
+          name: contractor.business_name,
+          type: 'supplier'
+        }))
+      ];
+    }
+    
+    return entities;
   },
   
   // Create a new contact

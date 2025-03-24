@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,13 +41,15 @@ interface ContactsFilterProps {
   onFilterChange: (filters: ContactFilters) => void;
   availableRoles: string[];
   availableDepartments: string[];
+  availableEntities?: Array<{id: string, name: string, type: string}>;
 }
 
 export function ContactsFilter({ 
   filters, 
   onFilterChange,
   availableRoles = [],
-  availableDepartments = []
+  availableDepartments = [],
+  availableEntities = []
 }: ContactsFilterProps) {
   const form = useForm<ContactFilters>({
     defaultValues: filters
@@ -96,6 +99,9 @@ export function ContactsFilter({
       filters[key as keyof ContactFilters] !== undefined
     );
   }).length;
+
+  // Add 1 to active filter count if entityId is set
+  const totalFilterCount = activeFilterCount + (filters.entityId ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-4">
@@ -154,9 +160,9 @@ export function ContactsFilter({
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
-              {activeFilterCount > 0 && (
+              {totalFilterCount > 0 && (
                 <Badge variant="secondary" className="ml-1">
-                  {activeFilterCount}
+                  {totalFilterCount}
                 </Badge>
               )}
             </Button>
@@ -165,6 +171,34 @@ export function ContactsFilter({
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleFilterSubmit)} className="space-y-4">
                 <h4 className="font-medium">Filter Contacts</h4>
+                
+                <FormField
+                  control={form.control}
+                  name="entityId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Associated With</FormLabel>
+                      <Select 
+                        value={field.value || 'any-entity'}
+                        onValueChange={(value) => field.onChange(value === 'any-entity' ? undefined : value)}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Any entity" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="any-entity">Any entity</SelectItem>
+                          {availableEntities.map(entity => (
+                            <SelectItem key={entity.id} value={entity.id}>
+                              {entity.name} ({entity.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
                 
                 <FormField
                   control={form.control}
@@ -245,7 +279,7 @@ export function ContactsFilter({
           </PopoverContent>
         </Popover>
 
-        {(filters.search || activeFilterCount > 0 || filters.sortBy) && (
+        {(filters.search || totalFilterCount > 0 || filters.sortBy) && (
           <Button
             variant="ghost"
             size="sm"
@@ -257,9 +291,18 @@ export function ContactsFilter({
         )}
       </div>
 
-      {activeFilterCount > 0 && (
+      {totalFilterCount > 0 && (
         <div className="flex flex-wrap gap-2 items-center">
           <div className="text-xs text-muted-foreground">Active filters:</div>
+          {filters.entityId && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Entity: {availableEntities.find(e => e.id === filters.entityId)?.name || filters.entityId}
+              <X 
+                className="h-3 w-3 ml-1 cursor-pointer" 
+                onClick={() => onFilterChange({ ...filters, entityId: undefined })}
+              />
+            </Badge>
+          )}
           {filters.role && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Role: {filters.role}
