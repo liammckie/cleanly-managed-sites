@@ -1,7 +1,8 @@
 
 import { SiteFormData } from './siteFormData';
 
-export interface SiteFormValidationErrors {
+// Renamed to avoid conflict with validationUtils.ts
+export interface FormValidationErrors {
   name?: string;
   address?: string;
   city?: string;
@@ -12,8 +13,9 @@ export interface SiteFormValidationErrors {
   customId?: string; // Add validation for custom ID
 }
 
-export function validateBasicInfo(formData: SiteFormData): SiteFormValidationErrors {
-  const errors: SiteFormValidationErrors = {};
+// Renamed to avoid conflict with validationUtils.ts
+export function validateFormBasicInfo(formData: SiteFormData): FormValidationErrors {
+  const errors: FormValidationErrors = {};
   
   if (!formData.name?.trim()) errors.name = 'Site name is required';
   if (!formData.address?.trim()) errors.address = 'Address is required';
