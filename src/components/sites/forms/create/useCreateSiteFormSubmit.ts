@@ -11,6 +11,11 @@ export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
 
   const handleSubmit = async () => {
     try {
+      if (isSubmitting) {
+        console.log('Already submitting - preventing duplicate submission');
+        return;
+      }
+      
       setIsSubmitting(true);
       
       // Show initial toast
@@ -18,6 +23,13 @@ export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
       
       // Process form data here
       console.log('Submitting form data:', formData);
+      
+      // Validate critical fields before submission
+      if (!formData.name || !formData.address || !formData.clientId) {
+        toast.error("Missing required information. Please check the form.", { id: toastId });
+        setIsSubmitting(false);
+        return;
+      }
       
       // Submit to API
       const result = await sitesApi.createSite(formData);

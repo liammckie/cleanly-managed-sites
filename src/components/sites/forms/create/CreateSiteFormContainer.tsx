@@ -3,9 +3,9 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { FormProgressBar } from '../FormProgressBar';
-import { SiteFormStep } from '../SiteFormStep';
 import { SiteFormData } from '../siteFormTypes';
 import { StepperState } from '@/hooks/useSiteFormStepper';
+import { CreateSiteFormStepRenderer } from './CreateSiteFormStepRenderer';
 
 interface CreateSiteFormContainerProps {
   form: any;
@@ -34,23 +34,21 @@ export function CreateSiteFormContainer({
         progress={stepper.progress}
       />
       
-      <Card className="p-6">
+      <Card className="p-6 shadow-lg">
         <Form {...form}>
           <form onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit();
+            if (stepper.isLastStep) {
+              handleSubmit();
+            } else {
+              stepper.handleNext();
+            }
           }}>
-            <SiteFormStep
-              title={stepper.steps[stepper.currentStep].title}
-              description={stepper.steps[stepper.currentStep].description}
-              onNext={() => stepper.handleNext()}
-              onBack={stepper.handleBack}
+            <CreateSiteFormStepRenderer
+              stepper={stepper}
               isSubmitting={isSubmitting}
-              isLastStep={stepper.isLastStep}
-              isFirstStep={stepper.isFirstStep}
-            >
-              {stepper.steps[stepper.currentStep].component}
-            </SiteFormStep>
+              onSubmit={handleSubmit}
+            />
           </form>
         </Form>
       </Card>

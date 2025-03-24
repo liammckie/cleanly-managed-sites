@@ -2,6 +2,7 @@
 import React from 'react';
 import { SiteFormStep } from '../SiteFormStep';
 import { StepperState } from '@/hooks/useSiteFormStepper';
+import { toast } from 'sonner';
 
 interface CreateSiteFormStepRendererProps {
   stepper: StepperState;
@@ -16,10 +17,16 @@ export function CreateSiteFormStepRenderer({
 }: CreateSiteFormStepRendererProps) {
   // Handle next button clicks
   const handleNext = async () => {
-    if (stepper.isLastStep) {
-      await onSubmit();
-    } else {
-      stepper.handleNext();
+    try {
+      console.log("Attempting to move to next step...");
+      if (stepper.isLastStep) {
+        await onSubmit();
+      } else {
+        stepper.handleNext();
+      }
+    } catch (error) {
+      console.error("Error handling next step:", error);
+      toast.error("Failed to proceed to next step. Please check form inputs.");
     }
   };
 

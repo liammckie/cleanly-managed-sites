@@ -3,63 +3,55 @@ import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
 
 export const useSiteFormValidation = () => {
   // Validate a specific step
-  const validateStep = (formData: SiteFormData, stepIndex: number, errors: Record<string, string>, setErrors: (errors: Record<string, string>) => void): boolean => {
-    // Each step has its own validation logic
-    switch (stepIndex) {
-      case 0: // Basic information
-        return validateBasicInfo(formData, errors, setErrors);
-      case 3: // Subcontractor details
-        return validateSubcontractors(formData, errors, setErrors);
-      default:
-        return true;
+  const validateStep = (
+    formData: SiteFormData, 
+    stepIndex: number,
+    errors: Record<string, string>,
+    setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  ): boolean => {
+    // Clear previous errors
+    const newErrors: Record<string, string> = {};
+    
+    // Step 0: Basic Information
+    if (stepIndex === 0) {
+      if (!formData.name) newErrors.name = 'Site name is required';
+      if (!formData.address) newErrors.address = 'Address is required';
+      if (!formData.city) newErrors.city = 'City is required';
+      if (!formData.state) newErrors.state = 'State is required';
+      if (!formData.postcode) newErrors.postcode = 'Postcode is required';
+      if (!formData.clientId) newErrors.clientId = 'Client is required';
+      if (!formData.representative) newErrors.representative = 'Representative is required';
     }
-  };
-  
-  // Validate basic site information
-  const validateBasicInfo = (formData: SiteFormData, errors: Record<string, string>, setErrors: (errors: Record<string, string>) => void): boolean => {
-    const newErrors: Record<string, string> = {};
     
-    // Required fields
-    if (!formData.clientId) newErrors['clientId'] = 'Client is required';
-    if (!formData.name?.trim()) newErrors['name'] = 'Site name is required';
-    if (!formData.address?.trim()) newErrors['address'] = 'Address is required';
-    if (!formData.city?.trim()) newErrors['city'] = 'City is required';
-    if (!formData.state?.trim()) newErrors['state'] = 'State is required';
-    if (!formData.postcode?.trim()) newErrors['postcode'] = 'Postcode is required';
-    if (!formData.representative?.trim()) newErrors['representative'] = 'Representative name is required';
+    // Step 1: Site Contacts (Moved from the old Step 4)
+    // No strict validation for contacts - they're optional
     
+    // Step 2: Contract Details (Previously Step 1)
+    else if (stepIndex === 2) {
+      const { contractDetails } = formData;
+      if (contractDetails) {
+        if (!contractDetails.startDate) newErrors['contractDetails.startDate'] = 'Start date is required';
+        if (!contractDetails.contractType) newErrors['contractDetails.contractType'] = 'Contract type is required';
+      }
+    }
+    
+    // Step 3: Billing Details (Previously Step 2)
+    else if (stepIndex === 3) {
+      const { billingDetails } = formData;
+      if (billingDetails) {
+        if (!billingDetails.billingFrequency) 
+          newErrors['billingDetails.billingFrequency'] = 'Billing frequency is required';
+      }
+    }
+    
+    // Set any new errors
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  // Validate subcontractors
-  const validateSubcontractors = (formData: SiteFormData, errors: Record<string, string>, setErrors: (errors: Record<string, string>) => void): boolean => {
-    const newErrors: Record<string, string> = {};
     
-    formData.subcontractors.forEach((subcontractor, index) => {
-      if (!subcontractor.businessName?.trim()) {
-        newErrors[`subcontractors[${index}].businessName`] = 'Business name is required';
-      }
-      if (!subcontractor.contactName?.trim()) {
-        newErrors[`subcontractors[${index}].contactName`] = 'Contact name is required';
-      }
-      if (!subcontractor.email?.trim()) {
-        newErrors[`subcontractors[${index}].email`] = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(subcontractor.email)) {
-        newErrors[`subcontractors[${index}].email`] = 'Valid email is required';
-      }
-      if (!subcontractor.phone?.trim()) {
-        newErrors[`subcontractors[${index}].phone`] = 'Phone is required';
-      }
-    });
-    
-    setErrors(newErrors);
+    // Return true if no errors
     return Object.keys(newErrors).length === 0;
   };
   
   return {
-    validateStep,
-    validateBasicInfo,
-    validateSubcontractors
+    validateStep
   };
 };

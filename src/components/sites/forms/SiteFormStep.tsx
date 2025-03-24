@@ -25,8 +25,8 @@ export function SiteFormStep({
   isFirstStep
 }: SiteFormStepProps) {
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="border-b pb-4 mb-6">
         <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
         {description && (
           <p className="text-muted-foreground mt-2">{description}</p>
