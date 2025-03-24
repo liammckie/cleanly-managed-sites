@@ -64,6 +64,7 @@ export interface CreateWorkOrderData {
   requires_purchase_order: boolean;
   purchase_order_number?: string;
   attachments?: WorkOrderAttachment[];
+  status?: WorkOrderStatus; // Optional field to allow setting initial status
 }
 
 export interface UpdateWorkOrderData {

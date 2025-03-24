@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteRecord } from '@/lib/api';
@@ -37,7 +38,6 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshKey, setRefreshKey] = useState(0);
   const [contractHistoryOpen, setContractHistoryOpen] = useState(false);
-  const [contractVariationOpen, setContractVariationOpen] = useState(false);
   const navigate = useNavigate();
   const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
   
@@ -72,20 +72,8 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
     navigate(`/sites/${site.id}/edit`);
   };
   
-  const startContractVariation = async () => {
-    try {
-      if (site.contract_details) {
-        await contractHistoryApi.saveContractVersion(site.id, site.contract_details, "Contract variation initiated");
-        toast.success("Contract version saved. Redirecting to edit contract...");
-        
-        navigate(`/sites/${site.id}/edit?tab=contract&variation=true`);
-      } else {
-        toast.error("No contract details available to modify");
-      }
-    } catch (error) {
-      console.error("Error saving contract variation:", error);
-      toast.error("Failed to initiate contract variation");
-    }
+  const startContractVariation = () => {
+    navigate(`/sites/${site.id}/variations`);
   };
   
   return (
@@ -121,7 +109,7 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
           onClick={startContractVariation}
         >
           <Layers size={16} />
-          <span>Make Contract Variation</span>
+          <span>Contract Variation</span>
         </Button>
         
         <Button 

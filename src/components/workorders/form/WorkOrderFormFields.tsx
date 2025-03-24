@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { CreateWorkOrderData } from '@/lib/api/workorders/types';
+import { CreateWorkOrderData, WorkOrderPriority } from '@/lib/api/workorders/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';

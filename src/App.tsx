@@ -1,44 +1,36 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './lib/theme/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Sites from '@/pages/Sites';
-import Clients from '@/pages/Clients';
-import Contractors from '@/pages/Contractors';
-import CreateClient from '@/pages/CreateClient';
-import EditClient from '@/pages/EditClient';
-import CreateSite from '@/pages/CreateSite';
-import EditSite from '@/pages/EditSite';
-import SiteDetail from '@/pages/SiteDetail';
-import ClientDetail from '@/pages/ClientDetail';
-import WorkOrders from '@/pages/WorkOrders';
-import Settings from '@/pages/Settings';
-import Integrations from '@/pages/Integrations';
-import Contracts from '@/pages/Contracts';
-import ImportExport from '@/pages/ImportExport';
-import NotFound from '@/pages/NotFound';
-import ResetPassword from '@/pages/ResetPassword';
-import Index from '@/pages/Index';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { AuthProvider } from '@/hooks/auth/AuthProvider';
-import CreateContractor from '@/pages/CreateContractor';
-import ContractorDetail from '@/pages/ContractorDetail';
-import Users from '@/pages/Users';
-import UserDetail from '@/pages/UserDetail';
-import Profile from '@/pages/Profile';
-import Contacts from '@/pages/Contacts';
-import { ZapierProvider } from '@/components/integrations/ZapierProvider';
-import './App.css';
+import Dashboard from './pages/Dashboard';
+import Sites from './pages/Sites';
+import Clients from './pages/Clients';
+import Settings from './pages/Settings';
+import SiteDetail from './pages/SiteDetail';
+import SiteEdit from './pages/SiteEdit';
+import SiteCreate from './pages/SiteCreate';
+import ClientDetail from './pages/ClientDetail';
+import ClientEdit from './pages/ClientEdit';
+import ClientCreate from './pages/ClientCreate';
+import WorkOrders from './pages/WorkOrders';
+import Contractors from './pages/Contractors';
+import Subcontractors from './pages/Subcontractors';
+import Contacts from './pages/Contacts';
+import Users from './pages/Users';
+import WorkOrderDetail from './pages/WorkOrderDetail';
+import ContractorDetail from './pages/ContractorDetail';
+import ContactDetail from './pages/ContactDetail';
+import { ContractVariationPage } from './components/sites/contract/variation/ContractVariationPage';
+import { ErrorPage } from './pages/ErrorPage';
+import React from 'react';
 
-// Create the query client instance outside of the component
+// Create the query client outside the component
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -47,145 +39,32 @@ function App() {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Router>
-          <AuthProvider>
-            <ZapierProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                
-                <Route path="/clients/create" element={
-                  <ProtectedRoute>
-                    <CreateClient />
-                  </ProtectedRoute>
-                } />
-                <Route path="/clients/:id/edit" element={
-                  <ProtectedRoute>
-                    <EditClient />
-                  </ProtectedRoute>
-                } />
-                <Route path="/clients/:id" element={
-                  <ProtectedRoute>
-                    <ClientDetail />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/sites" element={
-                  <ProtectedRoute>
-                    <Sites />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/sites/create" element={
-                  <ProtectedRoute>
-                    <CreateSite />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/sites/:id" element={
-                  <ProtectedRoute>
-                    <SiteDetail />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/sites/:id/edit" element={
-                  <ProtectedRoute>
-                    <EditSite />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/contracts" element={
-                  <ProtectedRoute>
-                    <Contracts />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/clients" element={
-                  <ProtectedRoute>
-                    <Clients />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/contractors" element={
-                  <ProtectedRoute>
-                    <Contractors />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/contractors/create" element={
-                  <ProtectedRoute>
-                    <CreateContractor />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/contractors/:id" element={
-                  <ProtectedRoute>
-                    <ContractorDetail />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/workorders" element={
-                  <ProtectedRoute>
-                    <WorkOrders />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/import-export" element={
-                  <ProtectedRoute>
-                    <ImportExport />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/integrations" element={
-                  <ProtectedRoute>
-                    <Integrations />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/users" element={
-                  <ProtectedRoute>
-                    <Users />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/users/:id" element={
-                  <ProtectedRoute>
-                    <UserDetail />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/contacts" element={
-                  <ProtectedRoute>
-                    <Contacts />
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/404" element={<NotFound />} />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-              <Toaster />
-            </ZapierProvider>
-          </AuthProvider>
-        </Router>
+        <ThemeProvider defaultTheme="light" storageKey="project-ui-theme">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sites" element={<Sites />} />
+            <Route path="/sites/:siteId" element={<SiteDetail />} />
+            <Route path="/sites/:siteId/edit" element={<SiteEdit />} />
+            <Route path="/sites/create" element={<SiteCreate />} />
+            <Route path="/sites/:siteId/variations" element={<ContractVariationPage />} />
+            <Route path="/sites/:siteId/variations/:variationType" element={<ContractVariationPage />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:clientId" element={<ClientDetail />} />
+            <Route path="/clients/:clientId/edit" element={<ClientEdit />} />
+            <Route path="/clients/create" element={<ClientCreate />} />
+            <Route path="/workorders" element={<WorkOrders />} />
+            <Route path="/workorders/:workOrderId" element={<WorkOrderDetail />} />
+            <Route path="/contractors" element={<Contractors />} />
+            <Route path="/contractors/:contractorId" element={<ContractorDetail />} />
+            <Route path="/subcontractors" element={<Subcontractors />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/contacts/:contactId" element={<ContactDetail />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<ErrorPage />} />
+          </Routes>
+        </ThemeProvider>
       </QueryClientProvider>
     </React.StrictMode>
   );

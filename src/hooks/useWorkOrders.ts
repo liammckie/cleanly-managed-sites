@@ -61,11 +61,12 @@ export const useWorkOrders = () => {
   // Create and mark complete in one step
   const createAndCompleteWorkOrderMutation = useMutation({
     mutationFn: async (data: CreateWorkOrderData) => {
-      // First create the work order
-      const workOrder = await createWorkOrder(data);
-      
-      // Then mark it as completed with the specified completion date or today's date
-      return completeWorkOrder(workOrder.id, data.completion_date);
+      // First create the work order with status completed
+      const workOrderData = {
+        ...data,
+        status: 'completed'
+      };
+      return createWorkOrder(workOrderData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
@@ -77,13 +78,13 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Update a work order
+  // Update an existing work order
   const updateWorkOrderMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateWorkOrderData }) => updateWorkOrder(id, data),
-    onSuccess: (_, variables) => {
+    mutationFn: ({ id, data }: { id: string; data: UpdateWorkOrderData }) => 
+      updateWorkOrder(id, data),
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['siteWorkOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
       toast.success('Work order updated successfully');
     },
     onError: (error) => {
@@ -105,14 +106,14 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Update work order status
-  const updateStatusMutation = useMutation({
+  // Update a work order status
+  const updateWorkOrderStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: WorkOrderStatus }) => 
       updateWorkOrderStatus(id, status),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
-      toast.success(`Work order status updated to ${variables.status}`);
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
+      toast.success('Work order status updated successfully');
     },
     onError: (error) => {
       console.error('Error updating work order status:', error);
@@ -120,13 +121,13 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Assign work order to subcontractor
+  // Assign a work order to a subcontractor
   const assignWorkOrderMutation = useMutation({
     mutationFn: ({ id, subcontractorId }: { id: string; subcontractorId: string }) => 
       assignWorkOrder(id, subcontractorId),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
       toast.success('Work order assigned successfully');
     },
     onError: (error) => {
@@ -135,13 +136,28 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Add attachment to work order
+  // Mark a work order as completed
+  const completeWorkOrderMutation = useMutation({
+    mutationFn: ({ id, completionDate }: { id: string; completionDate?: string }) => 
+      completeWorkOrder(id, completionDate),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
+      toast.success('Work order marked as completed');
+    },
+    onError: (error) => {
+      console.error('Error completing work order:', error);
+      toast.error('Failed to mark work order as completed');
+    }
+  });
+  
+  // Add attachment to a work order
   const addAttachmentMutation = useMutation({
     mutationFn: ({ id, attachment }: { id: string; attachment: WorkOrderAttachment }) => 
       addWorkOrderAttachment(id, attachment),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
       toast.success('Attachment added successfully');
     },
     onError: (error) => {
@@ -150,13 +166,13 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Remove attachment from work order
+  // Remove attachment from a work order
   const removeAttachmentMutation = useMutation({
     mutationFn: ({ id, attachmentId }: { id: string; attachmentId: string }) => 
       removeWorkOrderAttachment(id, attachmentId),
-    onSuccess: (_, variables) => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
       toast.success('Attachment removed successfully');
     },
     onError: (error) => {
@@ -165,36 +181,24 @@ export const useWorkOrders = () => {
     }
   });
   
-  // Mark work order as complete with specified date
-  const markWorkOrderCompleteMutation = useMutation({
-    mutationFn: (params: { id: string, completionDate?: string }) => 
-      completeWorkOrder(params.id, params.completionDate),
-    onSuccess: (_, params) => {
-      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['workOrder', params.id] });
-      toast.success('Work order marked as complete');
-    },
-    onError: (error) => {
-      console.error('Error completing work order:', error);
-      toast.error('Failed to complete work order');
-    }
-  });
-  
   return {
+    // Queries
     workOrders,
     isLoadingWorkOrders,
     workOrdersError,
     refetchWorkOrders,
     useWorkOrder,
     useSiteWorkOrders,
+    
+    // Mutations
     createWorkOrderMutation,
     createAndCompleteWorkOrderMutation,
     updateWorkOrderMutation,
     deleteWorkOrderMutation,
-    updateStatusMutation,
+    updateWorkOrderStatusMutation,
     assignWorkOrderMutation,
+    completeWorkOrderMutation,
     addAttachmentMutation,
-    removeAttachmentMutation,
-    markWorkOrderCompleteMutation
+    removeAttachmentMutation
   };
 };
