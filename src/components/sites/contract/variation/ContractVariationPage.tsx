@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, useNavigate, Routes, Route } from 'react-router-dom';
 import { ContractVariationSelector } from './ContractVariationSelector';
-import { BillingVariationForm } from './BillingVariationForm';
+import { BillingVariationForm } from './billing';
 import { ContractorChangeForm } from './ContractorChangeForm';
 import { useSite } from '@/hooks/useSite';
 import { Button } from '@/components/ui/button';
