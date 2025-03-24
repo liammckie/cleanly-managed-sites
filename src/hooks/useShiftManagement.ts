@@ -5,15 +5,18 @@ import { toast } from 'sonner';
 import { QuoteShift, EmploymentType, EmployeeLevel } from '@/lib/award/types';
 import { calculateShiftCost } from '@/lib/award/shiftCalculations';
 
-// Default new shift values
-const DEFAULT_NEW_SHIFT = {
-  day: 'monday',
+// Define type for day
+type ShiftDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public-holiday';
+
+// Default new shift values with proper typing
+const DEFAULT_NEW_SHIFT: Partial<QuoteShift> = {
+  day: 'monday' as ShiftDay,
   startTime: '08:00',
   endTime: '16:00',
   breakDuration: 30,
   numberOfCleaners: 1,
-  employmentType: 'full-time',
-  level: 1,
+  employmentType: 'full-time' as EmploymentType,
+  level: 1 as EmployeeLevel,
   allowances: [],
   estimatedCost: 0,
   location: '',
@@ -98,7 +101,7 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     // Create the full shift object with all required properties
     const shiftToAdd: QuoteShift = {
       id: uuidv4(),
-      day: newShift.day as 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public-holiday',
+      day: newShift.day as ShiftDay,
       startTime: newShift.startTime!,
       endTime: newShift.endTime!,
       breakDuration: newShift.breakDuration || 30,
@@ -180,6 +183,10 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     toast.success(`Applied template: ${template.name}`);
   };
   
+  const resetNewShift = () => {
+    setNewShift({ ...DEFAULT_NEW_SHIFT });
+  };
+  
   return {
     newShift,
     shiftBeingEdited,
@@ -190,6 +197,7 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     handleDeleteShift,
     handleDuplicateShift,
     handleUpdateShift,
-    applyShiftTemplate
+    applyShiftTemplate,
+    resetNewShift
   };
 }

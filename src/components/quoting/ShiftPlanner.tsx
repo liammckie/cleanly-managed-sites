@@ -30,7 +30,8 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     handleDeleteShift,
     handleDuplicateShift,
     handleUpdateShift,
-    applyShiftTemplate
+    applyShiftTemplate,
+    resetNewShift
   } = useShiftManagement(shifts, onShiftsChange);
 
   // Calculate overtime warnings
@@ -43,11 +44,19 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     const success = handleAddShift();
     if (success) {
       setActiveTab('list'); // Switch to list view after successful add
+      resetNewShift(); // Reset the form
     }
   };
 
-  console.log("Current new shift state:", newShift); // Debug log
-  console.log("Current shifts:", shifts); // Debug log
+  const handleAddShiftClick = () => {
+    resetNewShift(); // Reset the form when switching to add tab
+    setActiveTab('add');
+  };
+
+  const handleCancelAdd = () => {
+    resetNewShift(); // Reset the form when canceling
+    setActiveTab('list');
+  };
 
   return (
     <div className="space-y-6">
@@ -59,14 +68,12 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
           </p>
         </div>
         
-        <div className="flex gap-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="list">Shift List</TabsTrigger>
-              <TabsTrigger value="add">Add Shift</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[400px]">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="list">Shift List</TabsTrigger>
+            <TabsTrigger value="add">Add Shift</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
       
       {/* Warnings section */}
@@ -80,7 +87,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
           shifts={shifts}
           onDeleteShift={handleDeleteShift}
           onDuplicateShift={handleDuplicateShift}
-          onAddShiftClick={() => setActiveTab('add')}
+          onAddShiftClick={handleAddShiftClick}
           allowances={allowances}
           onUpdateShift={handleUpdateShift}
         />
@@ -93,7 +100,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
           onAllowanceToggle={handleAllowanceToggle}
           onApplyTemplate={applyShiftTemplate}
           onAddShift={handleAddShiftSubmit}
-          onCancel={() => setActiveTab('list')}
+          onCancel={handleCancelAdd}
           allowances={allowances}
           isLoadingAllowances={isLoadingAllowances}
         />
