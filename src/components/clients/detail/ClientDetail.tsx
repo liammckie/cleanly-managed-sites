@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useClientDetails } from '@/hooks/useClients';
+import { useClientDetails } from '@/hooks/useClientDetails';
 import { useNavigate } from 'react-router-dom';
 import { ClientHeader } from './ClientHeader';
 import { ClientInfoCard } from './ClientInfoCard';

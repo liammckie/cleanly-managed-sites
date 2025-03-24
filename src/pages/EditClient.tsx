@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ClientForm } from '@/components/clients/ClientForm';
-import { useClientDetails } from '@/hooks/useClients';
+import { useClientDetails } from '@/hooks/useClientDetails';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   SidebarProvider,
