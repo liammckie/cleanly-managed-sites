@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { ContactRecord } from '@/lib/types';
-import { employeeSchema, EmployeeFormValues } from './employeeSchema';
+import { employeeSchema, EmployeeFormValues, employeeServicesSchema, EmployeeServicesValues } from './employeeSchema';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +28,32 @@ export function EmployeeContactForm({
 }: EmployeeContactFormProps) {
   const [activeTab, setActiveTab] = useState('personal');
 
+  // Parse existing services data if it exists
+  const parseExistingServicesData = (): Partial<EmployeeServicesValues> => {
+    if (!contact?.services || !Array.isArray(contact.services)) return {};
+    
+    try {
+      // If services is stored as a string in the first array element (from JSON stringification)
+      if (typeof contact.services[0] === 'string') {
+        try {
+          return JSON.parse(contact.services[0]);
+        } catch (e) {
+          return {};
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing services data:", e);
+      return {};
+    }
+    
+    return {};
+  };
+  
+  const servicesData = parseExistingServicesData();
+  
+  // Convert ISO date string to Date object if it exists
+  const startDateValue = servicesData.startDate ? new Date(servicesData.startDate) : undefined;
+
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -38,23 +64,31 @@ export function EmployeeContactForm({
       phone: contact?.phone || '',
       notes: contact?.notes || '',
       
-      // Employee specific fields
-      position: '',
-      employmentType: 'full-time',
-      startDate: undefined,
-      employeeId: '',
-      reportingTo: '',
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-
-      // These would come from the extended data if it existed
-      ...(contact?.services as any || {}),
+      // Employee specific fields from services data
+      position: servicesData.position || '',
+      employmentType: servicesData.employmentType || 'full-time',
+      startDate: startDateValue,
+      employeeId: servicesData.employeeId || '',
+      reportingTo: servicesData.reportingTo || '',
+      emergencyContactName: servicesData.emergencyContactName || '',
+      emergencyContactPhone: servicesData.emergencyContactPhone || '',
     },
   });
 
   const handleSubmit = async (values: EmployeeFormValues) => {
     try {
-      // Convert the form values to a ContactRecord with services field containing the employee data
+      // Create a services object with all the employee-specific fields
+      const employeeServices: EmployeeServicesValues = {
+        position: values.position,
+        employmentType: values.employmentType,
+        startDate: values.startDate ? values.startDate.toISOString() : undefined,
+        employeeId: values.employeeId,
+        reportingTo: values.reportingTo,
+        emergencyContactName: values.emergencyContactName,
+        emergencyContactPhone: values.emergencyContactPhone,
+      };
+      
+      // Convert the form values to a ContactRecord
       const employeeData: Partial<ContactRecord> = {
         name: values.name,
         role: values.role,
@@ -63,16 +97,8 @@ export function EmployeeContactForm({
         phone: values.phone,
         notes: values.notes,
         entity_type: 'internal',
-        // Store additional employee fields in the services JSON field
-        services: {
-          position: values.position,
-          employmentType: values.employmentType,
-          startDate: values.startDate ? values.startDate.toISOString() : undefined,
-          employeeId: values.employeeId,
-          reportingTo: values.reportingTo,
-          emergencyContactName: values.emergencyContactName,
-          emergencyContactPhone: values.emergencyContactPhone,
-        },
+        // Store the services as a JSON string in the first element of the array
+        services: [JSON.stringify(employeeServices)],
       };
       
       if (contact?.id) {
