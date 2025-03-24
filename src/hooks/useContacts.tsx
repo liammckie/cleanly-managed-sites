@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { contactsApi } from '@/lib/api/contactsApi';
+import { contactsApi } from '@/lib/api/contacts';
 import { ContactRecord } from '@/lib/types';
 import { useState } from 'react';
 

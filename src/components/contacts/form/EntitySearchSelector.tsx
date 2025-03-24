@@ -1,112 +1,98 @@
-
-import React, { useState, useEffect } from 'react';
-import { FormLabel } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { EntityType, AssignmentType } from '../contactSchema';
-import { contactsApi } from '@/lib/api/contactsApi';
-import { Building, Store, Truck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { contactsApi } from '@/lib/api/contacts';
 
 interface EntitySearchSelectorProps {
-  entityType: EntityType;
-  assignmentType: AssignmentType;
-  entityId: string;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onEntitySelect: (id: string, name: string) => void;
+  entityType: string;
+  value?: string;
+  onChange: (value: string) => void;
 }
 
-export function EntitySearchSelector({ 
-  entityType, 
-  assignmentType, 
-  entityId,
-  searchTerm,
-  onSearchChange,
-  onEntitySelect
-}: EntitySearchSelectorProps) {
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+export function EntitySearchSelector({ entityType, value, onChange }: EntitySearchSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Perform search for entities
-  useEffect(() => {
-    const searchEntities = async () => {
-      if (searchTerm.length < 2) return;
-      
-      setIsSearching(true);
-      try {
-        const results = await contactsApi.searchEntities(searchTerm, entityType);
-        setSearchResults(results);
-      } catch (error) {
-        console.error('Error searching entities:', error);
-      } finally {
-        setIsSearching(false);
-      }
-    };
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
-    const timeoutId = setTimeout(() => {
-      searchEntities();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, entityType]);
-
-  // Don't show for internal contacts or bulk assignments
-  if (entityType === 'internal' || assignmentType !== 'single') {
-    return null;
-  }
-
-  const getEntityIcon = (type: string) => {
-    switch (type) {
-      case 'client': return <Building className="h-4 w-4" />;
-      case 'site': return <Store className="h-4 w-4" />;
-      case 'supplier': return <Truck className="h-4 w-4" />;
-      default: return null;
+    setIsLoading(true);
+    try {
+      const results = await contactsApi.searchEntities(query, entityType);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching entities:', error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const selectedEntity = searchResults.find(entity => entity.id === value);
+
   return (
-    <div className="space-y-2">
-      <FormLabel>Select {entityType}</FormLabel>
-      <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={`Search for ${entityType}...`}
-          className="pl-8"
-        />
-      </div>
-      {searchTerm.length > 0 && (
-        <div className="border rounded-md max-h-48 overflow-y-auto">
-          {isSearching ? (
-            <div className="p-2 text-center text-sm text-muted-foreground">
-              Searching...
-            </div>
-          ) : searchResults.length > 0 ? (
-            searchResults.map((result) => (
-              <div
-                key={result.id}
-                className={`p-2 cursor-pointer hover:bg-accent flex items-center ${entityId === result.id ? 'bg-muted' : ''}`}
-                onClick={() => onEntitySelect(result.id, result.name)}
-              >
-                {getEntityIcon(result.type)}
-                <div className="ml-2">
-                  <div>{result.name}</div>
-                  {result.identifier && (
-                    <div className="text-xs text-muted-foreground">
-                      {result.identifier}
-                    </div>
-                  )}
-                </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedEntity ? selectedEntity.name : "Select Entity..."}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandInput
+            placeholder="Search entity..."
+            onValueChange={handleSearch}
+          />
+          <CommandEmpty>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-14">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Searching...
               </div>
-            ))
-          ) : (
-            <div className="p-2 text-center text-sm text-muted-foreground">
-              No results found. Please try a different search term.
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+            ) : (
+              "No entity found."
+            )}
+          </CommandEmpty>
+          <ScrollArea className="max-h-[200px] overflow-y-auto">
+            <CommandGroup>
+              {searchResults.map((entity) => (
+                <CommandItem
+                  key={entity.id}
+                  value={entity.name}
+                  onSelect={() => {
+                    onChange(entity.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === entity.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {entity.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </ScrollArea>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
