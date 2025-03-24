@@ -30,12 +30,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useClients } from '@/hooks/useClients';
 import * as XLSX from 'xlsx';
+import { DateRange } from 'react-day-picker';
 
 const WorkOrders = () => {
   const { workOrders, isLoadingWorkOrders, workOrdersError, refetchWorkOrders } = useWorkOrders();
   const { sites } = useSites();
   const { clients } = useClients();
-  const { subcontractors = [] } = useSubcontractors();
+  const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors();
   
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,7 +45,7 @@ const WorkOrders = () => {
   const [siteFilter, setSiteFilter] = useState<string>('all');
   const [clientFilter, setClientFilter] = useState<string>('all');
   const [subcontractorFilter, setSubcontractorFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [showCompletedOnly, setShowCompletedOnly] = useState(false);
   const [showUnbilledOnly, setShowUnbilledOnly] = useState(false);
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);

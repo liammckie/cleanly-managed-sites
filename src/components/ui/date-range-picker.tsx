@@ -77,6 +77,7 @@ export function DateRangePicker({
             selected={date}
             onSelect={handleDateSelect}
             numberOfMonths={2}
+            className="pointer-events-auto"
           />
           <div className="flex justify-end gap-2 p-3 border-t">
             <Button
@@ -111,7 +112,7 @@ export function DateRangePicker({
               size="sm"
               onClick={() => {
                 setDate(undefined);
-                onChange({});
+                onChange({ from: undefined, to: undefined } as DateRange);
               }}
             >
               Clear
