@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { WorkOrderRecord } from './types';
 
 /**
- * Get all work orders
+ * Get all work orders with enhanced data
  */
 export const getWorkOrders = async (): Promise<WorkOrderRecord[]> => {
   try {
@@ -18,7 +18,8 @@ export const getWorkOrders = async (): Promise<WorkOrderRecord[]> => {
           city,
           state,
           postcode,
-          client_id
+          client_id,
+          client_name:clients(name)
         )
       `)
       .order('created_at', { ascending: false });
@@ -27,7 +28,21 @@ export const getWorkOrders = async (): Promise<WorkOrderRecord[]> => {
       throw error;
     }
 
-    return data as unknown as WorkOrderRecord[];
+    // Transform the data to extract client name
+    const transformedData = data.map(workOrder => {
+      const transformedWorkOrder = { ...workOrder } as any;
+      
+      // Extract client_name from nested structure
+      if (transformedWorkOrder.site && 
+          transformedWorkOrder.site.client_name && 
+          transformedWorkOrder.site.client_name.length > 0) {
+        transformedWorkOrder.site.client_name = transformedWorkOrder.site.client_name[0].name;
+      }
+      
+      return transformedWorkOrder;
+    });
+
+    return transformedData as unknown as WorkOrderRecord[];
   } catch (error) {
     console.error('Error fetching work orders:', error);
     throw error;
@@ -50,7 +65,8 @@ export const getSiteWorkOrders = async (siteId: string): Promise<WorkOrderRecord
           city,
           state,
           postcode,
-          client_id
+          client_id,
+          client_name:clients(name)
         )
       `)
       .eq('site_id', siteId)
@@ -60,7 +76,21 @@ export const getSiteWorkOrders = async (siteId: string): Promise<WorkOrderRecord
       throw error;
     }
 
-    return data as unknown as WorkOrderRecord[];
+    // Transform the data to extract client name
+    const transformedData = data.map(workOrder => {
+      const transformedWorkOrder = { ...workOrder } as any;
+      
+      // Extract client_name from nested structure
+      if (transformedWorkOrder.site && 
+          transformedWorkOrder.site.client_name && 
+          transformedWorkOrder.site.client_name.length > 0) {
+        transformedWorkOrder.site.client_name = transformedWorkOrder.site.client_name[0].name;
+      }
+      
+      return transformedWorkOrder;
+    });
+
+    return transformedData as unknown as WorkOrderRecord[];
   } catch (error) {
     console.error(`Error fetching work orders for site ${siteId}:`, error);
     throw error;
@@ -68,7 +98,7 @@ export const getSiteWorkOrders = async (siteId: string): Promise<WorkOrderRecord
 };
 
 /**
- * Get a single work order by ID
+ * Get a single work order by ID with enhanced data
  */
 export const getWorkOrder = async (id: string): Promise<WorkOrderRecord | null> => {
   try {
@@ -89,6 +119,18 @@ export const getWorkOrder = async (id: string): Promise<WorkOrderRecord | null> 
 
     if (error) {
       throw error;
+    }
+
+    // Transform to add client_name directly to site
+    if (data && data.site && data.site.client) {
+      const transformed = {
+        ...data,
+        site: {
+          ...data.site,
+          client_name: data.site.client.name
+        }
+      };
+      return transformed as unknown as WorkOrderRecord;
     }
 
     return data as unknown as WorkOrderRecord;

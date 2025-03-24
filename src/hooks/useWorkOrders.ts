@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -18,7 +19,7 @@ import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
 export const useWorkOrders = () => {
   const queryClient = useQueryClient();
   
-  // Get all work orders
+  // Get all work orders with full details
   const { 
     data: workOrders = [], 
     isLoading: isLoadingWorkOrders,
@@ -53,6 +54,29 @@ export const useWorkOrders = () => {
     onError: (error) => {
       console.error('Error creating work order:', error);
       toast.error('Failed to create work order');
+    }
+  });
+  
+  // Create and mark complete in one step
+  const createAndCompleteWorkOrderMutation = useMutation({
+    mutationFn: async (data: CreateWorkOrderData) => {
+      // First create the work order
+      const workOrder = await createWorkOrder(data);
+      
+      // Then mark it as completed with today's completion date
+      const completionDate = new Date().toISOString().split('T')[0];
+      return updateWorkOrder(workOrder.id, {
+        status: 'completed',
+        completion_date: completionDate
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
+      toast.success('Work order created and marked as completed');
+    },
+    onError: (error) => {
+      console.error('Error creating and completing work order:', error);
+      toast.error('Failed to create and complete work order');
     }
   });
   
@@ -144,6 +168,26 @@ export const useWorkOrders = () => {
     }
   });
   
+  // Mark work order as complete with current date
+  const markWorkOrderCompleteMutation = useMutation({
+    mutationFn: (id: string) => {
+      const completionDate = new Date().toISOString().split('T')[0];
+      return updateWorkOrder(id, {
+        status: 'completed',
+        completion_date: completionDate
+      });
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['workOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['workOrder', id] });
+      toast.success('Work order marked as complete');
+    },
+    onError: (error) => {
+      console.error('Error completing work order:', error);
+      toast.error('Failed to complete work order');
+    }
+  });
+  
   return {
     workOrders,
     isLoadingWorkOrders,
@@ -152,11 +196,13 @@ export const useWorkOrders = () => {
     useWorkOrder,
     useSiteWorkOrders,
     createWorkOrderMutation,
+    createAndCompleteWorkOrderMutation,
     updateWorkOrderMutation,
     deleteWorkOrderMutation,
     updateStatusMutation,
     assignWorkOrderMutation,
     addAttachmentMutation,
-    removeAttachmentMutation
+    removeAttachmentMutation,
+    markWorkOrderCompleteMutation
   };
 };
