@@ -5,7 +5,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ShiftPlanner } from './ShiftPlanner';
 import { QuoteSummary } from './QuoteSummary';
 import { QuoteDetails } from './QuoteDetails';
-import { Calendar, FileText, DollarSign } from 'lucide-react';
+import { SubcontractorSection } from './SubcontractorSection';
+import { Calendar, FileText, DollarSign, Users } from 'lucide-react';
 import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
 
 export function QuoteBuilder() {
@@ -17,6 +18,10 @@ export function QuoteBuilder() {
 
   const handleShiftsChange = (newShifts: QuoteShift[]) => {
     setShifts(newShifts);
+  };
+  
+  const handleSubcontractorsChange = (newSubcontractors: Subcontractor[]) => {
+    setSubcontractors(newSubcontractors);
   };
 
   return (
@@ -39,6 +44,10 @@ export function QuoteBuilder() {
                 <Calendar className="h-4 w-4" />
                 <span>Shift Planner</span>
               </TabsTrigger>
+              <TabsTrigger value="subcontractors" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Subcontractors</span>
+              </TabsTrigger>
               <TabsTrigger value="summary" className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 <span>Cost Summary</span>
@@ -57,6 +66,13 @@ export function QuoteBuilder() {
                 quoteId={activeQuoteId} 
                 shifts={shifts}
                 onShiftsChange={handleShiftsChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="subcontractors">
+              <SubcontractorSection 
+                subcontractors={subcontractors}
+                onSubcontractorsChange={handleSubcontractorsChange}
               />
             </TabsContent>
             

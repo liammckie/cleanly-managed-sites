@@ -1,179 +1,429 @@
 
-import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { QuoteShift, Subcontractor } from '@/lib/award/types';
-import { BarChart4, DollarSign, TrendingUp } from 'lucide-react';
+import { calculateHourDifference } from '@/lib/award/utils';
+import { useAwardSettings } from '@/hooks/useAwardSettings';
+import { DownloadIcon, FileText, DollarSign, Calendar, BarChart3, PrinterIcon } from 'lucide-react';
+
+// Calculate shift hours
+const calculateShiftHours = (shift: QuoteShift): number => {
+  const startDate = new Date(`2000-01-01T${shift.startTime}`);
+  const endDate = new Date(`2000-01-01T${shift.endTime}`);
+  
+  // If end time is earlier than start time, add 1 day to end time (overnight shift)
+  if (endDate < startDate) {
+    endDate.setDate(endDate.getDate() + 1);
+  }
+  
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  
+  // Subtract break duration (convert minutes to hours)
+  return diffHours - (shift.breakDuration / 60);
+};
+
+// Helper function to calculate subcontractor monthly cost
+const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number => {
+  switch (subcontractor.frequency) {
+    case 'daily':
+      return subcontractor.cost * 21.67; // Average work days per month
+    case 'weekly':
+      return subcontractor.cost * 4.33; // Average weeks per month
+    case 'fortnightly':
+      return subcontractor.cost * 2.167; // Average fortnights per month
+    case 'monthly':
+      return subcontractor.cost;
+    default:
+      return subcontractor.cost;
+  }
+};
 
 interface QuoteSummaryProps {
+  quoteId: string | null;
   shifts: QuoteShift[];
   subcontractors: Subcontractor[];
   overheadPercentage: number;
   marginPercentage: number;
-  quoteId?: string | null;
 }
 
 export function QuoteSummary({ 
+  quoteId, 
   shifts, 
-  subcontractors,
-  overheadPercentage,
-  marginPercentage,
-  quoteId
+  subcontractors, 
+  overheadPercentage: initialOverheadPercentage, 
+  marginPercentage: initialMarginPercentage 
 }: QuoteSummaryProps) {
-  // Calculate shift costs
-  const laborCost = useMemo(() => {
-    return shifts.reduce((sum, shift) => sum + shift.estimatedCost, 0);
-  }, [shifts]);
+  const [overheadPercentage, setOverheadPercentage] = useState(initialOverheadPercentage);
+  const [marginPercentage, setMarginPercentage] = useState(initialMarginPercentage);
+  const [activeTimeframe, setActiveTimeframe] = useState<'weekly' | 'monthly' | 'annual'>('monthly');
+  const { settings } = useAwardSettings();
   
-  // Calculate subcontractor costs with frequency adjustment
-  const subcontractorCost = useMemo(() => {
-    return subcontractors.reduce((sum, sub) => {
-      let weeklyCost = 0;
-      
-      switch (sub.frequency) {
-        case 'daily':
-          weeklyCost = sub.cost * 7;
-          break;
-        case 'weekly':
-          weeklyCost = sub.cost;
-          break;
-        case 'fortnightly':
-          weeklyCost = sub.cost / 2;
-          break;
-        case 'monthly':
-          weeklyCost = sub.cost / 4.33;
-          break;
-      }
-      
-      return sum + (weeklyCost * 4.33); // Monthly cost
-    }, 0);
-  }, [subcontractors]);
+  // Update when props change
+  useEffect(() => {
+    setOverheadPercentage(initialOverheadPercentage);
+    setMarginPercentage(initialMarginPercentage);
+  }, [initialOverheadPercentage, initialMarginPercentage]);
+  
+  // Calculate total labor cost
+  const totalLaborCost = shifts.reduce((total, shift) => total + shift.estimatedCost, 0);
+  
+  // Calculate total subcontractor cost (monthly)
+  const totalSubcontractorMonthlyCost = subcontractors.reduce(
+    (total, subcontractor) => total + calculateSubcontractorMonthlyCost(subcontractor),
+    0
+  );
+  
+  // Calculate total hours
+  const totalHours = shifts.reduce((total, shift) => {
+    const shiftHours = calculateShiftHours(shift);
+    return total + (shiftHours * shift.numberOfCleaners);
+  }, 0);
+  
+  // Calculate costs based on timeframe
+  const getTimeframeFactor = (): number => {
+    switch (activeTimeframe) {
+      case 'weekly': return 1;
+      case 'monthly': return 4.33; // Average weeks per month
+      case 'annual': return 52; // Weeks per year
+      default: return 1;
+    }
+  };
+  
+  const timeframeFactor = getTimeframeFactor();
+  const displayLaborCost = totalLaborCost * timeframeFactor;
+  
+  let displaySubcontractorCost: number;
+  switch (activeTimeframe) {
+    case 'weekly':
+      displaySubcontractorCost = totalSubcontractorMonthlyCost / 4.33;
+      break;
+    case 'monthly':
+      displaySubcontractorCost = totalSubcontractorMonthlyCost;
+      break;
+    case 'annual':
+      displaySubcontractorCost = totalSubcontractorMonthlyCost * 12;
+      break;
+    default:
+      displaySubcontractorCost = totalSubcontractorMonthlyCost;
+  }
   
   // Calculate overhead
-  const overheadCost = useMemo(() => {
-    return (laborCost * overheadPercentage) / 100;
-  }, [laborCost, overheadPercentage]);
+  const overheadCost = displayLaborCost * (overheadPercentage / 100);
   
-  // Calculate total cost before margin
-  const totalCostBeforeMargin = useMemo(() => {
-    return laborCost + subcontractorCost + overheadCost;
-  }, [laborCost, subcontractorCost, overheadCost]);
+  // Calculate cost before margin
+  const costBeforeMargin = displayLaborCost + overheadCost + displaySubcontractorCost;
   
   // Calculate margin
-  const marginAmount = useMemo(() => {
-    return (totalCostBeforeMargin * marginPercentage) / 100;
-  }, [totalCostBeforeMargin, marginPercentage]);
+  const marginAmount = costBeforeMargin * (marginPercentage / 100);
   
   // Calculate total price
-  const totalPrice = useMemo(() => {
-    return totalCostBeforeMargin + marginAmount;
-  }, [totalCostBeforeMargin, marginAmount]);
+  const totalPrice = costBeforeMargin + marginAmount;
   
   // Calculate profit percentage
-  const profitPercentage = useMemo(() => {
-    if (totalPrice === 0) return 0;
-    return (marginAmount / totalPrice) * 100;
-  }, [marginAmount, totalPrice]);
+  const profitPercentage = totalPrice > 0 ? ((totalPrice - costBeforeMargin) / totalPrice) * 100 : 0;
+  
+  const formatCurrency = (amount: number): string => {
+    return amount.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
+  };
   
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Labor Cost:</span>
-              <span className="font-medium">${laborCost.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subcontractor Cost:</span>
-              <span className="font-medium">${subcontractorCost.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                Overhead ({overheadPercentage}%):
-              </span>
-              <span className="font-medium">${overheadCost.toFixed(2)}</span>
-            </div>
-            
-            <Separator />
-            
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Cost:</span>
-              <span className="font-medium">${totalCostBeforeMargin.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                Margin ({marginPercentage}%):
-              </span>
-              <span className="font-medium">${marginAmount.toFixed(2)}</span>
-            </div>
-            
-            <Separator />
-            
-            <div className="flex justify-between text-lg">
-              <span className="font-semibold">Total Price:</span>
-              <span className="font-bold">${totalPrice.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground flex items-center">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Profit Percentage:
-              </span>
-              <span className={`font-medium ${profitPercentage >= 15 ? 'text-green-600' : 'text-orange-500'}`}>
-                {profitPercentage.toFixed(1)}%
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center">
-              <DollarSign className="h-8 w-8 text-muted-foreground mb-2" />
-              <span className="text-lg font-bold">
-                ${(totalPrice / 4.33).toFixed(2)}
-              </span>
-              <span className="text-sm text-muted-foreground">Weekly</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center">
-              <DollarSign className="h-8 w-8 text-muted-foreground mb-2" />
-              <span className="text-lg font-bold">${totalPrice.toFixed(2)}</span>
-              <span className="text-sm text-muted-foreground">Monthly</span>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center">
-              <DollarSign className="h-8 w-8 text-muted-foreground mb-2" />
-              <span className="text-lg font-bold">
-                ${(totalPrice * 12).toFixed(2)}
-              </span>
-              <span className="text-sm text-muted-foreground">Annual</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {shifts.length === 0 && subcontractors.length === 0 && (
-        <div className="text-center p-6 border rounded-md bg-muted/20">
-          <p className="text-muted-foreground">
-            Add shifts or subcontractors to see cost calculation
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h3 className="text-lg font-medium">Quote Summary</h3>
+          <p className="text-sm text-muted-foreground">
+            Review costs, overhead, margin, and total price
           </p>
         </div>
-      )}
+        
+        <div className="flex space-x-2">
+          <Tabs value={activeTimeframe} onValueChange={(v) => setActiveTimeframe(v as any)}>
+            <TabsList>
+              <TabsTrigger value="weekly">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="annual">Annual</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <Button variant="outline" size="icon">
+            <PrinterIcon className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon">
+            <DownloadIcon className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-8 space-y-6">
+          {/* Cost Breakdown Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <DollarSign className="h-5 w-5 mr-2" />
+                Cost Breakdown
+              </CardTitle>
+              <CardDescription>
+                Detailed breakdown of all costs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">% of Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Labor Cost</div>
+                      <div className="text-xs text-muted-foreground">
+                        {totalHours.toFixed(1)} hours {activeTimeframe === 'weekly' ? 'per week' : activeTimeframe === 'monthly' ? 'per month' : 'per year'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(displayLaborCost)}</TableCell>
+                    <TableCell className="text-right">
+                      {totalPrice > 0 ? ((displayLaborCost / totalPrice) * 100).toFixed(1) : 0}%
+                    </TableCell>
+                  </TableRow>
+                  
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Overhead</div>
+                      <div className="text-xs text-muted-foreground">
+                        {overheadPercentage}% of labor cost
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(overheadCost)}</TableCell>
+                    <TableCell className="text-right">
+                      {totalPrice > 0 ? ((overheadCost / totalPrice) * 100).toFixed(1) : 0}%
+                    </TableCell>
+                  </TableRow>
+                  
+                  {subcontractors.length > 0 && (
+                    <TableRow>
+                      <TableCell>
+                        <div className="font-medium">Subcontractors</div>
+                        <div className="text-xs text-muted-foreground">
+                          {subcontractors.length} subcontractor{subcontractors.length !== 1 ? 's' : ''}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(displaySubcontractorCost)}</TableCell>
+                      <TableCell className="text-right">
+                        {totalPrice > 0 ? ((displaySubcontractorCost / totalPrice) * 100).toFixed(1) : 0}%
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  
+                  <TableRow>
+                    <TableCell className="font-medium">Cost Before Margin</TableCell>
+                    <TableCell className="text-right">{formatCurrency(costBeforeMargin)}</TableCell>
+                    <TableCell className="text-right">
+                      {totalPrice > 0 ? ((costBeforeMargin / totalPrice) * 100).toFixed(1) : 0}%
+                    </TableCell>
+                  </TableRow>
+                  
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Margin</div>
+                      <div className="text-xs text-muted-foreground">
+                        {marginPercentage}% of cost before margin
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(marginAmount)}</TableCell>
+                    <TableCell className="text-right">
+                      {totalPrice > 0 ? ((marginAmount / totalPrice) * 100).toFixed(1) : 0}%
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+            <CardFooter className="border-t">
+              <div className="w-full flex justify-between items-center">
+                <span className="font-bold text-lg">Total Price</span>
+                <span className="font-bold text-lg">{formatCurrency(totalPrice)}</span>
+              </div>
+            </CardFooter>
+          </Card>
+          
+          {/* Shift Summary Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                Shift Summary
+              </CardTitle>
+              <CardDescription>
+                Overview of all scheduled shifts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {shifts.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground">No shifts have been added to this quote yet.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Day</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Staff</TableHead>
+                      <TableHead className="text-right">Hours</TableHead>
+                      <TableHead className="text-right">Cost</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shifts.map(shift => {
+                      const shiftHours = calculateShiftHours(shift);
+                      return (
+                        <TableRow key={shift.id}>
+                          <TableCell className="capitalize">
+                            {shift.day}
+                          </TableCell>
+                          <TableCell>
+                            {shift.startTime} - {shift.endTime}
+                          </TableCell>
+                          <TableCell>
+                            {shift.numberOfCleaners} × Level {shift.level} {shift.employmentType.replace('-', ' ')}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {(shiftHours * shift.numberOfCleaners).toFixed(1)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(shift.estimatedCost)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="md:col-span-4 space-y-6">
+          {/* Pricing Summary Card */}
+          <Card className="bg-gradient-to-br from-primary/30 via-primary/20 to-background">
+            <CardHeader>
+              <CardTitle>Pricing Summary</CardTitle>
+              <CardDescription>
+                {activeTimeframe === 'weekly' ? 'Weekly' : activeTimeframe === 'monthly' ? 'Monthly' : 'Annual'} quote summary
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold">{formatCurrency(totalPrice)}</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Total {activeTimeframe === 'weekly' ? 'Weekly' : activeTimeframe === 'monthly' ? 'Monthly' : 'Annual'} Price
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Labor & Overhead:</span>
+                    <span>{formatCurrency(displayLaborCost + overheadCost)}</span>
+                  </div>
+                  
+                  {subcontractors.length > 0 && (
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Subcontractors:</span>
+                      <span>{formatCurrency(displaySubcontractorCost)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Profit:</span>
+                    <span>{formatCurrency(marginAmount)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between font-medium">
+                    <span>Profit Margin:</span>
+                    <span>{profitPercentage.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Margin & Overhead Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quote Settings</CardTitle>
+              <CardDescription>
+                Adjust overhead and margins
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="overhead">Overhead Percentage: {overheadPercentage}%</Label>
+                </div>
+                <Slider
+                  id="overhead"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={[overheadPercentage]}
+                  onValueChange={(values) => setOverheadPercentage(values[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label htmlFor="margin">Margin Percentage: {marginPercentage}%</Label>
+                </div>
+                <Slider
+                  id="margin"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={[marginPercentage]}
+                  onValueChange={(values) => setMarginPercentage(values[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Generate Quote Button */}
+          <Button className="w-full" size="lg">
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Quote PDF
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
