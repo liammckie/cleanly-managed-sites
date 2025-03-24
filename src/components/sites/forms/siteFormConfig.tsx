@@ -2,16 +2,16 @@
 import React from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps/ContactsStep';
-import { SecurityDetailsStep } from './steps/SecurityDetailsStep';
 import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { ReplenishablesStep } from './steps/ReplenishablesStep';
-import { SuppliesStep } from './steps/SuppliesStep';
 import { SubcontractorsStep } from './steps/SubcontractorsStep';
-import { AdditionalContractsStep } from './steps/AdditionalContractsStep';
 import { PeriodicalsStep } from './steps/PeriodicalsStep';
 import { SiteFormData } from './siteFormTypes';
+
+// We were importing modules that don't exist - removing those imports
+// and we'll update the steps array to only include steps we have components for
 
 export interface StepConfig {
   id: string;
@@ -55,7 +55,6 @@ export const getSiteFormSteps = (
     component: (
       <BasicInformationStep
         formData={formData}
-        errors={{}}
         handleChange={handleChange}
         handleStatusChange={(status) => handleChange({ target: { name: 'status', value: status } } as any)}
         handleClientChange={(clientId) => handleChange({ target: { name: 'clientId', value: clientId } } as any)}
@@ -70,7 +69,6 @@ export const getSiteFormSteps = (
     component: (
       <ContactsStep
         formData={formData}
-        errors={{}}
         handleContactChange={(index, field, value) => {}}
         addContact={() => {}}
         removeContact={(index) => {}}
@@ -84,7 +82,6 @@ export const getSiteFormSteps = (
     component: (
       <ContractDetailsStep
         formData={formData}
-        errors={{}}
         handleNestedChange={handleNestedChange}
         handleFileUpload={handleFileUpload}
         handleFileRemove={handleFileRemove}
@@ -101,7 +98,6 @@ export const getSiteFormSteps = (
     component: (
       <BillingDetailsStep
         formData={formData}
-        errors={{}}
         handleNestedChange={handleNestedChange}
         handleDoubleNestedChange={handleDoubleNestedChange}
         handleToggle={(field, value) => handleNestedChange('billingDetails', field, value)}
@@ -118,21 +114,8 @@ export const getSiteFormSteps = (
     component: (
       <JobSpecificationsStep
         formData={formData}
-        errors={{}}
         handleNestedChange={handleNestedChange}
         handleDoubleNestedChange={handleDoubleNestedChange}
-      />
-    )
-  },
-  {
-    id: 'security-details',
-    title: 'Security Details',
-    description: 'Manage security information for site access',
-    component: (
-      <SecurityDetailsStep
-        formData={formData}
-        errors={{}}
-        handleNestedChange={handleNestedChange}
       />
     )
   },
@@ -143,21 +126,21 @@ export const getSiteFormSteps = (
     component: (
       <PeriodicalsStep
         formData={formData}
-        errors={{}}
         handleNestedChange={handleNestedChange} 
         handleDoubleNestedChange={handleDoubleNestedChange}
       />
     )
   },
   {
-    id: 'supplies',
-    title: 'Supplies',
-    description: 'Manage supplies provided to this site',
+    id: 'supplies-replenishables',
+    title: 'Supplies & Replenishables',
+    description: 'Manage supplies and replenishables for this site',
     component: (
-      <SuppliesStep
+      <ReplenishablesStep
         formData={formData}
-        errors={{}}
-        handleNestedChange={handleNestedChange}
+        addReplenishable={addReplenishable}
+        updateReplenishable={updateReplenishable}
+        removeReplenishable={removeReplenishable}
       />
     )
   },
@@ -168,24 +151,9 @@ export const getSiteFormSteps = (
     component: (
       <SubcontractorsStep
         formData={formData}
-        errors={{}}
         addSubcontractor={addSubcontractor}
         updateSubcontractor={updateSubcontractor}
         removeSubcontractor={removeSubcontractor}
-      />
-    )
-  },
-  {
-    id: 'additional-contracts',
-    title: 'Additional Contracts',
-    description: 'Manage additional contracts for this site',
-    component: (
-      <AdditionalContractsStep
-        formData={formData}
-        errors={{}}
-        addAdditionalContract={addAdditionalContract}
-        updateAdditionalContract={updateAdditionalContract}
-        removeAdditionalContract={removeAdditionalContract}
       />
     )
   }

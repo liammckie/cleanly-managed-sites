@@ -81,7 +81,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   // Initialize the stepper
   const steps = getSiteFormSteps(
     formData,
-    (field: string, value: any) => siteForm.handleChange({ target: { name: field, value } } as any),
+    siteForm.handleChange, // Fixed: Pass the entire function, not a partial one
     siteForm.handleNestedChange,
     handleArrayChange,
     handleArrayUpdate,

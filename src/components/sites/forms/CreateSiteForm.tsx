@@ -89,7 +89,7 @@ export function CreateSiteForm() {
   const getCustomSiteFormSteps = () => {
     const steps = getSiteFormSteps(
       formHandlers.formData,
-      (field: string, value: any) => formHandlers.handleChange({ target: { name: field, value } } as any),
+      formHandlers.handleChange, // Fixed: Pass the full event handler, not just (field, value)
       formHandlers.handleNestedChange,
       handleArrayChange,
       handleArrayUpdate,
@@ -127,7 +127,6 @@ export function CreateSiteForm() {
         component: (
           <ContactsStep
             formData={formHandlers.formData}
-            errors={{}}
             handleContactChange={(index, field, value) => {
               const updatedContacts = [...formHandlers.formData.contacts];
               if (updatedContacts[index]) {
