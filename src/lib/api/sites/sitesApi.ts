@@ -16,8 +16,9 @@ const withErrorHandling = async <T>(operation: () => Promise<T>, errorMessage: s
     const detailedMessage = error.message || 'Unknown error occurred';
     const enhancedError = new Error(`${errorMessage}: ${detailedMessage}`);
     
-    // Preserve the original error's properties
-    if (error.status) enhancedError.cause = { status: error.status };
+    // Instead of using Error.cause (ES2022 feature), 
+    // we'll add the status as a custom property using type assertion
+    if (error.status) (enhancedError as any).status = error.status;
     if (error.code) (enhancedError as any).code = error.code;
     
     throw enhancedError;
