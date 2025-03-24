@@ -89,8 +89,6 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
   };
   
   const handleAddShift = (): boolean => {
-    console.log("Adding shift with data:", newShift);
-    
     if (!validateShift(newShift)) {
       return false;
     }
@@ -114,16 +112,11 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
       notes: newShift.notes || ''
     };
     
-    console.log("Final shift to add:", shiftToAdd);
-    
     // Update the shifts array
     const updatedShifts = [...initialShifts, shiftToAdd];
     onShiftsChange(updatedShifts);
     
     toast.success('Shift added successfully');
-    
-    // Reset form to default values
-    setNewShift({ ...DEFAULT_NEW_SHIFT });
     
     return true;
   };

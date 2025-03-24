@@ -10,17 +10,16 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Copy, Trash2, Clock, DollarSign, Calculator } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateHourDifference } from '@/lib/award/utils';
+import { Copy, Trash2, Calculator, Plus } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Badge } from '@/components/ui/badge';
 import { ScenarioComparer } from './ScenarioComparer';
-import { toast } from 'sonner';
 
 interface ShiftListProps {
   shifts: QuoteShift[];
@@ -44,9 +43,6 @@ export function ShiftList({
 }: ShiftListProps) {
   const [scenarioShiftId, setScenarioShiftId] = useState<string | null>(null);
   
-  // Calculate total estimated cost
-  const totalEstimatedCost = shifts.reduce((total, shift) => total + shift.estimatedCost, 0);
-
   const getDayLabel = (day: string): string => {
     const DAYS_OF_WEEK = [
       { value: 'monday', label: 'Monday' },
@@ -83,7 +79,6 @@ export function ShiftList({
   const handleApplyScenario = (updatedShift: QuoteShift) => {
     if (onUpdateShift) {
       onUpdateShift(updatedShift);
-      toast.success('Scenario applied to shift');
       setScenarioShiftId(null);
     }
   };
@@ -91,13 +86,16 @@ export function ShiftList({
   if (shifts.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <CardContent className="p-8 text-center">
+          <div className="mx-auto h-12 w-12 text-muted-foreground mb-4 flex items-center justify-center">
+            <Calculator className="h-8 w-8" />
+          </div>
           <h3 className="text-lg font-medium mb-2">No Shifts Added Yet</h3>
           <p className="text-muted-foreground mb-4">
             Start by adding shifts to your quote. Each shift will automatically calculate costs based on the award rates.
           </p>
           <Button onClick={onAddShiftClick}>
+            <Plus className="mr-2 h-4 w-4" />
             Add Your First Shift
           </Button>
         </CardContent>
@@ -135,6 +133,7 @@ export function ShiftList({
         <div className="flex justify-between items-center">
           <CardTitle>Scheduled Shifts</CardTitle>
           <Button size="sm" onClick={onAddShiftClick}>
+            <Plus className="mr-2 h-4 w-4" />
             Add Shift
           </Button>
         </div>
@@ -143,7 +142,7 @@ export function ShiftList({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-auto max-h-[500px]">
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -152,18 +151,20 @@ export function ShiftList({
                 <TableHead>Staff</TableHead>
                 <TableHead>Allowances</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="w-[120px]"></TableHead>
+                <TableHead className="w-[120px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {shifts.map(shift => (
                 <TableRow key={shift.id}>
                   <TableCell>
-                    {getDayLabel(shift.day)}
+                    <Badge variant={shift.day === 'saturday' || shift.day === 'sunday' || shift.day === 'public-holiday' ? "destructive" : "secondary"}>
+                      {getDayLabel(shift.day)}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span>
+                      <span className="font-medium">
                         {shift.startTime} - {shift.endTime}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -219,20 +220,6 @@ export function ShiftList({
           </Table>
         </div>
       </CardContent>
-      <CardFooter className="pt-0 border-t">
-        <div className="w-full flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            Total Hours: {shifts.reduce((total, shift) => 
-              total + calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration) * shift.numberOfCleaners, 
-              0
-            ).toFixed(1)}
-          </div>
-          <div className="text-lg font-medium flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <span>Total: ${totalEstimatedCost.toFixed(2)}</span>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   );
 }
