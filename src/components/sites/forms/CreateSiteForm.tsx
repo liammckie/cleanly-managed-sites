@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useSiteForm } from '@/hooks/useSiteForm';
@@ -185,6 +186,17 @@ export function CreateSiteForm() {
             }}
             addExistingContact={formHandlers.addExistingContact}
             setAsPrimary={formHandlers.setAsPrimary}
+            toggleUseClientInfo={(value) => {
+              // Call the client data toggle function if it exists
+              if (formHandlers.handleChange) {
+                formHandlers.handleChange({ 
+                  target: { 
+                    name: 'useClientInfo', 
+                    value 
+                  } 
+                } as any);
+              }
+            }}
           />
         )
       };

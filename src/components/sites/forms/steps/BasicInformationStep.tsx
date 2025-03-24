@@ -14,7 +14,6 @@ import { SiteStatus } from '../../SiteCard';
 import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { useClients } from '@/hooks/useClients';
 import { ClientSelect } from '../../clients/ClientSelect';
-import { Switch } from '@/components/ui/switch';
 import { useClientData } from '@/hooks/useClientData';
 
 interface BasicInformationStepProps {
@@ -51,27 +50,11 @@ export function BasicInformationStep({
             value={formData.clientId}
             onChange={(clientId) => {
               handleClientChange(clientId);
-              if (formData.useClientInfo) {
-                clientData.toggleUseClientInfo(false);
-              }
             }}
             error={errors['clientId']}
           />
           {errors['clientId'] && <FormMessage>{errors['clientId']}</FormMessage>}
         </FormItem>
-        
-        {formData.clientId && formData.clientId.trim() !== '' && (
-          <FormItem className="flex items-center space-x-2">
-            <Switch 
-              id="useClientInfo" 
-              checked={formData.useClientInfo}
-              onCheckedChange={clientData.toggleUseClientInfo}
-            />
-            <Label htmlFor="useClientInfo" className="cursor-pointer">
-              Use client information for billing details
-            </Label>
-          </FormItem>
-        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormItem className="space-y-2">
@@ -203,56 +186,6 @@ export function BasicInformationStep({
                 <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">Contact Information</h3>
-        
-        <div className="space-y-4">
-          <FormItem className="space-y-2">
-            <Label htmlFor="representative">Representative Name <span className="text-destructive">*</span></Label>
-            <FormControl>
-              <Input
-                id="representative"
-                name="representative"
-                placeholder="Enter representative name"
-                value={formData.representative}
-                onChange={handleChange}
-                className={`glass-input ${errors['representative'] ? 'border-destructive' : ''}`}
-                required
-                aria-invalid={!!errors['representative']}
-              />
-            </FormControl>
-            {errors['representative'] && <FormMessage>{errors['representative']}</FormMessage>}
-          </FormItem>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                placeholder="Enter phone number"
-                value={formData.phone}
-                onChange={handleChange}
-                className="glass-input"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter email address"
-                value={formData.email}
-                onChange={handleChange}
-                className="glass-input"
-              />
-            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, X, Star, UserCheck } from 'lucide-react';
 import { EntitySearchSelector } from '@/components/contacts/form/EntitySearchSelector';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { FormItem } from '@/components/ui/form';
 
 export interface ContactsStepProps {
   formData: SiteFormData;
@@ -16,6 +19,7 @@ export interface ContactsStepProps {
   removeContact: (index: number) => void;
   addExistingContact?: (contactId: string) => void;
   setAsPrimary?: (index: number) => void;
+  toggleUseClientInfo?: (value: boolean) => void;
 }
 
 export function ContactsStep({
@@ -25,7 +29,8 @@ export function ContactsStep({
   addContact,
   removeContact,
   addExistingContact,
-  setAsPrimary
+  setAsPrimary,
+  toggleUseClientInfo
 }: ContactsStepProps) {
   // Handle adding an existing contact
   const handleExistingContactSelect = (contactId: string) => {
@@ -51,6 +56,23 @@ export function ContactsStep({
 
   return (
     <div className="space-y-6">
+      {formData.clientId && formData.clientId.trim() !== '' && (
+        <FormItem className="flex items-center space-x-2">
+          <Switch 
+            id="useClientInfo" 
+            checked={formData.useClientInfo}
+            onCheckedChange={(value) => {
+              if (toggleUseClientInfo) {
+                toggleUseClientInfo(value);
+              }
+            }}
+          />
+          <Label htmlFor="useClientInfo" className="cursor-pointer">
+            Use client information for billing details
+          </Label>
+        </FormItem>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Site Contacts</h2>
         <div className="flex gap-2">
