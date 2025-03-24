@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, FileText, Plus, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ export const ContractorDocuments = ({ contractorId }: { contractorId: string }) 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Documents & Certifications</CardTitle>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={closeAddDialog}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={handleOpenAddDialog}>
                 <Plus className="h-4 w-4 mr-2" />
