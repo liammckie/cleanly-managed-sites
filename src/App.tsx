@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './lib/theme/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -33,6 +34,7 @@ import CreateWorkOrder from './pages/CreateWorkOrder';
 import CreateContract from './pages/CreateContract';
 import QuickActions from './pages/QuickActions';
 import MyBusiness from './pages/MyBusiness';
+import Employees from './pages/Employees';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,14 +81,8 @@ function App() {
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/quickactions" element={<ProtectedRoute><QuickActions /></ProtectedRoute>} />
-              <Route
-                path="/my-business"
-                element={
-                  <ProtectedRoute>
-                    <MyBusiness />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/my-business" element={<ProtectedRoute><MyBusiness /></ProtectedRoute>} />
+              <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
               <Route path="*" element={<ErrorPage />} />
             </Routes>
             <Toaster />
