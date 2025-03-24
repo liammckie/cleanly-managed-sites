@@ -31,17 +31,26 @@ export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Pa
     })
   );
   
-  const { data, error } = await supabase
-    .from('quote_subcontractors')
-    .insert(subcontractorsWithQuoteId)
-    .select();
+  // Insert subcontractors one by one to avoid Supabase type validation issues
+  let allInsertedSubcontractors: Subcontractor[] = [];
   
-  if (error) {
-    console.error('Error adding subcontractors:', error);
-    throw new Error(error.message);
+  for (const subData of subcontractorsWithQuoteId) {
+    const { data, error } = await supabase
+      .from('quote_subcontractors')
+      .insert(subData)
+      .select();
+    
+    if (error) {
+      console.error('Error adding subcontractor:', error);
+      throw new Error(error.message);
+    }
+    
+    if (data && data.length > 0) {
+      allInsertedSubcontractors = [...allInsertedSubcontractors, ...data.map(dbToSubcontractor)];
+    }
   }
   
-  return (data || []).map(dbToSubcontractor);
+  return allInsertedSubcontractors;
 };
 
 // Update subcontractors for a quote

@@ -1,6 +1,10 @@
 
-import { Json } from '@/lib/supabase';
-import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
+import { 
+  Quote, 
+  QuoteShift, 
+  Subcontractor,
+  Json 
+} from '@/lib/award/types';
 
 // Type definitions matching the database schema
 export type DbQuote = {
@@ -58,6 +62,7 @@ export type DbQuoteSubcontractor = {
   description?: string;
   frequency?: string;
   cost: number;
+  notes?: string; // Add notes field to match the Subcontractor type
   created_at: string;
   updated_at: string;
 };
@@ -193,7 +198,8 @@ export function dbToSubcontractor(dbSubcontractor: DbQuoteSubcontractor): Subcon
     service: dbSubcontractor.service || '',
     description: dbSubcontractor.description || '',
     frequency: dbSubcontractor.frequency as any || 'monthly',
-    cost: dbSubcontractor.cost
+    cost: dbSubcontractor.cost,
+    notes: dbSubcontractor.notes || ''
   };
 }
 
@@ -205,7 +211,8 @@ export function subcontractorToDb(subcontractor: Partial<Subcontractor>): Partia
     service: subcontractor.service,
     description: subcontractor.description,
     frequency: subcontractor.frequency,
-    cost: subcontractor.cost
+    cost: subcontractor.cost,
+    notes: subcontractor.notes
   };
 
   // Remove undefined properties

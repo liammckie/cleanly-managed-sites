@@ -31,17 +31,26 @@ export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift
     })
   );
   
-  const { data, error } = await supabase
-    .from('quote_shifts')
-    .insert(shiftsWithQuoteId)
-    .select();
+  // Insert shifts one by one to avoid Supabase type validation issues
+  let allInsertedShifts: QuoteShift[] = [];
   
-  if (error) {
-    console.error('Error adding shifts:', error);
-    throw new Error(error.message);
+  for (const shiftData of shiftsWithQuoteId) {
+    const { data, error } = await supabase
+      .from('quote_shifts')
+      .insert(shiftData)
+      .select();
+    
+    if (error) {
+      console.error('Error adding shift:', error);
+      throw new Error(error.message);
+    }
+    
+    if (data && data.length > 0) {
+      allInsertedShifts = [...allInsertedShifts, ...data.map(dbToQuoteShift)];
+    }
   }
   
-  return (data || []).map(dbToQuoteShift);
+  return allInsertedShifts;
 };
 
 // Update shifts for a quote

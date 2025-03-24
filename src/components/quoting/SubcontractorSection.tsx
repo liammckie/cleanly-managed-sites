@@ -30,6 +30,7 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
     service: '',
     cost: 0,
     frequency: 'weekly',
+    description: '',
     notes: ''
   });
   
@@ -45,10 +46,12 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
     
     const subcontractorToAdd: Subcontractor = {
       id: uuidv4(),
+      quoteId: '', // This will be set when saving to the database
       name: newSubcontractor.name,
       service: newSubcontractor.service,
       cost: typeof newSubcontractor.cost === 'number' ? newSubcontractor.cost : parseFloat(newSubcontractor.cost as string),
-      frequency: newSubcontractor.frequency as 'daily' | 'weekly' | 'fortnightly' | 'monthly',
+      frequency: newSubcontractor.frequency as Subcontractor['frequency'],
+      description: newSubcontractor.description || '',
       notes: newSubcontractor.notes
     };
     
@@ -61,6 +64,7 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
       service: '',
       cost: 0,
       frequency: 'weekly',
+      description: '',
       notes: ''
     });
     
@@ -80,6 +84,9 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
       case 'weekly': return 'Per week';
       case 'fortnightly': return 'Per fortnight';
       case 'monthly': return 'Per month';
+      case 'quarterly': return 'Per quarter';
+      case 'yearly': return 'Per year';
+      case 'once-off': return 'Once off';
       default: return frequency;
     }
   };
@@ -94,6 +101,12 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
         return subcontractor.cost * 2.167; // Average fortnights per month
       case 'monthly':
         return subcontractor.cost;
+      case 'quarterly':
+        return subcontractor.cost / 3; // Divide by 3 for monthly cost
+      case 'yearly':
+        return subcontractor.cost / 12; // Divide by 12 for monthly cost
+      case 'once-off':
+        return subcontractor.cost; // Just use the cost for once-off
       default:
         return subcontractor.cost;
     }
@@ -182,9 +195,22 @@ export function SubcontractorSection({ subcontractors, onSubcontractorsChange }:
                     <SelectItem value="weekly">Weekly</SelectItem>
                     <SelectItem value="fortnightly">Fortnightly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="once-off">Once Off</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input 
+                id="description" 
+                placeholder="Brief description of service"
+                value={newSubcontractor.description || ''}
+                onChange={e => handleInputChange('description', e.target.value)}
+              />
             </div>
             
             <div className="space-y-2">

@@ -1,6 +1,9 @@
 
 // Add this file if it doesn't exist yet
-import { Json } from "@/lib/supabase";
+import { createClient } from '@supabase/supabase-js';
+
+// Define a replacement for Json type that was imported from supabase
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Quote = {
   id: string;
@@ -39,7 +42,7 @@ export type QuoteShift = {
   endTime: string;
   breakDuration: number;
   level: number;
-  employmentType: 'full-time' | 'part-time' | 'casual';
+  employmentType: EmploymentType;
   numberOfCleaners: number;
   location: string;
   allowances: any[];
@@ -53,8 +56,9 @@ export type Subcontractor = {
   name: string;
   service: string;
   description: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'once-off';
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'once-off' | 'fortnightly';
   cost: number;
+  notes?: string; // Add notes as an optional property
 };
 
 export type OverheadProfile = {
@@ -72,6 +76,14 @@ export type Allowance = {
   description?: string;
 };
 
+// Add the missing types that are referenced in other files
+export type AllowanceType = 'travel' | 'meal' | 'uniform' | 'tool' | 'vehicle' | 'other';
+
+export type EmploymentType = 'full-time' | 'part-time' | 'casual';
+export type EmployeeLevel = 1 | 2 | 3;
+export type PayCondition = 'base' | 'shift-early-late' | 'saturday' | 'sunday' | 'public-holiday' 
+  | 'overtime-first-2-hours' | 'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday';
+
 // Additional types needed for the quote system
 export type ShiftTemplate = {
   id: string;
@@ -82,7 +94,55 @@ export type ShiftTemplate = {
   endTime: string;
   breakDuration: number;
   level: number;
-  employmentType: QuoteShift['employmentType'];
+  employmentType: EmploymentType;
   numberOfCleaners: number;
   allowances: any[];
+};
+
+// Add job cost calculation related types
+export type EmployeeLevelRates = {
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  baseRate: number;
+  rates: Record<PayCondition, {
+    rate: number;
+    multiplier: number;
+  }>;
+};
+
+export type JobCostingParams = {
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  hours: Record<PayCondition, number>;
+  overheadPercentage: number;
+  marginPercentage: number;
+};
+
+export type JobCostBreakdown = {
+  laborCost: number;
+  overheadCost: number;
+  totalCostBeforeMargin: number;
+  margin: number;
+  totalPrice: number;
+  hourlyBreakdown: Array<{
+    condition: PayCondition;
+    hours: number;
+    rate: number;
+    cost: number;
+  }>;
+};
+
+// Add award data types
+export type AwardData = {
+  name: string;
+  code: string;
+  effectiveDate: string;
+  levels: EmployeeLevelRates[];
+};
+
+export type AwardSettings = {
+  baseRateMultiplier: number;
+  lastUpdated: string;
+  overheadPercentageDefault: number;
+  marginPercentageDefault: number;
 };

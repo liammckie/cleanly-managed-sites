@@ -22,16 +22,17 @@ export const createOverheadProfile = async (name: string, laborPercentage: numbe
   const user = supabase.auth.getUser();
   const userId = (await user).data.user?.id;
   
-  const profileData: Partial<DbOverheadProfile> = {
+  const profileData = {
     name,
     labor_percentage: laborPercentage,
     description,
     user_id: userId
   };
   
+  // Now the properly typed data
   const { data, error } = await supabase
     .from('overhead_profiles')
-    .insert([profileData])
+    .insert(profileData) // Use the direct object instead of an array
     .select()
     .single();
   

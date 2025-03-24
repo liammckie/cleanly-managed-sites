@@ -97,7 +97,7 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   // Insert the quote
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
-    .insert([dbQuoteData])
+    .insert(dbQuoteData)
     .select()
     .single();
   
@@ -112,39 +112,39 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   
   // If shifts are provided, insert them
   if (shifts && shifts.length > 0) {
-    const shiftsWithQuoteId = shifts.map(shift => 
-      quoteShiftToDb({
+    for (const shift of shifts) {
+      const shiftWithQuoteId = quoteShiftToDb({
         ...shift,
         quoteId: quote.id
-      })
-    );
-    
-    const { error: shiftsError } = await supabase
-      .from('quote_shifts')
-      .insert(shiftsWithQuoteId);
-    
-    if (shiftsError) {
-      console.error('Error adding shifts:', shiftsError);
-      toast.error('Error adding shifts: ' + shiftsError.message);
+      });
+      
+      const { error: shiftError } = await supabase
+        .from('quote_shifts')
+        .insert(shiftWithQuoteId);
+      
+      if (shiftError) {
+        console.error('Error adding shift:', shiftError);
+        toast.error('Error adding shift: ' + shiftError.message);
+      }
     }
   }
   
   // If subcontractors are provided, insert them
   if (subcontractors && subcontractors.length > 0) {
-    const subcontractorsWithQuoteId = subcontractors.map(subcontractor => 
-      subcontractorToDb({
+    for (const subcontractor of subcontractors) {
+      const subWithQuoteId = subcontractorToDb({
         ...subcontractor,
         quoteId: quote.id
-      })
-    );
-    
-    const { error: subcontractorsError } = await supabase
-      .from('quote_subcontractors')
-      .insert(subcontractorsWithQuoteId);
-    
-    if (subcontractorsError) {
-      console.error('Error adding subcontractors:', subcontractorsError);
-      toast.error('Error adding subcontractors: ' + subcontractorsError.message);
+      });
+      
+      const { error: subError } = await supabase
+        .from('quote_subcontractors')
+        .insert(subWithQuoteId);
+      
+      if (subError) {
+        console.error('Error adding subcontractor:', subError);
+        toast.error('Error adding subcontractor: ' + subError.message);
+      }
     }
   }
   
@@ -192,20 +192,20 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     
     // Insert new shifts if there are any
     if (shifts.length > 0) {
-      const shiftsWithQuoteId = shifts.map(shift => 
-        quoteShiftToDb({
+      for (const shift of shifts) {
+        const shiftWithQuoteId = quoteShiftToDb({
           ...shift,
           quoteId: id
-        })
-      );
-      
-      const { error: addShiftsError } = await supabase
-        .from('quote_shifts')
-        .insert(shiftsWithQuoteId);
-      
-      if (addShiftsError) {
-        console.error('Error adding shifts:', addShiftsError);
-        toast.error('Error updating shifts: ' + addShiftsError.message);
+        });
+        
+        const { error: addShiftError } = await supabase
+          .from('quote_shifts')
+          .insert(shiftWithQuoteId);
+        
+        if (addShiftError) {
+          console.error('Error adding shift:', addShiftError);
+          toast.error('Error updating shifts: ' + addShiftError.message);
+        }
       }
     }
   }
@@ -225,20 +225,20 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     
     // Insert new subcontractors if there are any
     if (subcontractors.length > 0) {
-      const subcontractorsWithQuoteId = subcontractors.map(subcontractor => 
-        subcontractorToDb({
+      for (const subcontractor of subcontractors) {
+        const subWithQuoteId = subcontractorToDb({
           ...subcontractor,
           quoteId: id
-        })
-      );
-      
-      const { error: addSubcontractorsError } = await supabase
-        .from('quote_subcontractors')
-        .insert(subcontractorsWithQuoteId);
-      
-      if (addSubcontractorsError) {
-        console.error('Error adding subcontractors:', addSubcontractorsError);
-        toast.error('Error updating subcontractors: ' + addSubcontractorsError.message);
+        });
+        
+        const { error: addSubError } = await supabase
+          .from('quote_subcontractors')
+          .insert(subWithQuoteId);
+        
+        if (addSubError) {
+          console.error('Error adding subcontractor:', addSubError);
+          toast.error('Error updating subcontractors: ' + addSubError.message);
+        }
       }
     }
   }

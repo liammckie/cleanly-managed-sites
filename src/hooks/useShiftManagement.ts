@@ -96,9 +96,13 @@ export function useShiftManagement(initialShifts: QuoteShift[], onShiftsChange: 
     // Calculate the estimated cost of the shift
     const estimatedCost = calculateShiftCost(newShift);
     
+    // Get quoteId from the first shift if it exists (all shifts should have the same quoteId)
+    const quoteId = initialShifts.length > 0 ? initialShifts[0].quoteId : '';
+    
     // Create the full shift object with all required properties
     const shiftToAdd: QuoteShift = {
       id: uuidv4(),
+      quoteId, // Add the quoteId here
       day: newShift.day as ShiftDay,
       startTime: newShift.startTime!,
       endTime: newShift.endTime!,
