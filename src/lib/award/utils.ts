@@ -90,6 +90,24 @@ export const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor):
 };
 
 /**
+ * Calculate weekly cost for a subcontractor based on frequency
+ */
+export const calculateSubcontractorWeeklyCost = (subcontractor: Subcontractor): number => {
+  switch (subcontractor.frequency) {
+    case 'daily':
+      return subcontractor.cost * 5; // Average work days per week
+    case 'weekly':
+      return subcontractor.cost;
+    case 'fortnightly':
+      return subcontractor.cost / 2;
+    case 'monthly':
+      return subcontractor.cost / 4.33; // Average weeks per month
+    default:
+      return subcontractor.cost / 4.33;
+  }
+};
+
+/**
  * Format currency values
  */
 export const formatCurrency = (amount: number): string => {
@@ -106,4 +124,100 @@ export const getTimeframeFactor = (timeframe: 'weekly' | 'monthly' | 'annual'): 
     case 'annual': return 52; // Weeks per year
     default: return 1;
   }
+};
+
+/**
+ * Calculate total cost with overhead and margin
+ * @param laborCost Total labor cost
+ * @param subcontractorCost Total subcontractor cost
+ * @param overheadPercentage Overhead percentage to apply
+ * @param marginPercentage Margin percentage to apply
+ * @param overheadOnSubcontractors Whether to apply overhead on subcontractor costs
+ */
+export const calculateTotalCostWithOverheadAndMargin = (
+  laborCost: number,
+  subcontractorCost: number,
+  overheadPercentage: number,
+  marginPercentage: number,
+  overheadOnSubcontractors: boolean = false
+): {
+  laborCost: number;
+  subcontractorCost: number;
+  overheadCost: number;
+  costBeforeMargin: number;
+  marginAmount: number;
+  totalPrice: number;
+  profitPercentage: number;
+} => {
+  // Calculate overhead based on configuration
+  const laborOverhead = (laborCost * overheadPercentage) / 100;
+  const subcontractorOverhead = overheadOnSubcontractors ? (subcontractorCost * overheadPercentage) / 100 : 0;
+  const totalOverhead = laborOverhead + subcontractorOverhead;
+  
+  // Calculate cost before margin
+  const costBeforeMargin = laborCost + subcontractorCost + totalOverhead;
+  
+  // Calculate margin
+  const marginAmount = (costBeforeMargin * marginPercentage) / 100;
+  
+  // Calculate total price
+  const totalPrice = costBeforeMargin + marginAmount;
+  
+  // Calculate profit percentage (margin as percentage of total price)
+  const profitPercentage = totalPrice > 0 ? ((marginAmount) / totalPrice) * 100 : 0;
+  
+  return {
+    laborCost,
+    subcontractorCost,
+    overheadCost: totalOverhead,
+    costBeforeMargin,
+    marginAmount,
+    totalPrice,
+    profitPercentage
+  };
+};
+
+/**
+ * Calculate the total hours worked in a shift by all cleaners
+ */
+export const calculateTotalShiftHours = (shift: QuoteShift): number => {
+  const shiftHours = calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
+  return shiftHours * shift.numberOfCleaners;
+};
+
+/**
+ * Calculate days per week from shifts
+ */
+export const calculateDaysPerWeek = (shifts: QuoteShift[]): number => {
+  const uniqueDays = new Set(shifts.map(shift => shift.day));
+  return uniqueDays.size;
+};
+
+/**
+ * Get the frequency multiplier for converting between timeframes
+ */
+export const getFrequencyMultiplier = (
+  fromFrequency: 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'annual',
+  toFrequency: 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'annual',
+  daysPerWeek: number = 5
+): number => {
+  // Convert everything to daily first
+  const toDailyMultipliers: Record<string, number> = {
+    'daily': 1,
+    'weekly': 1/daysPerWeek,
+    'fortnightly': 1/(daysPerWeek * 2),
+    'monthly': 1/(daysPerWeek * 4.33),
+    'annual': 1/(daysPerWeek * 52),
+  };
+  
+  // Then convert from daily to target frequency
+  const fromDailyMultipliers: Record<string, number> = {
+    'daily': 1,
+    'weekly': daysPerWeek,
+    'fortnightly': daysPerWeek * 2,
+    'monthly': daysPerWeek * 4.33,
+    'annual': daysPerWeek * 52,
+  };
+  
+  return toDailyMultipliers[fromFrequency] * fromDailyMultipliers[toFrequency];
 };

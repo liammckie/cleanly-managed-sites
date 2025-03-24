@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { 
   Table, 
   TableBody, 
@@ -16,41 +17,34 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { QuoteShift, Subcontractor } from '@/lib/award/types';
-import { calculateHourDifference } from '@/lib/award/utils';
+import { 
+  calculateHourDifference, 
+  calculateTotalCostWithOverheadAndMargin,
+  calculateSubcontractorMonthlyCost,
+  formatCurrency,
+  getTimeframeFactor,
+  calculateDaysPerWeek
+} from '@/lib/award/utils';
 import { useAwardSettings } from '@/hooks/useAwardSettings';
-import { DownloadIcon, FileText, DollarSign, Calendar, BarChart3, PrinterIcon } from 'lucide-react';
+import { 
+  DownloadIcon, 
+  FileText, 
+  DollarSign, 
+  Calendar, 
+  BarChart3, 
+  PrinterIcon, 
+  InfoIcon 
+} from 'lucide-react';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Calculate shift hours
 const calculateShiftHours = (shift: QuoteShift): number => {
-  const startDate = new Date(`2000-01-01T${shift.startTime}`);
-  const endDate = new Date(`2000-01-01T${shift.endTime}`);
-  
-  // If end time is earlier than start time, add 1 day to end time (overnight shift)
-  if (endDate < startDate) {
-    endDate.setDate(endDate.getDate() + 1);
-  }
-  
-  const diffMs = endDate.getTime() - startDate.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
-  
-  // Subtract break duration (convert minutes to hours)
-  return diffHours - (shift.breakDuration / 60);
-};
-
-// Helper function to calculate subcontractor monthly cost
-const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number => {
-  switch (subcontractor.frequency) {
-    case 'daily':
-      return subcontractor.cost * 21.67; // Average work days per month
-    case 'weekly':
-      return subcontractor.cost * 4.33; // Average weeks per month
-    case 'fortnightly':
-      return subcontractor.cost * 2.167; // Average fortnights per month
-    case 'monthly':
-      return subcontractor.cost;
-    default:
-      return subcontractor.cost;
-  }
+  return calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
 };
 
 interface QuoteSummaryProps {
@@ -71,6 +65,7 @@ export function QuoteSummary({
   const [overheadPercentage, setOverheadPercentage] = useState(initialOverheadPercentage);
   const [marginPercentage, setMarginPercentage] = useState(initialMarginPercentage);
   const [activeTimeframe, setActiveTimeframe] = useState<'weekly' | 'monthly' | 'annual'>('monthly');
+  const [applyOverheadToSubcontractors, setApplyOverheadToSubcontractors] = useState(false);
   const { settings } = useAwardSettings();
   
   // Update when props change
@@ -94,17 +89,11 @@ export function QuoteSummary({
     return total + (shiftHours * shift.numberOfCleaners);
   }, 0);
   
-  // Calculate costs based on timeframe
-  const getTimeframeFactor = (): number => {
-    switch (activeTimeframe) {
-      case 'weekly': return 1;
-      case 'monthly': return 4.33; // Average weeks per month
-      case 'annual': return 52; // Weeks per year
-      default: return 1;
-    }
-  };
+  // Calculate unique days per week
+  const daysPerWeek = calculateDaysPerWeek(shifts);
   
-  const timeframeFactor = getTimeframeFactor();
+  // Calculate costs based on timeframe
+  const timeframeFactor = getTimeframeFactor(activeTimeframe);
   const displayLaborCost = totalLaborCost * timeframeFactor;
   
   let displaySubcontractorCost: number;
@@ -122,24 +111,14 @@ export function QuoteSummary({
       displaySubcontractorCost = totalSubcontractorMonthlyCost;
   }
   
-  // Calculate overhead
-  const overheadCost = displayLaborCost * (overheadPercentage / 100);
-  
-  // Calculate cost before margin
-  const costBeforeMargin = displayLaborCost + overheadCost + displaySubcontractorCost;
-  
-  // Calculate margin
-  const marginAmount = costBeforeMargin * (marginPercentage / 100);
-  
-  // Calculate total price
-  const totalPrice = costBeforeMargin + marginAmount;
-  
-  // Calculate profit percentage
-  const profitPercentage = totalPrice > 0 ? ((totalPrice - costBeforeMargin) / totalPrice) * 100 : 0;
-  
-  const formatCurrency = (amount: number): string => {
-    return amount.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
-  };
+  // Use the enhanced calculation utility
+  const costSummary = calculateTotalCostWithOverheadAndMargin(
+    displayLaborCost,
+    displaySubcontractorCost,
+    overheadPercentage,
+    marginPercentage,
+    applyOverheadToSubcontractors
+  );
   
   return (
     <div className="space-y-6">
@@ -199,9 +178,9 @@ export function QuoteSummary({
                         {totalHours.toFixed(1)} hours {activeTimeframe === 'weekly' ? 'per week' : activeTimeframe === 'monthly' ? 'per month' : 'per year'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(displayLaborCost)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(costSummary.laborCost)}</TableCell>
                     <TableCell className="text-right">
-                      {totalPrice > 0 ? ((displayLaborCost / totalPrice) * 100).toFixed(1) : 0}%
+                      {costSummary.totalPrice > 0 ? ((costSummary.laborCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                   
@@ -209,12 +188,12 @@ export function QuoteSummary({
                     <TableCell>
                       <div className="font-medium">Overhead</div>
                       <div className="text-xs text-muted-foreground">
-                        {overheadPercentage}% of labor cost
+                        {overheadPercentage}% of {applyOverheadToSubcontractors ? 'all costs' : 'labor cost only'}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(overheadCost)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(costSummary.overheadCost)}</TableCell>
                     <TableCell className="text-right">
-                      {totalPrice > 0 ? ((overheadCost / totalPrice) * 100).toFixed(1) : 0}%
+                      {costSummary.totalPrice > 0 ? ((costSummary.overheadCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                   
@@ -226,18 +205,18 @@ export function QuoteSummary({
                           {subcontractors.length} subcontractor{subcontractors.length !== 1 ? 's' : ''}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(displaySubcontractorCost)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(costSummary.subcontractorCost)}</TableCell>
                       <TableCell className="text-right">
-                        {totalPrice > 0 ? ((displaySubcontractorCost / totalPrice) * 100).toFixed(1) : 0}%
+                        {costSummary.totalPrice > 0 ? ((costSummary.subcontractorCost / costSummary.totalPrice) * 100).toFixed(1) : 0}%
                       </TableCell>
                     </TableRow>
                   )}
                   
                   <TableRow>
                     <TableCell className="font-medium">Cost Before Margin</TableCell>
-                    <TableCell className="text-right">{formatCurrency(costBeforeMargin)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(costSummary.costBeforeMargin)}</TableCell>
                     <TableCell className="text-right">
-                      {totalPrice > 0 ? ((costBeforeMargin / totalPrice) * 100).toFixed(1) : 0}%
+                      {costSummary.totalPrice > 0 ? ((costSummary.costBeforeMargin / costSummary.totalPrice) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                   
@@ -248,9 +227,9 @@ export function QuoteSummary({
                         {marginPercentage}% of cost before margin
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(marginAmount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(costSummary.marginAmount)}</TableCell>
                     <TableCell className="text-right">
-                      {totalPrice > 0 ? ((marginAmount / totalPrice) * 100).toFixed(1) : 0}%
+                      {costSummary.totalPrice > 0 ? ((costSummary.marginAmount / costSummary.totalPrice) * 100).toFixed(1) : 0}%
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -259,7 +238,7 @@ export function QuoteSummary({
             <CardFooter className="border-t">
               <div className="w-full flex justify-between items-center">
                 <span className="font-bold text-lg">Total Price</span>
-                <span className="font-bold text-lg">{formatCurrency(totalPrice)}</span>
+                <span className="font-bold text-lg">{formatCurrency(costSummary.totalPrice)}</span>
               </div>
             </CardFooter>
           </Card>
@@ -272,7 +251,7 @@ export function QuoteSummary({
                 Shift Summary
               </CardTitle>
               <CardDescription>
-                Overview of all scheduled shifts
+                Overview of all scheduled shifts ({daysPerWeek} days per week)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -332,7 +311,7 @@ export function QuoteSummary({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <div className="text-4xl font-bold">{formatCurrency(totalPrice)}</div>
+                <div className="text-4xl font-bold">{formatCurrency(costSummary.totalPrice)}</div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Total {activeTimeframe === 'weekly' ? 'Weekly' : activeTimeframe === 'monthly' ? 'Monthly' : 'Annual'} Price
                 </div>
@@ -344,24 +323,24 @@ export function QuoteSummary({
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>Labor & Overhead:</span>
-                    <span>{formatCurrency(displayLaborCost + overheadCost)}</span>
+                    <span>{formatCurrency(costSummary.laborCost + costSummary.overheadCost)}</span>
                   </div>
                   
                   {subcontractors.length > 0 && (
                     <div className="flex justify-between text-sm mb-1">
                       <span>Subcontractors:</span>
-                      <span>{formatCurrency(displaySubcontractorCost)}</span>
+                      <span>{formatCurrency(costSummary.subcontractorCost)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between text-sm mb-1">
                     <span>Profit:</span>
-                    <span>{formatCurrency(marginAmount)}</span>
+                    <span>{formatCurrency(costSummary.marginAmount)}</span>
                   </div>
                   
                   <div className="flex justify-between font-medium">
                     <span>Profit Margin:</span>
-                    <span>{profitPercentage.toFixed(1)}%</span>
+                    <span>{costSummary.profitPercentage.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
@@ -378,7 +357,7 @@ export function QuoteSummary({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <Label htmlFor="overhead">Overhead Percentage: {overheadPercentage}%</Label>
                 </div>
                 <Slider
@@ -394,6 +373,30 @@ export function QuoteSummary({
                   <span>50%</span>
                   <span>100%</span>
                 </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="apply-overhead"
+                  checked={applyOverheadToSubcontractors}
+                  onCheckedChange={setApplyOverheadToSubcontractors}
+                />
+                <Label htmlFor="apply-overhead" className="cursor-pointer">
+                  Apply overhead to subcontractors
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">
+                        When enabled, overhead percentage will be applied to both labor and subcontractor costs.
+                        When disabled, overhead is only calculated on labor costs.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               
               <div className="space-y-2">
