@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,7 +100,6 @@ export function ContactsFilter({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Search input */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -113,7 +111,6 @@ export function ContactsFilter({
           />
         </div>
 
-        {/* Primary filter */}
         <Button
           variant={filters.isPrimary ? "default" : "outline"}
           size="sm"
@@ -126,7 +123,6 @@ export function ContactsFilter({
           Primary Only
         </Button>
 
-        {/* Sort buttons */}
         <Button
           variant="outline"
           size="sm"
@@ -149,7 +145,6 @@ export function ContactsFilter({
           )}
         </Button>
 
-        {/* Advanced filters */}
         <Popover>
           <PopoverTrigger asChild>
             <Button 
@@ -178,8 +173,8 @@ export function ContactsFilter({
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <Select 
-                        value={field.value || ''}
-                        onValueChange={field.onChange}
+                        value={field.value || 'any-role'}
+                        onValueChange={(value) => field.onChange(value === 'any-role' ? undefined : value)}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -187,7 +182,7 @@ export function ContactsFilter({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Any role</SelectItem>
+                          <SelectItem value="any-role">Any role</SelectItem>
                           {availableRoles.map(role => (
                             <SelectItem key={role} value={role}>{role}</SelectItem>
                           ))}
@@ -204,8 +199,8 @@ export function ContactsFilter({
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       <Select 
-                        value={field.value || ''}
-                        onValueChange={field.onChange}
+                        value={field.value || 'any-department'}
+                        onValueChange={(value) => field.onChange(value === 'any-department' ? undefined : value)}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -213,7 +208,7 @@ export function ContactsFilter({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Any department</SelectItem>
+                          <SelectItem value="any-department">Any department</SelectItem>
                           {availableDepartments.map(department => (
                             <SelectItem key={department} value={department}>{department}</SelectItem>
                           ))}
@@ -250,7 +245,6 @@ export function ContactsFilter({
           </PopoverContent>
         </Popover>
 
-        {/* Reset all filters */}
         {(filters.search || activeFilterCount > 0 || filters.sortBy) && (
           <Button
             variant="ghost"
@@ -263,7 +257,6 @@ export function ContactsFilter({
         )}
       </div>
 
-      {/* Active filters display */}
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap gap-2 items-center">
           <div className="text-xs text-muted-foreground">Active filters:</div>
