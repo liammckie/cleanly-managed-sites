@@ -8,7 +8,7 @@ import Clients from './pages/Clients';
 import Settings from './pages/Settings';
 import SiteDetail from './pages/SiteDetail';
 import SiteEdit from './pages/SiteEdit';
-import SiteCreate from './pages/SiteCreate';
+import CreateSite from './pages/CreateSite'; // Use consistent naming
 import ClientDetail from './pages/ClientDetail';
 import ClientEdit from './pages/ClientEdit';
 import ClientCreate from './pages/ClientCreate';
@@ -23,6 +23,7 @@ import ContactDetail from './pages/ContactDetail';
 import { ContractVariationPage } from './components/sites/contract/variation/ContractVariationPage';
 import { ErrorPage } from './pages/ErrorPage';
 import React from 'react';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Create the query client outside the component
 const queryClient = new QueryClient({
@@ -41,27 +42,27 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="light" storageKey="project-ui-theme">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/sites" element={<Sites />} />
-            <Route path="/sites/:siteId" element={<SiteDetail />} />
-            <Route path="/sites/:siteId/edit" element={<SiteEdit />} />
-            <Route path="/sites/create" element={<SiteCreate />} />
-            <Route path="/sites/:siteId/variations" element={<ContractVariationPage />} />
-            <Route path="/sites/:siteId/variations/:variationType" element={<ContractVariationPage />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/clients/:clientId" element={<ClientDetail />} />
-            <Route path="/clients/:clientId/edit" element={<ClientEdit />} />
-            <Route path="/clients/create" element={<ClientCreate />} />
-            <Route path="/workorders" element={<WorkOrders />} />
-            <Route path="/workorders/:workOrderId" element={<WorkOrderDetail />} />
-            <Route path="/contractors" element={<Contractors />} />
-            <Route path="/contractors/:contractorId" element={<ContractorDetail />} />
-            <Route path="/subcontractors" element={<Subcontractors />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/contacts/:contactId" element={<ContactDetail />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/sites" element={<ProtectedRoute><Sites /></ProtectedRoute>} />
+            <Route path="/sites/:siteId" element={<ProtectedRoute><SiteDetail /></ProtectedRoute>} />
+            <Route path="/sites/:siteId/edit" element={<ProtectedRoute><SiteEdit /></ProtectedRoute>} />
+            <Route path="/sites/create" element={<ProtectedRoute><CreateSite /></ProtectedRoute>} /> 
+            <Route path="/sites/:siteId/variations" element={<ProtectedRoute><ContractVariationPage /></ProtectedRoute>} />
+            <Route path="/sites/:siteId/variations/:variationType" element={<ProtectedRoute><ContractVariationPage /></ProtectedRoute>} />
+            <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+            <Route path="/clients/:clientId" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+            <Route path="/clients/:clientId/edit" element={<ProtectedRoute><ClientEdit /></ProtectedRoute>} />
+            <Route path="/clients/create" element={<ProtectedRoute><ClientCreate /></ProtectedRoute>} />
+            <Route path="/workorders" element={<ProtectedRoute><WorkOrders /></ProtectedRoute>} />
+            <Route path="/workorders/:workOrderId" element={<ProtectedRoute><WorkOrderDetail /></ProtectedRoute>} />
+            <Route path="/contractors" element={<ProtectedRoute><Contractors /></ProtectedRoute>} />
+            <Route path="/contractors/:contractorId" element={<ProtectedRoute><ContractorDetail /></ProtectedRoute>} />
+            <Route path="/subcontractors" element={<ProtectedRoute><Subcontractors /></ProtectedRoute>} />
+            <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+            <Route path="/contacts/:contactId" element={<ProtectedRoute><ContactDetail /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </ThemeProvider>
