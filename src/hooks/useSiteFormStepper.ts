@@ -55,3 +55,6 @@ export const useSiteFormStepper = ({ steps, validateStep }: UseSiteFormStepperPr
     steps
   };
 };
+
+// Add a return type for the hook
+export type UseSiteFormStepperReturnType = ReturnType<typeof useSiteFormStepper>;
