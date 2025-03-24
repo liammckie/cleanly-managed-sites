@@ -30,7 +30,10 @@ export const NewWorkOrderDialog = ({ sites: allSites, onSuccess }: NewWorkOrderD
     }
   }, [siteId, allSites]);
 
-  if (allSites.length === 0) {
+  // Make sure we have valid sites for rendering
+  const validSites = allSites.filter(site => site && site.id);
+
+  if (validSites.length === 0) {
     return (
       <div className="p-6 text-center">
         <p className="text-muted-foreground mb-4">
@@ -52,5 +55,5 @@ export const NewWorkOrderDialog = ({ sites: allSites, onSuccess }: NewWorkOrderD
     />;
   }
 
-  return <SiteSelector sites={allSites} onSiteSelect={setSelectedSite} />;
+  return <SiteSelector sites={validSites} onSiteSelect={setSelectedSite} />;
 };

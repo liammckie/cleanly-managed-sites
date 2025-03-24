@@ -40,7 +40,7 @@ export const FilterSelectors = ({
           <SelectContent>
             <SelectItem value="all-clients">All clients</SelectItem>
             {clients.map((client) => (
-              <SelectItem key={client.id} value={client.id}>
+              <SelectItem key={client.id} value={client.id || `client-${client.name}`}>
                 {client.name}
               </SelectItem>
             ))}
@@ -60,8 +60,8 @@ export const FilterSelectors = ({
           <SelectContent>
             <SelectItem value="all-states">All states</SelectItem>
             {availableStates.map((state) => (
-              <SelectItem key={state} value={state}>
-                {state}
+              <SelectItem key={state} value={state || "unknown-state"}>
+                {state || "Unknown State"}
               </SelectItem>
             ))}
           </SelectContent>

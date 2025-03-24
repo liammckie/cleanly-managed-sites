@@ -27,30 +27,34 @@ export function ClientSelect({ value, onChange, error }: ClientSelectProps) {
     // Validate the ID before passing it up
     if (newValue && clients.some(client => client.id === newValue)) {
       onChange(newValue);
-    } else if (newValue === '') {
-      // Handle clearing the selection
-      onChange('');
+    } else if (newValue === 'default') {
+      // Use a non-empty default value when clearing the selection
+      onChange('default');
     }
   };
+  
+  // Ensure we have a valid value
+  const safeValue = value || 'default';
   
   return (
     <div className="flex space-x-2">
       <div className="flex-1">
-        <Select value={value} onValueChange={handleChange}>
+        <Select value={safeValue} onValueChange={handleChange}>
           <SelectTrigger className={`glass-input ${error ? 'border-destructive' : ''}`}>
             <SelectValue placeholder="Select client" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="default">Select a client</SelectItem>
             {isLoading ? (
-              <SelectItem value="loading" disabled>Loading clients...</SelectItem>
+              <SelectItem value="loading">Loading clients...</SelectItem>
             ) : clients.length > 0 ? (
               clients.map(client => (
-                <SelectItem key={client.id} value={client.id}>
+                <SelectItem key={client.id} value={client.id || `client-${client.name}`}>
                   {client.name}
                 </SelectItem>
               ))
             ) : (
-              <SelectItem value="no-clients" disabled>No clients found</SelectItem>
+              <SelectItem value="no-clients">No clients found</SelectItem>
             )}
           </SelectContent>
         </Select>
