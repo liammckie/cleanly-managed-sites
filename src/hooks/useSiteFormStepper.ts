@@ -31,6 +31,7 @@ export const useSiteFormStepper = ({
   
   const handleNext = async (onSubmit?: () => Promise<void>) => {
     // If validation function provided, check before proceeding
+    console.log(`Validating step ${currentStep} before proceeding`);
     if (!validateStep(currentStep)) {
       console.log(`Validation failed for step ${currentStep}`);
       return;
@@ -38,6 +39,7 @@ export const useSiteFormStepper = ({
     
     if (isLastStep) {
       // If we're on the last step and have an onSubmit callback, use it
+      console.log("On last step, using onSubmit callback if provided");
       if (onSubmit) {
         await onSubmit();
       }
@@ -45,6 +47,7 @@ export const useSiteFormStepper = ({
     }
     
     // Move to the next step
+    console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
     setCurrentStep(prev => prev + 1);
   };
   

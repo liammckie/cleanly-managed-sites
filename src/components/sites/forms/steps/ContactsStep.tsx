@@ -9,7 +9,9 @@ import { UserPlus, X, Star, UserCheck } from 'lucide-react';
 import { EntitySearchSelector } from '@/components/contacts/form/EntitySearchSelector';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { FormItem } from '@/components/ui/form';
+import { FormItem, FormMessage } from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export interface ContactsStepProps {
   formData: SiteFormData;
@@ -98,6 +100,13 @@ export function ContactsStep({
         </div>
       </div>
       
+      {errors['contacts'] && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors['contacts']}</AlertDescription>
+        </Alert>
+      )}
+      
       {formData.contacts && formData.contacts.length > 0 ? (
         <div className="grid gap-4">
           {formData.contacts.map((contact: SiteContact, index: number) => (
@@ -140,12 +149,12 @@ export function ContactsStep({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <label className="block text-sm font-medium mb-1">Name <span className="text-destructive">*</span></label>
                   <input
                     type="text"
                     value={contact.name || ''}
                     onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors[`contacts[${index}].name`] ? 'border-destructive' : ''}`}
                     placeholder="Full name"
                   />
                   {errors[`contacts[${index}].name`] && (
@@ -168,14 +177,17 @@ export function ContactsStep({
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <label className="block text-sm font-medium mb-1">Email <span className="text-destructive">*</span></label>
                   <input
                     type="email"
                     value={contact.email || ''}
                     onChange={(e) => handleContactChange(index, 'email', e.target.value)}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors[`contacts[${index}].email`] ? 'border-destructive' : ''}`}
                     placeholder="Email address"
                   />
+                  {errors[`contacts[${index}].email`] && (
+                    <p className="text-red-500 text-xs mt-1">{errors[`contacts[${index}].email`]}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -217,7 +229,7 @@ export function ContactsStep({
         </div>
       ) : (
         <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
-          <p className="text-gray-500 mb-4">No contacts added yet.</p>
+          <p className="text-gray-500 mb-4">No contacts added yet. <span className="text-destructive font-medium">At least one contact is required.</span></p>
           <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
             <Button
               type="button"

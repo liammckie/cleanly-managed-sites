@@ -38,6 +38,7 @@ export function CreateSiteFormContainer({
         <Form {...form}>
           <form onSubmit={(e) => {
             e.preventDefault();
+            console.log("Form submitted, current step:", stepper.currentStep, "isLastStep:", stepper.isLastStep);
             if (stepper.isLastStep) {
               handleSubmit();
             } else {

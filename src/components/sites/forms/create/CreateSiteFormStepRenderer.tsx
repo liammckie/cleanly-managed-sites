@@ -20,8 +20,10 @@ export function CreateSiteFormStepRenderer({
     try {
       console.log("Attempting to move to next step...");
       if (stepper.isLastStep) {
+        console.log("On last step, submitting form");
         await onSubmit();
       } else {
+        console.log("Moving to next step");
         stepper.handleNext();
       }
     } catch (error) {

@@ -39,10 +39,14 @@ export const useSiteForm = () => {
   
   // Validate a specific step
   const validateStep = (stepIndex: number): boolean => {
+    console.log(`Validating step ${stepIndex}`, formData);
     const isValid = validation.validateStep(formData, stepIndex, errors, setErrors);
     
     if (!isValid) {
       toast.error("Please fix the highlighted errors before proceeding");
+      console.log("Validation errors:", errors);
+    } else {
+      console.log("Step validation passed");
     }
     
     return isValid;

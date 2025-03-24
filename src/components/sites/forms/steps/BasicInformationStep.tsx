@@ -12,7 +12,6 @@ import {
 import { SiteFormData } from '../siteFormTypes';
 import { SiteStatus } from '../../SiteCard';
 import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { useClients } from '@/hooks/useClients';
 import { ClientSelect } from '../../clients/ClientSelect';
 import { useClientData } from '@/hooks/useClientData';
 

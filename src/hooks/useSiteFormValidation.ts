@@ -20,11 +20,28 @@ export const useSiteFormValidation = () => {
       if (!formData.state) newErrors.state = 'State is required';
       if (!formData.postcode) newErrors.postcode = 'Postcode is required';
       if (!formData.clientId) newErrors.clientId = 'Client is required';
-      if (!formData.representative) newErrors.representative = 'Representative is required';
+      
+      // Remove the representative validation since it's been moved to step 2
+      // if (!formData.representative) newErrors.representative = 'Representative is required';
     }
     
     // Step 1: Site Contacts (Moved from the old Step 4)
-    // No strict validation for contacts - they're optional
+    else if (stepIndex === 1) {
+      // Ensure at least one contact exists and has required fields
+      if (!formData.contacts || formData.contacts.length === 0) {
+        newErrors['contacts'] = 'At least one contact is required';
+      } else {
+        // Validate each contact
+        formData.contacts.forEach((contact, index) => {
+          if (!contact.name) {
+            newErrors[`contacts[${index}].name`] = 'Contact name is required';
+          }
+          if (!contact.email) {
+            newErrors[`contacts[${index}].email`] = 'Contact email is required';
+          }
+        });
+      }
+    }
     
     // Step 2: Contract Details (Previously Step 1)
     else if (stepIndex === 2) {
