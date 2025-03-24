@@ -81,61 +81,103 @@ export const contactsApi = {
   async getContactEntities(): Promise<Array<{id: string, name: string, type: string}>> {
     let entities: Array<{id: string, name: string, type: string}> = [];
     
-    // Fetch clients with contacts
-    const { data: clients, error: clientError } = await supabase
-      .from('clients')
-      .select('id, name')
-      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'client'));
+    // First fetch contact entity IDs by type
+    const { data: clientContactIds, error: clientIdsError } = await supabase
+      .from('contacts')
+      .select('entity_id')
+      .eq('entity_type', 'client');
     
-    if (clientError) {
-      console.error('Error fetching client entities:', clientError);
-    } else if (clients) {
-      entities = [
-        ...entities,
-        ...clients.map(client => ({
-          id: client.id,
-          name: client.name,
-          type: 'client'
-        }))
-      ];
+    if (clientIdsError) {
+      console.error('Error fetching client contact IDs:', clientIdsError);
+    } else {
+      // Then fetch clients that match those IDs
+      if (clientContactIds && clientContactIds.length > 0) {
+        const clientIds = clientContactIds.map(row => row.entity_id);
+        const { data: clients, error: clientError } = await supabase
+          .from('clients')
+          .select('id, name')
+          .in('id', clientIds);
+        
+        if (clientError) {
+          console.error('Error fetching client entities:', clientError);
+        } else if (clients) {
+          entities = [
+            ...entities,
+            ...clients.map(client => ({
+              id: client.id,
+              name: client.name,
+              type: 'client'
+            }))
+          ];
+        }
+      }
     }
     
-    // Fetch sites with contacts
-    const { data: sites, error: siteError } = await supabase
-      .from('sites')
-      .select('id, name')
-      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'site'));
+    // Fetch site contact IDs
+    const { data: siteContactIds, error: siteIdsError } = await supabase
+      .from('contacts')
+      .select('entity_id')
+      .eq('entity_type', 'site');
     
-    if (siteError) {
-      console.error('Error fetching site entities:', siteError);
-    } else if (sites) {
-      entities = [
-        ...entities,
-        ...sites.map(site => ({
-          id: site.id,
-          name: site.name,
-          type: 'site'
-        }))
-      ];
+    if (siteIdsError) {
+      console.error('Error fetching site contact IDs:', siteIdsError);
+    } else {
+      // Then fetch sites that match those IDs
+      if (siteContactIds && siteContactIds.length > 0) {
+        const siteIds = siteContactIds.map(row => row.entity_id);
+        const { data: sites, error: siteError } = await supabase
+          .from('sites')
+          .select('id, name')
+          .in('id', siteIds);
+        
+        if (siteError) {
+          console.error('Error fetching site entities:', siteError);
+        } else if (sites) {
+          entities = [
+            ...entities,
+            ...sites.map(site => ({
+              id: site.id,
+              name: site.name,
+              type: 'site'
+            }))
+          ];
+        }
+      }
     }
     
-    // Fetch suppliers (contractors) with contacts
-    const { data: contractors, error: contractorError } = await supabase
-      .from('contractors')
-      .select('id, business_name')
-      .in('id', supabase.from('contacts').select('entity_id').eq('entity_type', 'supplier'));
+    // Fetch supplier (contractor) contact IDs
+    const { data: supplierContactIds, error: supplierIdsError } = await supabase
+      .from('contacts')
+      .select('entity_id')
+      .eq('entity_type', 'supplier');
     
-    if (contractorError) {
-      console.error('Error fetching supplier entities:', contractorError);
-    } else if (contractors) {
-      entities = [
-        ...entities,
-        ...contractors.map(contractor => ({
-          id: contractor.id,
-          name: contractor.business_name,
-          type: 'supplier'
-        }))
-      ];
+    if (supplierIdsError) {
+      console.error('Error fetching supplier contact IDs:', supplierIdsError);
+    } else {
+      // Then fetch contractors that match those IDs
+      if (supplierContactIds && supplierContactIds.length > 0) {
+        const supplierIds = supplierContactIds.map(row => row.entity_id);
+        try {
+          const { data: contractors, error: contractorError } = await supabase
+            .from('contractors')
+            .select('id, business_name')
+            .in('id', supplierIds);
+          
+          if (contractorError) {
+            console.error('Error fetching supplier entities:', contractorError);
+          } else if (contractors && Array.isArray(contractors)) {
+            const contractorResults = contractors.map(contractor => ({
+              id: contractor.id,
+              name: contractor.business_name,
+              type: 'supplier'
+            }));
+            
+            entities = [...entities, ...contractorResults];
+          }
+        } catch (error) {
+          console.error('Error in contractor search:', error);
+        }
+      }
     }
     
     return entities;
