@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { QuoteShift } from '@/lib/award/types';
+import { dbToQuoteShift, quoteShiftToDb } from './adapters';
 
 // Fetch shifts for a quote
 export const fetchQuoteShifts = async (quoteId: string) => {
@@ -16,17 +17,19 @@ export const fetchQuoteShifts = async (quoteId: string) => {
     throw new Error(error.message);
   }
   
-  return data || [];
+  return (data || []).map(dbToQuoteShift);
 };
 
 // Add shifts to a quote
 export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift>[]) => {
   if (!quoteId || !shifts.length) return [];
   
-  const shiftsWithQuoteId = shifts.map(shift => ({
-    ...shift,
-    quote_id: quoteId
-  }));
+  const shiftsWithQuoteId = shifts.map(shift => 
+    quoteShiftToDb({
+      ...shift,
+      quoteId
+    })
+  );
   
   const { data, error } = await supabase
     .from('quote_shifts')
@@ -38,7 +41,7 @@ export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift
     throw new Error(error.message);
   }
   
-  return data || [];
+  return (data || []).map(dbToQuoteShift);
 };
 
 // Update shifts for a quote

@@ -2,6 +2,13 @@
 import { supabase } from '@/lib/supabase';
 import { Quote } from '@/lib/award/types';
 import { toast } from 'sonner';
+import { 
+  DbQuote, 
+  dbToQuote, 
+  quoteToDb, 
+  quoteShiftToDb, 
+  subcontractorToDb 
+} from './adapters';
 
 // Fetch quotes from Supabase
 export const fetchQuotes = async () => {
@@ -15,7 +22,7 @@ export const fetchQuotes = async () => {
     throw new Error(error.message);
   }
   
-  return data || [];
+  return (data || []).map(dbToQuote);
 };
 
 // Fetch a single quote with its shifts and subcontractors
@@ -61,11 +68,13 @@ export const fetchQuote = async (quoteId: string) => {
   }
   
   // Combine all data into a quote object
-  return {
+  const fullQuote = {
     ...quote,
     shifts: shifts || [],
     subcontractors: subcontractors || []
   };
+  
+  return dbToQuote(fullQuote as DbQuote);
 };
 
 // Create a new quote
@@ -77,12 +86,18 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
     throw new Error('User not authenticated');
   }
   
-  const { shifts, subcontractors, ...quoteDetails } = quoteData;
+  const { shifts, subcontractors, ...restQuoteData } = quoteData;
+  
+  const dbQuoteData = quoteToDb({
+    ...restQuoteData,
+    userId,
+    createdBy: userId
+  });
   
   // Insert the quote
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
-    .insert([{ ...quoteDetails, user_id: userId, created_by: userId }])
+    .insert([dbQuoteData])
     .select()
     .single();
   
@@ -97,10 +112,12 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   
   // If shifts are provided, insert them
   if (shifts && shifts.length > 0) {
-    const shiftsWithQuoteId = shifts.map(shift => ({
-      ...shift,
-      quote_id: quote.id
-    }));
+    const shiftsWithQuoteId = shifts.map(shift => 
+      quoteShiftToDb({
+        ...shift,
+        quoteId: quote.id
+      })
+    );
     
     const { error: shiftsError } = await supabase
       .from('quote_shifts')
@@ -114,10 +131,12 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
   
   // If subcontractors are provided, insert them
   if (subcontractors && subcontractors.length > 0) {
-    const subcontractorsWithQuoteId = subcontractors.map(subcontractor => ({
-      ...subcontractor,
-      quote_id: quote.id
-    }));
+    const subcontractorsWithQuoteId = subcontractors.map(subcontractor => 
+      subcontractorToDb({
+        ...subcontractor,
+        quoteId: quote.id
+      })
+    );
     
     const { error: subcontractorsError } = await supabase
       .from('quote_subcontractors')
@@ -129,21 +148,26 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>) => {
     }
   }
   
-  return quote;
+  return dbToQuote(quote as DbQuote);
 };
 
 // Update an existing quote
 export const updateQuoteMutation = async (quoteData: Quote) => {
-  const { id, shifts, subcontractors, ...quoteDetails } = quoteData;
+  const { id, shifts, subcontractors, ...restQuoteData } = quoteData;
   
   if (!id) {
     throw new Error('Quote ID is required for updates');
   }
   
+  const dbQuoteData = quoteToDb({
+    ...restQuoteData,
+    updatedAt: new Date().toISOString()
+  });
+  
   // Update quote details
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
-    .update({ ...quoteDetails, updated_at: new Date().toISOString() })
+    .update(dbQuoteData)
     .eq('id', id)
     .select()
     .single();
@@ -168,10 +192,12 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     
     // Insert new shifts if there are any
     if (shifts.length > 0) {
-      const shiftsWithQuoteId = shifts.map(shift => ({
-        ...shift,
-        quote_id: id
-      }));
+      const shiftsWithQuoteId = shifts.map(shift => 
+        quoteShiftToDb({
+          ...shift,
+          quoteId: id
+        })
+      );
       
       const { error: addShiftsError } = await supabase
         .from('quote_shifts')
@@ -199,10 +225,12 @@ export const updateQuoteMutation = async (quoteData: Quote) => {
     
     // Insert new subcontractors if there are any
     if (subcontractors.length > 0) {
-      const subcontractorsWithQuoteId = subcontractors.map(subcontractor => ({
-        ...subcontractor,
-        quote_id: id
-      }));
+      const subcontractorsWithQuoteId = subcontractors.map(subcontractor => 
+        subcontractorToDb({
+          ...subcontractor,
+          quoteId: id
+        })
+      );
       
       const { error: addSubcontractorsError } = await supabase
         .from('quote_subcontractors')

@@ -1,5 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
+import { Subcontractor } from '@/lib/award/types';
+import { dbToSubcontractor, subcontractorToDb } from './adapters';
 
 // Fetch subcontractors for a quote
 export const fetchQuoteSubcontractors = async (quoteId: string) => {
@@ -15,17 +17,19 @@ export const fetchQuoteSubcontractors = async (quoteId: string) => {
     throw new Error(error.message);
   }
   
-  return data || [];
+  return (data || []).map(dbToSubcontractor);
 };
 
 // Add subcontractors to a quote
-export const addQuoteSubcontractors = async (quoteId: string, subcontractors: any[]) => {
+export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Partial<Subcontractor>[]) => {
   if (!quoteId || !subcontractors.length) return [];
   
-  const subcontractorsWithQuoteId = subcontractors.map(subcontractor => ({
-    ...subcontractor,
-    quote_id: quoteId
-  }));
+  const subcontractorsWithQuoteId = subcontractors.map(sub => 
+    subcontractorToDb({
+      ...sub,
+      quoteId
+    })
+  );
   
   const { data, error } = await supabase
     .from('quote_subcontractors')
@@ -37,11 +41,11 @@ export const addQuoteSubcontractors = async (quoteId: string, subcontractors: an
     throw new Error(error.message);
   }
   
-  return data || [];
+  return (data || []).map(dbToSubcontractor);
 };
 
 // Update subcontractors for a quote
-export const updateQuoteSubcontractors = async (quoteId: string, subcontractors: any[]) => {
+export const updateQuoteSubcontractors = async (quoteId: string, subcontractors: Subcontractor[]) => {
   if (!quoteId) return [];
   
   // Delete all existing subcontractors

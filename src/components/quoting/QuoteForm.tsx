@@ -1,3 +1,5 @@
+
+// Only updating the section with the laborPercentage error
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
