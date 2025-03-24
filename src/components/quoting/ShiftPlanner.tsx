@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { QuoteShift } from '@/lib/award/types';
-import { useAllowances } from '@/hooks/useQuotes';
+import { useAllowances } from '@/hooks/quotes/useAllowances';
 import { useShiftManagement } from '@/hooks/useShiftManagement';
 import { calculateOvertimeHours } from '@/lib/award/utils';
 import { checkForBrokenShifts } from '@/lib/award/shiftCalculations';
@@ -22,7 +21,6 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const [activeView, setActiveView] = useState<'calendar' | 'list' | 'add'>('list');
   const { data: allowances = [], isLoading: isLoadingAllowances } = useAllowances();
 
-  // Use the shift management hook
   const {
     newShift,
     handleShiftChange,
@@ -35,25 +33,20 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
     resetNewShift
   } = useShiftManagement(shifts, onShiftsChange);
 
-  // Calculate overtime warnings
   const overtimeHours = calculateOvertimeHours(shifts);
   
-  // Check for broken shifts
   const brokenShiftDays = checkForBrokenShifts(shifts);
   
-  // Total estimated cost
   const totalEstimatedCost = shifts.reduce((total, shift) => total + shift.estimatedCost, 0);
 
-  // Handle adding a new shift
   const handleAddShiftSubmit = () => {
     const success = handleAddShift();
     if (success) {
-      setActiveView('list'); // Switch to list view after successful add
-      resetNewShift(); // Reset the form
+      setActiveView('list');
+      resetNewShift();
     }
   };
 
-  // Switch to add shift view
   const handleAddShiftClick = () => {
     resetNewShift();
     setActiveView('add');
@@ -104,19 +97,16 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
         </div>
       </div>
       
-      {/* Warnings section */}
       <ShiftWarnings 
         overtimeHours={overtimeHours} 
         brokenShiftDays={brokenShiftDays} 
       />
       
-      {/* Pre-built shift templates */}
       <ShiftTemplates 
         onApplyTemplate={applyShiftTemplate} 
         disabled={activeView !== 'add'}
       />
       
-      {/* Shift scheduler component - handles list, add, and calendar views */}
       <ShiftScheduler 
         activeView={activeView}
         shifts={shifts}
@@ -136,7 +126,6 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
         onAddShiftClick={handleAddShiftClick}
       />
       
-      {/* Summary component */}
       <ShiftSummary
         shifts={shifts} 
         totalCost={totalEstimatedCost}
