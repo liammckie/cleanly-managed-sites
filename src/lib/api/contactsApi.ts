@@ -1,20 +1,52 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ContactRecord } from '../types';
+import { ContactFilters } from '@/hooks/useContacts';
 
 // Contacts API functions
 export const contactsApi = {
   // Get all contacts for the current user, optionally filtered by entity type
-  async getContacts(entityType?: string): Promise<ContactRecord[]> {
+  async getContacts(filters: ContactFilters = {}): Promise<ContactRecord[]> {
     let query = supabase
       .from('contacts')
       .select('*');
     
-    if (entityType && entityType !== 'all') {
-      query = query.eq('entity_type', entityType);
+    // Apply entity type filter
+    if (filters.entityType && filters.entityType !== 'all') {
+      query = query.eq('entity_type', filters.entityType);
     }
     
-    const { data: contacts, error } = await query.order('created_at', { ascending: false });
+    // Apply search filter
+    if (filters.search && filters.search.trim() !== '') {
+      const searchTerm = `%${filters.search.toLowerCase()}%`;
+      query = query.or(`name.ilike.${searchTerm},email.ilike.${searchTerm},role.ilike.${searchTerm},department.ilike.${searchTerm},phone.ilike.${searchTerm}`);
+    }
+    
+    // Apply role filter
+    if (filters.role && filters.role.trim() !== '') {
+      query = query.ilike('role', `%${filters.role}%`);
+    }
+    
+    // Apply department filter
+    if (filters.department && filters.department.trim() !== '') {
+      query = query.ilike('department', `%${filters.department}%`);
+    }
+    
+    // Apply primary contact filter
+    if (filters.isPrimary !== undefined) {
+      query = query.eq('is_primary', filters.isPrimary);
+    }
+    
+    // Apply sorting
+    if (filters.sortBy) {
+      const direction = filters.sortDirection || 'asc';
+      query = query.order(filters.sortBy, { ascending: direction === 'asc' });
+    } else {
+      // Default sorting by created_at
+      query = query.order('created_at', { ascending: false });
+    }
+    
+    const { data: contacts, error } = await query;
     
     if (error) {
       console.error('Error fetching contacts:', error);

@@ -5,9 +5,19 @@ import { contactsApi } from '@/lib/api/contactsApi';
 import { ContactRecord } from '@/lib/types';
 import { toast } from 'sonner';
 
-export function useContacts(entityType?: string) {
+export type ContactFilters = {
+  entityType?: string;
+  search?: string;
+  department?: string;
+  role?: string;
+  isPrimary?: boolean;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+};
+
+export function useContacts(initialFilters: ContactFilters = {}) {
   const queryClient = useQueryClient();
-  const [activeEntityType, setActiveEntityType] = useState<string | undefined>(entityType);
+  const [filters, setFilters] = useState<ContactFilters>(initialFilters);
   
   // Fetch all contacts
   const { 
@@ -15,8 +25,8 @@ export function useContacts(entityType?: string) {
     isLoading, 
     error,
   } = useQuery({
-    queryKey: ['contacts', activeEntityType],
-    queryFn: () => contactsApi.getContacts(activeEntityType),
+    queryKey: ['contacts', filters],
+    queryFn: () => contactsApi.getContacts(filters),
   });
 
   // Add contact mutation
@@ -90,13 +100,13 @@ export function useContacts(entityType?: string) {
 
   return {
     contacts,
+    filters,
+    setFilters,
     isLoading: isLoading || addContactMutation.isPending || updateContactMutation.isPending || deleteContactMutation.isPending,
     error,
     isCreating: addContactMutation.isPending,
     isUpdating: updateContactMutation.isPending,
     isDeleting: deleteContactMutation.isPending,
-    filter: activeEntityType,
-    setFilter: setActiveEntityType,
     searchEntities,
     addContact: (contact: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) => 
       addContactMutation.mutateAsync(contact),

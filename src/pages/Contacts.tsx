@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { 
   Table, 
@@ -8,16 +9,15 @@ import {
   TableBody, 
   TableCell 
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ContactManagementTabs } from '@/components/contacts/ContactManagementTabs';
 import { ContactDialog } from '@/components/contacts/ContactDialog';
-import { useContacts } from '@/hooks/useContacts';
+import { ContactsFilter } from '@/components/contacts/ContactsFilter';
+import { useContacts, ContactFilters } from '@/hooks/useContacts';
 import { ContactRecord } from '@/lib/types';
 import { 
-  Search, 
   UserPlus, 
   Star, 
   Mail, 
@@ -32,10 +32,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Contacts = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [filters, setFilters] = useState<ContactFilters>({
+    entityType: 'all',
+    search: ''
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
   
   const { 
     contacts, 
@@ -45,12 +49,36 @@ const Contacts = () => {
     updateContact,
     deleteContact,
     setPrimaryContact,
-    setFilter
-  } = useContacts();
+    setFilters: setContactsFilters
+  } = useContacts(filters);
+
+  // Extract unique roles and departments for filter dropdowns
+  useEffect(() => {
+    if (contacts && contacts.length > 0) {
+      const roles = [...new Set(contacts.map(c => c.role).filter(Boolean))];
+      const departments = [...new Set(contacts.map(c => c.department).filter(Boolean))];
+      
+      setAvailableRoles(roles as string[]);
+      setAvailableDepartments(departments as string[]);
+    }
+  }, [contacts]);
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setFilter(value === 'all' ? undefined : value);
+    setFilters({
+      ...filters,
+      entityType: value === 'all' ? undefined : value
+    });
+  };
+
+  const handleFilterChange = (newFilters: ContactFilters) => {
+    setFilters({
+      ...newFilters,
+      entityType: filters.entityType // Preserve entity type from tabs
+    });
+    setContactsFilters({
+      ...newFilters,
+      entityType: filters.entityType
+    });
   };
 
   const handleAddContact = async (contactData: Partial<ContactRecord>) => {
@@ -100,28 +128,6 @@ const Contacts = () => {
     }
   };
 
-  const filteredContacts = React.useMemo(() => {
-    let filtered = [...contacts];
-    
-    if (activeTab !== 'all') {
-      filtered = filtered.filter(contact => contact.entity_type === activeTab);
-    }
-    
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(contact => {
-        return (
-          (contact.name && contact.name.toLowerCase().includes(searchLower)) ||
-          (contact.email && contact.email.toLowerCase().includes(searchLower)) ||
-          (contact.role && contact.role.toLowerCase().includes(searchLower)) ||
-          (contact.department && contact.department.toLowerCase().includes(searchLower))
-        );
-      });
-    }
-    
-    return filtered;
-  }, [contacts, activeTab, searchTerm]);
-
   return (
     <PageLayout>
       <div className="container py-6">
@@ -143,20 +149,16 @@ const Contacts = () => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search contacts..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            
             <ContactManagementTabs onValueChange={handleTabChange} />
+            
+            <Card className="p-4">
+              <ContactsFilter 
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                availableRoles={availableRoles}
+                availableDepartments={availableDepartments}
+              />
+            </Card>
             
             <Card>
               <div className="overflow-x-auto">
@@ -177,14 +179,14 @@ const Contacts = () => {
                           Loading contacts...
                         </TableCell>
                       </TableRow>
-                    ) : filteredContacts.length === 0 ? (
+                    ) : contacts.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center">
                           No contacts found. Add your first contact to get started.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredContacts.map((contact) => (
+                      contacts.map((contact) => (
                         <TableRow key={contact.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
