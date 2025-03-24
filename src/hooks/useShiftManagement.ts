@@ -8,7 +8,7 @@ const useShiftManagement = (initialShifts: QuoteShift[] = [], quoteId?: string) 
 
   // Function to generate a new shift
   const generateNewShift = (quoteId?: string): QuoteShift => {
-    const defaultShift = {
+    const defaultShift: QuoteShift = {
       id: uuidv4(),
       quoteId: quoteId || '',  // Add quoteId property
       day: 'monday' as Day,

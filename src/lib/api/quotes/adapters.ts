@@ -1,104 +1,90 @@
 
-import { QuoteShift, Subcontractor, Quote, OverheadProfile } from '@/lib/award/types';
+import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
 import { Json } from '@/lib/types';
 
-// Database shape to application shape converters
-export interface DbQuoteShift {
-  id?: string;
-  quote_id?: string;
-  day: string;
-  start_time: string;
-  end_time: string;
-  break_duration?: number;
-  level: number;
-  employment_type: string;
-  number_of_cleaners?: number;
-  location?: string;
-  allowances?: Json;
-  estimated_cost?: number;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface DbQuoteSubcontractor {
-  id?: string;
-  quote_id?: string;
-  name: string;
-  service?: string;
-  description?: string;
-  frequency?: string;
-  cost?: number;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface DbQuote {
-  id?: string;
-  name: string;
-  client_id?: string;
-  client_name?: string;
-  site_address?: string;
-  site_name?: string;
-  start_date?: string;
-  end_date?: string;
-  contract_length?: number;
-  contract_length_unit?: string;
-  expiry_date?: string;
-  status?: string;
-  overhead_percentage?: number;
-  margin_percentage?: number;
-  overhead_profile?: string;
-  labor_cost?: number;
-  overhead_amount?: number;
-  overhead_cost?: number;
-  margin_amount?: number;
-  total_price?: number;
-  total_cost?: number;
-  subcontractor_cost?: number;
-  total_hours?: number;
-  notes?: string;
-  user_id?: string;
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface DbOverheadProfile {
-  id?: string;
-  name: string;
-  percentage?: number;
-  labor_percentage?: number;
-  description?: string;
-  is_default?: boolean;
-  user_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Database to application converters
-export const dbToQuoteShift = (dbShift: DbQuoteShift): QuoteShift => {
+export function adaptQuoteFromDatabase(data: any): Quote {
   return {
-    id: dbShift.id || '',
-    quoteId: dbShift.quote_id || '',
-    day: dbShift.day as any,
-    startTime: dbShift.start_time,
-    endTime: dbShift.end_time,
-    breakDuration: dbShift.break_duration || 0,
-    level: dbShift.level as any,
-    employmentType: dbShift.employment_type as any,
-    numberOfCleaners: dbShift.number_of_cleaners || 1,
-    location: dbShift.location,
-    allowances: Array.isArray(dbShift.allowances) ? dbShift.allowances as string[] : [],
-    estimatedCost: dbShift.estimated_cost || 0,
-    notes: dbShift.notes,
-    createdAt: dbShift.created_at,
-    updatedAt: dbShift.updated_at
+    id: data.id || '',
+    title: data.title || '',
+    clientName: data.client_name || '',
+    siteName: data.site_name || '',
+    description: data.description || '',
+    status: data.status || 'draft',
+    overheadPercentage: data.overhead_percentage || 0,
+    marginPercentage: data.margin_percentage || 0,
+    totalPrice: data.total_price || 0,
+    laborCost: data.labor_cost || 0,
+    suppliesCost: data.supplies_cost || 0,
+    equipmentCost: data.equipment_cost || 0,
+    subcontractorCost: data.subcontractor_cost || 0,
+    createdAt: data.created_at || '',
+    updatedAt: data.updated_at || '',
+    quoteNumber: data.quote_number || '',
+    validUntil: data.valid_until || '',
+    clientId: data.client_id || '',
+    clientContact: data.client_contact || '',
+    clientEmail: data.client_email || '',
+    clientPhone: data.client_phone || '',
+    siteAddress: data.site_address || '',
+    siteId: data.site_id || '',
+    frequency: data.frequency || '',
+    scope: data.scope || '',
+    terms: data.terms || '',
+    notes: data.notes || '',
+    created_by: data.created_by || '',
   };
-};
+}
 
-export const quoteShiftToDb = (shift: Partial<QuoteShift>): Partial<DbQuoteShift> => {
+export function adaptQuoteForDatabase(quote: Quote): any {
+  return {
+    id: quote.id,
+    title: quote.title,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
+    description: quote.description,
+    status: quote.status,
+    overhead_percentage: quote.overheadPercentage,
+    margin_percentage: quote.marginPercentage,
+    total_price: quote.totalPrice,
+    labor_cost: quote.laborCost,
+    supplies_cost: quote.suppliesCost,
+    equipment_cost: quote.equipmentCost,
+    subcontractor_cost: quote.subcontractorCost,
+    quote_number: quote.quoteNumber,
+    valid_until: quote.validUntil,
+    client_id: quote.clientId,
+    client_contact: quote.clientContact,
+    client_email: quote.clientEmail,
+    client_phone: quote.clientPhone,
+    site_address: quote.siteAddress,
+    site_id: quote.siteId,
+    frequency: quote.frequency,
+    scope: quote.scope,
+    terms: quote.terms,
+    notes: quote.notes,
+    created_by: quote.created_by,
+  };
+}
+
+export function adaptShiftFromDatabase(data: any): QuoteShift {
+  return {
+    id: data.id || '',
+    quoteId: data.quote_id || '',
+    day: data.day || 'monday',
+    startTime: data.start_time || '09:00',
+    endTime: data.end_time || '17:00',
+    breakDuration: data.break_duration || 30,
+    numberOfCleaners: data.number_of_cleaners || 1,
+    employmentType: data.employment_type || 'full_time',
+    level: data.level || 1,
+    allowances: data.allowances || [],
+    estimatedCost: data.estimated_cost || 0,
+    location: data.location || '',
+    notes: data.notes || '',
+  };
+}
+
+export function adaptShiftForDatabase(shift: QuoteShift): any {
   return {
     id: shift.id,
     quote_id: shift.quoteId,
@@ -106,138 +92,38 @@ export const quoteShiftToDb = (shift: Partial<QuoteShift>): Partial<DbQuoteShift
     start_time: shift.startTime,
     end_time: shift.endTime,
     break_duration: shift.breakDuration,
-    level: shift.level,
-    employment_type: shift.employmentType,
     number_of_cleaners: shift.numberOfCleaners,
-    location: shift.location,
-    allowances: shift.allowances as Json,
+    employment_type: shift.employmentType,
+    level: shift.level,
+    allowances: shift.allowances || [],
     estimated_cost: shift.estimatedCost,
-    notes: shift.notes,
-    created_at: shift.createdAt,
-    updated_at: shift.updatedAt || new Date().toISOString()
+    location: shift.location || '',
+    notes: shift.notes || '',
   };
-};
+}
 
-export const dbToSubcontractor = (dbSub: DbQuoteSubcontractor): Subcontractor => {
+export function adaptSubcontractorFromDatabase(data: any): Subcontractor {
   return {
-    id: dbSub.id || '',
-    quoteId: dbSub.quote_id || '',
-    name: dbSub.name,
-    service: dbSub.service,
-    description: dbSub.description,
-    frequency: dbSub.frequency as any || 'monthly',
-    cost: dbSub.cost || 0,
-    notes: dbSub.notes,
-    createdAt: dbSub.created_at,
-    updatedAt: dbSub.updated_at
+    id: data.id || '',
+    name: data.name || '',
+    email: data.email || '',
+    phone: data.phone || '',
+    services: data.services || [],
+    rate: data.rate || 0,
+    frequency: data.frequency || 'weekly',
+    notes: data.notes || '',
   };
-};
+}
 
-export const subcontractorToDb = (sub: Partial<Subcontractor>): Partial<DbQuoteSubcontractor> => {
+export function adaptSubcontractorForDatabase(subcontractor: Subcontractor): any {
   return {
-    id: sub.id,
-    quote_id: sub.quoteId,
-    name: sub.name || '',
-    service: sub.service,
-    description: sub.description,
-    frequency: sub.frequency,
-    cost: sub.cost,
-    notes: sub.notes,
-    created_at: sub.createdAt,
-    updated_at: sub.updatedAt || new Date().toISOString()
+    id: subcontractor.id,
+    name: subcontractor.name,
+    email: subcontractor.email || '',
+    phone: subcontractor.phone || '',
+    services: subcontractor.services || [],
+    rate: subcontractor.rate || 0,
+    frequency: subcontractor.frequency || 'weekly',
+    notes: subcontractor.notes || '',
   };
-};
-
-export const dbToQuote = (dbQuote: DbQuote): Quote => {
-  return {
-    id: dbQuote.id || '',
-    name: dbQuote.name || '',
-    clientId: dbQuote.client_id,
-    clientName: dbQuote.client_name,
-    siteAddress: dbQuote.site_address,
-    siteName: dbQuote.site_name,
-    startDate: dbQuote.start_date,
-    endDate: dbQuote.end_date,
-    contractLength: dbQuote.contract_length,
-    contractLengthUnit: dbQuote.contract_length_unit as any,
-    expiryDate: dbQuote.expiry_date,
-    status: dbQuote.status as any || 'draft',
-    overheadProfile: dbQuote.overhead_profile,
-    overheadPercentage: dbQuote.overhead_percentage || 0,
-    marginPercentage: dbQuote.margin_percentage || 0,
-    laborCost: dbQuote.labor_cost || 0,
-    overheadAmount: dbQuote.overhead_amount || 0,
-    overheadCost: dbQuote.overhead_cost || 0,
-    marginAmount: dbQuote.margin_amount || 0,
-    totalPrice: dbQuote.total_price || 0,
-    totalCost: dbQuote.total_cost || 0,
-    subcontractorCost: dbQuote.subcontractor_cost || 0,
-    totalHours: dbQuote.total_hours || 0,
-    notes: dbQuote.notes,
-    userId: dbQuote.user_id,
-    createdBy: dbQuote.created_by,
-    createdAt: dbQuote.created_at,
-    updatedAt: dbQuote.updated_at,
-  };
-};
-
-export const quoteToDb = (quote: Partial<Quote>): Partial<DbQuote> => {
-  return {
-    id: quote.id,
-    name: quote.name || '',
-    client_id: quote.clientId,
-    client_name: quote.clientName,
-    site_address: quote.siteAddress,
-    site_name: quote.siteName,
-    start_date: quote.startDate,
-    end_date: quote.endDate,
-    contract_length: quote.contractLength,
-    contract_length_unit: quote.contractLengthUnit,
-    expiry_date: quote.expiryDate,
-    status: quote.status,
-    overhead_profile: quote.overheadProfile,
-    overhead_percentage: quote.overheadPercentage,
-    margin_percentage: quote.marginPercentage,
-    labor_cost: quote.laborCost,
-    overhead_amount: quote.overheadAmount,
-    overhead_cost: quote.overheadCost,
-    margin_amount: quote.marginAmount,
-    total_price: quote.totalPrice,
-    total_cost: quote.totalCost,
-    subcontractor_cost: quote.subcontractorCost,
-    total_hours: quote.totalHours,
-    notes: quote.notes,
-    user_id: quote.userId,
-    created_by: quote.createdBy,
-    created_at: quote.createdAt,
-    updated_at: quote.updatedAt || new Date().toISOString()
-  };
-};
-
-export const dbToOverheadProfile = (dbProfile: DbOverheadProfile): OverheadProfile => {
-  return {
-    id: dbProfile.id || '',
-    name: dbProfile.name,
-    percentage: dbProfile.percentage || 0,
-    laborPercentage: dbProfile.labor_percentage,
-    description: dbProfile.description,
-    isDefault: dbProfile.is_default,
-    userId: dbProfile.user_id,
-    createdAt: dbProfile.created_at,
-    updatedAt: dbProfile.updated_at
-  };
-};
-
-export const overheadProfileToDb = (profile: Partial<OverheadProfile>): Partial<DbOverheadProfile> => {
-  return {
-    id: profile.id,
-    name: profile.name || '',
-    percentage: profile.percentage,
-    labor_percentage: profile.laborPercentage,
-    description: profile.description,
-    is_default: profile.isDefault,
-    user_id: profile.userId,
-    created_at: profile.createdAt,
-    updated_at: profile.updatedAt || new Date().toISOString()
-  };
-};
+}
