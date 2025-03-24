@@ -14,7 +14,11 @@ import { toast } from 'sonner';
 import { clientsApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 
-export function ClientDetail({ clientId }: { clientId: string }) {
+interface ClientDetailProps {
+  clientId: string;
+}
+
+export function ClientDetail({ clientId }: ClientDetailProps) {
   const { client, sites, isLoading, isError, error, updateClient } = useClientDetails(clientId);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
