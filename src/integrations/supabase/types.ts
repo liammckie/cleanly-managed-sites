@@ -1142,11 +1142,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_auth_user: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_setting_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_admin_status: {
         Args: {
           user_uuid: string
         }
         Returns: boolean
+      }
+      get_user_policy_level: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_user_role: {
         Args: {

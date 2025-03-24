@@ -2,37 +2,37 @@
 import { supabase } from '@/lib/supabase';
 import { ContractorVersionHistoryEntry } from '@/lib/types';
 
+// Functions to manage contractor history
 export const contractorHistoryApi = {
   // Get history entries for a contractor
   async getContractorHistory(contractorId: string): Promise<ContractorVersionHistoryEntry[]> {
-    try {
-      // Query the contractor_history table directly
-      const { data, error } = await supabase
-        .from('contractor_history')
-        .select('*')
-        .eq('contractor_id', contractorId)
-        .order('version_number', { ascending: false });
-      
-      if (error) {
-        console.error(`Error fetching history for contractor with ID ${contractorId}:`, error);
-        throw error;
-      }
-      
-      // Process the data to match the ContractorVersionHistoryEntry type with proper type casting
-      return (data || []).map(entry => ({
-        id: entry.id,
-        contractor_id: entry.contractor_id,
-        // Use type assertion to convert the JSON data to ContractorRecord
-        contractor_data: entry.contractor_data as any,
-        version_number: entry.version_number,
-        notes: entry.notes || '',
-        created_at: entry.created_at,
-        created_by: entry.created_by
-      })) as ContractorVersionHistoryEntry[];
-    } catch (error) {
-      console.error(`Error in getContractorHistory for ID ${contractorId}:`, error);
-      // Return empty array instead of throwing to make the UI more resilient
-      return [];
+    const { data, error } = await supabase
+      .from('contractor_history')
+      .select('*')
+      .eq('contractor_id', contractorId)
+      .order('version_number', { ascending: false });
+    
+    if (error) {
+      console.error(`Error fetching history for contractor ${contractorId}:`, error);
+      throw error;
     }
+    
+    return data as ContractorVersionHistoryEntry[];
+  },
+  
+  // Get specific history entry
+  async getHistoryEntry(historyId: string): Promise<ContractorVersionHistoryEntry | null> {
+    const { data, error } = await supabase
+      .from('contractor_history')
+      .select('*')
+      .eq('id', historyId)
+      .single();
+    
+    if (error) {
+      console.error(`Error fetching history entry ${historyId}:`, error);
+      throw error;
+    }
+    
+    return data as ContractorVersionHistoryEntry;
   }
 };
