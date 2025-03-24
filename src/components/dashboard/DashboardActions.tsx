@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Users, Building2, Phone, FileText, FileLock } from 'lucide-react';
+import { PlusCircle, Users, Building2, Phone, FileText, FileLock, Briefcase } from 'lucide-react';
 
 export function DashboardActions() {
   const navigate = useNavigate();
@@ -52,6 +52,15 @@ export function DashboardActions() {
       >
         <FileLock className="mr-2 h-4 w-4" />
         Create Contract
+      </Button>
+      
+      <Button 
+        variant="outline"
+        className="bg-slate-50 hover:bg-slate-100 border-slate-200"
+        onClick={() => navigate('/employees')}
+      >
+        <Briefcase className="mr-2 h-4 w-4" />
+        Manage Employees
       </Button>
       
       <Button 

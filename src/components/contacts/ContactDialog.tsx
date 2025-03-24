@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ContactRecord } from '@/lib/types';
 import { ContactForm } from './ContactForm';
+import { EmployeeContactForm } from './EmployeeContactForm';
 
 export interface ContactDialogProps {
   open?: boolean;
@@ -31,6 +32,9 @@ export function ContactDialog({
 }: ContactDialogProps) {
   const [isOpen, setIsOpen] = useState(open || false);
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(isSubmitting);
+  const [selectedEntityType, setSelectedEntityType] = useState<'site' | 'client' | 'supplier' | 'internal'>(
+    entityType || (contact?.entity_type as any) || 'client'
+  );
 
   useEffect(() => {
     if (open !== undefined) {
@@ -41,6 +45,14 @@ export function ContactDialog({
   useEffect(() => {
     setIsSubmittingLocal(isSubmitting);
   }, [isSubmitting]);
+
+  useEffect(() => {
+    if (entityType) {
+      setSelectedEntityType(entityType);
+    } else if (contact?.entity_type) {
+      setSelectedEntityType(contact.entity_type as any);
+    }
+  }, [entityType, contact]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setIsOpen(newOpen);
@@ -68,28 +80,62 @@ export function ContactDialog({
     }
   };
 
+  const handleEntityTypeChange = (newType: 'site' | 'client' | 'supplier' | 'internal') => {
+    setSelectedEntityType(newType);
+  };
+
+  const renderForm = () => {
+    // Use the employee form for internal contacts
+    if (selectedEntityType === 'internal') {
+      return (
+        <EmployeeContactForm
+          contact={contact}
+          onSubmit={handleSubmit}
+          onCancel={() => handleOpenChange(false)}
+          isSubmitting={isSubmittingLocal}
+        />
+      );
+    }
+
+    // Use the regular contact form for other contact types
+    return (
+      <ContactForm
+        contact={contact}
+        entityType={entityType}
+        entityId={entityId}
+        onSubmit={handleSubmit}
+        onCancel={() => handleOpenChange(false)}
+        isSubmitting={isSubmittingLocal}
+        onEntityTypeChange={handleEntityTypeChange}
+      />
+    );
+  };
+
+  const renderContent = () => (
+    <DialogContent className="sm:max-w-[600px]">
+      <DialogHeader>
+        <DialogTitle>
+          {contact 
+            ? `Edit ${selectedEntityType === 'internal' ? 'Employee' : title}` 
+            : `Add ${selectedEntityType === 'internal' ? 'Employee' : title}`}
+        </DialogTitle>
+        <DialogDescription>
+          {selectedEntityType === 'internal' 
+            ? 'Manage employee information including roles, departments, and employment details.' 
+            : `${contact ? 'Edit' : 'Enter'} ${title.toLowerCase()} details below`}
+        </DialogDescription>
+      </DialogHeader>
+      
+      {renderForm()}
+    </DialogContent>
+  );
+
   if (trigger) {
     return (
       <>
         <div onClick={() => handleOpenChange(true)}>{trigger}</div>
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{contact ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
-              <DialogDescription>
-                {contact ? `Edit ${title.toLowerCase()} details below` : `Enter ${title.toLowerCase()} details below`}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <ContactForm
-              contact={contact}
-              entityType={entityType}
-              entityId={entityId}
-              onSubmit={handleSubmit}
-              onCancel={() => handleOpenChange(false)}
-              isSubmitting={isSubmittingLocal}
-            />
-          </DialogContent>
+          {renderContent()}
         </Dialog>
       </>
     );
@@ -97,23 +143,7 @@ export function ContactDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{contact ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
-          <DialogDescription>
-            {contact ? `Edit ${title.toLowerCase()} details below` : `Enter ${title.toLowerCase()} details below`}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ContactForm
-          contact={contact}
-          entityType={entityType}
-          entityId={entityId}
-          onSubmit={handleSubmit}
-          onCancel={() => handleOpenChange(false)}
-          isSubmitting={isSubmittingLocal}
-        />
-      </DialogContent>
+      {renderContent()}
     </Dialog>
   );
 }

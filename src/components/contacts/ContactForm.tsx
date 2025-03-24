@@ -19,6 +19,7 @@ export interface ContactFormProps {
   onSubmit: (values: Partial<ContactRecord>) => Promise<void>;
   onCancel?: () => void;
   isSubmitting?: boolean;
+  onEntityTypeChange?: (entityType: EntityType) => void;
 }
 
 export function ContactForm({
@@ -28,6 +29,7 @@ export function ContactForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  onEntityTypeChange,
 }: ContactFormProps) {
   const [entityType, setEntityType] = useState<EntityType>(
     (initialEntityType || contact?.entity_type || 'client') as EntityType
@@ -59,6 +61,11 @@ export function ContactForm({
     setEntityId('');
     setSearchTerm('');
     setAssignmentType('single');
+    
+    // Notify parent component about entity type change
+    if (onEntityTypeChange) {
+      onEntityTypeChange(value);
+    }
   };
 
   // Handle assignment type change
