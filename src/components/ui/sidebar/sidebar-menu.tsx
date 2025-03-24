@@ -1,3 +1,4 @@
+
 import {
   BarChart3,
   Building2,
@@ -8,15 +9,14 @@ import {
   Settings,
   User2,
   Calculator,
+  LucideIcon
 } from "lucide-react"
-
-import { Icons } from "@/components/icons"
 
 export interface SidebarNavItem {
   title: string
   disabled?: boolean
   external?: boolean
-  icon?: keyof typeof Icons
+  icon?: LucideIcon | React.ReactElement
   path?: string
   group?: "general" | "admin" | "operations"
 }

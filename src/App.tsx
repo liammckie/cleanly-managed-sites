@@ -1,21 +1,22 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Sites } from './pages/Sites';
-import { Clients } from './pages/Clients';
-import { Settings } from './pages/Settings';
-import { Dashboard } from './pages/Dashboard';
-import { WorkOrders } from './pages/WorkOrders';
-import { Subcontractors } from './pages/Subcontractors';
-import { Login } from './pages/Login';
-import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { SiteDetails } from './pages/SiteDetails';
-import { ClientDetails } from './pages/ClientDetails';
-import { CreateSite } from './pages/CreateSite';
-import { EditSite } from './pages/EditSite';
-import { CreateClient } from './pages/CreateClient';
-import { EditClient } from './pages/EditClient';
-import { QuotingTool } from './pages/QuotingTool';
+import Sites from './pages/Sites';
+import Clients from './pages/Clients';
+import Settings from './pages/Settings';
+import Dashboard from './pages/Dashboard';
+import WorkOrders from './pages/WorkOrders';
+import Subcontractors from './pages/Subcontractors';
+import Login from './pages/Login';
+import { AuthProvider } from './hooks/auth';
+import ProtectedRoute from './components/ProtectedRoute';
+import SiteDetails from './pages/SiteDetails';
+import ClientDetails from './pages/ClientDetails';
+import CreateSite from './pages/CreateSite';
+import EditSite from './pages/EditSite';
+import CreateClient from './pages/CreateClient';
+import EditClient from './pages/EditClient';
+import QuotingTool from './pages/QuotingTool';
 
 function App() {
   return (

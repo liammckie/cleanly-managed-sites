@@ -24,7 +24,7 @@ export {
 } from "./sidebar-group"
 
 // Menu components
-export { SidebarMenu, SidebarMenuItem, SidebarMenuSkeleton } from "./sidebar-menu"
+export { SidebarMenu, SidebarMenuItem, SidebarMenuSkeleton } from "./sidebar-menu-components"
 export {
   SidebarMenuAction,
   SidebarMenuBadge,
@@ -36,6 +36,10 @@ export {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "./sidebar-menu-sub"
+
+// Export sidebar menu data
+export { SIDEBAR_MENU_SECTIONS, DEFAULT_SIDEBAR_ITEMS } from "./sidebar-menu"
+export type { SidebarNavItem, SidebarMenuSection } from "./sidebar-menu"
 
 // Types
 export type { SidebarContext } from "./types"
