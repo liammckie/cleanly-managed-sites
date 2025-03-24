@@ -9,7 +9,8 @@ import {
   Settings,
   User2,
   Calculator,
-  LucideIcon
+  LucideIcon,
+  FileText
 } from "lucide-react"
 
 export interface SidebarNavItem {
@@ -71,7 +72,7 @@ export const SIDEBAR_MENU_SECTIONS: SidebarMenuSection[] = [
       },
       {
         title: "Quoting Tool",
-        icon: <Calculator className="h-4 w-4" />,
+        icon: Calculator,
         path: "/quoting",
         group: "operations"
       },

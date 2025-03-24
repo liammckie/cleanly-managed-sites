@@ -1,71 +1,90 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JobCostCalculator } from '@/components/award/JobCostCalculator';
 import { AwardRatesTable } from '@/components/award/AwardRatesTable';
 import { AwardSettingsForm } from '@/components/award/AwardSettingsForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QuoteBuilder } from './QuoteBuilder';
-import { Calculator, FileSpreadsheet, Sliders, Clock, FileText } from 'lucide-react';
+import { Calculator, FileSpreadsheet, Sliders, Clock, FileText, Plus, Filter, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { QuoteList } from './QuoteList';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
+import { useQuotes } from '@/hooks/useQuotes';
 
 export function QuotingDashboard() {
-  return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Quoting & Labor Planning</h1>
-        <p className="text-muted-foreground">
-          Create accurate quotes based on the Cleaning Services Award [MA000022]
-        </p>
-      </div>
+  const navigate = useNavigate();
+  const { data: quotes = [], isLoading } = useQuotes();
+  const [searchTerm, setSearchTerm] = useState('');
 
-      <Tabs defaultValue="quote-builder" className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full max-w-3xl">
-          <TabsTrigger value="quote-builder" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Quote Builder</span>
-          </TabsTrigger>
-          <TabsTrigger value="labor-cost" className="flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
-            <span className="hidden sm:inline">Labor Cost</span>
-          </TabsTrigger>
-          <TabsTrigger value="award-rates" className="flex items-center gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            <span className="hidden sm:inline">Award Rates</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Sliders className="h-4 w-4" />
-            <span className="hidden sm:inline">Settings</span>
-          </TabsTrigger>
-        </TabsList>
-      
-        <TabsContent value="quote-builder">
-          <QuoteBuilder />
-        </TabsContent>
-      
-        <TabsContent value="labor-cost">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Labor Cost Calculator</CardTitle>
-                <CardDescription>
-                  Calculate labor costs based on the Cleaning Services Award [MA000022]
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <JobCostCalculator />
-              </CardContent>
-            </Card>
+  return (
+    <Tabs defaultValue="quotes" className="space-y-6">
+      <TabsList className="grid grid-cols-4 w-full max-w-3xl">
+        <TabsTrigger value="quotes" className="flex items-center gap-2">
+          <FileText className="h-4 w-4" />
+          <span className="hidden sm:inline">Quotes</span>
+        </TabsTrigger>
+        <TabsTrigger value="labor-cost" className="flex items-center gap-2">
+          <Calculator className="h-4 w-4" />
+          <span className="hidden sm:inline">Labor Cost</span>
+        </TabsTrigger>
+        <TabsTrigger value="award-rates" className="flex items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4" />
+          <span className="hidden sm:inline">Award Rates</span>
+        </TabsTrigger>
+        <TabsTrigger value="settings" className="flex items-center gap-2">
+          <Sliders className="h-4 w-4" />
+          <span className="hidden sm:inline">Settings</span>
+        </TabsTrigger>
+      </TabsList>
+    
+      <TabsContent value="quotes">
+        <div className="space-y-4">
+          <div className="flex gap-4 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search quotes by name, client, or status..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button onClick={() => navigate('/quoting/create')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Quote
+            </Button>
           </div>
-        </TabsContent>
-      
-        <TabsContent value="award-rates">
-          <AwardRatesTable />
-        </TabsContent>
-      
-        <TabsContent value="settings">
-          <AwardSettingsForm />
-        </TabsContent>
-      </Tabs>
-    </div>
+          
+          <QuoteList quotes={quotes} searchTerm={searchTerm} isLoading={isLoading} />
+        </div>
+      </TabsContent>
+    
+      <TabsContent value="labor-cost">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Labor Cost Calculator</CardTitle>
+              <CardDescription>
+                Calculate labor costs based on the Cleaning Services Award [MA000022]
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <JobCostCalculator />
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+    
+      <TabsContent value="award-rates">
+        <AwardRatesTable />
+      </TabsContent>
+    
+      <TabsContent value="settings">
+        <AwardSettingsForm />
+      </TabsContent>
+    </Tabs>
   );
 }

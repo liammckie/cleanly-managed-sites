@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Select, 
   SelectContent, 
@@ -30,44 +30,49 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Edit, Clock, Calendar, AlertTriangle } from 'lucide-react';
-import { EmploymentType, EmployeeLevel } from '@/lib/award/types';
+import { 
+  Plus, 
+  Trash2, 
+  Edit, 
+  Clock, 
+  Calendar, 
+  AlertTriangle,
+  Info,
+  ArrowUpDown,
+  Users
+} from 'lucide-react';
+import { EmploymentType, EmployeeLevel, QuoteShift } from '@/lib/award/types';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { useAwardSettings } from '@/hooks/useAwardSettings';
+import { useAllowances } from '@/hooks/useQuotes';
 
 interface ShiftPlannerProps {
-  quoteId: string | null;
+  shifts: QuoteShift[];
+  onShiftsChange: (shifts: QuoteShift[]) => void;
+  quoteId?: string;
 }
 
-interface Shift {
-  id: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
-  numberOfCleaners: number;
-  includesToiletCleaning: boolean;
-  includesHighRiseCleaning: boolean;
-  estimatedCost: number;
-}
-
-export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
+export function ShiftPlanner({ shifts, onShiftsChange, quoteId }: ShiftPlannerProps) {
   const { settings } = useAwardSettings();
-  const [shifts, setShifts] = useState<Shift[]>([]);
-  const [newShift, setNewShift] = useState<Omit<Shift, 'id' | 'estimatedCost'>>({
+  const { data: allowances = [] } = useAllowances();
+  
+  const [newShift, setNewShift] = useState<Omit<QuoteShift, 'id' | 'estimatedCost'>>({
     day: 'monday',
     startTime: '06:00',
     endTime: '14:00',
+    breakDuration: 30,
     employmentType: 'full-time',
     level: 1,
     numberOfCleaners: 1,
-    includesToiletCleaning: false,
-    includesHighRiseCleaning: false
+    allowances: [],
+    location: '',
+    notes: ''
   });
+  
   const [isEditing, setIsEditing] = useState(false);
   const [currentShiftId, setCurrentShiftId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedAllowances, setSelectedAllowances] = useState<string[]>([]);
 
   const dayOptions = [
     { value: 'monday', label: 'Monday' },
@@ -80,17 +85,23 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
     { value: 'public-holiday', label: 'Public Holiday' },
   ];
 
-  const calculateShiftHours = (startTime: string, endTime: string) => {
+  const calculateShiftHours = (startTime: string, endTime: string, breakDuration: number) => {
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
+    
     if (end < start) {
       end.setDate(end.getDate() + 1);
     }
-    return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    
+    // Calculate hours and subtract break time
+    const totalMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
+    const workMinutes = totalMinutes - breakDuration;
+    
+    return workMinutes / 60; // Convert to hours
   };
 
   const determinePayCondition = (day: string, startTime: string, endTime: string) => {
-    const hoursOfDay = calculateShiftHours(startTime, endTime);
+    const hoursOfDay = calculateShiftHours(startTime, endTime, newShift.breakDuration);
     
     // Basic conditions based on day of week
     switch (day) {
@@ -113,7 +124,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
     }
   };
 
-  const estimateShiftCost = (shift: Omit<Shift, 'id' | 'estimatedCost'>) => {
+  const estimateShiftCost = (shift: Omit<QuoteShift, 'id' | 'estimatedCost'>) => {
     const { condition, hours } = determinePayCondition(shift.day, shift.startTime, shift.endTime);
     
     // Create hours object for award engine
@@ -121,6 +132,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
     hoursObj[condition] = hours;
     
     try {
+      // Calculate base labor cost
       const costResult = calculateJobCost({
         employmentType: shift.employmentType,
         level: shift.level,
@@ -129,33 +141,78 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
         marginPercentage: settings.marginPercentageDefault
       }, settings.baseRateMultiplier);
       
+      // Calculate allowance costs
+      let allowanceCost = 0;
+      
+      if (shift.allowances && shift.allowances.length > 0) {
+        // Find the allowances for this shift
+        shift.allowances.forEach(allowanceId => {
+          const allowance = allowances.find(a => a.id === allowanceId);
+          if (allowance) {
+            if (allowance.unit === 'per-hour') {
+              allowanceCost += allowance.amount * hours;
+            } else {
+              // For per-shift or per-day allowances, add the fixed amount
+              allowanceCost += allowance.amount;
+            }
+          }
+        });
+      }
+      
+      // Add allowance cost to labor cost
+      const totalCost = costResult.totalPrice + allowanceCost;
+      
       // Multiply by number of cleaners
-      return costResult.totalPrice * shift.numberOfCleaners;
+      return totalCost * shift.numberOfCleaners;
     } catch (error) {
       console.error('Error calculating shift cost:', error);
       return 0;
     }
   };
 
-  const handleInputChange = (field: keyof Omit<Shift, 'id' | 'estimatedCost'>, value: any) => {
+  const handleInputChange = (field: keyof Omit<QuoteShift, 'id' | 'estimatedCost'>, value: any) => {
     setNewShift(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAllowanceToggle = (allowanceId: string) => {
+    setSelectedAllowances(prev => {
+      if (prev.includes(allowanceId)) {
+        return prev.filter(id => id !== allowanceId);
+      } else {
+        return [...prev, allowanceId];
+      }
+    });
+  };
+
   const handleAddShift = () => {
+    // Update newShift with selected allowances
+    const shiftToAdd = {
+      ...newShift,
+      allowances: selectedAllowances
+    };
+    
     if (isEditing && currentShiftId) {
       // Update existing shift
-      setShifts(shifts.map(shift => 
+      const updatedShifts = shifts.map(shift => 
         shift.id === currentShiftId ? 
         { 
-          ...newShift, 
+          ...shiftToAdd, 
           id: shift.id, 
-          estimatedCost: estimateShiftCost(newShift) 
+          estimatedCost: estimateShiftCost(shiftToAdd) 
         } : shift
-      ));
+      );
+      onShiftsChange(updatedShifts);
     } else {
       // Add new shift
-      const shiftCost = estimateShiftCost(newShift);
-      setShifts([...shifts, { ...newShift, id: crypto.randomUUID(), estimatedCost: shiftCost }]);
+      const shiftCost = estimateShiftCost(shiftToAdd);
+      onShiftsChange([
+        ...shifts, 
+        { 
+          ...shiftToAdd, 
+          id: crypto.randomUUID(), 
+          estimatedCost: shiftCost 
+        }
+      ]);
     }
     
     // Reset form
@@ -163,12 +220,15 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
       day: 'monday',
       startTime: '06:00',
       endTime: '14:00',
+      breakDuration: 30,
       employmentType: 'full-time',
       level: 1,
       numberOfCleaners: 1,
-      includesToiletCleaning: false,
-      includesHighRiseCleaning: false
+      allowances: [],
+      location: '',
+      notes: ''
     });
+    setSelectedAllowances([]);
     setIsEditing(false);
     setCurrentShiftId(null);
     setDialogOpen(false);
@@ -179,6 +239,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
     if (shiftToEdit) {
       const { id, estimatedCost, ...restShift } = shiftToEdit;
       setNewShift(restShift);
+      setSelectedAllowances(restShift.allowances || []);
       setIsEditing(true);
       setCurrentShiftId(id);
       setDialogOpen(true);
@@ -187,14 +248,15 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
 
   const handleDeleteShift = (shiftId: string) => {
     if (confirm('Are you sure you want to delete this shift?')) {
-      setShifts(shifts.filter(s => s.id !== shiftId));
+      onShiftsChange(shifts.filter(s => s.id !== shiftId));
     }
   };
 
   // Calculate totals
   const totalEstimatedCost = shifts.reduce((sum, shift) => sum + shift.estimatedCost, 0);
+  
   const totalHours = shifts.reduce((sum, shift) => {
-    const hours = calculateShiftHours(shift.startTime, shift.endTime);
+    const hours = calculateShiftHours(shift.startTime, shift.endTime, shift.breakDuration);
     return sum + (hours * shift.numberOfCleaners);
   }, 0);
 
@@ -226,7 +288,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
               Add Shift
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent className="sm:max-w-[650px]">
             <DialogHeader>
               <DialogTitle>{isEditing ? 'Edit Shift' : 'Add New Shift'}</DialogTitle>
               <DialogDescription>
@@ -267,7 +329,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startTime">Start Time</Label>
                   <Input 
@@ -285,6 +347,18 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
                     type="time" 
                     value={newShift.endTime} 
                     onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="breakDuration">Break (minutes)</Label>
+                  <Input 
+                    id="breakDuration" 
+                    type="number" 
+                    min={0}
+                    step={5}
+                    value={newShift.breakDuration} 
+                    onChange={(e) => handleInputChange('breakDuration', parseInt(e.target.value))}
                   />
                 </div>
               </div>
@@ -325,31 +399,65 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
                 </div>
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="location">Location/Area (Optional)</Label>
+                <Input 
+                  id="location" 
+                  placeholder="e.g., Main Building, East Wing, etc."
+                  value={newShift.location || ''} 
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                />
+              </div>
+              
               <Separator className="my-2" />
               
               <div className="space-y-3">
-                <h4 className="text-sm font-medium">Additional Allowances</h4>
+                <h4 className="text-sm font-medium">Allowances & Special Conditions</h4>
                 
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="toilet-cleaning" className="flex-1">
-                    Includes toilet cleaning
-                  </Label>
-                  <Switch 
-                    id="toilet-cleaning" 
-                    checked={newShift.includesToiletCleaning}
-                    onCheckedChange={(checked) => handleInputChange('includesToiletCleaning', checked)}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  {allowances.map(allowance => (
+                    <div key={allowance.id} className="flex items-center space-x-2">
+                      <Switch
+                        id={`allowance-${allowance.id}`}
+                        checked={selectedAllowances.includes(allowance.id)}
+                        onCheckedChange={() => handleAllowanceToggle(allowance.id)}
+                      />
+                      <Label htmlFor={`allowance-${allowance.id}`} className="flex-1">
+                        {allowance.name}
+                        <span className="text-xs text-muted-foreground block">
+                          ${allowance.amount.toFixed(2)} {allowance.unit}
+                        </span>
+                      </Label>
+                    </div>
+                  ))}
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="high-rise-cleaning" className="flex-1">
-                    High-rise work (above 22nd floor)
-                  </Label>
-                  <Switch 
-                    id="high-rise-cleaning" 
-                    checked={newShift.includesHighRiseCleaning}
-                    onCheckedChange={(checked) => handleInputChange('includesHighRiseCleaning', checked)}
-                  />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Input 
+                  id="notes" 
+                  placeholder="Any additional information about this shift"
+                  value={newShift.notes || ''} 
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                />
+              </div>
+              
+              <div className="mt-2 p-3 border rounded-md bg-muted/30">
+                <div className="flex items-start">
+                  <Info className="h-5 w-5 mr-2 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">Cost Estimate</p>
+                    <p className="text-muted-foreground">
+                      This shift will have a base cost of approximately <strong>${estimateShiftCost(newShift).toFixed(2)}</strong> 
+                      based on the Award rates for {newShift.employmentType}, Level {newShift.level} employees working on {getDayLabel(newShift.day)}.
+                      {newShift.day === 'saturday' && " Weekend penalty rates apply."}
+                      {newShift.day === 'sunday' && " Higher weekend penalty rates apply."}
+                      {newShift.day === 'public-holiday' && " Public holiday penalty rates apply."}
+                      {(newShift.startTime < '06:00' || newShift.endTime >= '18:00') && 
+                       " Early morning/late evening shift loadings apply."}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -381,10 +489,7 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
       ) : (
         <>
           <Card>
-            <CardHeader>
-              <CardTitle>Shift Schedule</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -399,26 +504,39 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
                 <TableBody>
                   {sortedShifts.map(shift => (
                     <TableRow key={shift.id}>
-                      <TableCell>{getDayLabel(shift.day)}</TableCell>
+                      <TableCell className="font-medium">
+                        {getDayLabel(shift.day)}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="h-3 w-3 mr-1" /> 
                           {shift.startTime} - {shift.endTime}
                         </div>
-                        {(shift.includesToiletCleaning || shift.includesHighRiseCleaning) && (
+                        {shift.location && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {shift.location}
+                          </div>
+                        )}
+                        {shift.allowances && shift.allowances.length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1 flex items-center">
                             <AlertTriangle className="h-3 w-3 mr-1" />
-                            {shift.includesToiletCleaning && 'Toilet cleaning'}
-                            {shift.includesToiletCleaning && shift.includesHighRiseCleaning && ', '}
-                            {shift.includesHighRiseCleaning && 'High-rise work'}
+                            {shift.allowances.length} allowance{shift.allowances.length !== 1 ? 's' : ''}
                           </div>
                         )}
                       </TableCell>
                       <TableCell>
-                        {shift.numberOfCleaners} × Level {shift.level} ({shift.employmentType})
+                        <div className="flex items-center">
+                          <Users className="h-3 w-3 mr-1" />
+                          {shift.numberOfCleaners} × Level {shift.level} ({shift.employmentType})
+                        </div>
+                        {shift.breakDuration > 0 && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {shift.breakDuration} min break
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
-                        {calculateShiftHours(shift.startTime, shift.endTime).toFixed(1)} hrs
+                        {calculateShiftHours(shift.startTime, shift.endTime, shift.breakDuration).toFixed(1)} hrs
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         ${shift.estimatedCost.toFixed(2)}
@@ -460,11 +578,11 @@ export function ShiftPlanner({ quoteId }: ShiftPlannerProps) {
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Weekly Cost</div>
-                <div className="text-2xl font-bold">${totalEstimatedCost.toFixed(2)}</div>
+                <div className="text-2xl font-bold">${(totalEstimatedCost / 4.33).toFixed(2)}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Monthly Cost (est.)</div>
-                <div className="text-2xl font-bold">${(totalEstimatedCost * 4.33).toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">Monthly Cost</div>
+                <div className="text-2xl font-bold">${totalEstimatedCost.toFixed(2)}</div>
               </div>
             </div>
           </div>
