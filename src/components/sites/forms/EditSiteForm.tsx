@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { SiteFormData } from './siteFormTypes';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from './types/billingTypes';
 import { SiteRecord } from '@/lib/types';
+import { Form } from '@/components/ui/form';
 
 // Define fallback functions for missing handlers
 const noop = () => {};
@@ -228,19 +230,21 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
       />
       
       <Card className="p-6">
-        <form onSubmit={handleSubmit}>
-          <SiteFormStep
-            title={stepper.steps[stepper.currentStep].title}
-            description={stepper.steps[stepper.currentStep].description}
-            onNext={() => stepper.handleNext()}
-            onBack={stepper.handleBack}
-            isSubmitting={isSaving}
-            isLastStep={stepper.isLastStep}
-            isFirstStep={stepper.isFirstStep}
-          >
-            {stepper.steps[stepper.currentStep].component}
-          </SiteFormStep>
-        </form>
+        <Form {...siteForm.form}>
+          <form onSubmit={handleSubmit}>
+            <SiteFormStep
+              title={stepper.steps[stepper.currentStep].title}
+              description={stepper.steps[stepper.currentStep].description}
+              onNext={() => stepper.handleNext()}
+              onBack={stepper.handleBack}
+              isSubmitting={isSaving}
+              isLastStep={stepper.isLastStep}
+              isFirstStep={stepper.isFirstStep}
+            >
+              {stepper.steps[stepper.currentStep].component}
+            </SiteFormStep>
+          </form>
+        </Form>
       </Card>
     </div>
   );

@@ -66,15 +66,15 @@ export const TemplateSelector = ({ onTemplateSelect, siteName, dueDate }: Templa
               value={activityType} 
               onValueChange={(value) => setActivityType(value as WorkOrderActivityType)}
             >
-              <SelectTrigger id="activityType">
+              <SelectTrigger id="activityType" className="bg-background">
                 <SelectValue placeholder="Select Activity Type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cleaning">Cleaning</SelectItem>
-                <SelectItem value="pest_control" disabled>Pest Control</SelectItem>
-                <SelectItem value="grounds_maintenance" disabled>Grounds Maintenance</SelectItem>
-                <SelectItem value="waste_management" disabled>Waste Management</SelectItem>
-                <SelectItem value="hygiene_services" disabled>Hygiene Services</SelectItem>
+                <SelectItem value="pest_control">Pest Control</SelectItem>
+                <SelectItem value="grounds_maintenance">Grounds Maintenance</SelectItem>
+                <SelectItem value="waste_management">Waste Management</SelectItem>
+                <SelectItem value="hygiene_services">Hygiene Services</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -85,10 +85,10 @@ export const TemplateSelector = ({ onTemplateSelect, siteName, dueDate }: Templa
               value={selectedTemplateId} 
               onValueChange={handleTemplateSelect}
             >
-              <SelectTrigger id="templateId">
+              <SelectTrigger id="templateId" className="bg-background">
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
+              <SelectContent className="max-h-[300px] bg-background">
                 {templates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.title}
