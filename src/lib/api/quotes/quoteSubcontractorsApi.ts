@@ -42,7 +42,7 @@ export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Pa
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert([subData]) // Make sure this is an array
+      .insert(subData) // Insert a single object, not an array
       .select();
     
     if (error) {

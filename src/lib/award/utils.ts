@@ -1,4 +1,3 @@
-
 import { QuoteShift, Subcontractor } from './types';
 
 // Calculate the difference in hours between two times, accounting for break
@@ -47,7 +46,7 @@ export function hasEarlyLateHours(startTime: string, endTime: string): boolean {
 // Calculate total hours for a set of shifts
 export function calculateTotalHours(shifts: QuoteShift[]): number {
   return shifts.reduce((total, shift) => {
-    return total + calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
+    return total + calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration || 0);
   }, 0);
 }
 

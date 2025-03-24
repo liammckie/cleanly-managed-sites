@@ -56,7 +56,7 @@ export type Subcontractor = {
   name: string;
   service: string;
   description: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'once-off' | 'fortnightly';
+  frequency: 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once-off';
   cost: number;
   notes?: string; // Add notes as an optional property
 };
