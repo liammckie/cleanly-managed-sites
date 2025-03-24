@@ -21,14 +21,23 @@ export type BusinessLocationRecord = {
   created_at: string;
   updated_at: string;
   user_id: string;
-  documents?: BusinessDocument[];
+  documents?: BusinessDocumentRecord[];
   contacts?: any[];
 };
 
 // Type for the document API responses
-export type BusinessDocumentRecord = BusinessDocument & {
+export type BusinessDocumentRecord = {
   id: string;
   location_id: string;
+  name: string;
+  type: string;
+  file_url?: string;
+  issue_date?: string;
+  expiry_date?: string;
+  reminder_days?: number;
+  issuer?: string;
+  document_number?: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -76,7 +85,7 @@ export const businessLocationsApi = {
     
     return {
       ...location as BusinessLocationRecord,
-      documents: documents as BusinessDocument[] || []
+      documents: documents as BusinessDocumentRecord[] || []
     };
   },
   
@@ -88,12 +97,31 @@ export const businessLocationsApi = {
       throw new Error('User not authenticated');
     }
     
+    // Ensure required fields are present for database
+    if (!locationData.name || !locationData.type || !locationData.address) {
+      throw new Error('Name, type, and address are required fields');
+    }
+    
+    const dbLocationData = {
+      name: locationData.name,
+      type: locationData.type,
+      address: locationData.address,
+      city: locationData.city,
+      state: locationData.state,
+      postcode: locationData.postcode,
+      country: locationData.country || 'Australia',
+      phone: locationData.phone,
+      email: locationData.email,
+      is_active: locationData.is_active !== undefined ? locationData.is_active : true,
+      opening_hours: locationData.opening_hours,
+      manager_id: locationData.manager_id,
+      notes: locationData.notes,
+      user_id: user.id
+    };
+    
     const { data, error } = await supabase
       .from('business_locations')
-      .insert({
-        ...locationData,
-        user_id: user.id
-      })
+      .insert(dbLocationData)
       .select()
       .single();
     
@@ -136,7 +164,7 @@ export const businessLocationsApi = {
   },
   
   // Document-related operations
-  async getBusinessDocuments(locationId: string): Promise<BusinessDocument[]> {
+  async getBusinessDocuments(locationId: string): Promise<BusinessDocumentRecord[]> {
     const { data, error } = await supabase
       .from('business_documents')
       .select('*')
@@ -148,23 +176,38 @@ export const businessLocationsApi = {
       throw error;
     }
     
-    return data as BusinessDocument[] || [];
+    return data as BusinessDocumentRecord[] || [];
   },
   
-  async addBusinessDocument(locationId: string, document: Partial<BusinessDocument>): Promise<BusinessDocument> {
+  async addBusinessDocument(locationId: string, document: Partial<BusinessDocument>): Promise<BusinessDocumentRecord> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error('User not authenticated');
     }
     
+    // Ensure required fields are present and convert dates to strings
+    if (!document.name || !document.type) {
+      throw new Error('Document name and type are required');
+    }
+    
+    const dbDocumentData = {
+      location_id: locationId,
+      name: document.name,
+      type: document.type,
+      file_url: document.file_url,
+      issue_date: document.issue_date ? document.issue_date.toISOString().split('T')[0] : undefined,
+      expiry_date: document.expiry_date ? document.expiry_date.toISOString().split('T')[0] : undefined,
+      reminder_days: document.reminder_days || 30,
+      issuer: document.issuer,
+      document_number: document.document_number,
+      notes: document.notes,
+      user_id: user.id
+    };
+    
     const { data, error } = await supabase
       .from('business_documents')
-      .insert({
-        ...document,
-        location_id: locationId,
-        user_id: user.id
-      })
+      .insert(dbDocumentData)
       .select()
       .single();
     
@@ -173,11 +216,11 @@ export const businessLocationsApi = {
       throw error;
     }
     
-    return data as BusinessDocument;
+    return data as BusinessDocumentRecord;
   },
   
   // Get soon-to-expire documents
-  async getExpiringDocuments(daysThreshold: number = 30): Promise<BusinessDocument[]> {
+  async getExpiringDocuments(daysThreshold: number = 30): Promise<BusinessDocumentRecord[]> {
     // Calculate the date threshold
     const thresholdDate = new Date();
     thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
@@ -188,8 +231,8 @@ export const businessLocationsApi = {
         *,
         business_locations!inner(name)
       `)
-      .lt('expiry_date', thresholdDate.toISOString())
-      .gt('expiry_date', new Date().toISOString())
+      .lt('expiry_date', thresholdDate.toISOString().split('T')[0])
+      .gt('expiry_date', new Date().toISOString().split('T')[0])
       .order('expiry_date', { ascending: true });
     
     if (error) {
@@ -197,6 +240,6 @@ export const businessLocationsApi = {
       throw error;
     }
     
-    return data as unknown as BusinessDocument[] || [];
+    return data as BusinessDocumentRecord[] || [];
   }
 };
