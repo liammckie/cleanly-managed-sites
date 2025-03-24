@@ -11,4 +11,7 @@ export const contactSchema = z.object({
   is_primary: z.boolean().default(false),
 });
 
+export const entityTypes = ['client', 'site', 'supplier', 'internal'] as const;
+export type EntityType = typeof entityTypes[number];
+
 export type ContactFormValues = z.infer<typeof contactSchema>;

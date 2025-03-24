@@ -49,7 +49,9 @@ export function ContactForm({
   onCancel,
   isSubmitting = false,
 }: ContactFormProps) {
-  const [entityType, setEntityType] = useState<string>(initialEntityType || contact?.entity_type || 'client');
+  const [entityType, setEntityType] = useState<'site' | 'client' | 'supplier' | 'internal'>(
+    (initialEntityType || contact?.entity_type || 'client') as 'site' | 'client' | 'supplier' | 'internal'
+  );
   const [entityId, setEntityId] = useState<string>(initialEntityId || contact?.entity_id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -69,7 +71,7 @@ export function ContactForm({
   });
 
   // Handle entity type change
-  const handleEntityTypeChange = (value: string) => {
+  const handleEntityTypeChange = (value: 'site' | 'client' | 'supplier' | 'internal') => {
     setEntityType(value);
     setEntityId('');
     setSearchResults([]);
