@@ -19,6 +19,7 @@ import {
 import { DateSelector } from './form/DateSelector';
 import { FileAttachments } from './form/FileAttachments';
 import { WorkOrderAttachment } from '@/hooks/useGoogleDriveFiles';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface WorkOrderFormProps {
   site: SiteRecord;
@@ -27,10 +28,11 @@ interface WorkOrderFormProps {
 
 export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
   const navigate = useNavigate();
-  const { createWorkOrderMutation } = useWorkOrders();
+  const { createWorkOrderMutation, createAndCompleteWorkOrderMutation } = useWorkOrders();
   const { subcontractors = [], isLoading: isLoadingSubcontractors } = useSubcontractors(site.id);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [attachments, setAttachments] = useState<WorkOrderAttachment[]>([]);
+  const [markAsCompleted, setMarkAsCompleted] = useState(false);
 
   const form = useForm<CreateWorkOrderData>({
     defaultValues: {
@@ -53,7 +55,13 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
       data.attachments = attachments;
     }
 
-    await createWorkOrderMutation.mutateAsync(data);
+    // Determine whether to create a regular work order or a completed one
+    if (markAsCompleted) {
+      await createAndCompleteWorkOrderMutation.mutateAsync(data);
+    } else {
+      await createWorkOrderMutation.mutateAsync(data);
+    }
+    
     if (onSuccess) {
       onSuccess();
     } else {
@@ -63,6 +71,8 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
 
   // For storing a temporary workOrderId to use with file uploads before the work order is created
   const tempWorkOrderId = React.useMemo(() => crypto.randomUUID(), []);
+
+  const isPending = createWorkOrderMutation.isPending || createAndCompleteWorkOrderMutation.isPending;
 
   return (
     <Form {...form}>
@@ -101,13 +111,27 @@ export const WorkOrderForm = ({ site, onSuccess }: WorkOrderFormProps) => {
           onAttachmentsChange={setAttachments}
         />
 
+        <div className="flex items-center space-x-2 py-2">
+          <Checkbox 
+            id="markAsCompleted" 
+            checked={markAsCompleted} 
+            onCheckedChange={(checked) => setMarkAsCompleted(checked === true)}
+          />
+          <label
+            htmlFor="markAsCompleted"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            This job is already completed
+          </label>
+        </div>
+
         <div className="flex justify-end space-x-3">
           <Button type="button" variant="outline" onClick={() => navigate(`/sites/${site.id}`)}>
             Cancel
           </Button>
-          <Button type="submit" disabled={createWorkOrderMutation.isPending}>
-            {createWorkOrderMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Work Order
+          <Button type="submit" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {markAsCompleted ? 'Create & Complete Work Order' : 'Create Work Order'}
           </Button>
         </div>
       </form>

@@ -6,6 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { ClientDashboard } from '@/components/clients/ClientDashboard';
 import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
 import { ContractorsDashboard } from '@/components/contractors/ContractorsDashboard';
+import { WorkOrderMetrics } from '@/components/workorders/WorkOrderMetrics';
 
 const Dashboard = () => {
   return (
@@ -24,6 +25,8 @@ const Dashboard = () => {
             
             <div className="space-y-8">
               <ContractValueMetrics />
+              
+              <WorkOrderMetrics />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ClientDashboard />

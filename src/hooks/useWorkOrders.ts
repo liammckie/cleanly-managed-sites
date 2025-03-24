@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -64,11 +63,7 @@ export const useWorkOrders = () => {
       const workOrder = await createWorkOrder(data);
       
       // Then mark it as completed with today's completion date
-      const completionDate = new Date().toISOString().split('T')[0];
-      return updateWorkOrder(workOrder.id, {
-        status: 'completed',
-        completion_date: completionDate
-      });
+      return completeWorkOrder(workOrder.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
@@ -170,13 +165,7 @@ export const useWorkOrders = () => {
   
   // Mark work order as complete with current date
   const markWorkOrderCompleteMutation = useMutation({
-    mutationFn: (id: string) => {
-      const completionDate = new Date().toISOString().split('T')[0];
-      return updateWorkOrder(id, {
-        status: 'completed',
-        completion_date: completionDate
-      });
-    },
+    mutationFn: completeWorkOrder,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['workOrders'] });
       queryClient.invalidateQueries({ queryKey: ['workOrder', id] });

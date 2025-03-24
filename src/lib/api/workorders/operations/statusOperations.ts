@@ -50,3 +50,31 @@ export const assignWorkOrder = async (id: string, subcontractorId: string): Prom
     throw error;
   }
 };
+
+/**
+ * Mark a work order as completed with current date
+ */
+export const completeWorkOrder = async (id: string): Promise<WorkOrderRecord> => {
+  try {
+    const completionDate = new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('work_orders')
+      .update({
+        status: 'completed',
+        completion_date: completionDate
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data as unknown as WorkOrderRecord;
+  } catch (error) {
+    console.error(`Error completing work order ${id}:`, error);
+    throw error;
+  }
+};
