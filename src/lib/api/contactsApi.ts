@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContactRecord } from '../types';
 import { ContactFilters } from '@/hooks/useContacts';
@@ -195,11 +194,15 @@ export const contactsApi = {
       throw new Error('Missing required contact data: name and role are required');
     }
     
+    // For internal contacts, entity_id can be null
+    const entity_id = contactData.entity_type === 'internal' ? null : 
+                      (contactData.entity_id && contactData.entity_id.trim() !== '' ? 
+                       contactData.entity_id : null);
+    
     // Prepare services field as JSON
     const preparedContactData = {
       ...contactData,
-      // If entity_id is missing or empty, use null
-      entity_id: contactData.entity_id && contactData.entity_id.trim() !== '' ? contactData.entity_id : null,
+      entity_id,
       user_id: user?.id, // This will be null if no user, but the RLS policies will handle this
       services: contactData.services || null,
       monthly_cost: contactData.monthly_cost || null,
@@ -222,9 +225,15 @@ export const contactsApi = {
   
   // Update an existing contact
   async updateContact(id: string, contactData: Partial<ContactRecord>): Promise<ContactRecord> {
+    // For internal contacts, entity_id can be null
+    const entity_id = contactData.entity_type === 'internal' ? null : 
+                      (contactData.entity_id && contactData.entity_id.trim() !== '' ? 
+                       contactData.entity_id : null);
+    
     // Ensure services is properly handled
     const preparedData = {
       ...contactData,
+      entity_id,
       services: contactData.services || null,
       monthly_cost: contactData.monthly_cost || null,
       is_flat_rate: contactData.is_flat_rate !== undefined ? contactData.is_flat_rate : true

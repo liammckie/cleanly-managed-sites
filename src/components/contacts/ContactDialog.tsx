@@ -8,8 +8,8 @@ export interface ContactDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   contact?: ContactRecord;
-  entityType: 'site' | 'client' | 'supplier' | 'internal';
-  entityId: string;
+  entityType?: 'site' | 'client' | 'supplier' | 'internal';
+  entityId?: string;
   isSubmitting?: boolean;
   title?: string;
   onSubmit: (contactData: Partial<ContactRecord>) => Promise<void>;

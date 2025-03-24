@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { 
@@ -57,7 +56,6 @@ const Contacts = () => {
     setFilters: setContactsFilters
   } = useContacts(filters);
 
-  // Extract unique roles and departments for filter dropdowns
   useEffect(() => {
     if (contacts && contacts.length > 0) {
       const roles = [...new Set(contacts.map(c => c.role).filter(Boolean))];
@@ -81,7 +79,6 @@ const Contacts = () => {
   };
 
   const handleFilterChange = (newFilters: ContactFilters) => {
-    // Preserve entity type from tabs
     const updatedFilters = {
       ...newFilters,
       entityType: filters.entityType
@@ -138,13 +135,11 @@ const Contacts = () => {
     }
   };
 
-  // Helper to get the entity name for a contact
   const getEntityName = (contact: ContactRecord) => {
     const entity = availableEntities.find(e => e.id === contact.entity_id && e.type === contact.entity_type);
     return entity ? entity.name : '';
   };
 
-  // Helper to render entity icon
   const getEntityIcon = (entityType: string) => {
     switch (entityType) {
       case 'client':
@@ -314,8 +309,6 @@ const Contacts = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         contact={editingContact || undefined}
-        entityType={editingContact?.entity_type || 'client'}
-        entityId={editingContact?.entity_id || ''}
         onSubmit={handleSubmitContact}
         isSubmitting={isLoading}
         title="Contact"
