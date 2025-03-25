@@ -15,7 +15,7 @@ import { SiteRecord } from '@/lib/types';
 export function SitesList() {
   const navigate = useNavigate();
   const { data: sites = [], isLoading: sitesLoading, error: sitesError } = useSites();
-  const { clients, isLoading: clientsLoading } = useClients();
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
   const [filteredSites, setFilteredSites] = useState<SiteRecord[]>([]);
   const [filters, setFilters] = useState({
     search: '',
@@ -134,7 +134,7 @@ export function SitesList() {
       <Alert variant="destructive" className="mb-4">
         <AlertTitle>Error loading sites</AlertTitle>
         <AlertDescription>
-          {sitesError.message || 'An error occurred while fetching site data. Please try again.'}
+          {(sitesError as Error)?.message || 'An error occurred while fetching site data. Please try again.'}
         </AlertDescription>
       </Alert>
     );
