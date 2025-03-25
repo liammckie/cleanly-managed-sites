@@ -8,7 +8,7 @@ import { SiteRecord } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { getJsonProperty } from '@/lib/utils/json';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface ContractExpiryListProps {
   sites: SiteRecord[];
@@ -23,15 +23,17 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
     
     return sites
       .filter(site => {
-        const endDate = getJsonProperty<string>(site.contract_details, 'endDate', '');
-        return !!endDate;
+        const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
+        return !!contractDetails.endDate;
       })
       .map(site => {
-        const endDate = parseISO(getJsonProperty<string>(site.contract_details, 'endDate', ''));
+        const contractDetails = asJsonObject(site.contract_details, { endDate: '', contractNumber: '' });
+        const endDate = parseISO(contractDetails.endDate);
         const daysUntilExpiry = differenceInDays(endDate, today);
         return {
           ...site,
           daysUntilExpiry,
+          contractNumber: contractDetails.contractNumber
         };
       })
       .filter(site => site.daysUntilExpiry < 180) // Show contracts expiring within 6 months
@@ -89,33 +91,26 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
               <TableHead>Contract #</TableHead>
               <TableHead>Expiry Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Review By</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contractsWithExpiry.map((site) => (
-              <TableRow key={site.id}>
-                <TableCell className="font-medium">{site.name}</TableCell>
-                <TableCell>{getJsonProperty(site.contract_details, 'contractNumber', 'N/A')}</TableCell>
-                <TableCell>{format(parseISO(getJsonProperty<string>(site.contract_details, 'endDate', '')), 'MMM d, yyyy')}</TableCell>
-                <TableCell>
-                  <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>
-                    {site.daysUntilExpiry < 0
-                      ? 'Expired'
-                      : `${site.daysUntilExpiry} days left`}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {format(addDays(parseISO(getJsonProperty<string>(site.contract_details, 'endDate', '')), -90), 'MMM d, yyyy')}
-                </TableCell>
-                <TableCell>
-                  <Link to={`/sites/${site.id}`} className="text-primary hover:underline">
-                    View Site
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
+            {contractsWithExpiry.map((site) => {
+              const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
+              return (
+                <TableRow key={site.id}>
+                  <TableCell className="font-medium">{site.name}</TableCell>
+                  <TableCell>{site.contractNumber || 'N/A'}</TableCell>
+                  <TableCell>{format(parseISO(contractDetails.endDate), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>
+                    <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>
+                      {site.daysUntilExpiry < 0
+                        ? 'Expired'
+                        : `${site.daysUntilExpiry} days left`}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>

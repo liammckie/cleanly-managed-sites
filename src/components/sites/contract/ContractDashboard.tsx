@@ -35,7 +35,7 @@ export function ContractDashboard() {
         
         {/* Contract expirations list */}
         <ContractExpiryList 
-          forecastData={forecastData} 
+          sites={sites || []} 
           isLoading={isLoading} 
         />
       </div>
