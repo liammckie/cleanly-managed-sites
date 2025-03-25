@@ -1,109 +1,96 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { BillingDetails } from '../types/billingTypes';
-import { isSiteBillingOnHold } from '@/lib/utils/billingCalculations';
-import { PauseCircle, UserCheck, Users, Briefcase } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BillingDetails, BillingLine } from '../types/billingTypes';
+import { formatCurrency } from '@/lib/utils/formatters';
 
 interface BillingDetailsSummaryProps {
   billingDetails: BillingDetails;
-  contractType?: string;
 }
 
-export function BillingDetailsSummary({ billingDetails, contractType = 'cleaning' }: BillingDetailsSummaryProps) {
-  const isBillingOnHold = isSiteBillingOnHold(billingDetails.billingOnHold);
-
-  // Format date for display
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    return format(new Date(dateString), 'dd/MM/yyyy');
-  };
-
-  // Map contract type to display name
-  const getContractTypeDisplay = (type?: string) => {
-    const contractTypes: Record<string, string> = {
-      'cleaning': 'Cleaning',
-      'pest': 'Pest Control',
-      'grounds': 'Grounds Maintenance',
-      'waste': 'Waste Management',
-      'hygiene': 'Hygiene Services',
-      'gardening': 'Gardening',
-      'security': 'Security',
-      'other': 'Other'
-    };
-    
-    return contractTypes[type || 'cleaning'] || 'Cleaning';
-  };
-
+export function BillingDetailsSummary({ billingDetails }: BillingDetailsSummaryProps) {
   return (
-    <Card className="bg-slate-50 mb-4">
-      <CardContent className="pt-4">
-        {isBillingOnHold && (
-          <div className="mb-3 bg-yellow-100 text-yellow-800 px-3 py-2 rounded flex items-center">
-            <PauseCircle size={16} className="mr-2" />
-            <span>
-              Billing On Hold
-              {billingDetails.billingHoldStartDate && ` since ${formatDate(billingDetails.billingHoldStartDate)}`}
-              {billingDetails.billingHoldEndDate && ` until ${formatDate(billingDetails.billingHoldEndDate)}`}
-            </span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Billing Summary</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-sm font-medium">Invoice Frequency</h3>
+              <p className="capitalize">{billingDetails.invoiceFrequency || 'Not specified'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium">Invoice Day</h3>
+              <p>{billingDetails.invoiceDay || 'Not specified'}</p>
+            </div>
           </div>
-        )}
-
-        <div className="flex items-center gap-2 mb-3">
-          <div className={`px-3 py-1 rounded text-sm font-medium flex items-center ${
-            billingDetails.serviceDeliveryType === 'contractor' 
-              ? 'bg-orange-100 text-orange-800' 
-              : 'bg-green-100 text-green-800'
-          }`}>
-            {billingDetails.serviceDeliveryType === 'contractor' ? (
-              <>
-                <Users size={14} className="mr-1" />
-                <span>Contractor Delivery</span>
-              </>
-            ) : (
-              <>
-                <UserCheck size={14} className="mr-1" />
-                <span>Direct Delivery</span>
-              </>
+          
+          <div>
+            <h3 className="text-sm font-medium">Invoice Email</h3>
+            <p>{billingDetails.invoiceEmail || 'Not specified'}</p>
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-medium">Invoice Address</h3>
+            <p>{billingDetails.invoiceAddressLine1 || 'Not specified'}</p>
+            {billingDetails.invoiceAddressLine2 && <p>{billingDetails.invoiceAddressLine2}</p>}
+            {(billingDetails.invoiceCity || billingDetails.invoiceState) && (
+              <p>
+                {billingDetails.invoiceCity || ''}{' '}
+                {billingDetails.invoiceState && billingDetails.invoiceCity && ', '}
+                {billingDetails.invoiceState || ''}
+                {' '}
+                {billingDetails.invoicePostalCode || ''}
+              </p>
             )}
           </div>
           
-          <div className="px-3 py-1 rounded text-sm font-medium flex items-center bg-blue-100 text-blue-800">
-            <Briefcase size={14} className="mr-1" />
-            <span>{getContractTypeDisplay(contractType)}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Weekly Revenue</p>
-            <div className="text-lg font-semibold">
-              {formatCurrency(billingDetails.totalWeeklyAmount || 0, 'AUD')}
+          <div>
+            <h3 className="text-sm font-medium">Revenue</h3>
+            <div className="grid grid-cols-3 gap-2 mt-1">
+              <div>
+                <p className="text-xs text-muted-foreground">Weekly</p>
+                <p>{formatCurrency(billingDetails.weeklyRevenue || 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Monthly</p>
+                <p>{formatCurrency(billingDetails.monthlyRevenue || 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Annual</p>
+                <p>{formatCurrency((billingDetails.monthlyRevenue || 0) * 12)}</p>
+              </div>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Monthly Revenue</p>
-            <div className="text-lg font-semibold">
-              {formatCurrency(billingDetails.totalMonthlyAmount || 0, 'AUD')}
+          {billingDetails.purchaseOrderRequired && (
+            <div>
+              <h3 className="text-sm font-medium">Purchase Order Required</h3>
+              <p>Yes - PO #{billingDetails.purchaseOrderNumber || 'Not specified'}</p>
             </div>
-          </div>
+          )}
           
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground font-medium">Annual Revenue</p>
-            <div className="text-lg font-semibold">
-              {formatCurrency(billingDetails.totalAnnualAmount || 0, 'AUD')}
+          {billingDetails.billingLines && billingDetails.billingLines.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-2">Billing Lines</h3>
+              <div className="space-y-2">
+                {billingDetails.billingLines.map((line: BillingLine, index: number) => (
+                  <div key={line.id || index} className="p-2 border rounded">
+                    <div className="flex justify-between">
+                      <span className="font-medium">{line.description}</span>
+                      <span>{formatCurrency(line.amount)}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="capitalize">{line.frequency}</span>
+                      {line.isRecurring && ' • Recurring'}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="flex justify-between p-2 bg-slate-100 rounded">
-          <span className="text-sm font-medium">Payment Terms:</span>
-          <span className="text-sm">
-            {billingDetails.paymentTerms || 'Not specified'} ({billingDetails.billingFrequency || 'monthly'})
-          </span>
+          )}
         </div>
       </CardContent>
     </Card>

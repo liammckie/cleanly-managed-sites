@@ -1,18 +1,16 @@
-export * from './contactTypes';
+
+// Re-export all form types for easier imports
+export * from './siteFormData';
+export * from './billingTypes';
+export * from './contractTypes';
+export * from './subcontractorTypes';
 export * from './periodicalTypes';
-export * from './jobSpecificationTypes';
 export * from './replenishableTypes';
 export * from './securityTypes';
-export * from './subcontractorTypes';
-export * from './contractTypes';
-export * from './billingTypes';
-export * from './adHocWorkTypes';
-export * from './siteFormData';
+export * from './formValidation';
 export * from './initialFormData';
-// Remove formValidation export to avoid duplicate with validationUtils
-// export * from './formValidation';
-// Export validationUtils last to avoid conflicts
-export * from './validationUtils';
 
-// Update SiteStatus to include "on-hold"
-export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold';
+// Fix ambiguity by explicitly re-exporting
+export { AdHocWorkAuthorization } from './adHocWorkTypes';
+export { JobSpecifications } from './jobSpecificationTypes';
+export { SecurityDetails } from './securityTypes';

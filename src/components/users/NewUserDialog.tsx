@@ -1,305 +1,146 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useUserRoles } from '@/hooks/useUserRoles';
-import { useCreateUser } from '@/hooks/useUsers';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { z } from 'zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { useCreateUser } from '@/hooks/useUsers';
+import { Loader2 } from 'lucide-react';
 
-const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
-  lastName: z.string().min(2, { message: 'Last name must be at least 2 characters' }),
+const userSchema = z.object({
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
+  role: z.string().min(1, 'Role is required'),
   phone: z.string().optional(),
-  title: z.string().optional(),
-  role_id: z.string().min(1, { message: 'Please select a role' }),
-  password: z.string()
-    .min(8, { message: 'Password must be at least 8 characters' })
-    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
-    .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
-    .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
-  confirm_password: z.string(),
-}).refine((data) => data.password === data.confirm_password, {
-  message: "Passwords don't match",
-  path: ["confirm_password"],
 });
 
-type FormData = z.infer<typeof formSchema>;
+type UserFormValues = z.infer<typeof userSchema>;
 
 interface NewUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUserCreated?: () => void;
 }
 
-export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
-  const { roles } = useUserRoles();
-  const { createUser, isLoading } = useCreateUser();
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+export function NewUserDialog({ open, onOpenChange, onUserCreated }: NewUserDialogProps) {
+  const { createUser, isCreating } = useCreateUser();
+  
+  const form = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
     defaultValues: {
+      first_name: '',
+      last_name: '',
       email: '',
-      firstName: '',
-      lastName: '',
+      role: 'user',
       phone: '',
-      title: '',
-      role_id: '',
-      password: '',
-      confirm_password: '',
     },
   });
-
-  const onSubmit = async (data: FormData) => {
+  
+  const onSubmit = async (data: UserFormValues) => {
     try {
-      setError(null);
-      console.log("Creating user with data:", { 
-        email: data.email, 
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        title: data.title
-      });
-      
       await createUser({
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone || '',
-        title: data.title || '',
-        role_id: data.role_id,
-        password: data.password,
+        ...data,
+        status: 'active',
       });
       
-      setSuccess(true);
       form.reset();
-      
-      // Keep dialog open for 3 seconds to show success message, then close
-      setTimeout(() => {
-        onOpenChange(false);
-        setSuccess(false);
-      }, 3000);
-    } catch (error: any) {
-      console.error('Error in form submission:', error);
-      
-      // Show a more specific error message
-      const errorMessage = error.message || 'Failed to create user';
-      if (errorMessage.includes('infinite recursion')) {
-        setError('Database policy error. Please contact your system administrator.');
-      } else if (errorMessage.includes('duplicate key')) {
-        setError('A user with this email already exists.');
-      } else if (errorMessage.includes('already exists')) {
-        setError(errorMessage);
-      } else {
-        setError(errorMessage);
-      }
+      onOpenChange(false);
+      if (onUserCreated) onUserCreated();
+    } catch (error) {
+      console.error('Error creating user:', error);
     }
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
-          <DialogDescription>
-            Add a new user to the system. They will receive an email to verify their account.
-          </DialogDescription>
+          <DialogTitle>Add New User</DialogTitle>
         </DialogHeader>
         
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        {success && (
-          <Alert className="bg-green-50 border-green-200">
-            <AlertDescription className="text-green-800">
-              User created successfully! An email verification has been sent to the user.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="user@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first_name">First Name</Label>
+              <Input
+                id="first_name"
+                {...form.register('first_name')}
+                className={form.formState.errors.first_name ? "border-destructive" : ""}
+              />
+              {form.formState.errors.first_name && (
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.first_name.message}</p>
               )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (555) 123-4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input
+                id="last_name"
+                {...form.register('last_name')}
+                className={form.formState.errors.last_name ? "border-destructive" : ""}
               />
-              
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Manager" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {form.formState.errors.last_name && (
+                <p className="text-sm font-medium text-destructive">{form.formState.errors.last_name.message}</p>
+              )}
             </div>
-            
-            <FormField
-              control={form.control}
-              name="role_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roles?.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    This determines what permissions the user will have
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              {...form.register('email')}
+              className={form.formState.errors.email ? "border-destructive" : ""}
             />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Minimum 8 characters with uppercase, lowercase, and numbers
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+            {form.formState.errors.email && (
+              <p className="text-sm font-medium text-destructive">{form.formState.errors.email.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <select
+              id="role"
+              {...form.register('role')}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="user">User</option>
+              <option value="admin">Administrator</option>
+              <option value="manager">Manager</option>
+            </select>
+            {form.formState.errors.role && (
+              <p className="text-sm font-medium text-destructive">{form.formState.errors.role.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone (Optional)</Label>
+            <Input
+              id="phone"
+              {...form.register('phone')}
             />
-            
-            <FormField
-              control={form.control}
-              name="confirm_password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading || success}>
-                {isLoading ? 'Creating...' : success ? 'Created!' : 'Create User'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create User
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

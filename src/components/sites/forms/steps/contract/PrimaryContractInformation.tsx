@@ -1,198 +1,246 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Calculator, History } from 'lucide-react';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { SiteFormData } from '../../siteFormTypes';
-import { ContractType } from '../../types/contractTypes';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { HelpCircle, ChevronDown } from 'lucide-react';
+import { SiteFormData } from '../../types/siteFormData';
+import { ContractTerm } from '../../types/contractTypes';
 
 interface PrimaryContractInformationProps {
   formData: SiteFormData;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  annualValue: number;
+  updateFormField: (field: string, value: any) => void;
+  errors: Record<string, string>;
 }
 
 export function PrimaryContractInformation({ 
   formData, 
-  handleNestedChange,
-  annualValue
+  updateFormField,
+  errors
 }: PrimaryContractInformationProps) {
-  // Calculate weekly value from contract value
-  const weeklyValue = formData.contractDetails.value 
-    ? (formData.contractDetails.billingCycle === 'weekly' 
-      ? formData.contractDetails.value 
-      : formData.contractDetails.billingCycle === 'monthly' 
-        ? formData.contractDetails.value / 4.33
-        : formData.contractDetails.billingCycle === 'quarterly'
-          ? formData.contractDetails.value / 13
-          : formData.contractDetails.value / 52)
-    : 0;
+  // Initialize contract details if it doesn't exist
+  const contractDetails = formData.contract_details || {};
+
+  // Initialize billingCycle if it doesn't exist
+  if (!contractDetails.billingCycle) {
+    updateFormField('contract_details.billingCycle', 'monthly');
+  }
 
   return (
-    <div className="glass-card p-6 space-y-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-medium">Primary Contract Information</h3>
-        <div className="flex items-center text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-          <History className="h-3.5 w-3.5 mr-1 text-blue-500" />
-          Changes will be versioned
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="contract-number">Contract Number</Label>
-          <Input
-            id="contract-number"
-            value={formData.contractDetails.contractNumber}
-            onChange={(e) => handleNestedChange('contractDetails', 'contractNumber', e.target.value)}
-            className="glass-input"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contract-type">Contract Type</Label>
-          <Select 
-            value={formData.contractDetails.contractType || 'cleaning'}
-            onValueChange={(value) => handleNestedChange('contractDetails', 'contractType', value as ContractType)}
-          >
-            <SelectTrigger id="contract-type" className="glass-input">
-              <SelectValue placeholder="Select contract type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cleaning">Cleaning</SelectItem>
-              <SelectItem value="pest">Pest Control</SelectItem>
-              <SelectItem value="grounds">Grounds Maintenance</SelectItem>
-              <SelectItem value="waste">Waste Management</SelectItem>
-              <SelectItem value="hygiene">Hygiene Services</SelectItem>
-              <SelectItem value="gardening">Gardening</SelectItem>
-              <SelectItem value="security">Security</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="start-date">Start Date</Label>
-          <Input
-            id="start-date"
-            type="date"
-            value={formData.contractDetails.startDate}
-            onChange={(e) => handleNestedChange('contractDetails', 'startDate', e.target.value)}
-            className="glass-input"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="end-date">End Date</Label>
-          <Input
-            id="end-date"
-            type="date"
-            value={formData.contractDetails.endDate}
-            onChange={(e) => handleNestedChange('contractDetails', 'endDate', e.target.value)}
-            className="glass-input"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="next-review-date">Next Review Date</Label>
-          <Input
-            id="next-review-date"
-            type="date"
-            value={formData.contractDetails.nextReviewDate || ''}
-            onChange={(e) => handleNestedChange('contractDetails', 'nextReviewDate', e.target.value)}
-            className="glass-input"
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="contract-value">Contract Value ($)</Label>
-          <Input
-            id="contract-value"
-            type="number"
-            placeholder="0.00"
-            value={formData.contractDetails.value || ''}
-            onChange={(e) => handleNestedChange('contractDetails', 'value', parseFloat(e.target.value))}
-            className="glass-input"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="billing-cycle">Billing Cycle</Label>
-          <Select 
-            value={formData.contractDetails.billingCycle || 'monthly'}
-            onValueChange={(value) => handleNestedChange('contractDetails', 'billingCycle', value)}
-          >
-            <SelectTrigger id="billing-cycle" className="glass-input">
-              <SelectValue placeholder="Select billing cycle" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="quarterly">Quarterly</SelectItem>
-              <SelectItem value="annually">Annually</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Weekly Value</Label>
-          <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-            <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
-            ${weeklyValue.toFixed(2)}
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Primary Contract Information</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="contractNumber">Contract Number</Label>
+            <Input
+              id="contractNumber"
+              value={contractDetails.contractNumber || ''}
+              onChange={(e) => updateFormField('contract_details.contractNumber', e.target.value)}
+              placeholder="E.g., CTR-2023-001"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="contractType">Contract Type</Label>
+            <Select 
+              value={contractDetails.contractType || ''} 
+              onValueChange={(value) => updateFormField('contract_details.contractType', value)}
+            >
+              <SelectTrigger id="contractType">
+                <SelectValue placeholder="Select contract type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed_term">Fixed Term</SelectItem>
+                <SelectItem value="ongoing">Ongoing</SelectItem>
+                <SelectItem value="project_based">Project Based</SelectItem>
+                <SelectItem value="retainer">Retainer</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Label>Annual Value Forecast</Label>
-          <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-            <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
-            ${annualValue.toFixed(2)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="contractStartDate">Start Date</Label>
+            <DatePicker
+              id="contractStartDate"
+              value={contractDetails.startDate ? new Date(contractDetails.startDate) : undefined}
+              onChange={(date) => updateFormField('contract_details.startDate', date ? date.toISOString().split('T')[0] : '')}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="contractEndDate">End Date</Label>
+            <DatePicker
+              id="contractEndDate"
+              value={contractDetails.endDate ? new Date(contractDetails.endDate) : undefined}
+              onChange={(date) => updateFormField('contract_details.endDate', date ? date.toISOString().split('T')[0] : '')}
+            />
           </div>
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="auto-renew" 
-            checked={formData.contractDetails.autoRenew || false}
-            onCheckedChange={(checked) => handleNestedChange('contractDetails', 'autoRenew', checked)}
-          />
-          <Label htmlFor="auto-renew">Auto-renew contract</Label>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="terminationPeriod">Notice Period (Days)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="terminationPeriod"
+                type="number"
+                min="0"
+                value={contractDetails.terminationPeriod || ''}
+                onChange={(e) => updateFormField('contract_details.terminationPeriod', e.target.value)}
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <p className="text-sm">
+                    The number of days' notice required to terminate the contract. This applies to both parties.
+                  </p>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="nextReviewDate">Next Review Date</Label>
+            <DatePicker
+              id="nextReviewDate"
+              value={contractDetails.nextReviewDate ? new Date(contractDetails.nextReviewDate) : undefined}
+              onChange={(date) => updateFormField('contract_details.nextReviewDate', date ? date.toISOString().split('T')[0] : '')}
+            />
+          </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="cpi-applied" 
-            checked={formData.contractDetails.cpiApplied || false}
-            onCheckedChange={(checked) => handleNestedChange('contractDetails', 'cpiApplied', checked)}
-          />
-          <Label htmlFor="cpi-applied">CPI can be applied automatically</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="renewalType">Renewal Type</Label>
+            <Select 
+              value={contractDetails.renewalType || ''} 
+              onValueChange={(value) => updateFormField('contract_details.renewalType', value)}
+            >
+              <SelectTrigger id="renewalType">
+                <SelectValue placeholder="Select renewal type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">Fixed Term</SelectItem>
+                <SelectItem value="evergreen">Evergreen</SelectItem>
+                <SelectItem value="extension">Extension Option</SelectItem>
+                <SelectItem value="renegotiation">Renegotiation</SelectItem>
+                <SelectItem value="non_renewable">Non-Renewable</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="billingCycle">Billing Cycle</Label>
+            <Select 
+              value={contractDetails.billingCycle || 'monthly'} 
+              onValueChange={(value) => updateFormField('contract_details.billingCycle', value)}
+            >
+              <SelectTrigger id="billingCycle">
+                <SelectValue placeholder="Select billing cycle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
-      
-      {formData.contractDetails.cpiApplied && (
-        <div className="space-y-2 mt-2">
-          <Label htmlFor="cpi-application-date">CPI Application Date</Label>
-          <Input
-            id="cpi-application-date"
-            type="date"
-            value={formData.contractDetails.cpiApplicationDate || ''}
-            onChange={(e) => handleNestedChange('contractDetails', 'cpiApplicationDate', e.target.value)}
-            className="glass-input"
-          />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select 
+              value={contractDetails.status || 'active'} 
+              onValueChange={(value) => updateFormField('contract_details.status', value)}
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="terminated">Terminated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="value">Monthly Value</Label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+              <Input
+                id="value"
+                type="number"
+                min="0"
+                step="0.01"
+                className="pl-8"
+                value={contractDetails.value || ''}
+                onChange={(e) => updateFormField('contract_details.value', parseFloat(e.target.value) || 0)}
+              />
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        
+        <div className="flex justify-between items-center border-t pt-4">
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoRenewal"
+                checked={contractDetails.autoRenewal || false}
+                onCheckedChange={(checked) => updateFormField('contract_details.autoRenewal', checked)}
+              />
+              <Label htmlFor="autoRenewal">Auto Renewal</Label>
+            </div>
+            
+            <p className="text-xs text-muted-foreground mt-1 ml-7">
+              Contract will automatically renew at the end of the term
+            </p>
+          </div>
+          
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="cpiApplied"
+                checked={contractDetails.cpiApplied || false}
+                onCheckedChange={(checked) => updateFormField('contract_details.cpiApplied', checked)}
+              />
+              <Label htmlFor="cpiApplied">CPI Adjustment</Label>
+            </div>
+            
+            {contractDetails.cpiApplied && (
+              <div className="mt-2 ml-7">
+                <Label htmlFor="cpiApplicationDate" className="text-xs">CPI Adjustment Date</Label>
+                <DatePicker
+                  id="cpiApplicationDate"
+                  value={contractDetails.cpiApplicationDate ? new Date(contractDetails.cpiApplicationDate) : undefined}
+                  onChange={(date) => updateFormField('contract_details.cpiApplicationDate', date ? date.toISOString().split('T')[0] : '')}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

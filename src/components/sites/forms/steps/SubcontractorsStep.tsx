@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, DollarSign, PlusCircle } from 'lucide-react';
-import { SiteFormData } from '../siteFormTypes';
-import { Subcontractor, SERVICE_OPTIONS, ServiceOption } from '../types/subcontractorTypes';
+import { SiteFormData } from '../types/siteFormData';
+import { ServiceOption, SERVICE_OPTIONS } from '../types/subcontractorTypes';
 import { 
   Select,
   SelectContent,
@@ -41,8 +41,8 @@ export function SubcontractorsStep({
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const handleServiceChange = (index: number, service: ServiceOption, checked: boolean) => {
-    const currentServices = formData.subcontractors[index].services || [];
+  const handleServiceChange = (index: number, service: string, checked: boolean) => {
+    const currentServices = formData.subcontractors![index].services || [];
     let newServices;
     
     if (checked) {
@@ -56,7 +56,7 @@ export function SubcontractorsStep({
 
   return (
     <div className="space-y-6">
-      {formData.subcontractors.map((subcontractor, index) => (
+      {formData.subcontractors && formData.subcontractors.map((subcontractor, index) => (
         <Card key={index} className="shadow-sm hover:shadow-md transition-shadow duration-200">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -71,7 +71,7 @@ export function SubcontractorsStep({
                 >
                   {expandedIndex === index ? 'Collapse' : 'Expand'}
                 </Button>
-                {formData.subcontractors.length > 1 && (
+                {formData.subcontractors && formData.subcontractors.length > 1 && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -242,32 +242,29 @@ export function SubcontractorsStep({
               <div className="flex flex-wrap gap-2">
                 {(subcontractor.services || []).map(service => {
                   const serviceOption = SERVICE_OPTIONS.find(s => s.value === service);
-                  return (
+                  return serviceOption ? (
                     <Badge key={service} variant="secondary">
-                      {serviceOption?.label || service}
+                      {serviceOption.label}
                     </Badge>
-                  );
+                  ) : null;
                 })}
               </div>
-              
-              {subcontractor.monthlyCost && (
-                <Badge variant="outline" className="ml-auto">
-                  ${subcontractor.monthlyCost}/month
-                </Badge>
-              )}
             </CardFooter>
           )}
         </Card>
       ))}
       
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full" 
-        onClick={addSubcontractor}
-      >
-        <PlusCircle className="mr-2 h-4 w-4" /> Add Another Subcontractor
-      </Button>
+      <div className="flex justify-center">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={addSubcontractor}
+          className="mt-4"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Subcontractor
+        </Button>
+      </div>
     </div>
   );
 }

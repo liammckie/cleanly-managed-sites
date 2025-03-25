@@ -12,37 +12,39 @@ export function ContractValueMetrics() {
   
   // Calculate total values
   const totalAnnualValue = contractData.reduce((sum, contract) => 
-    sum + (contract.monthly_revenue || 0) * 12, 0);
+    sum + (contract.monthly_revenue || 0) * 12, 0
+  );
   
   const totalMonthlyValue = contractData.reduce((sum, contract) => 
-    sum + (contract.monthly_revenue || 0), 0);
-    
+    sum + (contract.monthly_revenue || 0), 0
+  );
+  
   const activeContracts = contractData.filter(c => c.status === 'active').length;
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <ValueCard 
+      <ValueCard
         title="Annual Contract Value"
         value={formatCurrency(totalAnnualValue)}
         description="Total annual revenue from all contracts"
         loading={isLoading}
       />
       
-      <ValueCard 
+      <ValueCard
         title="Monthly Contract Value"
         value={formatCurrency(totalMonthlyValue)}
         description="Total monthly revenue from all contracts"
         loading={isLoading}
       />
       
-      <ValueCard 
+      <ValueCard
         title="Total Contracts"
         value={contractData.length.toString()}
         description="Number of contracts across all clients"
         loading={isLoading}
       />
       
-      <ValueCard 
+      <ValueCard
         title="Active Contracts"
         value={activeContracts.toString()}
         description={`${activeContracts} of ${contractData.length} contracts are active`}

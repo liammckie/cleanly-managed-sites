@@ -1,99 +1,75 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { SystemUser } from '@/lib/types';
-import { usersApi } from '@/lib/api/users';
-import { toast } from 'sonner';
+import { usersApi, SystemUser } from '@/lib/api/users';
+import { useState } from 'react';
 
 export function useUsers() {
-  const queryClient = useQueryClient();
-  
-  const usersQuery = useQuery({
+  const { data = [], isLoading, error } = useQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      try {
-        return await usersApi.getAllUsers();
-      } catch (error) {
-        console.error('Failed to fetch users:', error);
-        throw error;
-      }
-    }
+    queryFn: usersApi.getUsers
   });
 
-  return {
-    users: usersQuery.data as SystemUser[] || [],
-    isLoading: usersQuery.isLoading,
-    error: usersQuery.error as Error,
-    refetch: usersQuery.refetch
-  };
+  return { users: data, isLoading, error };
 }
 
 export function useUser(userId: string) {
+  const [isUpdating, setIsUpdating] = useState(false);
   const queryClient = useQueryClient();
 
-  const userQuery = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['user', userId],
-    queryFn: async () => {
-      try {
-        return await usersApi.getUserById(userId);
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        throw error;
-      }
-    },
+    queryFn: () => usersApi.getUser(userId),
     enabled: !!userId
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async (userData: Partial<SystemUser>) => {
-      return await usersApi.updateUser(userId, userData);
+    mutationFn: (userData: Partial<SystemUser>) => {
+      setIsUpdating(true);
+      return usersApi.updateUser(userId, userData);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
-      toast.success('User updated successfully');
-      return data;
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      setIsUpdating(false);
     },
-    onError: (error) => {
-      console.error('Failed to update user:', error);
-      toast.error('Failed to update user');
-      throw error;
+    onError: () => {
+      setIsUpdating(false);
     }
   });
 
+  const updateUser = async (userData: Partial<SystemUser>) => {
+    return updateUserMutation.mutateAsync(userData);
+  };
+
   return {
-    user: userQuery.data as SystemUser,
-    isLoading: userQuery.isLoading,
-    error: userQuery.error as Error,
-    updateUser: updateUserMutation.mutateAsync,
-    refetch: userQuery.refetch
+    user: data as SystemUser,
+    isLoading,
+    error,
+    updateUser,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['user', userId] })
   };
 }
 
-export const useUpdateUser = (userId: string) => {
-  const { updateUser } = useUser(userId);
-  return updateUser;
-};
-
-export const useCreateUser = () => {
+export function useCreateUser() {
+  const [isCreating, setIsCreating] = useState(false);
   const queryClient = useQueryClient();
-  
+
   const createUserMutation = useMutation({
-    mutationFn: async (userData: Partial<SystemUser>) => {
-      return await usersApi.createUser(userData);
+    mutationFn: (userData: Partial<SystemUser>) => {
+      setIsCreating(true);
+      return usersApi.createUser(userData);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User created successfully');
-      return data;
+      setIsCreating(false);
     },
-    onError: (error) => {
-      console.error('Failed to create user:', error);
-      toast.error('Failed to create user');
-      throw error;
+    onError: () => {
+      setIsCreating(false);
     }
   });
-  
+
   return {
     createUser: createUserMutation.mutateAsync,
-    isCreating: createUserMutation.isPending
+    isCreating
   };
-};
+}

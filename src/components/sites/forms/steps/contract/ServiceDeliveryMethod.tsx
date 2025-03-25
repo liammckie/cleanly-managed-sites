@@ -1,163 +1,143 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calculator } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { SiteFormData } from '../../siteFormTypes';
-import { LaborPlanSection } from './LaborPlanSection';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { SiteFormData } from '../../types/siteFormData';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { HelpCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ServiceDeliveryMethodProps {
   formData: SiteFormData;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  annualDirectCost: number;
-  annualContractorCost: number;
-  profitMargin: number;
-  annualValue: number;
+  updateFormField: (section: keyof SiteFormData, field: string, value: any) => void;
+  errors: Record<string, string>;
 }
 
 export function ServiceDeliveryMethod({ 
   formData, 
-  handleNestedChange,
-  annualDirectCost,
-  annualContractorCost,
-  profitMargin,
-  annualValue
+  updateFormField,
+  errors
 }: ServiceDeliveryMethodProps) {
-  const [costFrequency, setCostFrequency] = useState<'weekly' | 'monthly' | 'annually'>(
-    formData.billingDetails.contractorCostFrequency || 'annually'
-  );
+  // Initialize if contractorCostFrequency doesn't exist
+  if (formData.billingDetails && !formData.billingDetails.contractorCostFrequency) {
+    updateFormField('billingDetails', 'contractorCostFrequency', 'weekly');
+  }
 
-  const handleCostFrequencyChange = (value: 'weekly' | 'monthly' | 'annually') => {
-    setCostFrequency(value);
-    handleNestedChange('billingDetails', 'contractorCostFrequency', value);
-
-    handleNestedChange('billingDetails', 'weeklyContractorCost', 0);
-    handleNestedChange('billingDetails', 'monthlyContractorCost', 0);
-    handleNestedChange('billingDetails', 'annualContractorCost', 0);
+  // Handle frequency changes and automatic calculations
+  const handleFrequencyChange = (value: string) => {
+    updateFormField('billingDetails', 'contractorCostFrequency', value);
+    recalculateContractorCosts(value);
   };
 
-  const handleCostChange = (value: number) => {
-    const weeklyValue = costFrequency === 'weekly' ? value : 
-                        costFrequency === 'monthly' ? value / 4.33 : 
-                        value / 52;
-    
-    const monthlyValue = costFrequency === 'monthly' ? value : 
-                         costFrequency === 'weekly' ? value * 4.33 : 
-                         value / 12;
-    
-    const annualValue = costFrequency === 'annually' ? value : 
-                        costFrequency === 'monthly' ? value * 12 : 
-                        value * 52;
+  const recalculateContractorCosts = (frequency: string) => {
+    const billingDetails = formData.billingDetails;
+    if (!billingDetails) return;
 
-    handleNestedChange('billingDetails', 'weeklyContractorCost', weeklyValue);
-    handleNestedChange('billingDetails', 'monthlyContractorCost', monthlyValue);
-    handleNestedChange('billingDetails', 'annualContractorCost', annualValue);
+    let weeklyAmount = 0;
+    let monthlyAmount = 0;
+
+    if (frequency === 'weekly' && billingDetails.weeklyContractorCost) {
+      weeklyAmount = billingDetails.weeklyContractorCost;
+      monthlyAmount = weeklyAmount * 4.33; // 52 weeks / 12 months
+    } else if (frequency === 'monthly' && billingDetails.monthlyContractorCost) {
+      monthlyAmount = billingDetails.monthlyContractorCost;
+      weeklyAmount = monthlyAmount / 4.33;
+    } else if (frequency === 'annually' && billingDetails.monthlyContractorCost) {
+      const annualAmount = billingDetails.monthlyContractorCost * 12;
+      weeklyAmount = annualAmount / 52;
+      monthlyAmount = annualAmount / 12;
+    }
+
+    updateFormField('billingDetails', 'weeklyContractorCost', parseFloat(weeklyAmount.toFixed(2)));
+    updateFormField('billingDetails', 'monthlyContractorCost', parseFloat(monthlyAmount.toFixed(2)));
+  };
+
+  const handleWeeklyAmountChange = (value: number) => {
+    updateFormField('billingDetails', 'weeklyContractorCost', value);
+    updateFormField('billingDetails', 'monthlyContractorCost', parseFloat((value * 4.33).toFixed(2)));
+  };
+
+  const handleMonthlyAmountChange = (value: number) => {
+    updateFormField('billingDetails', 'monthlyContractorCost', value);
+    updateFormField('billingDetails', 'weeklyContractorCost', parseFloat((value / 4.33).toFixed(2)));
   };
 
   return (
-    <div className="glass-card p-6 space-y-4">
-      <h3 className="text-lg font-medium">Service Delivery Method</h3>
-      
-      <div className="space-y-3">
-        <Label>How will services be delivered?</Label>
-        <RadioGroup 
-          value={formData.billingDetails.serviceDeliveryType || 'direct'} 
-          onValueChange={(value) => handleNestedChange('billingDetails', 'serviceDeliveryType', value)}
-          className="flex flex-col space-y-1"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="direct" id="direct" />
-            <Label htmlFor="direct">Direct Employees</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="contractor" id="contractor" />
-            <Label htmlFor="contractor">Contractor</Label>
-          </div>
-        </RadioGroup>
-      </div>
-      
-      {formData.billingDetails.serviceDeliveryType === 'direct' ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="weekly-budget">Weekly Budget ($)</Label>
-              <Input
-                id="weekly-budget"
-                type="number"
-                placeholder="0.00"
-                value={formData.billingDetails.weeklyBudget || ''}
-                onChange={(e) => handleNestedChange('billingDetails', 'weeklyBudget', parseFloat(e.target.value))}
-                className="glass-input"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Annual Labor Cost Forecast</Label>
-              <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                <Calculator className="w-4 h-4 mr-2 text-muted-foreground" />
-                ${annualDirectCost.toFixed(2)}
-              </div>
-            </div>
-          </div>
-          
-          <LaborPlanSection
-            formData={formData}
-            handleNestedChange={handleNestedChange}
-          />
+    <Card className="mb-6">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Service Delivery Method</CardTitle>
+          <CardDescription>How the service is delivered and billed</CardDescription>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="contractor-cost-frequency">Cost Entry Frequency</Label>
+        <Popover>
+          <PopoverTrigger>
+            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+          </PopoverTrigger>
+          <PopoverContent className="w-80 text-sm">
+            <p>Configure how the service is delivered and how contractors are paid.</p>
+            <p className="mt-2">
+              For contractor payment frequency, select how often you pay the contractor. The system will 
+              automatically calculate the equivalent weekly, monthly, and annual costs.
+            </p>
+          </PopoverContent>
+        </Popover>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="serviceType">Service Type</Label>
             <Select 
-              value={costFrequency}
-              onValueChange={(value: 'weekly' | 'monthly' | 'annually') => handleCostFrequencyChange(value)}
+              value={formData.billingDetails?.serviceType || 'cleaning'} 
+              onValueChange={(value) => updateFormField('billingDetails', 'serviceType', value)}
             >
-              <SelectTrigger id="contractor-cost-frequency" className="glass-input">
-                <SelectValue placeholder="Select frequency" />
+              <SelectTrigger id="serviceType">
+                <SelectValue placeholder="Select service type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="annually">Annual</SelectItem>
+                <SelectItem value="cleaning">Cleaning</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="security">Security</SelectItem>
+                <SelectItem value="landscaping">Landscaping</SelectItem>
+                <SelectItem value="waste_management">Waste Management</SelectItem>
+                <SelectItem value="pest_control">Pest Control</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="contractor-cost">
-                {costFrequency === 'weekly' ? 'Weekly' : 
-                 costFrequency === 'monthly' ? 'Monthly' : 'Annual'} Contractor Cost ($)
-              </Label>
-              <Input
-                id="contractor-cost"
-                type="number"
-                placeholder="0.00"
-                value={
-                  costFrequency === 'weekly' ? formData.billingDetails.weeklyContractorCost || '' :
-                  costFrequency === 'monthly' ? formData.billingDetails.monthlyContractorCost || '' :
-                  formData.billingDetails.annualContractorCost || ''
-                }
-                onChange={(e) => handleCostChange(parseFloat(e.target.value) || 0)}
-                className="glass-input"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contractor-invoice-frequency">Contractor Invoice Frequency</Label>
+          
+          <div>
+            <Label htmlFor="deliveryMethod">Delivery Method</Label>
+            <Select 
+              value={formData.billingDetails?.deliveryMethod || 'direct'} 
+              onValueChange={(value) => updateFormField('billingDetails', 'deliveryMethod', value)}
+            >
+              <SelectTrigger id="deliveryMethod">
+                <SelectValue placeholder="Select delivery method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="direct">Direct Service</SelectItem>
+                <SelectItem value="subcontractor">Subcontractor</SelectItem>
+                <SelectItem value="mixed">Mixed Model</SelectItem>
+                <SelectItem value="self_performed">Self-Performed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-medium mb-3">Contractor Payment</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="contractorCostFrequency">Payment Frequency</Label>
               <Select 
-                value={formData.billingDetails.contractorInvoiceFrequency || 'monthly'}
-                onValueChange={(value) => handleNestedChange('billingDetails', 'contractorInvoiceFrequency', value)}
+                value={formData.billingDetails?.contractorCostFrequency || 'weekly'} 
+                onValueChange={handleFrequencyChange}
               >
-                <SelectTrigger id="contractor-invoice-frequency" className="glass-input">
+                <SelectTrigger id="contractorCostFrequency">
                   <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
@@ -169,59 +149,81 @@ export function ServiceDeliveryMethod({
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <Label htmlFor="weeklyContractorCost">Weekly Amount</Label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                <Input
+                  id="weeklyContractorCost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="pl-8"
+                  value={formData.billingDetails?.weeklyContractorCost || ''}
+                  onChange={(e) => handleWeeklyAmountChange(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="monthlyContractorCost">Monthly Amount</Label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                <Input
+                  id="monthlyContractorCost"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="pl-8"
+                  value={formData.billingDetails?.monthlyContractorCost || ''}
+                  onChange={(e) => handleMonthlyAmountChange(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+            </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-4 border p-3 rounded-md bg-gray-50 dark:bg-gray-800">
-            <div className="space-y-1 text-center">
-              <Label className="text-xs text-muted-foreground">Weekly Cost</Label>
-              <p className="font-medium">${formData.billingDetails.weeklyContractorCost?.toFixed(2) || '0.00'}</p>
+          
+          <div className="mt-4">
+            <Label htmlFor="contractorInvoiceFrequency">Contractor Invoice Frequency</Label>
+            <Select 
+              value={formData.billingDetails?.contractorInvoiceFrequency || 'monthly'} 
+              onValueChange={(value) => updateFormField('billingDetails', 'contractorInvoiceFrequency', value)}
+            >
+              <SelectTrigger id="contractorInvoiceFrequency">
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-medium mb-3">Cost Summary</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-xs text-muted-foreground">Weekly Cost</p>
+              <p className="text-lg font-bold">${(formData.billingDetails?.weeklyContractorCost || 0).toFixed(2)}</p>
             </div>
-            <div className="space-y-1 text-center">
-              <Label className="text-xs text-muted-foreground">Monthly Cost</Label>
-              <p className="font-medium">${formData.billingDetails.monthlyContractorCost?.toFixed(2) || '0.00'}</p>
+            
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-xs text-muted-foreground">Monthly Cost</p>
+              <p className="text-lg font-bold">${(formData.billingDetails?.monthlyContractorCost || 0).toFixed(2)}</p>
             </div>
-            <div className="space-y-1 text-center">
-              <Label className="text-xs text-muted-foreground">Annual Cost</Label>
-              <p className="font-medium">${formData.billingDetails.annualContractorCost?.toFixed(2) || '0.00'}</p>
+            
+            <div className="p-3 bg-muted rounded-md">
+              <p className="text-xs text-muted-foreground">Annual Cost</p>
+              <p className="text-lg font-bold">${((formData.billingDetails?.monthlyContractorCost || 0) * 12).toFixed(2)}</p>
             </div>
           </div>
         </div>
-      )}
-      
-      {(formData.billingDetails.serviceDeliveryType === 'direct' && formData.billingDetails.weeklyBudget) || 
-        (formData.billingDetails.serviceDeliveryType === 'contractor' && formData.billingDetails.annualContractorCost) ? (
-        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
-          <h4 className="font-medium mb-2">Profit Calculation</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Annual Revenue</p>
-              <p className="font-medium">${annualValue.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Annual Cost</p>
-              <p className="font-medium">
-                ${formData.billingDetails.serviceDeliveryType === 'direct' 
-                  ? annualDirectCost.toFixed(2) 
-                  : formData.billingDetails.annualContractorCost?.toFixed(2) || '0.00'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Annual Profit</p>
-              <p className="font-medium">
-                ${(annualValue - (formData.billingDetails.serviceDeliveryType === 'direct' 
-                  ? annualDirectCost 
-                  : formData.billingDetails.annualContractorCost || 0)).toFixed(2)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Profit Margin</p>
-              <p className={`font-medium ${profitMargin < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                {profitMargin.toFixed(2)}%
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
