@@ -56,4 +56,40 @@ export interface BillingDetails {
   paymentTerms?: string;
   serviceType?: string;
   deliveryMethod?: string;
+  
+  // Additional fields for missing properties
+  invoiceMethod?: string;
+  accountNumber?: string;
+  taxId?: string;
+  notes?: string;
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string;
+  billingHoldEndDate?: string;
+  billingHoldReason?: string;
+  invoiceFrequency?: string;
+  xeroContactId?: string;
+  
+  // Service delivery props
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  annualContractorCost?: number;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  
+  // Labor plan
+  laborPlan?: {
+    staffingLevel?: string;
+    headcount?: number;
+    hoursPerWeek?: number;
+    costPerHour?: number;
+    daysPerWeek?: number;
+    hoursPerDay?: number;
+    weeklyHours?: number;
+    ratePerHour?: number;
+  };
 }
+
+// Export the BillingFrequency type to ensure it's accessible
+export { BillingFrequency };

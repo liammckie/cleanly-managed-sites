@@ -11,7 +11,7 @@ export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly
 export type ContractType = 'cleaning' | 'maintenance' | 'security' | 'other';
 
 // Quote types
-export type QuoteShift = {
+export interface QuoteShift {
   id: string;
   quoteId: string;
   day: string;
@@ -25,9 +25,9 @@ export type QuoteShift = {
   estimatedCost: number;
   location?: string;
   notes?: string;
-};
+}
 
-export type Subcontractor = {
+export interface Subcontractor {
   id: string;
   quoteId: string;
   name: string;
@@ -40,10 +40,34 @@ export type Subcontractor = {
   service?: string;
   notes?: string;
   rate?: number;
-};
+  customServices?: string;
+  monthlyCost?: number;
+  isFlatRate?: boolean;
+}
 
 // PayCondition type for award calculations
-export type PayCondition = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
+export type PayCondition = 
+  'base' | 
+  'standard' | 
+  'weekday' | 
+  'shift-early-late' | 
+  'saturday' | 
+  'sunday' | 
+  'public-holiday' | 
+  'early_morning' | 
+  'evening' | 
+  'night' | 
+  'overnight' | 
+  'overtime-first-2-hours' | 
+  'overtime-after-2-hours' | 
+  'overtime-sunday' | 
+  'overtime-public-holiday' |
+  'public_holiday' | 
+  'monday' | 
+  'tuesday' | 
+  'wednesday' | 
+  'thursday' | 
+  'friday';
 
 // Award calculation types
 export interface RateDefinition {

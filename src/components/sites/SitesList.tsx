@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,16 +17,15 @@ import { SiteRecord } from '@/lib/types';
 import { ViewToggle } from '@/components/ui/data-table/ViewToggle';
 import { TabulatorView } from '@/components/ui/data-table/TabulatorView';
 import { formatCurrency } from '@/lib/utils';
+import { useAsyncData, getErrorMessage } from '@/hooks/useAsyncData';
 
 export function SitesList() {
-  const { sites, isLoading, error } = useSites();
+  const { sites, isLoading: sitesLoading, error: sitesError } = useAsyncData(sitesData);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [view, setView] = useState<'grid' | 'table'>('table');
 
-  // Filter sites based on search and status
   const filteredSites = sites.filter(site => {
-    // Filter by search term
     const matchesSearch = 
       site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       site.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -35,19 +33,16 @@ export function SitesList() {
       (site.representative && site.representative.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (site.client_name && site.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filter by status
     const matchesStatus = statusFilter === 'all' || site.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate annual billing amount
   const getAnnualBilling = (site: SiteRecord) => {
     if (!site.monthly_revenue) return null;
     return site.monthly_revenue * 12;
   };
 
-  // Get service delivery type from billing details
   const getServiceDeliveryType = (site: SiteRecord) => {
     if (site.billing_details && typeof site.billing_details === 'string') {
       try {
@@ -60,7 +55,6 @@ export function SitesList() {
     return 'direct';
   };
 
-  // Table columns for tabulator
   const tabulatorColumns = [
     { title: "Name", field: "name", headerFilter: true, sorter: "string", width: 200 },
     { title: "Client", field: "client_name", headerFilter: true, sorter: "string" },
@@ -69,7 +63,7 @@ export function SitesList() {
       field: "service_delivery_type", 
       headerFilter: "list", 
       headerFilterParams: { values: { direct: "Direct", contractor: "Contractor" } },
-      formatter: "plaintext", // Changed from "text" to "plaintext"
+      formatter: "plaintext",
       mutator: function(value: any, data: any) {
         return data.service_delivery_type || 'direct';
       }
@@ -158,7 +152,7 @@ export function SitesList() {
       mutator: function(value: any, data: any) {
         if (!data.monthly_revenue || !data.monthly_cost || data.monthly_revenue <= 0) return 0;
         const margin = ((data.monthly_revenue - data.monthly_cost) / data.monthly_revenue) * 100;
-        return Math.round(margin * 10) / 10; // Round to 1 decimal place
+        return Math.round(margin * 10) / 10;
       }
     },
     { title: "Status", field: "status", headerFilter: "list", headerFilterParams: { values: { active: "Active", inactive: "Inactive", pending: "Pending" } } },
@@ -176,7 +170,9 @@ export function SitesList() {
     }
   ];
 
-  if (isLoading) {
+  const errorMessage = sitesError ? getErrorMessage(sitesError) : '';
+
+  if (isLoading || sitesLoading) {
     return (
       <div className="flex justify-center items-center h-60">
         <LoadingSpinner />
@@ -184,10 +180,10 @@ export function SitesList() {
     );
   }
 
-  if (error) {
+  if (error || sitesError) {
     return (
       <div className="rounded-lg p-8 text-center border border-border bg-card">
-        <p className="text-lg text-destructive">Error loading sites: {error.message || 'Unknown error'}</p>
+        <p className="text-lg text-destructive">{errorMessage}</p>
         <Button className="mt-4" variant="outline" onClick={() => window.location.reload()}>
           Try Again
         </Button>
@@ -195,7 +191,6 @@ export function SitesList() {
     );
   }
 
-  // Add service delivery type data for the table view
   const enhancedSiteData = filteredSites.map(site => {
     let serviceDeliveryType = 'direct';
     if (site.billing_details) {
@@ -206,7 +201,6 @@ export function SitesList() {
           
         serviceDeliveryType = billingDetails.serviceDeliveryType || 'direct';
       } catch (e) {
-        // Default to direct if parsing fails
       }
     }
     

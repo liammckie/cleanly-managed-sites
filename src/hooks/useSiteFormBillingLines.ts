@@ -1,29 +1,72 @@
-
 import { useState } from 'react';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { BillingLine } from '@/components/sites/forms/types/billingTypes';
+import { BillingFrequency } from '@/lib/types/commonTypes';
 import { v4 as uuidv4 } from 'uuid';
-import { BillingFrequency } from '@/components/sites/forms/types/billingTypes';
 
-export interface BillingLine {
-  id: string;
-  description: string;
-  amount: number;
-  frequency: BillingFrequency;
-  isRecurring: boolean;
-  weeklyAmount?: number;
-  monthlyAmount?: number;
-  annualAmount?: number;
-  onHold?: boolean;
-  holdStartDate?: string;
-  holdEndDate?: string;
-  creditAmount?: number;
-  creditDate?: string;
-  creditReason?: string;
-}
+export type BillingLineFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
 
-export const useSiteFormBillingLines = (initialLines: BillingLine[] = []) => {
-  const [billingLines, setBillingLines] = useState<BillingLine[]>(initialLines);
+export function useSiteFormBillingLines(formData: SiteFormData, setFormData: (data: SiteFormData) => void) {
+  const updateBillingLine = (id: string, field: string, value: any) => {
+    setFormData({
+      ...formData,
+      billingDetails: {
+        ...formData.billingDetails,
+        billingLines: formData.billingDetails?.billingLines?.map(line =>
+          line.id === id ? { ...line, [field]: value } : line
+        )
+      }
+    });
+  };
 
-  // Add a new billing line
+  const removeBillingLine = (id: string) => {
+    setFormData({
+      ...formData,
+      billingDetails: {
+        ...formData.billingDetails,
+        billingLines: formData.billingDetails?.billingLines?.filter(line => line.id !== id)
+      }
+    });
+  };
+
+  const calculateBillingTotals = () => {
+    if (!formData.billingDetails?.billingLines) return { weekly: 0, monthly: 0, annual: 0 };
+
+    let weekly = 0;
+    let monthly = 0;
+    let annual = 0;
+
+    formData.billingDetails.billingLines.forEach(line => {
+      switch (line.frequency) {
+        case 'weekly':
+          weekly += line.amount;
+          break;
+        case 'monthly':
+          monthly += line.amount;
+          break;
+        case 'quarterly':
+          monthly += line.amount / 3;
+          break;
+        case 'annually':
+          annual += line.amount;
+          break;
+        case 'one-time':
+          // One-time billing lines don't contribute to recurring totals
+          break;
+        case 'fortnightly':
+          weekly += line.amount / 2;
+          break;
+        default:
+          break;
+      }
+    });
+
+    annual = monthly * 12;
+    weekly = annual / 52;
+
+    return { weekly, monthly, annual };
+  };
+
   const addBillingLine = () => {
     const newLine: BillingLine = {
       id: uuidv4(),
@@ -32,29 +75,23 @@ export const useSiteFormBillingLines = (initialLines: BillingLine[] = []) => {
       frequency: 'monthly',
       isRecurring: true
     };
-    
-    setBillingLines(prev => [...prev, newLine]);
-  };
 
-  // Remove a billing line by ID
-  const removeBillingLine = (id: string) => {
-    setBillingLines(prev => prev.filter(line => line.id !== id));
-  };
-
-  // Update a field in a billing line
-  const updateBillingLine = (id: string, field: string, value: any) => {
-    setBillingLines(prev => 
-      prev.map(line => 
-        line.id === id ? { ...line, [field]: value } : line
-      )
-    );
+    setFormData({
+      ...formData,
+      billingDetails: {
+        ...formData.billingDetails,
+        billingLines: [
+          ...(formData.billingDetails?.billingLines || []),
+          newLine
+        ]
+      }
+    });
   };
 
   return {
-    billingLines,
-    setBillingLines,
     addBillingLine,
+    updateBillingLine,
     removeBillingLine,
-    updateBillingLine
+    calculateBillingTotals
   };
-};
+}

@@ -1,75 +1,40 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi, SystemUser } from '@/lib/api/users';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { usersApi } from '@/lib/api/users'; 
+import { SystemUser } from '@/lib/types';
 
 export function useUsers() {
-  const { data = [], isLoading, error } = useQuery({
+  const usersQuery = useQuery({
     queryKey: ['users'],
-    queryFn: usersApi.getUsers
-  });
-
-  return { users: data, isLoading, error };
-}
-
-export function useUser(userId: string) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const queryClient = useQueryClient();
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['user', userId],
-    queryFn: () => usersApi.getUser(userId),
-    enabled: !!userId
-  });
-
-  const updateUserMutation = useMutation({
-    mutationFn: (userData: Partial<SystemUser>) => {
-      setIsUpdating(true);
-      return usersApi.updateUser(userId, userData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user', userId] });
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      setIsUpdating(false);
-    },
-    onError: () => {
-      setIsUpdating(false);
+    queryFn: async () => {
+      try {
+        return await usersApi.getUsers();
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
     }
   });
 
-  const updateUser = async (userData: Partial<SystemUser>) => {
-    return updateUserMutation.mutateAsync(userData);
-  };
-
-  return {
-    user: data as SystemUser,
-    isLoading,
-    error,
-    updateUser,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ['user', userId] })
-  };
-}
-
-export function useCreateUser() {
-  const [isCreating, setIsCreating] = useState(false);
-  const queryClient = useQueryClient();
-
-  const createUserMutation = useMutation({
-    mutationFn: (userData: Partial<SystemUser>) => {
-      setIsCreating(true);
-      return usersApi.createUser(userData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      setIsCreating(false);
-    },
-    onError: () => {
-      setIsCreating(false);
+  const userRolesQuery = useQuery({
+    queryKey: ['userRoles'],
+    queryFn: async () => {
+      try {
+        // This would be implemented in userRolesApi
+        // For now return a simple array
+        return [{ id: '1', name: 'Admin' }, { id: '2', name: 'User' }];
+      } catch (error) {
+        console.error('Error fetching user roles:', error);
+        throw error;
+      }
     }
   });
 
   return {
-    createUser: createUserMutation.mutateAsync,
-    isCreating
+    users: usersQuery.data as SystemUser[] || [],
+    userRoles: userRolesQuery.data || [],
+    isLoading: usersQuery.isLoading || userRolesQuery.isLoading,
+    isError: usersQuery.isError || userRolesQuery.isError,
+    error: usersQuery.error || userRolesQuery.error
   };
 }

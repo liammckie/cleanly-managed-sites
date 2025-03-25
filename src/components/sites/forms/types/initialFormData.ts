@@ -8,15 +8,12 @@ export const getInitialFormData = (): SiteFormData => {
     address: '',
     city: '',
     state: '',
-    postalCode: '', // Changed from postcode
+    postalCode: '', // Corrected from postcode
     country: 'Australia',
-    client_id: '',  // Changed from clientId
+    client_id: '',  // Corrected from clientId
     representative: '',
-    contactDetails: {
-      email: '',
-      phone: '',
-      notes: ''
-    },
+    // Changed contactDetails to be included in contact property or removed
+    // contactDetails removed
     status: 'pending' as SiteStatus,
     monthlyRevenue: 0,
     annualRevenue: 0,

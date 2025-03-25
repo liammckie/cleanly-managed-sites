@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { EmploymentType, PayCondition, EmployeeLevel } from '@/lib/award/types';
 import { calculateJobCost } from '@/lib/award/awardEngine';
@@ -13,6 +12,7 @@ const conditionDisplayNames: Record<PayCondition, string> = {
   'saturday': 'Saturday',
   'sunday': 'Sunday',
   'public-holiday': 'Public Holiday',
+  'public_holiday': 'Public Holiday',
   'early_morning': 'Early Morning',
   'evening': 'Evening',
   'night': 'Night',
@@ -20,7 +20,12 @@ const conditionDisplayNames: Record<PayCondition, string> = {
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
   'overtime-sunday': 'Overtime (Sunday)',
-  'overtime-public-holiday': 'Overtime (Public Holiday)'
+  'overtime-public-holiday': 'Overtime (Public Holiday)',
+  'monday': 'Monday',
+  'tuesday': 'Tuesday',
+  'wednesday': 'Wednesday',
+  'thursday': 'Thursday',
+  'friday': 'Friday'
 };
 
 export function JobCostCalculator() {
@@ -37,6 +42,7 @@ export function JobCostCalculator() {
     'saturday': 0,
     'sunday': 0,
     'public-holiday': 0,
+    'public_holiday': 0,
     'early_morning': 0,
     'evening': 0,
     'night': 0,
@@ -44,7 +50,12 @@ export function JobCostCalculator() {
     'overtime-first-2-hours': 0,
     'overtime-after-2-hours': 0,
     'overtime-sunday': 0,
-    'overtime-public-holiday': 0
+    'overtime-public-holiday': 0,
+    'monday': 0,
+    'tuesday': 0,
+    'wednesday': 0,
+    'thursday': 0,
+    'friday': 0
   });
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [marginPercentage, setMarginPercentage] = useState(20);

@@ -6,6 +6,7 @@ import { ContractCharts } from './ContractCharts';
 import { ContractExpiryList } from './ContractExpiryList'; 
 import { useContractForecast } from '@/hooks/useContractForecast';
 import { useSites } from '@/hooks/useSites';
+import { useAsyncData } from '@/hooks/useAsyncData';
 
 /**
  * Dashboard component for contract management
@@ -13,8 +14,9 @@ import { useSites } from '@/hooks/useSites';
  */
 export function ContractDashboard() {
   const { contractData, groupedContracts, isLoading } = useContracts();
-  const { sites } = useSites();
-  const { forecastData, summaryData } = useContractForecast(sites || []);
+  const { sites: sitesData } = useSites();
+  const { data: sites } = useAsyncData(sitesData);
+  const { forecastData, summaryData } = useContractForecast(sites);
   
   return (
     <div className="space-y-6">
@@ -35,7 +37,7 @@ export function ContractDashboard() {
         
         {/* Contract expirations list */}
         <ContractExpiryList 
-          sites={sites || []} 
+          sites={sites} 
           isLoading={isLoading} 
         />
       </div>

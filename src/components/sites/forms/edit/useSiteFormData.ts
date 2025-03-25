@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { SiteFormData } from '../types/siteFormData';
 import { SiteRecord } from '@/lib/types';
@@ -24,7 +23,7 @@ export function useSiteFormData(
         city: site.city || '',
         state: site.state || '',
         postalCode: site.postcode || '', // Map postcode to postalCode
-        status: site.status || 'active',
+        status: site.status === 'on-hold' ? 'on_hold' : site.status,
         // Set contract details if available
         contract_details: {
           ...formData.contract_details,
@@ -77,7 +76,7 @@ export function useSiteFormData(
         }
       });
     }
-  }, [site]);
+  }, [site, setFormData]);
 
   return { formData };
 }

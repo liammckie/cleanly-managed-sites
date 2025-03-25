@@ -1,45 +1,50 @@
 
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { parseError } from '@/lib/utils/errorHandling';
+import { getErrorMessage } from './useAsyncData';
 
-export function useErrorHandledQuery<TData, TError = unknown>(
-  queryKey: string[],
-  queryFn: () => Promise<TData>,
-  options?: Omit<UseQueryOptions<TData, TError, TData, string[]>, 'queryKey' | 'queryFn'> & {
+/**
+ * A wrapper for react-query's useQuery that provides consistent error handling
+ */
+export function useErrorHandledQuery<
+  TData,
+  TError = Error,
+  TQueryKey extends Array<any> = Array<any>
+>(
+  queryOptions: Omit<UseQueryOptions<TData, TError, TData, TQueryKey>, 'onError'> & {
     errorMessage?: string;
     showErrorToast?: boolean;
+    onCustomError?: (error: TError) => void;
   }
 ): UseQueryResult<TData, TError> {
   const {
-    errorMessage = 'Failed to load data',
+    errorMessage = 'An error occurred while fetching data',
     showErrorToast = true,
-    ...queryOptions
-  } = options || {};
+    onCustomError,
+    ...restOptions
+  } = queryOptions;
 
-  return useQuery({
-    queryKey,
-    queryFn,
-    ...queryOptions,
+  // Use react-query's useQuery with custom error handling
+  return useQuery<TData, TError, TData, TQueryKey>({
+    ...restOptions,
     meta: {
-      ...queryOptions.meta,
-      errorCallback: (error: unknown) => {
-        const parsedError = parseError(error);
-        console.error(`Query error [${queryKey.join(', ')}]:`, parsedError);
-        
+      ...restOptions.meta,
+      onError: (error: TError) => {
+        // Show error toast if enabled
         if (showErrorToast) {
-          toast.error(errorMessage, {
-            description: parsedError.message,
-          });
+          toast.error(`${errorMessage}: ${getErrorMessage(error)}`);
         }
         
-        // Call the user's onError callback if provided in meta
-        if (queryOptions.meta?.errorCallback) {
-          queryOptions.meta.errorCallback(error);
+        // Call custom error handler if provided
+        if (onCustomError) {
+          onCustomError(error);
+        }
+        
+        // Call the original onError if provided in meta
+        if (restOptions.meta?.onError) {
+          (restOptions.meta.onError as any)(error);
         }
       }
     }
   });
 }
-
-export default useErrorHandledQuery;

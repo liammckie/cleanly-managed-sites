@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatCurrency, formatDate } from '@/lib/utils/formatting';
 import { MoreHorizontal, FileEdit, Trash2, Copy, Download } from 'lucide-react';
+
+// Simple formatting utilities
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+};
+
+const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-AU', { year: 'numeric', month: 'short', day: 'numeric' });
+};
 
 // Define the contract data type
 export interface ContractData {
@@ -154,3 +163,6 @@ export const contractColumns: ColumnDef<ContractData>[] = [
     },
   },
 ];
+
+// Export a function to get the columns for compatibility
+export const getColumns = () => contractColumns;
