@@ -12,8 +12,8 @@ export const validateBasicInfo = (formData: SiteFormData): SiteFormValidationErr
   if (!formData.address) errors.address = 'Address is required';
   if (!formData.city) errors.city = 'City is required';
   if (!formData.state) errors.state = 'State is required';
-  if (!formData.postcode) errors.postcode = 'Postcode is required';
-  if (!formData.clientId) errors.clientId = 'Client is required';
+  if (!formData.postalCode) errors.postalCode = 'Postal code is required'; // Changed from postcode
+  if (!formData.client_id) errors.client_id = 'Client is required'; // Changed from clientId
   
   return errors;
 };

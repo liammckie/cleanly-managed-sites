@@ -19,15 +19,15 @@ export function useSiteFormData(
       const updatedFormData: SiteFormData = {
         ...formData,
         name: site.name || '',
-        clientId: site.client_id || '',
+        client_id: site.client_id || '',
         address: site.address || '',
         city: site.city || '',
         state: site.state || '',
-        postcode: site.postcode || '',
+        postalCode: site.postcode || '', // Map postcode to postalCode
         status: site.status || 'active',
         // Set contract details if available
-        contractDetails: {
-          ...formData.contractDetails,
+        contract_details: {
+          ...formData.contract_details,
           contractType: site.contract_details && typeof site.contract_details === 'object' 
             ? (site.contract_details as any).contractType || 'cleaning'
             : 'cleaning'

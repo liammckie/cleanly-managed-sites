@@ -8,9 +8,9 @@ export const getInitialFormData = (): SiteFormData => {
     address: '',
     city: '',
     state: '',
-    postcode: '',
+    postalCode: '', // Changed from postcode
     country: 'Australia',
-    clientId: '',
+    client_id: '',  // Changed from clientId
     representative: '',
     contactDetails: {
       email: '',
@@ -22,7 +22,7 @@ export const getInitialFormData = (): SiteFormData => {
     annualRevenue: 0,
     monthlyCost: 0,
     contacts: [],
-    contractDetails: {
+    contract_details: {  // Changed from contractDetails
       contractType: 'cleaning',
       value: 0,
       startDate: '',

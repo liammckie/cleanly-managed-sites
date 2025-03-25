@@ -1,37 +1,28 @@
 
-export interface ServiceOption {
-  value: string;
-  label: string;
-  selected?: boolean;
-}
-
 export interface Subcontractor {
   id?: string;
-  businessName?: string;
-  contactName?: string;
+  businessName: string;
+  contactName: string;
   email?: string;
   phone?: string;
   services?: string[];
-  customServices?: string;
-  monthlyCost?: number;
-  isFlatRate?: boolean;
+  service?: string;
+  isActive?: boolean;
+  notes?: string;
+  rate?: number;
+  frequency?: string;
 }
 
-// Define service options
-export const serviceOptions: ServiceOption[] = [
-  { value: 'cleaning', label: 'Cleaning' },
-  { value: 'gardening', label: 'Gardening' },
-  { value: 'security', label: 'Security' },
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'waste', label: 'Waste Management' },
-  { value: 'pest', label: 'Pest Control' },
-  { value: 'window', label: 'Window Cleaning' },
-  { value: 'carpet', label: 'Carpet Cleaning' },
-  { value: 'hvac', label: 'HVAC Services' },
-  { value: 'electrical', label: 'Electrical Services' },
-  { value: 'plumbing', label: 'Plumbing Services' },
-  { value: 'landscaping', label: 'Landscaping' }
+// Add SERVICE_OPTIONS for backward compatibility
+export const SERVICE_OPTIONS = [
+  { label: 'Cleaning', value: 'cleaning' },
+  { label: 'Maintenance', value: 'maintenance' },
+  { label: 'Security', value: 'security' },
+  { label: 'Landscaping', value: 'landscaping' },
+  { label: 'Waste Management', value: 'waste_management' },
+  { label: 'Pest Control', value: 'pest_control' },
+  { label: 'Other', value: 'other' }
 ];
 
-// Add an alias for backward compatibility
-export const SERVICE_OPTIONS = serviceOptions;
+// Export in camelCase for modern components
+export const serviceOptions = SERVICE_OPTIONS;

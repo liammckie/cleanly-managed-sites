@@ -31,7 +31,8 @@ function App() {
       showToast={true}
       fallback={<ErrorPage />}
     >
-      <Routes errorElement={<GlobalErrorPage />}>
+      {/* Removed errorElement prop as it's not supported in react-router v6 Routes component */}
+      <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={
           <ProtectedRoute>

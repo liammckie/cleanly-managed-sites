@@ -5,17 +5,16 @@ import { Subcontractor } from './subcontractorTypes';
 import { SecurityDetails } from './securityTypes';
 import { Periodicals } from './periodicalTypes';
 import { AdHocWorkAuthorization } from './adHocWorkTypes';
-
-export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on_hold';
+import { SiteStatus } from '@/lib/types/commonTypes';
 
 export interface SiteFormData {
   name: string;
   address: string;
   city: string;
   state: string;
-  postalCode: string;
+  postalCode: string;  // Changed from postcode for consistency
   country: string;
-  client_id?: string;
+  client_id?: string;   // Changed from clientId to match backend
   client_name?: string;
   status: SiteStatus;
   phone?: string;
@@ -34,11 +33,11 @@ export interface SiteFormData {
     email: string;
     phone: string;
     role: string;
-    isPrimary?: boolean;
+    isPrimary?: boolean;  // Changed from is_primary
     department?: string;
     notes?: string;
   }[];
-  contract_details?: ContractDetails;
+  contract_details?: ContractDetails;  // Changed from contractDetails
   useClientInfo?: boolean;
   billingDetails?: BillingDetails;
   additionalContracts?: ContractDetails[];
@@ -73,3 +72,12 @@ export interface SiteFormData {
     annualContractorCost?: number;
   };
 }
+
+// Add compatible aliases to support existing code
+export type {
+  SiteStatus
+}
+
+// Export alias names for backward compatibility
+import { SiteStatus as SiteStatusType } from '@/lib/types/commonTypes';
+export const siteStatusOptions: SiteStatusType[] = ['active', 'pending', 'inactive', 'lost', 'on_hold'];

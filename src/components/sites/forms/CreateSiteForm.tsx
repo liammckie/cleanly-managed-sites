@@ -138,12 +138,12 @@ export function CreateSiteForm() {
                 };
                 
                 // If setting as primary, update others
-                if (field === 'is_primary' && value === true) {
+                if (field === 'isPrimary' && value === true) {
                   updatedContacts.forEach((contact, i) => {
-                    if (i !== index && contact.is_primary) {
+                    if (i !== index && contact.isPrimary) {
                       updatedContacts[i] = {
                         ...contact,
-                        is_primary: false
+                        isPrimary: false
                       };
                     }
                   });
@@ -158,7 +158,7 @@ export function CreateSiteForm() {
                 name: '',
                 role: 'operations',
                 entity_type: 'site',
-                is_primary: formHandlers.formData.contacts.length === 0,
+                isPrimary: formHandlers.formData.contacts.length === 0,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               };
@@ -175,17 +175,30 @@ export function CreateSiteForm() {
               
               // If we removed the primary contact and there are still contacts,
               // make the first one primary
-              if (formHandlers.formData.contacts[index]?.is_primary && updatedContacts.length > 0) {
+              if (formHandlers.formData.contacts[index]?.isPrimary && updatedContacts.length > 0) {
                 updatedContacts[0] = {
                   ...updatedContacts[0],
-                  is_primary: true
+                  isPrimary: true
                 };
               }
               
               formHandlers.handleChange({ target: { name: 'contacts', value: updatedContacts } } as any);
             }}
-            addExistingContact={formHandlers.addExistingContact}
-            setAsPrimary={formHandlers.setAsPrimary}
+            addExistingContact={formHandlers.addBillingContact} // Use available method
+            setAsPrimary={(index) => {
+              // Handle setting primary contact
+              const updatedContacts = [...formHandlers.formData.contacts];
+              
+              // First, set all contacts to not primary
+              updatedContacts.forEach((contact, i) => {
+                updatedContacts[i] = {
+                  ...contact,
+                  isPrimary: i === index
+                };
+              });
+              
+              formHandlers.handleChange({ target: { name: 'contacts', value: updatedContacts } } as any);
+            }}
             toggleUseClientInfo={(value) => {
               // Call the client data toggle function if it exists
               if (formHandlers.handleChange) {

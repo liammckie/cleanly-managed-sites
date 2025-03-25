@@ -1,8 +1,5 @@
 
-import { Frequency } from '@/lib/award/types';
-
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
-export type InvoiceMethod = 'email' | 'post' | 'both';
+import { BillingFrequency } from '@/lib/types/commonTypes';
 
 export interface BillingLine {
   id: string;
@@ -22,62 +19,41 @@ export interface BillingLine {
 }
 
 export interface BillingContact {
-  id?: string;
+  id: string;
   name: string;
   email: string;
-  phone?: string;
-  position?: string;
-  isPrimary?: boolean;
+  phone: string;
+  role: string;
 }
 
 export interface BillingDetails {
-  // Basic billing information
-  rate?: number;
   billingFrequency?: BillingFrequency;
-  invoiceFrequency?: BillingFrequency;
-  invoiceMethod?: InvoiceMethod;
-  accountNumber?: string;
-  taxId?: string;
-  xeroContactId?: string;
-  notes?: string;
-
-  // Billing address
-  useSiteAddress?: boolean;
+  billingLines?: BillingLine[];
   billingAddress?: string;
   billingCity?: string;
   billingState?: string;
   billingPostcode?: string;
   billingEmail?: string;
-  
-  // Billing contacts
+  useSiteAddress?: boolean;
   contacts?: BillingContact[];
-  
-  // Billing status
-  billingOnHold?: boolean;
-  billingHoldStartDate?: string;
-  billingHoldEndDate?: string;
-  billingHoldReason?: string;
-  
-  // Billing lines
-  billingLines?: BillingLine[];
+  rate?: number;
   totalWeeklyAmount?: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
   
-  // Contractor costs
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  annualContractorCost?: number;
-  contractorCostFrequency?: string;
-  contractorInvoiceFrequency?: string;
-  
-  // Labor plan
-  laborPlan?: {
-    daysPerWeek?: number;
-    hoursPerDay?: number;
-    weeklyHours?: number;
-    ratePerHour?: number;
-  };
+  // Additional properties needed by components
+  invoiceDay?: number;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  paymentTerms?: string;
+  serviceType?: string;
+  deliveryMethod?: string;
 }

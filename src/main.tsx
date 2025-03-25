@@ -15,13 +15,19 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      onError: (error) => {
-        console.error('Query error:', error);
+      meta: {
+        // Use meta for error handling instead of onError
+        errorCallback: (error: any) => {
+          console.error('Query error:', error);
+        }
       }
     },
     mutations: {
-      onError: (error) => {
-        console.error('Mutation error:', error);
+      meta: {
+        // Use meta for error handling instead of onError
+        errorCallback: (error: any) => {
+          console.error('Mutation error:', error);
+        }
       }
     }
   },

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { SiteFormData } from '../siteFormTypes';
+import { SiteFormData } from '../types/siteFormData';
 import { sitesApi } from '@/lib/api';
 
 export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
@@ -25,7 +25,7 @@ export const useCreateSiteFormSubmit = (formData: SiteFormData) => {
       console.log('Submitting form data:', formData);
       
       // Validate critical fields before submission
-      if (!formData.name || !formData.address || !formData.clientId) {
+      if (!formData.name || !formData.address || !formData.client_id) {
         toast.error("Missing required information. Please check the form.", { id: toastId });
         setIsSubmitting(false);
         return;
