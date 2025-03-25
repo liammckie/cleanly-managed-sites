@@ -1,3 +1,4 @@
+
 export interface Quote {
   id: string;
   title: string;
@@ -73,8 +74,8 @@ export interface Subcontractor {
   rate?: number;
 }
 
-// Update Frequency to include one_time
-export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one_time';
+// Update Frequency to include daily, one_time, and per_event
+export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one_time' | 'daily' | 'per_event';
 
 export type Day =
   | 'monday'
@@ -92,7 +93,10 @@ export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 
 export interface EmployeeLevelRate {
   level: EmployeeLevel;
+  employmentType: EmploymentType;
+  baseRate: number;
   hourlyRate: number;
+  rates: Record<PayCondition, { rate: number; multiplier: number }>;
 }
 
 export interface ShiftData {
@@ -113,6 +117,9 @@ export interface JobCostingParams {
   subcontractors: Subcontractor[];
   overheadPercentage: number;
   marginPercentage: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  hours: Record<PayCondition, number>;
 }
 
 export interface JobCostBreakdown {
@@ -122,19 +129,21 @@ export interface JobCostBreakdown {
   marginAmount: number;
   totalPrice: number;
   totalCostBeforeMargin: number;
-  shiftCosts: Record<string, number>;
+  shiftCosts?: Record<string, number>;
+  laborCost?: number;
+  baseRate?: number;
+  hourlyRate?: number;
+  hourlyBreakdown?: JobCostBreakdownItem[];
 }
 
 export interface JobCostBreakdownItem {
-  description: string;
   hours: number;
   rate: number;
-  amount: number;
+  cost: number;
+  condition?: string;
 }
 
-export interface EmployeeLevelRates {
-  [level: number]: EmployeeLevelRate;
-}
+export type EmployeeLevelRates = EmployeeLevelRate;
 
 export type AllowanceType = 'laundry' | 'vehicle' | 'first_aid' | 'leading_hand' | 'meal';
 
@@ -142,4 +151,23 @@ export type PayCondition =
   'base' | 'standard' | 'weekday' | 'shift-early-late' | 'night' | 
   'saturday' | 'sunday' | 'public_holiday' | 'evening' | 
   'early_morning' | 'overnight' | 'overtime-first-2-hours' | 
-  'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public_holiday';
+  'overtime-after-2-hours' | 'overtime-sunday' | 'overtime-public-holiday';
+
+export interface AwardData {
+  name: string;
+  code: string;
+  effectiveDate: string;
+  levels: EmployeeLevelRate[];
+}
+
+export interface AwardSettings {
+  useModernAward: boolean;
+  usePenalties: boolean;
+  includeAllowances: boolean;
+  awardVersion: string;
+  customRates: boolean;
+  baseRateMultiplier: number;
+  overheadPercentageDefault: number;
+  marginPercentageDefault: number;
+  lastUpdated: string;
+}

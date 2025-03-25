@@ -1,4 +1,3 @@
-
 // Define general types for the application
 
 export type Json =
@@ -193,6 +192,33 @@ export interface SiteContact {
   is_primary?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+// WorkOrderRecord interface
+export interface WorkOrderRecord {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  site_id: string;
+  created_by: string;
+  assigned_to?: string;
+  due_date?: string;
+  completion_date?: string;
+  estimated_cost?: number;
+  actual_cost?: number;
+  billing_amount?: number;
+  requires_purchase_order: boolean;
+  purchase_order_number?: string;
+  purchaseOrderRequired?: boolean;
+  xero_invoice_id?: string;
+  xero_purchase_order_id?: string;
+  attachments?: any;
+  sync_status?: string;
+  xero_synced_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Site Status enum
