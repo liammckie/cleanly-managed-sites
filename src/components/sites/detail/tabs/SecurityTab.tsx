@@ -8,7 +8,12 @@ interface SecurityTabProps {
 }
 
 export function SecurityTab({ site }: SecurityTabProps) {
-  const securityDetails = asJsonObject(site.security_details, {});
+  const securityDetails = asJsonObject(site.security_details, {
+    accessCode: '',
+    alarmCode: '',
+    keyLocation: '',
+    outOfHoursAccess: false
+  });
   
   return (
     <div className="glass-card p-6">

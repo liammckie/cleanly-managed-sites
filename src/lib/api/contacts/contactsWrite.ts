@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { ContactRecord } from '@/lib/types';
 
 // Create a new contact
-export async function addContact(contactData: ContactRecord) {
+export async function addContact(contactData: Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>) {
   // Make sure required fields are present
   if (!contactData.name || !contactData.role || !contactData.entity_id || !contactData.entity_type) {
     throw new Error('Missing required contact fields');
@@ -37,6 +37,9 @@ export async function addContact(contactData: ContactRecord) {
   return data;
 }
 
+// Create a new contact (alias for addContact)
+export const createContact = addContact;
+
 // Update an existing contact
 export async function updateContactRecord(id: string, contactData: Partial<ContactRecord>) {
   const { data, error } = await supabase
@@ -65,6 +68,9 @@ export async function updateContactRecord(id: string, contactData: Partial<Conta
   return data;
 }
 
+// Update contact (alias for updateContactRecord)
+export const updateContact = updateContactRecord;
+
 // Delete a contact
 export async function removeContact(id: string) {
   const { error } = await supabase
@@ -79,6 +85,9 @@ export async function removeContact(id: string) {
 
   return { success: true, id };
 }
+
+// Delete contact (alias for removeContact)
+export const deleteContact = removeContact;
 
 // Set a contact as primary
 export async function makePrimaryContact(contactId: string, entityId: string, entityType: string) {
@@ -109,3 +118,6 @@ export async function makePrimaryContact(contactId: string, entityId: string, en
 
   return data;
 }
+
+// Set primary contact (alias for makePrimaryContact)
+export const setPrimaryContact = makePrimaryContact;

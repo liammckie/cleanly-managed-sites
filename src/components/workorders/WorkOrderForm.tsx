@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { CreateWorkOrderData } from '@/lib/api/workorders/types';
 import { useWorkOrders } from '@/hooks/useWorkOrders';
 import { useSubcontractors } from '@/hooks/useSubcontractors';
-import { SiteRecord } from '@/lib/types';
+import { SiteRecord, WorkOrderRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Form } from '@/components/ui/form';
@@ -43,13 +44,15 @@ export const WorkOrderForm = ({ site, onSuccess, templateId, workOrder }: WorkOr
   const [attachments, setAttachments] = useState<WorkOrderAttachment[]>([]);
   const [markAsCompleted, setMarkAsCompleted] = useState(false);
 
+  const billingDetails = asJsonObject(site.billing_details, { purchaseOrderRequired: false });
+
   const form = useForm<CreateWorkOrderData>({
     defaultValues: {
       title: '',
       description: '',
       site_id: site.id,
       priority: 'medium',
-      requires_purchase_order: site.billing_details?.purchaseOrderRequired || false,
+      requires_purchase_order: billingDetails.purchaseOrderRequired || false,
     },
   });
 
@@ -116,9 +119,6 @@ export const WorkOrderForm = ({ site, onSuccess, templateId, workOrder }: WorkOr
 
   // Get the initial attachments and purchaseOrderRequired values using asJsonObject
   const initialAttachments = workOrder ? asJsonObject(workOrder.attachments, []) : [];
-  const initialPurchaseOrderRequired = workOrder 
-    ? asJsonObject(workOrder.requires_purchase_order, false) 
-    : false;
 
   return (
     <Form {...form}>

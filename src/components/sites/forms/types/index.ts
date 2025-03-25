@@ -1,4 +1,3 @@
-
 export * from './contactTypes';
 export * from './periodicalTypes';
 export * from './jobSpecificationTypes';
@@ -14,3 +13,6 @@ export * from './initialFormData';
 // export * from './formValidation';
 // Export validationUtils last to avoid conflicts
 export * from './validationUtils';
+
+// Update SiteStatus to include "on-hold"
+export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold';

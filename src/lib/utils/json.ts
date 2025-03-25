@@ -1,93 +1,70 @@
 
-import { Json } from '../types';
+export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+export interface JsonObject { [key: string]: JsonValue }
+export interface JsonArray extends Array<JsonValue> {}
 
-// Helper function to safely access properties from JSON data
-export function getJsonProperty<T>(json: Json | undefined, path: string, defaultValue: T): T {
-  if (!json) return defaultValue;
-  
-  // Handle string JSON
-  if (typeof json === 'string') {
-    try {
-      json = JSON.parse(json);
-    } catch {
-      return defaultValue;
-    }
-  }
-  
-  // Handle non-object JSON types
-  if (typeof json !== 'object' || json === null) {
-    return defaultValue;
-  }
-  
-  const parts = path.split('.');
-  let current: any = json;
-  
-  for (const part of parts) {
-    if (current === null || current === undefined || typeof current !== 'object') {
-      return defaultValue;
-    }
-    
-    current = current[part];
-    
-    if (current === undefined) {
-      return defaultValue;
-    }
-  }
-  
-  return current as T || defaultValue;
-}
-
-// Helper function to safely parse a JSON string, with a fallback object
-export function safeParseJson(jsonString: string | Json | null | undefined, fallback: any = {}): any {
-  if (!jsonString) return fallback;
-  
-  if (typeof jsonString === 'object') {
-    return jsonString;
-  }
+/**
+ * Parse and convert a JSON value to a specific type with default values
+ * 
+ * @param jsonData The JSON data to parse, could be a string or already parsed object
+ * @param defaultValue The default value to return if parsing fails
+ * @returns The parsed object with default values for missing properties
+ */
+export function asJsonObject<T>(jsonData: any, defaultValue: T): T {
+  // If jsonData is falsy, return default
+  if (!jsonData) return defaultValue;
   
   try {
-    return JSON.parse(jsonString as string);
-  } catch (e) {
-    console.error('Error parsing JSON:', e);
-    return fallback;
+    // If jsonData is a string, try to parse it
+    const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+    
+    // If the result is not an object or is null, return default
+    if (typeof data !== 'object' || data === null) return defaultValue;
+    
+    // Merge with default values to ensure all expected properties exist
+    return { ...defaultValue, ...data };
+  } catch (error) {
+    console.error('Error parsing JSON data:', error);
+    return defaultValue;
   }
 }
 
-// Helper function to check if a JSON object has a specific property
-export function hasJsonProperty(json: Json | undefined, property: string): boolean {
-  if (!json) return false;
+/**
+ * Parse and convert a JSON string to an array with a default value
+ * 
+ * @param jsonData The JSON data to parse, could be a string or already parsed array
+ * @param defaultValue The default array to return if parsing fails
+ * @returns The parsed array or default value
+ */
+export function asJsonArray<T>(jsonData: any, defaultValue: T[]): T[] {
+  // If jsonData is falsy, return default
+  if (!jsonData) return defaultValue;
   
-  if (typeof json === 'object' && json !== null) {
-    return property in json;
+  try {
+    // If jsonData is a string, try to parse it
+    const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+    
+    // If the result is not an array, return default
+    if (!Array.isArray(data)) return defaultValue;
+    
+    return data;
+  } catch (error) {
+    console.error('Error parsing JSON array:', error);
+    return defaultValue;
   }
-  
-  if (typeof json === 'string') {
-    try {
-      const parsed = JSON.parse(json);
-      return typeof parsed === 'object' && parsed !== null && property in parsed;
-    } catch {
-      return false;
-    }
-  }
-  
-  return false;
 }
 
-// Convert JSON to a strongly typed object for better TypeScript support
-export function asJsonObject<T>(json: Json | undefined, defaultValue: T): T {
-  if (!json) return defaultValue;
-  
-  if (typeof json === 'string') {
-    try {
-      return JSON.parse(json) as T;
-    } catch {
-      return defaultValue;
-    }
+/**
+ * Safely stringify an object to JSON
+ * 
+ * @param data The data to stringify
+ * @returns JSON string or empty object string if error
+ */
+export function safeStringify(data: any): string {
+  try {
+    return JSON.stringify(data);
+  } catch (error) {
+    console.error('Error stringifying data:', error);
+    return '{}';
   }
-  
-  if (typeof json === 'object' && json !== null) {
-    return json as unknown as T;
-  }
-  
-  return defaultValue;
 }

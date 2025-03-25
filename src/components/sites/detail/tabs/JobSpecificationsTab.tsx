@@ -9,7 +9,12 @@ interface JobSpecificationsTabProps {
 }
 
 export function JobSpecificationsTab({ site }: JobSpecificationsTabProps) {
-  const jobSpecs = asJsonObject(site.job_specifications, {});
+  const jobSpecs = asJsonObject(site.job_specifications, {
+    daysPerWeek: '',
+    hoursPerDay: '',
+    directEmployees: false,
+    notes: ''
+  });
   
   return (
     <div className="glass-card p-6">

@@ -1,84 +1,44 @@
 
-import React, { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContractHistoryTable } from './ContractHistoryTable';
-import { ContractSummaryCards } from './ContractSummaryCards';
-import { ContractForecastChart } from './ContractForecastChart';
-import { ContractExpiryList } from './ContractExpiryList';
-import { SiteRecord } from '@/lib/types';
-import { ContractHistoryEntry, ContractForecast, ContractSummary } from '../forms/types/contractTypes';
-import { useContractHistory } from '@/hooks/useContractHistory';
+import React from 'react';
+import { useContracts } from '@/hooks/useContracts';
+import { ContractSummarySection } from './ContractSummarySection';
+import { ContractCharts } from './ContractCharts';
+import { ContractExpiryList } from './ContractExpiryList'; 
 import { useContractForecast } from '@/hooks/useContractForecast';
+import { useSites } from '@/hooks/useSites';
 
-interface ContractDashboardProps {
-  sites: SiteRecord[];
-  isLoading: boolean;
-}
-
-export function ContractDashboard({ sites, isLoading }: ContractDashboardProps) {
-  const [selectedSiteId, setSelectedSiteId] = React.useState<string | undefined>(
-    sites?.length > 0 ? sites[0].id : undefined
-  );
+/**
+ * Dashboard component for contract management
+ * Displays summary metrics, charts, and upcoming expirations
+ */
+export function ContractDashboard() {
+  const { contractData, groupedContracts, isLoading } = useContracts();
+  const { sites } = useSites();
+  const { forecastData, summaryData } = useContractForecast(sites || []);
   
-  const { history, isLoading: isLoadingHistory } = useContractHistory(selectedSiteId);
-  const { forecast, summary, forecastData, summaryData, isForecastLoading, isSummaryLoading } = useContractForecast(selectedSiteId);
-  
-  const selectedSite = useMemo(() => {
-    return sites?.find(site => site.id === selectedSiteId);
-  }, [sites, selectedSiteId]);
-
-  const isDataLoading = isLoading || isForecastLoading || isSummaryLoading;
-  const contractSummary = summary || summaryData;
-  const contractForecast = forecast || forecastData;
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Contract Management Dashboard</h1>
-        <select 
-          className="p-2 border rounded glass-input" 
-          value={selectedSiteId}
-          onChange={(e) => setSelectedSiteId(e.target.value)}
-        >
-          {sites?.map(site => (
-            <option key={site.id} value={site.id}>
-              {site.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Summary metrics section */}
+      <ContractSummarySection 
+        contractData={contractData} 
+        isLoading={isLoading} 
+        summaryData={summaryData}
+      />
       
-      <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="history">Contract History</TabsTrigger>
-          <TabsTrigger value="forecast">Financial Forecast</TabsTrigger>
-          <TabsTrigger value="expiry">Expiring Contracts</TabsTrigger>
-        </TabsList>
+      {/* Charts for visualization */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ContractCharts 
+          contractData={contractData} 
+          groupedContracts={groupedContracts}
+          isLoading={isLoading}
+        />
         
-        <TabsContent value="summary" className="space-y-6">
-          <ContractSummaryCards summary={contractSummary} isLoading={isDataLoading} />
-        </TabsContent>
-        
-        <TabsContent value="history" className="space-y-6">
-          {selectedSite && (
-            <ContractHistoryTable 
-              history={history} 
-              isLoading={isLoadingHistory} 
-              currentContractDetails={selectedSite.contract_details}
-            />
-          )}
-        </TabsContent>
-        
-        <TabsContent value="forecast" className="space-y-6">
-          <ContractForecastChart forecast={contractForecast} isLoading={isDataLoading} />
-        </TabsContent>
-        
-        <TabsContent value="expiry" className="space-y-6">
-          <ContractExpiryList sites={sites} isLoading={isLoading} />
-        </TabsContent>
-      </Tabs>
+        {/* Contract expirations list */}
+        <ContractExpiryList 
+          forecastData={forecastData} 
+          isLoading={isLoading} 
+        />
+      </div>
     </div>
   );
 }

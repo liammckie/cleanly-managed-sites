@@ -61,6 +61,9 @@ export async function getContacts(filters: ContactFilters = {}): Promise<Contact
   return contacts as ContactRecord[] || [];
 }
 
+// Alias of getContacts for backward compatibility
+export const getAllContacts = getContacts;
+
 // Get a single contact by ID
 export async function getContactById(id: string): Promise<ContactRecord | null> {
   const { data, error } = await supabase
@@ -76,6 +79,26 @@ export async function getContactById(id: string): Promise<ContactRecord | null> 
   
   return data as ContactRecord;
 }
+
+// Get contacts by entity ID and type
+export async function getContactsByEntityId(entityId: string, entityType: string): Promise<ContactRecord[]> {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('entity_id', entityId)
+    .eq('entity_type', entityType)
+    .order('is_primary', { ascending: false });
+  
+  if (error) {
+    console.error(`Error fetching contacts for entity ${entityId}:`, error);
+    throw error;
+  }
+  
+  return data as ContactRecord[] || [];
+}
+
+// Get contacts for a specific entity (client, site, etc.) - alias for getContactsByEntityId
+export const getEntityContacts = getContactsByEntityId;
 
 // Get all entities that have contacts
 export async function getContactEntities(): Promise<Array<{id: string, name: string, type: string}>> {
@@ -192,19 +215,76 @@ export async function getContactEntities(): Promise<Array<{id: string, name: str
   return entities;
 }
 
-// Get contacts for a specific entity (client, site, etc.)
-export async function getContactsByEntityId(entityId: string, entityType: string): Promise<ContactRecord[]> {
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('*')
-    .eq('entity_id', entityId)
-    .eq('entity_type', entityType)
-    .order('is_primary', { ascending: false });
+// Search for entities to link contacts to
+export async function searchEntities(query: string, entityType?: string): Promise<Array<{id: string, name: string, type: string}>> {
+  const searchTerm = `%${query.toLowerCase()}%`;
+  let results: Array<{id: string, name: string, type: string}> = [];
   
-  if (error) {
-    console.error(`Error fetching contacts for entity ${entityId}:`, error);
-    throw error;
+  if (!entityType || entityType === 'client') {
+    try {
+      const { data: clients } = await supabase
+        .from('clients')
+        .select('id, name')
+        .ilike('name', searchTerm);
+      
+      if (clients && clients.length > 0) {
+        results = [
+          ...results,
+          ...clients.map(client => ({
+            id: client.id,
+            name: client.name,
+            type: 'client'
+          }))
+        ];
+      }
+    } catch (error) {
+      console.error('Error searching clients:', error);
+    }
   }
   
-  return data as ContactRecord[] || [];
+  if (!entityType || entityType === 'site') {
+    try {
+      const { data: sites } = await supabase
+        .from('sites')
+        .select('id, name')
+        .ilike('name', searchTerm);
+      
+      if (sites && sites.length > 0) {
+        results = [
+          ...results,
+          ...sites.map(site => ({
+            id: site.id,
+            name: site.name,
+            type: 'site'
+          }))
+        ];
+      }
+    } catch (error) {
+      console.error('Error searching sites:', error);
+    }
+  }
+  
+  if (!entityType || entityType === 'supplier') {
+    try {
+      const { data: suppliers } = await supabase
+        .from('contractors')
+        .select('id, business_name')
+        .ilike('business_name', searchTerm);
+      
+      if (suppliers && suppliers.length > 0) {
+        results = [
+          ...results,
+          ...suppliers.map(supplier => ({
+            id: supplier.id,
+            name: supplier.business_name,
+            type: 'supplier'
+          }))
+        ];
+      }
+    } catch (error) {
+      console.error('Error searching suppliers:', error);
+    }
+  }
+  
+  return results;
 }

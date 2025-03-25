@@ -1,83 +1,141 @@
-import React from 'react';
-import { useContractForecast } from '@/hooks/useContractForecast';
+
+import React, { useMemo } from 'react';
+import { useContracts } from '@/hooks/useContracts';
+import { DataTable } from '@/components/ui/data-table';
+import { PageHeader } from '@/components/ui/page-header';
+import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { TableFilter } from '@/components/sites/contract/TableFilter';
+import { Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils/formatters';
+import { format, isBefore, parseISO } from 'date-fns';
+import { ColumnDef } from '@tanstack/react-table';
+import { ContractData } from '@/lib/types/contracts';
 import { asJsonObject } from '@/lib/utils/json';
 
-interface ContractDetails {
-  start_date: string;
-  end_date: string;
-  contract_number: string;
-  contract_type: string;
-  renewal_type: string;
-  value: number;
-  status: string;
-  notice_period: string;
-  auto_renewal: string;
-}
-
-const ContractRow = ({ details }: { details: ContractDetails }) => (
-  <tr>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.start_date}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.end_date}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.contract_number}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.contract_type}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.renewal_type}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.value}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.status}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.notice_period}</td>
-    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{details.auto_renewal}</td>
-  </tr>
-);
-
-export default function ContractsPage() {
-  const { contractData, isLoading, groupedContracts } = useContractForecast();
+export default function Contracts() {
+  const { contractData, groupedContracts, isLoading } = useContracts();
   
-  // Sample contract data transformation function - fixed to use asJsonObject
-  const sampleTransformContractDetails = (detailsJson: any) => {
-    const contractDetails = asJsonObject(detailsJson, {});
-    return {
-      start_date: contractDetails.startDate || 'N/A',
-      end_date: contractDetails.endDate || 'N/A',
-      contract_number: contractDetails.contractNumber || 'N/A',
-      contract_type: contractDetails.contractType || 'Standard',
-      renewal_type: contractDetails.renewalType || 'Auto',
-      value: contractDetails.value || 0,
-      status: contractDetails.status || 'Active',
-      notice_period: contractDetails.noticePeriod || '30 days',
-      auto_renewal: contractDetails.autoRenewal || 'Yes'
-    };
-  };
-  
+  const columns = useMemo<ColumnDef<ContractData>[]>(() => [
+    {
+      accessorKey: 'site_name',
+      header: 'Site',
+      cell: ({ row }) => (
+        <Link to={`/sites/${row.original.site_id}`} className="text-primary hover:underline">
+          {row.original.site_name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: 'client_name',
+      header: 'Client',
+      cell: ({ row }) => (
+        <Link to={`/clients/${row.original.client_id}`} className="text-primary hover:underline">
+          {row.original.client_name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Start Date',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { startDate: '' });
+        return contractDetails.startDate ? format(new Date(contractDetails.startDate), 'dd/MM/yyyy') : '-';
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'End Date',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { endDate: '' });
+        return contractDetails.endDate ? format(new Date(contractDetails.endDate), 'dd/MM/yyyy') : '-';
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Contract Number',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { contractNumber: '' });
+        return contractDetails.contractNumber || '-';
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Contract Type',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { contractType: '' });
+        return contractDetails.contractType || '-';
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Renewal Type',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { renewalType: '' });
+        return contractDetails.renewalType || '-';
+      },
+    },
+    {
+      accessorKey: 'monthly_revenue',
+      header: 'Monthly Value',
+      cell: ({ row }) => {
+        const value = asJsonObject(row.original.contract_details, { value: 0 }).value || row.original.monthly_revenue;
+        return formatCurrency(value);
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Status',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { status: 'active' });
+        return (
+          <Badge variant={contractDetails.status === 'active' ? 'default' : 'secondary'}>
+            {contractDetails.status || 'Active'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Notice Period',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { noticePeriod: '' });
+        return contractDetails.noticePeriod || '-';
+      },
+    },
+    {
+      accessorKey: 'contract_details',
+      header: 'Auto Renewal',
+      cell: ({ row }) => {
+        const contractDetails = asJsonObject(row.original.contract_details, { autoRenewal: false });
+        return contractDetails.autoRenewal ? 'Yes' : 'No';
+      },
+    },
+  ], []);
+
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-4">Contract Overview</h1>
+    <div className="container mx-auto py-6 space-y-8">
+      <PageHeader
+        title="Contracts"
+        description="Manage all client contracts and agreements"
+        actions={
+          <Button asChild>
+            <Link to="/contracts/new"><Plus className="mr-2 h-4 w-4" />Add Contract</Link>
+          </Button>
+        }
+      />
       
-      {isLoading ? (
-        <p>Loading contracts...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Renewal Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notice Period</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auto Renewal</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {contractData && contractData.map((contract) => {
-                const transformedDetails = sampleTransformContractDetails(contract);
-                return <ContractRow key={contract.id} details={transformedDetails} />;
-              })}
-            </tbody>
-          </table>
+      <ContractValueMetrics />
+      
+      <div className="rounded-md border bg-card">
+        <div className="p-4 flex flex-col sm:flex-row justify-between gap-4">
+          <TableFilter />
         </div>
-      )}
+        
+        <DataTable columns={columns} data={contractData} loading={isLoading} />
+      </div>
     </div>
   );
 }

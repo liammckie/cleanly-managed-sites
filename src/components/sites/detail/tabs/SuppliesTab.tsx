@@ -8,7 +8,10 @@ interface SuppliesTabProps {
 }
 
 export function SuppliesTab({ site }: SuppliesTabProps) {
-  const replenishables = asJsonObject(site.replenishables, { stock: [] });
+  const replenishables = asJsonObject(site.replenishables, { 
+    stock: [], 
+    contactDetails: '' 
+  });
   
   return (
     <div className="glass-card p-6">

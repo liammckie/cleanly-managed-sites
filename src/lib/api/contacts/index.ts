@@ -1,6 +1,6 @@
 
-import { getEntityContacts, getContactById, getAllContacts } from './contactsRead';
-import { addContact, updateContactRecord, removeContact, makePrimaryContact } from './contactsWrite';
+import { getEntityContacts, getContactById, getAllContacts, getContacts, getContactEntities, getContactsByEntityId, searchEntities } from './contactsRead';
+import { addContact, updateContactRecord, removeContact, makePrimaryContact, createContact, updateContact, deleteContact, setPrimaryContact } from './contactsWrite';
 
 // Export as contactsApi object for backward compatibility
 export const contactsApi = {
@@ -8,12 +8,20 @@ export const contactsApi = {
   getEntityContacts,
   getContactById,
   getAllContacts,
+  getContacts,
+  getContactEntities,
+  getContactsByEntityId,
+  searchEntities,
   
   // Write operations
-  createContact: addContact,
-  updateContact: updateContactRecord,
-  deleteContact: removeContact,
-  setPrimaryContact: makePrimaryContact
+  createContact,
+  updateContact,
+  deleteContact,
+  setPrimaryContact,
+  addContact,
+  updateContactRecord,
+  removeContact,
+  makePrimaryContact
 };
 
 // Also export individual functions
@@ -21,8 +29,16 @@ export {
   getEntityContacts,
   getContactById,
   getAllContacts,
+  getContacts,
+  getContactEntities,
+  getContactsByEntityId,
+  searchEntities,
   addContact,
   updateContactRecord,
   removeContact,
-  makePrimaryContact
+  makePrimaryContact,
+  createContact,
+  updateContact,
+  deleteContact,
+  setPrimaryContact
 };
