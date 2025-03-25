@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,12 +27,10 @@ export function EmployeeContactForm({
 }: EmployeeContactFormProps) {
   const [activeTab, setActiveTab] = useState('personal');
 
-  // Parse existing services data if it exists
   const parseExistingServicesData = (): Partial<EmployeeServicesValues> => {
     if (!contact?.services || !Array.isArray(contact.services)) return {};
     
     try {
-      // If services is stored as a string in the first array element (from JSON stringification)
       if (typeof contact.services[0] === 'string') {
         try {
           return JSON.parse(contact.services[0]);
@@ -51,7 +48,6 @@ export function EmployeeContactForm({
   
   const servicesData = parseExistingServicesData();
   
-  // Convert ISO date string to Date object if it exists
   const startDateValue = servicesData.startDate ? new Date(servicesData.startDate) : undefined;
 
   const form = useForm<EmployeeFormValues>({
@@ -64,7 +60,6 @@ export function EmployeeContactForm({
       phone: contact?.phone || '',
       notes: contact?.notes || '',
       
-      // Employee specific fields from services data
       position: servicesData.position || '',
       employmentType: servicesData.employmentType || 'full-time',
       startDate: startDateValue,
@@ -77,7 +72,6 @@ export function EmployeeContactForm({
 
   const handleSubmit = async (values: EmployeeFormValues) => {
     try {
-      // Create a services object with all the employee-specific fields
       const employeeServices: EmployeeServicesValues = {
         position: values.position,
         employmentType: values.employmentType,
@@ -88,7 +82,6 @@ export function EmployeeContactForm({
         emergencyContactPhone: values.emergencyContactPhone,
       };
       
-      // Convert the form values to a ContactRecord
       const employeeData: Partial<ContactRecord> = {
         name: values.name,
         role: values.role,
@@ -97,7 +90,6 @@ export function EmployeeContactForm({
         phone: values.phone,
         notes: values.notes,
         entity_type: 'internal',
-        // Store the services as a JSON string in the first element of the array
         services: [JSON.stringify(employeeServices)],
       };
       

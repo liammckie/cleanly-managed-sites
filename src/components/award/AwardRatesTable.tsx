@@ -11,7 +11,7 @@ const payConditionDisplayNames: Record<PayCondition, string> = {
   'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
-  'public_holiday': 'Public Holiday',
+  'public-holiday': 'Public Holiday',
   'early_morning': 'Early Morning',
   'evening': 'Evening',
   'night': 'Night',

@@ -1,129 +1,76 @@
 
-import { getAwardRates } from './awardEngine';
-import { 
-  QuoteShift, 
-  EmploymentType, 
-  EmployeeLevel, 
-  AllowanceType 
-} from './types';
-import { 
-  calculateHourDifference, 
-  hasEarlyLateHours 
-} from './utils';
+import { cleaningServicesAward } from './awardData';
+import { QuoteShift, EmploymentType, EmployeeLevel, AllowanceType, Day, PayCondition } from './types';
 
-export const calculateShiftCost = (shift: Partial<QuoteShift>): number => {
-  if (!shift.startTime || !shift.endTime || !shift.employmentType || !shift.level || !shift.day) {
-    return 0;
+export const getPayConditionForDay = (day: Day): PayCondition => {
+  switch (day) {
+    case 'saturday':
+      return 'saturday';
+    case 'sunday':
+      return 'sunday';
+    case 'public-holiday':
+      return 'public-holiday';
+    default:
+      return 'weekday';
   }
-  
-  const hours = calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration || 0);
-  if (hours <= 0) return 0;
-  
-  // Get base rates for the employment type and level
-  const rateInfo = getAwardRates(
-    shift.employmentType as EmploymentType, 
-    shift.level as EmployeeLevel
+};
+
+export const calculateShiftCost = (
+  shift: QuoteShift,
+  allowanceRates: Record<string, number>
+): number => {
+  // Get the employee level rates
+  const employeeRates = cleaningServicesAward.levels.find(
+    level => level.level === shift.level && level.employmentType === shift.employmentType
   );
   
-  if (!rateInfo) {
+  if (!employeeRates) {
+    console.error('Employee rates not found for level', shift.level, 'and type', shift.employmentType);
     return 0;
   }
   
-  let hourlyRate: number;
-  let condition: string;
+  // Get the base hourly rate for the specific level and employment type
+  const hourlyRate = employeeRates.hourlyRate;
   
-  // Determine the applicable rate based on day and time
-  if (shift.day === 'saturday') {
-    condition = 'saturday';
-    hourlyRate = rateInfo.rates.saturday.rate;
-  } else if (shift.day === 'sunday') {
-    condition = 'sunday';
-    hourlyRate = rateInfo.rates.sunday.rate;
-  } else if (shift.day === 'public_holiday') {
-    condition = 'public_holiday';
-    hourlyRate = rateInfo.rates.public_holiday.rate;
-  } else if (hasEarlyLateHours(shift.startTime, shift.endTime)) {
-    condition = 'shift-early-late';
-    hourlyRate = rateInfo.rates['shift-early-late'].rate;
-  } else {
-    condition = 'base';
-    hourlyRate = rateInfo.rates.base.rate;
+  // Calculate the duration of the shift in hours (excluding breaks)
+  const startTime = new Date(`2000-01-01T${shift.startTime}`);
+  const endTime = new Date(`2000-01-01T${shift.endTime}`);
+  
+  if (endTime < startTime) {
+    // If the shift crosses midnight, add 24 hours to the end time
+    endTime.setDate(endTime.getDate() + 1);
   }
   
-  // Calculate base labor cost
-  let laborCost = hourlyRate * hours;
+  const durationMs = endTime.getTime() - startTime.getTime();
+  const durationHours = durationMs / (1000 * 60 * 60);
+  const workHours = durationHours - (shift.breakDuration / 60);
   
-  // Multiply by number of cleaners
-  const totalCost = laborCost * (shift.numberOfCleaners || 1);
+  // Determine the rate multiplier based on the day of the week
+  let condition = getPayConditionForDay(shift.day);
+  let rateMultiplier = 1.0;
   
-  // Note: Allowance costs will be added separately once we have the allowance data
+  if (condition === 'weekday') {
+    rateMultiplier = employeeRates.rates.weekday.multiplier;
+  } else if (condition === 'saturday') {
+    rateMultiplier = employeeRates.rates.saturday.multiplier;
+  } else if (condition === 'sunday') {
+    rateMultiplier = employeeRates.rates.sunday.multiplier;
+  } else if (condition === 'public-holiday') {
+    rateMultiplier = employeeRates.rates['public-holiday'].multiplier;
+  }
   
-  return parseFloat(totalCost.toFixed(2));
-};
-
-export const calculateShiftCostWithAllowances = (
-  shift: QuoteShift, 
-  allowances: Array<{
-    id: string;
-    type: AllowanceType;
-    amount: number;
-    unit: 'per_hour' | 'per_shift' | 'per_day' | 'per_week' | 'per_km';
-    description?: string;
-  }>
-): number => {
-  // Start with the base cost calculation
-  const baseCost = calculateShiftCost(shift);
+  // Calculate the base labor cost
+  let laborCost = hourlyRate * workHours * rateMultiplier * shift.numberOfCleaners;
   
-  // Calculate hours for hourly allowances
-  const hours = calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration);
-  
-  // Add allowance costs
+  // Add allowances if applicable
   let allowanceCost = 0;
-  if (shift.allowances && allowances) {
-    shift.allowances.forEach(allowanceId => {
-      const allowance = allowances.find(a => a.id === allowanceId);
-      if (allowance) {
-        if (allowance.unit === 'per_hour') {
-          allowanceCost += allowance.amount * hours;
-        } else if (allowance.unit === 'per_shift') {
-          allowanceCost += allowance.amount;
-        } else if (allowance.unit === 'per_day') {
-          allowanceCost += allowance.amount;
-        }
+  if (shift.allowances && shift.allowances.length > 0) {
+    for (const allowance of shift.allowances) {
+      if (allowanceRates[allowance]) {
+        allowanceCost += allowanceRates[allowance] * workHours * shift.numberOfCleaners;
       }
-    });
+    }
   }
   
-  // Multiply allowances by number of cleaners if applicable
-  // Some allowances are per-person, others might be per-shift regardless of staff count
-  const allowancesByCleaners = allowanceCost * shift.numberOfCleaners;
-  
-  return parseFloat((baseCost + allowancesByCleaners).toFixed(2));
-};
-
-export const checkForBrokenShifts = (shifts: QuoteShift[]): string[] => {
-  // Group shifts by day and employee type
-  const shiftsByDayAndType: Record<string, QuoteShift[]> = {};
-  
-  shifts.forEach(shift => {
-    const key = `${shift.day}-${shift.employmentType}-${shift.level}`;
-    if (!shiftsByDayAndType[key]) {
-      shiftsByDayAndType[key] = [];
-    }
-    shiftsByDayAndType[key].push(shift);
-  });
-  
-  // Check for days with multiple shifts (potential broken shifts)
-  const brokenShiftDays: string[] = [];
-  
-  Object.entries(shiftsByDayAndType).forEach(([key, dayShifts]) => {
-    if (dayShifts.length > 1) {
-      const [day] = key.split('-');
-      if (!brokenShiftDays.includes(day)) {
-        brokenShiftDays.push(day);
-      }
-    }
-  });
-  
-  return brokenShiftDays;
+  return laborCost + allowanceCost;
 };

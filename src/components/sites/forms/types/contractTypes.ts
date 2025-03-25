@@ -47,7 +47,9 @@ export interface ContractHistoryEntry {
   id: string;
   site_id: string;
   version: number;
+  version_number?: number;
   contract_data: any;
+  contract_details?: any;
   created_at: string;
   notes?: string;
   created_by?: string;

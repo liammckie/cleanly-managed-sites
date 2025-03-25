@@ -18,7 +18,7 @@ export interface Subcontractor {
 }
 
 // Define service options
-export const SERVICE_OPTIONS: ServiceOption[] = [
+export const serviceOptions: ServiceOption[] = [
   { value: 'cleaning', label: 'Cleaning' },
   { value: 'gardening', label: 'Gardening' },
   { value: 'security', label: 'Security' },

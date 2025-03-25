@@ -10,7 +10,7 @@ export * from './securityTypes';
 export * from './formValidation';
 export * from './initialFormData';
 
-// Fix ambiguity by explicitly re-exporting
-export { AdHocWorkAuthorization } from './adHocWorkTypes';
-export { JobSpecifications } from './jobSpecificationTypes';
-export { SecurityDetails } from './securityTypes';
+// Fix ambiguity by explicitly re-exporting as types
+export type { AdHocWorkAuthorization } from './adHocWorkTypes';
+export type { JobSpecifications } from './jobSpecificationTypes';
+export type { SecurityDetails } from './securityTypes';
