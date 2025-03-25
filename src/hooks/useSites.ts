@@ -109,3 +109,36 @@ export function useSite(siteId?: string) {
     refetch: query.refetch
   };
 }
+
+/**
+ * Hook to fetch site details with additional data
+ */
+export function useSiteDetails(siteId?: string) {
+  const query = useErrorHandledQuery({
+    queryKey: ['siteDetails', siteId],
+    queryFn: async () => {
+      if (!siteId) return null;
+      try {
+        const site = await sitesApi.getSiteById(siteId);
+        
+        // You could fetch additional data here if needed
+        // For example: contacts, related data, etc.
+        
+        return site;
+      } catch (error) {
+        console.error(`Error fetching site details ${siteId}:`, error);
+        throw error;
+      }
+    },
+    errorMessage: 'Failed to load site details',
+    enabled: !!siteId
+  });
+
+  return {
+    site: query.data as SiteRecord | null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch
+  };
+}
