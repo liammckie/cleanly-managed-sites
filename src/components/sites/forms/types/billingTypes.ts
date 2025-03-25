@@ -1,32 +1,32 @@
 
-import { BillingFrequency } from '@/lib/types/commonTypes';
+// Define the billing frequency type
+export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
+// Define the billing line interface
 export interface BillingLine {
-  id: string;
+  id?: string;
   description: string;
   amount: number;
   frequency: string;
   isRecurring: boolean;
-  onHold?: boolean;
   weeklyAmount?: number;
   monthlyAmount?: number;
   annualAmount?: number;
-  holdStartDate?: string;
-  holdEndDate?: string;
-  creditAmount?: number;
-  creditDate?: string;
-  creditReason?: string;
+  on_hold?: boolean;
 }
 
+// Define the billing contact interface
 export interface BillingContact {
-  id: string;
+  id?: string;
   name: string;
   email: string;
   phone: string;
-  role: string;
+  position?: string;
 }
 
+// Define the billing details interface
 export interface BillingDetails {
+  rate?: number;
   billingFrequency?: BillingFrequency;
   billingLines?: BillingLine[];
   billingAddress?: string;
@@ -36,12 +36,15 @@ export interface BillingDetails {
   billingEmail?: string;
   useSiteAddress?: boolean;
   contacts?: BillingContact[];
-  rate?: number;
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
-  
-  // Additional properties needed by components
+  billingReason?: string;
+  billingNotes?: string;
+  // Added missing properties that were causing errors
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string | Date;
+  billingHoldEndDate?: string | Date;
+  billingHoldReason?: string;
+  invoiceMethod?: string;
+  invoiceFrequency?: string;
   invoiceDay?: number;
   invoiceEmail?: string;
   invoiceAddressLine1?: string;
@@ -49,36 +52,25 @@ export interface BillingDetails {
   invoiceCity?: string;
   invoiceState?: string;
   invoicePostalCode?: string;
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  paymentTerms?: string;
-  serviceType?: string;
-  deliveryMethod?: string;
-  
-  // Additional fields for missing properties
-  invoiceMethod?: string;
   accountNumber?: string;
   taxId?: string;
   notes?: string;
-  billingOnHold?: boolean;
-  billingHoldStartDate?: string;
-  billingHoldEndDate?: string;
-  billingHoldReason?: string;
-  invoiceFrequency?: string;
   xeroContactId?: string;
-  
-  // Service delivery props
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  paymentTerms?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  // Service delivery properties
   serviceDeliveryType?: string;
+  deliveryMethod?: string;
+  serviceType?: string;
   weeklyBudget?: number;
   annualContractorCost?: number;
   contractorCostFrequency?: string;
   weeklyContractorCost?: number;
   monthlyContractorCost?: number;
   contractorInvoiceFrequency?: string;
-  
-  // Labor plan
   laborPlan?: {
     staffingLevel?: string;
     headcount?: number;
@@ -91,5 +83,7 @@ export interface BillingDetails {
   };
 }
 
-// Export the BillingFrequency type to ensure it's accessible
-export { BillingFrequency };
+// Export types for use elsewhere
+export type { BillingFrequency };
+export type { BillingLine };
+export type { BillingContact };

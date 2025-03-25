@@ -1,72 +1,15 @@
+
 import { useState } from 'react';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { BillingLine } from '@/components/sites/forms/types/billingTypes';
-import { BillingFrequency } from '@/lib/types/commonTypes';
 import { v4 as uuidv4 } from 'uuid';
+import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
-export type BillingLineFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+/**
+ * Hook to manage billing lines for a site
+ */
+export function useSiteFormBillingLines(initialBillingLines: BillingLine[] = []) {
+  const [billingLines, setBillingLines] = useState<BillingLine[]>(initialBillingLines);
 
-export function useSiteFormBillingLines(formData: SiteFormData, setFormData: (data: SiteFormData) => void) {
-  const updateBillingLine = (id: string, field: string, value: any) => {
-    setFormData({
-      ...formData,
-      billingDetails: {
-        ...formData.billingDetails,
-        billingLines: formData.billingDetails?.billingLines?.map(line =>
-          line.id === id ? { ...line, [field]: value } : line
-        )
-      }
-    });
-  };
-
-  const removeBillingLine = (id: string) => {
-    setFormData({
-      ...formData,
-      billingDetails: {
-        ...formData.billingDetails,
-        billingLines: formData.billingDetails?.billingLines?.filter(line => line.id !== id)
-      }
-    });
-  };
-
-  const calculateBillingTotals = () => {
-    if (!formData.billingDetails?.billingLines) return { weekly: 0, monthly: 0, annual: 0 };
-
-    let weekly = 0;
-    let monthly = 0;
-    let annual = 0;
-
-    formData.billingDetails.billingLines.forEach(line => {
-      switch (line.frequency) {
-        case 'weekly':
-          weekly += line.amount;
-          break;
-        case 'monthly':
-          monthly += line.amount;
-          break;
-        case 'quarterly':
-          monthly += line.amount / 3;
-          break;
-        case 'annually':
-          annual += line.amount;
-          break;
-        case 'one-time':
-          // One-time billing lines don't contribute to recurring totals
-          break;
-        case 'fortnightly':
-          weekly += line.amount / 2;
-          break;
-        default:
-          break;
-      }
-    });
-
-    annual = monthly * 12;
-    weekly = annual / 52;
-
-    return { weekly, monthly, annual };
-  };
-
+  // Add a new billing line
   const addBillingLine = () => {
     const newLine: BillingLine = {
       id: uuidv4(),
@@ -75,20 +18,81 @@ export function useSiteFormBillingLines(formData: SiteFormData, setFormData: (da
       frequency: 'monthly',
       isRecurring: true
     };
+    
+    setBillingLines(prev => [...prev, newLine]);
+  };
 
-    setFormData({
-      ...formData,
-      billingDetails: {
-        ...formData.billingDetails,
-        billingLines: [
-          ...(formData.billingDetails?.billingLines || []),
-          newLine
-        ]
-      }
-    });
+  // Update a specific billing line
+  const updateBillingLine = (id: string, field: string, value: any) => {
+    setBillingLines(prev => 
+      prev.map(line => {
+        if (line.id === id) {
+          const updatedLine = { ...line, [field]: value };
+          
+          // Calculate weekly/monthly/annual amounts based on frequency and amount
+          if (field === 'amount' || field === 'frequency') {
+            const amount = typeof value === 'number' && field === 'amount' 
+              ? value 
+              : line.amount;
+              
+            const frequency = field === 'frequency' ? value : line.frequency;
+            
+            switch (frequency) {
+              case 'weekly':
+                updatedLine.weeklyAmount = amount;
+                updatedLine.monthlyAmount = amount * 4.33;
+                updatedLine.annualAmount = amount * 52;
+                break;
+              case 'fortnightly':
+                updatedLine.weeklyAmount = amount / 2;
+                updatedLine.monthlyAmount = amount * 2.165;
+                updatedLine.annualAmount = amount * 26;
+                break;
+              case 'monthly':
+                updatedLine.weeklyAmount = amount / 4.33;
+                updatedLine.monthlyAmount = amount;
+                updatedLine.annualAmount = amount * 12;
+                break;
+              case 'quarterly':
+                updatedLine.weeklyAmount = amount / 13;
+                updatedLine.monthlyAmount = amount / 3;
+                updatedLine.annualAmount = amount * 4;
+                break;
+              case 'annually':
+                updatedLine.weeklyAmount = amount / 52;
+                updatedLine.monthlyAmount = amount / 12;
+                updatedLine.annualAmount = amount;
+                break;
+              default:
+                updatedLine.weeklyAmount = amount;
+                updatedLine.monthlyAmount = amount * 4.33;
+                updatedLine.annualAmount = amount * 52;
+            }
+          }
+          
+          return updatedLine;
+        }
+        return line;
+      })
+    );
+  };
+
+  // Remove a billing line
+  const removeBillingLine = (id: string) => {
+    setBillingLines(prev => prev.filter(line => line.id !== id));
+  };
+
+  // Calculate totals across all billing lines
+  const calculateBillingTotals = () => {
+    const weekly = billingLines.reduce((sum, line) => sum + (line.weeklyAmount || 0), 0);
+    const monthly = billingLines.reduce((sum, line) => sum + (line.monthlyAmount || 0), 0);
+    const annual = billingLines.reduce((sum, line) => sum + (line.annualAmount || 0), 0);
+    
+    return { weekly, monthly, annual };
   };
 
   return {
+    billingLines,
     addBillingLine,
     updateBillingLine,
     removeBillingLine,

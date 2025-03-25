@@ -48,7 +48,6 @@ export interface SiteFormData {
   annualRevenue?: number;
   replenishables?: {
     stock?: any[];
-    contactDetails?: string;
     supplies?: any[];
     notes?: string;
   };
@@ -71,6 +70,10 @@ export interface SiteFormData {
     monthlyContractorCost?: number;
     annualContractorCost?: number;
   };
+  // Add backward compatibility properties
+  contractDetails?: ContractDetails;  // Alias for contract_details
+  clientId?: string;                  // Alias for client_id
+  postcode?: string;                  // Alias for postalCode
 }
 
 // Add compatible aliases to support existing code

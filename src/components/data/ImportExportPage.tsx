@@ -10,10 +10,11 @@ import { ImportExportInstructions } from './ImportExportInstructions';
 import { Button } from '@/components/ui/button';
 import { Beaker } from 'lucide-react';
 import { toast } from 'sonner';
+import { SiteRecord } from '@/lib/types';
 
 export const ImportExportPage: React.FC = () => {
   const { clients, isLoading: isLoadingClients } = useClients();
-  const { sites, isLoading: isLoadingSites } = useSites();
+  const { data: sites = [], isLoading: isLoadingSites } = useSites();
   const { 
     contractHistory, 
     isLoadingContracts,
@@ -58,6 +59,9 @@ export const ImportExportPage: React.FC = () => {
     }
   };
   
+  // Ensure sites is always an array, even if it's a Promise
+  const sitesArray: SiteRecord[] = Array.isArray(sites) ? sites : [];
+  
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -75,7 +79,7 @@ export const ImportExportPage: React.FC = () => {
       <ImportExportInstructions />
       <ImportExportCardGrid 
         clients={clients}
-        sites={sites}
+        sites={sitesArray}
         contractHistory={contractHistory || []}
         onImportClients={handleImportClients}
         onImportSites={handleImportSites}

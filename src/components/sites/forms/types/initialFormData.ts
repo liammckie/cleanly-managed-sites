@@ -8,18 +8,16 @@ export const getInitialFormData = (): SiteFormData => {
     address: '',
     city: '',
     state: '',
-    postalCode: '', // Corrected from postcode
+    postalCode: '', // Using postalCode consistently
     country: 'Australia',
-    client_id: '',  // Corrected from clientId
+    client_id: '',  // Using client_id consistently
     representative: '',
-    // Changed contactDetails to be included in contact property or removed
-    // contactDetails removed
     status: 'pending' as SiteStatus,
     monthlyRevenue: 0,
     annualRevenue: 0,
     monthlyCost: 0,
     contacts: [],
-    contract_details: {  // Changed from contractDetails
+    contract_details: {  // Using contract_details consistently
       contractType: 'cleaning',
       value: 0,
       startDate: '',

@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,20 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, FileEdit, Trash2, Copy, Download } from 'lucide-react';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
-// Simple formatting utilities
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
-};
-
-const formatDate = (dateString: string): string => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-AU', { year: 'numeric', month: 'short', day: 'numeric' });
-};
-
-// Define the contract data type
 export interface ContractData {
   id: string;
   client: string;
@@ -32,37 +22,17 @@ export interface ContractData {
   value: number;
   startDate: string;
   endDate: string;
-  status: 'active' | 'expired' | 'pending' | 'draft' | 'cancelled';
-  type: string;
+  status: 'active' | 'pending' | 'expired' | 'terminated';
 }
 
-// Function to get the appropriate badge variant based on contract status
-const getStatusVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "success" => {
-  switch (status) {
-    case 'active':
-      return 'success';
-    case 'expired':
-      return 'destructive';
-    case 'pending':
-      return 'outline';
-    case 'draft':
-      return 'secondary';
-    case 'cancelled':
-      return 'destructive';
-    default:
-      return 'default';
-  }
-};
-
-// Define the columns
-export const contractColumns: ColumnDef<ContractData>[] = [
+export const getColumns = (): ColumnDef<ContractData>[] => [
   {
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <Checkbox
         checked={
           table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
+          (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -79,54 +49,67 @@ export const contractColumns: ColumnDef<ContractData>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'client',
-    header: 'Client',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('client')}</div>
-    ),
-  },
-  {
-    accessorKey: 'site',
-    header: 'Site',
-    cell: ({ row }) => <div>{row.getValue('site')}</div>,
-  },
-  {
-    accessorKey: 'value',
-    header: 'Value',
-    cell: ({ row }) => <div>{formatCurrency(row.getValue('value'))}</div>,
-  },
-  {
-    accessorKey: 'startDate',
-    header: 'Start Date',
-    cell: ({ row }) => <div>{formatDate(row.getValue('startDate'))}</div>,
-  },
-  {
-    accessorKey: 'endDate',
-    header: 'End Date',
-    cell: ({ row }) => <div>{formatDate(row.getValue('endDate'))}</div>,
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const status = row.getValue('status') as string;
+    accessorKey: "client",
+    header: ({ column }) => {
       return (
-        <Badge variant={getStatusVariant(status)}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-      );
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Client
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => <div>{row.getValue("client")}</div>,
+  },
+  {
+    accessorKey: "site",
+    header: "Site",
+    cell: ({ row }) => <div>{row.getValue("site")}</div>,
+  },
+  {
+    accessorKey: "value",
+    header: () => <div className="text-right">Value</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("value"));
+      return <div className="text-right font-medium">{formatCurrency(amount)}</div>
     },
   },
   {
-    accessorKey: 'type',
-    header: 'Type',
-    cell: ({ row }) => <div>{row.getValue('type')}</div>,
+    accessorKey: "startDate",
+    header: "Start Date",
+    cell: ({ row }) => formatDate(row.getValue("startDate")),
   },
   {
-    id: 'actions',
+    accessorKey: "endDate",
+    header: "End Date",
+    cell: ({ row }) => formatDate(row.getValue("endDate")),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge 
+          variant={
+            status === "active" ? "success" : 
+            status === "pending" ? "warning" : 
+            status === "expired" ? "destructive" : 
+            "outline"
+          }
+        >
+          {status}
+        </Badge>
+      )
+    },
+  },
+  {
+    id: "actions",
     cell: ({ row }) => {
       const contract = row.original;
-      
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -140,29 +123,15 @@ export const contractColumns: ColumnDef<ContractData>[] = [
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(contract.id)}
             >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy ID
+              Copy contract ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <FileEdit className="mr-2 h-4 w-4" />
-              Edit Contract
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Contract
-            </DropdownMenuItem>
+            <DropdownMenuItem>View contract</DropdownMenuItem>
+            <DropdownMenuItem>Edit contract</DropdownMenuItem>
+            <DropdownMenuItem>Renew contract</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
   },
 ];
-
-// Export a function to get the columns for compatibility
-export const getColumns = () => contractColumns;

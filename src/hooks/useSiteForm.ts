@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { SiteFormData, getInitialFormData } from '@/components/sites/forms/siteFormTypes';
+import { SiteFormData, getInitialFormData } from '@/components/sites/forms/types';
 import { SiteStatus } from '@/components/sites/SiteCard';
 import { useSiteFormValidation } from './useSiteFormValidation';
 import { useSiteFormHandlers } from './useSiteFormHandlers';
@@ -32,7 +32,12 @@ export const useSiteForm = () => {
   const subcontractorHandlers = useSiteFormSubcontractors(formData, setFormData, errors, setErrors);
   const replenishableHandlers = useSiteFormReplenishables(formData, setFormData);
   const billingContactHandlers = useSiteFormBillingContacts(formData, setFormData, errors, setErrors);
-  const billingLineHandlers = useSiteFormBillingLines(formData.billingDetails?.billingLines || []);
+  
+  // Initialize with empty array if billingLines doesn't exist
+  const billingLineHandlers = useSiteFormBillingLines(
+    formData.billingDetails?.billingLines || []
+  );
+  
   const contractTermHandlers = useSiteFormContractTerms(formData, setFormData, errors, setErrors);
   const contactHandlers = useSiteFormContacts();
   const additionalContractHandlers = useSiteFormAdditionalContracts(formData, setFormData);
@@ -87,7 +92,7 @@ export const useSiteForm = () => {
     let totalRequiredFields = 0;
     
     // Basic info
-    const basicFields = ['name', 'address', 'city', 'state', 'postcode', 'clientId'];
+    const basicFields = ['name', 'address', 'city', 'state', 'postalCode', 'client_id'];
     basicFields.forEach(field => {
       totalRequiredFields++;
       if (formData[field as keyof SiteFormData]) completedFields++;
@@ -98,7 +103,7 @@ export const useSiteForm = () => {
     if (formData.contacts && formData.contacts.length > 0) completedFields++;
     
     // Contract details
-    const contractFields = ['contractDetails.startDate', 'contractDetails.endDate', 'contractDetails.contractNumber'];
+    const contractFields = ['contract_details.startDate', 'contract_details.endDate', 'contract_details.contractNumber'];
     contractFields.forEach(field => {
       totalRequiredFields++;
       const [section, key] = field.split('.');

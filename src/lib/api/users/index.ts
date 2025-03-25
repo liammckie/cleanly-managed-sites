@@ -1,88 +1,146 @@
 
 import { supabase } from '@/lib/supabase';
-import { SystemUser, UserRole } from '@/lib/types';
+import { SystemUser } from '@/lib/types';
 
-// Create a users API module
+// Define the users API object
 export const usersApi = {
-  getUsers: async (): Promise<SystemUser[]> => {
+  // Get all users
+  async getUsers(): Promise<SystemUser[]> {
     try {
-      // Instead of directly querying the auth.users table (which isn't allowed),
-      // we need to query the user_profiles table instead
+      // Query the user_profiles table which has all the user data
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*');
-      
+        
       if (error) {
         console.error('Error fetching users:', error);
         throw error;
       }
       
-      // Map from database format to SystemUser format
-      return (data || []).map((profile) => ({
-        id: profile.id,
-        email: profile.email,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url,
-        role_id: profile.role_id,
-        created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        title: profile.title,
-        phone: profile.phone,
-        status: profile.status || 'active',
-        last_login: profile.last_login,
-        custom_id: profile.custom_id,
-        note: profile.notes,
-        territories: profile.territories,
-      }));
+      // Cast data to SystemUser[] and convert string status to enum
+      return (data || []).map(user => ({
+        ...user,
+        status: (user.status as "active" | "pending" | "inactive") || "active"
+      })) as SystemUser[];
     } catch (error) {
       console.error('Error in getUsers:', error);
       throw error;
     }
   },
   
-  getUserById: async (userId: string): Promise<SystemUser | null> => {
+  // Get a single user by ID
+  async getUserById(userId: string): Promise<SystemUser> {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
+        
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // Not found
-        }
+        console.error('Error fetching user by ID:', error);
         throw error;
       }
       
-      if (!data) return null;
+      if (!data) {
+        throw new Error(`User with ID ${userId} not found`);
+      }
       
-      // Map from database format to SystemUser format
+      // Cast to SystemUser and ensure status is valid enum
       return {
-        id: data.id,
-        email: data.email,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        full_name: data.full_name,
-        avatar_url: data.avatar_url,
-        role_id: data.role_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        title: data.title,
-        phone: data.phone,
-        status: data.status || 'active',
-        last_login: data.last_login,
-        custom_id: data.custom_id,
-        note: data.notes,
-        territories: data.territories,
-      };
+        ...data,
+        status: (data.status as "active" | "pending" | "inactive") || "active"
+      } as SystemUser;
     } catch (error) {
       console.error('Error in getUserById:', error);
       throw error;
     }
   },
   
-  // More user-related functions can be added here
+  // Create a new user
+  async createUser(userData: Partial<SystemUser>): Promise<SystemUser> {
+    try {
+      // Ensure required fields are present
+      if (!userData.email) {
+        throw new Error('Email is required to create a user');
+      }
+      
+      // Validate status is a valid enum value
+      const validStatus: ("active" | "pending" | "inactive")[] = ["active", "pending", "inactive"];
+      const status = validStatus.includes(userData.status as any) 
+        ? userData.status 
+        : "pending";
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert({
+          ...userData,
+          status
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error creating user:', error);
+        throw error;
+      }
+      
+      return data as SystemUser;
+    } catch (error) {
+      console.error('Error in createUser:', error);
+      throw error;
+    }
+  },
+  
+  // Update an existing user
+  async updateUser(userId: string, userData: Partial<SystemUser>): Promise<SystemUser> {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(userData)
+        .eq('id', userId)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error updating user:', error);
+        throw error;
+      }
+      
+      return data as SystemUser;
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      throw error;
+    }
+  },
+  
+  // Delete a user
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', userId);
+        
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      throw error;
+    }
+  }
 };
+
+// Create a hook for user creation
+export const useCreateUser = () => {
+  return {
+    createUser: async (userData: Partial<SystemUser>) => {
+      return await usersApi.createUser(userData);
+    }
+  };
+};
+
+// Add this export for backward compatibility
+export { usersApi };

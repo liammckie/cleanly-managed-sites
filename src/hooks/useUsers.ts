@@ -1,10 +1,10 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { usersApi } from '@/lib/api/users'; 
+import { useErrorHandledQuery } from '@/hooks/useErrorHandledQuery';
+import { usersApi } from '@/lib/api/users';
 import { SystemUser } from '@/lib/types';
 
 export function useUsers() {
-  const usersQuery = useQuery({
+  const usersQuery = useErrorHandledQuery({
     queryKey: ['users'],
     queryFn: async () => {
       try {
@@ -13,10 +13,11 @@ export function useUsers() {
         console.error('Error fetching users:', error);
         throw error;
       }
-    }
+    },
+    errorMessage: 'Failed to load users'
   });
 
-  const userRolesQuery = useQuery({
+  const userRolesQuery = useErrorHandledQuery({
     queryKey: ['userRoles'],
     queryFn: async () => {
       try {
@@ -27,7 +28,8 @@ export function useUsers() {
         console.error('Error fetching user roles:', error);
         throw error;
       }
-    }
+    },
+    errorMessage: 'Failed to load user roles'
   });
 
   return {
@@ -38,3 +40,30 @@ export function useUsers() {
     error: usersQuery.error || userRolesQuery.error
   };
 }
+
+// Export useUser for individual user lookups
+export function useUser(userId: string) {
+  const userQuery = useErrorHandledQuery({
+    queryKey: ['user', userId],
+    queryFn: async () => {
+      try {
+        return await usersApi.getUserById(userId);
+      } catch (error) {
+        console.error(`Error fetching user ${userId}:`, error);
+        throw error;
+      }
+    },
+    errorMessage: 'Failed to load user details',
+    enabled: !!userId
+  });
+
+  return {
+    user: userQuery.data as SystemUser | undefined,
+    isLoading: userQuery.isLoading,
+    isError: userQuery.isError,
+    error: userQuery.error
+  };
+}
+
+// Export for backward compatibility
+export { useCreateUser } from '@/lib/api/users';

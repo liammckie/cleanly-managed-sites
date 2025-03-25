@@ -14,7 +14,7 @@ import {
 export interface DatePickerProps {
   value: Date;
   onChange: (date: Date | undefined) => void;
-  id?: string; // Add id for compatibility
+  id?: string; // Added id prop
 }
 
 export function DatePicker({ value, onChange, id }: DatePickerProps) {

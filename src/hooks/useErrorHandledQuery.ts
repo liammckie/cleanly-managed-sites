@@ -24,8 +24,8 @@ export function useErrorHandledQuery<
     ...restOptions
   } = queryOptions;
 
-  // Use react-query's useQuery with custom error handling
-  return useQuery<TData, TError, TData, TQueryKey>({
+  // Handle errors via the meta property as per v5 of react-query
+  const options: UseQueryOptions<TData, TError, TData, TQueryKey> = {
     ...restOptions,
     meta: {
       ...restOptions.meta,
@@ -42,9 +42,13 @@ export function useErrorHandledQuery<
         
         // Call the original onError if provided in meta
         if (restOptions.meta?.onError) {
-          (restOptions.meta.onError as any)(error);
+          const metaOnError = restOptions.meta.onError as Function;
+          metaOnError(error);
         }
       }
     }
-  });
+  };
+
+  // Use react-query's useQuery with our enhanced error handling
+  return useQuery<TData, TError, TData, TQueryKey>(options);
 }
