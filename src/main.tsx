@@ -6,14 +6,24 @@ import App from './App.tsx';
 import './index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './hooks/auth';
+import { ErrorBoundaryProvider } from './components/ui/error-boundary/useErrorBoundary';
+import { Toaster } from 'sonner';
 
-// Create a client
+// Configure query client with error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
+      onError: (error) => {
+        console.error('Query error:', error);
+      }
     },
+    mutations: {
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      }
+    }
   },
 });
 
@@ -24,9 +34,12 @@ createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ErrorBoundaryProvider>
+          <AuthProvider>
+            <App />
+            <Toaster />
+          </AuthProvider>
+        </ErrorBoundaryProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>
