@@ -3,7 +3,7 @@ import React from 'react';
 import { SiteRecord } from '@/lib/api';
 import { Briefcase, DollarSign, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { SERVICE_OPTIONS } from '@/components/sites/forms/types/subcontractorTypes';
+import { serviceOptions } from '@/components/sites/forms/types/subcontractorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -64,7 +64,7 @@ export function SubcontractorsTab({ site }: SubcontractorsTabProps) {
                   <p className="text-sm text-muted-foreground mb-2">Services Provided</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {subcontractor.services?.map(service => {
-                      const serviceOption = SERVICE_OPTIONS.find(s => s.value === service);
+                      const serviceOption = serviceOptions.find(s => s.value === service);
                       return (
                         <Badge key={service} variant="secondary" className="flex items-center">
                           <CheckCircle className="h-3 w-3 mr-1" />

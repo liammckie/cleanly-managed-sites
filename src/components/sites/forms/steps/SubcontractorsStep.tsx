@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, DollarSign, PlusCircle } from 'lucide-react';
 import { SiteFormData } from '../types/siteFormData';
-import { ServiceOption, SERVICE_OPTIONS } from '../types/subcontractorTypes';
+import { Subcontractor, serviceOptions } from '../types/subcontractorTypes';
 import { 
   Select,
   SelectContent,
@@ -163,7 +163,7 @@ export function SubcontractorsStep({
                     <div className="border rounded-md p-4 bg-background/50">
                       <ScrollArea className="h-48 pr-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {SERVICE_OPTIONS.map((service) => (
+                          {serviceOptions.map((service) => (
                             <div key={service.value} className="flex items-center space-x-2">
                               <Checkbox 
                                 id={`service-${index}-${service.value}`}
@@ -241,7 +241,7 @@ export function SubcontractorsStep({
             <CardFooter className="border-t pt-4 flex justify-between">
               <div className="flex flex-wrap gap-2">
                 {(subcontractor.services || []).map(service => {
-                  const serviceOption = SERVICE_OPTIONS.find(s => s.value === service);
+                  const serviceOption = serviceOptions.find(s => s.value === service);
                   return serviceOption ? (
                     <Badge key={service} variant="secondary">
                       {serviceOption.label}

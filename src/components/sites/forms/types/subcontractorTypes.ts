@@ -32,3 +32,6 @@ export const serviceOptions: ServiceOption[] = [
   { value: 'plumbing', label: 'Plumbing Services' },
   { value: 'landscaping', label: 'Landscaping' }
 ];
+
+// Add an alias for backward compatibility
+export const SERVICE_OPTIONS = serviceOptions;
