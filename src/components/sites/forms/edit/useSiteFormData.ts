@@ -1,9 +1,10 @@
 
 import { useEffect } from 'react';
-import { SiteFormData } from '../siteFormTypes';
+import { SiteFormData } from '../types/siteFormData';
 import { SiteRecord } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from '../types/billingTypes';
+import { asJsonObject } from '@/lib/utils/json';
 
 export function useSiteFormData(
   site: SiteRecord, 
@@ -27,7 +28,9 @@ export function useSiteFormData(
         // Set contract details if available
         contractDetails: {
           ...formData.contractDetails,
-          contractType: site.contract_details?.contractType || 'cleaning'
+          contractType: site.contract_details && typeof site.contract_details === 'object' 
+            ? (site.contract_details as any).contractType || 'cleaning'
+            : 'cleaning'
         }
       };
       

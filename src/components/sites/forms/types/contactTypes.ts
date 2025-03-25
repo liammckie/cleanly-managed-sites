@@ -1,40 +1,38 @@
 
 import { ContactRecord } from '@/lib/types';
 
-export interface SiteContact extends ContactRecord {
-  // Ensure we only have one primary flag property using is_primary from ContactRecord
-  role: string; // Changed from optional to required to match ContactRecord
+export interface SiteContact {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  department?: string;
+  notes?: string;
+  entity_id?: string;
+  entity_type?: string;
+  is_primary?: boolean;
 }
 
 export interface BillingContact {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  role?: string;
-  position?: string; // Added position field
+  email?: string;
+  phone?: string;
+  role: string;
 }
 
-export function convertContactRecordToSiteContact(contact: ContactRecord): SiteContact {
+export const convertContactRecordToSiteContact = (contactRecord: ContactRecord): SiteContact => {
   return {
-    ...contact,
-    role: contact.role || ''
+    id: contactRecord.id,
+    name: contactRecord.name,
+    email: contactRecord.email,
+    phone: contactRecord.phone,
+    role: contactRecord.role,
+    department: contactRecord.department,
+    notes: contactRecord.notes,
+    entity_id: contactRecord.entity_id,
+    entity_type: contactRecord.entity_type,
+    is_primary: contactRecord.is_primary
   };
-}
-
-export function convertSiteContactToContactRecord(contact: SiteContact, entityId: string): ContactRecord {
-  return {
-    id: contact.id,
-    name: contact.name,
-    role: contact.role || '',
-    department: contact.department || undefined,
-    email: contact.email || undefined,
-    phone: contact.phone || undefined,
-    is_primary: contact.is_primary || false,
-    notes: contact.notes || undefined,
-    entity_id: entityId,
-    entity_type: 'site',
-    created_at: contact.created_at || new Date().toISOString(),
-    updated_at: contact.updated_at || new Date().toISOString()
-  };
-}
+};

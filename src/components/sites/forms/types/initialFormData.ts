@@ -17,10 +17,27 @@ export const getInitialFormData = (): SiteFormData => {
       phone: '',
       notes: ''
     },
-    status: 'pending',
+    status: 'pending' as SiteStatus,
     monthlyRevenue: 0,
     annualRevenue: 0,
     monthlyCost: 0,
-    contacts: []
+    contacts: [],
+    contractDetails: {
+      contractType: 'cleaning',
+      value: 0,
+      startDate: '',
+      endDate: '',
+      terms: []
+    },
+    billingDetails: {
+      billingFrequency: 'monthly',
+      billingLines: [],
+      useSiteAddress: true
+    },
+    replenishables: {
+      stock: [],
+      supplies: []
+    },
+    subcontractors: []
   };
 };

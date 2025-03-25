@@ -1,5 +1,106 @@
 
-import { SiteStatus } from '@/components/sites/forms/types/siteFormData';
+import { Json } from '@/lib/utils/json';
+import { SiteStatus } from '@/lib/types';
+import { BillingLine } from './billingTypes'; 
+import { ContractDetails, ContractTerm } from './contractTypes';
+import { ReplenishableSupply } from './replenishableTypes';
+import { SiteContact } from './contactTypes';
+import { ServiceOption } from './subcontractorTypes';
+
+export interface JobSpecifications {
+  daysPerWeek?: number;
+  hoursPerDay?: number;
+  directEmployees?: number;
+  notes?: string;
+  // Extended job specifications
+  cleaningFrequency?: string;
+  customFrequency?: string;
+  serviceDays?: string;
+  serviceTime?: string;
+  estimatedHours?: string;
+  equipmentRequired?: string;
+  scopeNotes?: string;
+}
+
+export interface SecurityDetails {
+  accessCode?: string;
+  alarmCode?: string;
+  keyLocation?: string;
+  outOfHoursAccess?: boolean;
+}
+
+export interface PeriodicalService {
+  frequency: string;
+  lastCompleted?: string;
+  nextScheduled?: string;
+  charges?: number;
+  cleaning?: boolean;
+  shampooing?: boolean;
+  buffing?: boolean;
+  stripping?: boolean;
+  internal?: boolean;
+  external?: boolean;
+  dusting?: boolean;
+  upholstery?: boolean;
+  pressureWashing?: boolean;
+}
+
+export interface Replenishables {
+  stock?: any[];
+  contactDetails?: string;
+  supplies?: ReplenishableSupply[];
+  notes?: string;
+}
+
+export interface BillingDetails {
+  billingFrequency?: string;
+  paymentTerms?: string;
+  invoiceMethod?: string;
+  billingEmail?: string;
+  useSiteAddress?: boolean;
+  billingAddress?: string;
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  accountNumber?: string;
+  taxId?: string;
+  notes?: string;
+  billingLines: BillingLine[];
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  annualForecast?: string;
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string;
+  billingHoldEndDate?: string;
+  billingHoldReason?: string;
+  contacts?: any[];
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  annualContractorCost?: number;
+  rate?: number;
+}
+
+export interface AdHocWorkAuthorization {
+  requiresApproval?: boolean;
+  approvalThreshold?: number;
+  approvalContact?: string;
+  approvalEmail?: string;
+  maxAmount?: number;
+}
+
+export interface Subcontractor {
+  businessName: string;
+  contactName: string;
+  email?: string;
+  phone?: string;
+  services?: ServiceOption[];
+  customServices?: string;
+  monthlyCost?: number;
+  isFlatRate?: boolean;
+}
 
 export interface SiteFormData {
   id?: string;
@@ -19,57 +120,28 @@ export interface SiteFormData {
   };
   status: SiteStatus;
   customId?: string;
+  phone?: string;
+  email?: string;
   monthlyRevenue?: number;
   annualRevenue?: number;
   monthlyCost?: number;
-  contractDetails?: {
-    contractNumber?: string;
-    startDate?: string;
-    endDate?: string;
-    terminationPeriod?: string;
-    renewalTerms?: string;
-    autoRenewal?: boolean;
-    noticePeriod?: string;
-    contractType?: string;
-    renewalType?: string;
-    value?: number;
-    status?: string;
+  weeklyRevenue?: number;
+  contractDetails: ContractDetails & {
+    billingCycle?: string;
+    nextReviewDate?: string;
+    cpiApplied?: boolean;
+    cpiApplicationDate?: string;
+    terms?: ContractTerm[];
   };
-  jobSpecifications?: {
-    daysPerWeek?: number;
-    hoursPerDay?: number;
-    directEmployees?: number;
-    notes?: string;
-  };
-  securityDetails?: {
-    accessCode?: string;
-    alarmCode?: string;
-    keyLocation?: string;
-    outOfHoursAccess?: boolean;
-  };
-  replenishables?: {
-    stock?: any[];
-    contactDetails?: string;
-  };
-  periodicals?: Record<string, {
-    frequency: string;
-    lastCompleted?: string;
-    nextScheduled?: string;
-    charges?: number;
-  }>;
-  contacts?: {
-    id?: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    role: string;
-    department?: string;
-    notes?: string;
-    entity_id?: string;
-    entity_type?: string;
-    is_primary?: boolean;
-  }[];
+  jobSpecifications?: JobSpecifications;
+  securityDetails?: SecurityDetails;
+  replenishables: Replenishables;
+  periodicals?: Record<string, PeriodicalService>;
+  contacts: SiteContact[];
+  billingDetails: BillingDetails;
+  subcontractors: Subcontractor[];
+  additionalContracts?: ContractDetails[];
+  useClientInfo?: boolean;
+  adHocWorkAuthorization?: AdHocWorkAuthorization;
 }
 
-// Update SiteStatus to include "on-hold"
-export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold';
