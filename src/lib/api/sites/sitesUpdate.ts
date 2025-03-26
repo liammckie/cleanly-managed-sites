@@ -5,11 +5,6 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteRecord } from '@/lib/types';
 import { toast } from 'sonner';
 
-// Export a named object for compatibility
-export const sitesUpdate = {
-  updateSite
-};
-
 // Update an existing site
 export const updateSite = async (siteId: string, formData: Partial<SiteFormData>): Promise<SiteRecord> => {
   try {
@@ -57,13 +52,13 @@ export const updateSite = async (siteId: string, formData: Partial<SiteFormData>
       // Convert field names to snake_case for database consistency
       updateData.subcontractors = formData.subcontractors.map(sub => ({
         id: sub.id,
-        business_name: sub.name, // Field name mapping
-        contact_name: sub.contact_name, // Field name mapping
+        business_name: sub.business_name, // Use correct snake_case field name
+        contact_name: sub.contact_name, // Use correct snake_case field name
         email: sub.email,
         phone: sub.phone,
         services: sub.services,
-        is_flat_rate: sub.isFlatRate, // Field name mapping
-        monthly_cost: sub.monthlyCost, // Field name mapping
+        is_flat_rate: sub.is_flat_rate, // Use correct snake_case field name
+        monthly_cost: sub.monthly_cost, // Use correct snake_case field name
         notes: sub.notes
       }));
     } else {
@@ -144,4 +139,9 @@ export const updateSite = async (siteId: string, formData: Partial<SiteFormData>
     toast.error('Failed to update site');
     throw error;
   }
+};
+
+// Export a named object for compatibility
+export const sitesUpdate = {
+  updateSite
 };

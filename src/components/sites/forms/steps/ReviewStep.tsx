@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { SiteFormData } from '../siteFormTypes';
+import { SiteFormData } from '../types/siteFormData';
 import { getBusinessName, getContactName } from '../types/subcontractorTypes';
 
 interface ReviewStepProps {

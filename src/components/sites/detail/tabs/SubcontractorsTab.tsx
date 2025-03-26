@@ -64,7 +64,7 @@ export function SubcontractorsTab({ site }: SubcontractorsTabProps) {
                   <p className="text-sm text-muted-foreground mb-2">Services Provided</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {subcontractor.services?.map(service => {
-                      const serviceOption = serviceOptions.find(s => s.value === service);
+                      const serviceOption = serviceOptions.find(s => s.id === service);
                       return (
                         <Badge key={service} variant="secondary" className="flex items-center">
                           <CheckCircle className="h-3 w-3 mr-1" />

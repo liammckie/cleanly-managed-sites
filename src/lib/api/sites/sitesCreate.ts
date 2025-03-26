@@ -60,8 +60,8 @@ export const sitesCreate = {
     if (siteData.subcontractors.length > 0) {
       const subcontractorRecords = siteData.subcontractors.map(sub => ({
         site_id: data.id,
-        business_name: sub.businessName,
-        contact_name: sub.contactName,
+        business_name: sub.business_name,
+        contact_name: sub.contact_name,
         email: sub.email,
         phone: sub.phone,
         user_id: user.id,

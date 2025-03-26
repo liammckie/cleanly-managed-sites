@@ -18,16 +18,16 @@ export async function handleSiteSubcontractors(
   if (subcontractors.length > 0) {
     const subcontractorRecords = subcontractors.map(sub => ({
       site_id: siteId,
-      business_name: sub.businessName,
-      contact_name: sub.contactName,
+      business_name: sub.business_name,
+      contact_name: sub.contact_name,
       email: sub.email,
       phone: sub.phone,
       user_id: userId,
       // Add the new fields as JSON since they're not native columns
       services: sub.services || [],
       custom_services: sub.customServices || null,
-      monthly_cost: sub.monthlyCost || null,
-      is_flat_rate: sub.isFlatRate !== undefined ? sub.isFlatRate : true
+      monthly_cost: sub.monthly_cost || null,
+      is_flat_rate: sub.is_flat_rate !== undefined ? sub.is_flat_rate : true
     }));
     
     const { error: subError } = await supabase
