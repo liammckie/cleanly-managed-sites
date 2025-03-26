@@ -1,4 +1,5 @@
 
+
 export interface ContractTerm {
   id: string;
   name: string;
@@ -53,3 +54,4 @@ export interface ContractForecast {
   cost: number;
   profit: number;
 }
+

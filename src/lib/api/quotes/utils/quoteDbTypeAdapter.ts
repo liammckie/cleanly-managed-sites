@@ -27,6 +27,8 @@ export function toDay(day: string): Day {
     case 'friday':
     case 'saturday':
     case 'sunday':
+    case 'weekday':
+    case 'public_holiday':
       return day as Day;
     default:
       return 'monday';
@@ -53,7 +55,7 @@ export function toEmploymentType(type: string): EmploymentType {
 // Convert string employee level to EmployeeLevel enum
 export function toEmployeeLevel(level: string | number): EmployeeLevel {
   if (typeof level === 'number') {
-    if (level >= 1 && level <= 5) {
+    if (level >= 1 && level <= 8) {
       return level as EmployeeLevel;
     }
     return 1;
@@ -61,7 +63,7 @@ export function toEmployeeLevel(level: string | number): EmployeeLevel {
   
   // If it's a string, try parsing as number
   const numLevel = parseInt(level, 10);
-  if (!isNaN(numLevel) && numLevel >= 1 && numLevel <= 5) {
+  if (!isNaN(numLevel) && numLevel >= 1 && numLevel <= 8) {
     return numLevel as EmployeeLevel;
   }
   
@@ -77,7 +79,11 @@ export function toFrequency(frequency: string): Frequency {
     case 'monthly':
     case 'quarterly':
     case 'yearly':
+    case 'annually':
     case 'once':
+    case 'one-time':
+    case 'one_time':
+    case 'per_event':
       return frequency as Frequency;
     default:
       return 'monthly';

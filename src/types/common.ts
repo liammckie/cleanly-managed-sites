@@ -42,6 +42,7 @@ export type Frequency =
   | "once"
   | "annually"
   | "one_time"
+  | "one-time"
   | "per_event";
 
 // JSON utility type

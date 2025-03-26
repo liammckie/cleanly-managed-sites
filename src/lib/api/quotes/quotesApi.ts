@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { Quote } from '@/types/models';
 import { fetchQuoteShiftsByQuoteId } from './quoteShiftsApi';
 import { fetchQuoteSubcontractorsByQuoteId } from './quoteSubcontractorsApi';
-import { calculateTotalCosts } from '@/utils/quoteCalculations';
 import { adaptQuote, adaptQuotes, prepareQuoteForApi } from './utils/quoteAdapter';
+import { adaptQuote as adaptQuoteType } from '@/lib/utils/quoteTypeAdapter';
 
 // Fetch all quotes for the current user
 export const fetchQuotes = async (): Promise<Quote[]> => {
@@ -19,7 +19,8 @@ export const fetchQuotes = async (): Promise<Quote[]> => {
   }
 
   // Use the adapter to convert database records to Quote objects
-  return adaptQuotes(quotes);
+  const adaptedQuotes = adaptQuotes(quotes);
+  return adaptedQuotes.map(adaptQuoteType);
 };
 
 // Fetch a single quote by ID, including shifts and subcontractors
@@ -47,7 +48,7 @@ export const fetchQuoteById = async (quoteId: string): Promise<Quote> => {
   mappedQuote.shifts = shifts;
   mappedQuote.subcontractors = subcontractors;
 
-  return mappedQuote;
+  return adaptQuoteType(mappedQuote);
 };
 
 // Create a new quote
@@ -68,7 +69,8 @@ export const createQuoteMutation = async (quoteData: Partial<Quote>): Promise<Qu
   }
 
   // Convert the created quote to a Quote object using the adapter
-  return adaptQuote(createdQuote);
+  const adaptedQuote = adaptQuote(createdQuote);
+  return adaptQuoteType(adaptedQuote);
 };
 
 // Update an existing quote
@@ -90,7 +92,8 @@ export const updateQuoteMutation = async (quoteData: Quote): Promise<Quote> => {
   }
 
   // Convert the updated quote to a Quote object using the adapter
-  return adaptQuote(updatedQuote);
+  const adaptedQuote = adaptQuote(updatedQuote);
+  return adaptQuoteType(adaptedQuote);
 };
 
 // Delete a quote

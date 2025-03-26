@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { useUser } from '@/hooks/useUser';
 import { UserDetails } from '@/components/users/UserDetails';
 import { UserDetailSkeleton } from '@/components/users/UserDetailSkeleton';
 import { DeleteUserModal } from '@/components/data/DeleteUserModal';
-import { adaptSystemUser } from '@/utils/typeAdapters';
+import { adaptSystemUser } from '@/lib/utils/userTypeAdapter';
 import { SystemUser } from '@/lib/types';
 
 const UserDetail = () => {
@@ -15,6 +15,13 @@ const UserDetail = () => {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { user, isLoading, error } = useUser(userId!);
+
+  const adaptedUser = useMemo(() => {
+    if (user) {
+      return adaptSystemUser(user);
+    }
+    return null;
+  }, [user]);
 
   const handleConfirmDelete = () => {
     // Implementation for confirming delete
@@ -85,7 +92,7 @@ const UserDetail = () => {
             </div>
           ) : user ? (
             <UserDetails 
-              user={user} 
+              user={adaptedUser} 
               onEdit={handleEditUser} 
               onDelete={handleDeleteUser} 
             />

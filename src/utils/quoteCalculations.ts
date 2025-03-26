@@ -1,150 +1,137 @@
-import { Day, EmployeeLevel, EmploymentType } from '@/lib/award/types';
-import { Subcontractor } from '@/lib/types/quotes';
 
-interface QuoteShift {
-  id: string;
-  quoteId: string;
-  day: Day;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
-  allowances: string[];
-  estimatedCost: number;
-  location: string;
-  notes: string;
-}
+import { Frequency } from '@/types/common';
 
-export interface QuoteCalculationInput {
-  laborCost: number;
-  suppliesCost: number;
-  equipmentCost: number;
-  subcontractorCost: number;
-  overheadPercentage: number;
-  marginPercentage: number;
-}
+// Function to calculate weekly amount from a given amount and frequency
+export const calculateWeeklyAmount = (amount: number, frequency: string): number => {
+  if (!amount || amount <= 0) {
+    return 0;
+  }
 
-export interface QuoteCalculationResult {
-  laborCost: number;
-  suppliesCost: number;
-  equipmentCost: number;
-  subcontractorCost: number;
-  overheadCost: number;
-  totalCostBeforeMargin: number;
-  marginAmount: number;
-  totalCost: number;
-  price: number;
-}
+  switch (frequency) {
+    case 'daily':
+      return amount * 7;
+    case 'weekly':
+      return amount;
+    case 'fortnightly':
+      return amount / 2;
+    case 'monthly':
+      return amount * 12 / 52;
+    case 'quarterly':
+      return amount * 4 / 52;
+    case 'yearly':
+    case 'annually':
+      return amount / 52;
+    case 'once':
+    case 'one-time':
+    case 'one_time':
+    case 'per_event':
+      return 0; // One-time amounts don't contribute to recurring weekly amount
+    default:
+      return amount;
+  }
+};
 
-export function calculateTotalCosts(input: QuoteCalculationInput): QuoteCalculationResult {
-  const { 
-    laborCost, 
-    suppliesCost, 
-    equipmentCost, 
-    subcontractorCost,
-    overheadPercentage,
-    marginPercentage
-  } = input;
+// Function to calculate monthly amount from a given amount and frequency
+export const calculateMonthlyAmount = (amount: number, frequency: string): number => {
+  if (!amount || amount <= 0) {
+    return 0;
+  }
 
-  // Calculate the subtotal before overhead
-  const subtotalBeforeOverhead = laborCost + suppliesCost + equipmentCost + subcontractorCost;
-  
-  // Calculate overhead cost
-  const overheadCost = (subtotalBeforeOverhead * overheadPercentage) / 100;
-  
-  // Calculate total cost before margin
-  const totalCostBeforeMargin = subtotalBeforeOverhead + overheadCost;
-  
-  // Calculate margin amount
-  const marginAmount = (totalCostBeforeMargin * marginPercentage) / 100;
-  
-  // Calculate total cost and price
-  const totalCost = totalCostBeforeMargin + marginAmount;
-  const price = totalCost;
+  switch (frequency) {
+    case 'daily':
+      return amount * 30.42; // Average days in a month
+    case 'weekly':
+      return amount * 4.33; // Average weeks in a month
+    case 'fortnightly':
+      return amount * 2.17; // Average fortnights in a month
+    case 'monthly':
+      return amount;
+    case 'quarterly':
+      return amount / 3;
+    case 'yearly':
+    case 'annually':
+      return amount / 12;
+    case 'once':
+    case 'one-time':
+    case 'one_time':
+    case 'per_event':
+      return 0; // One-time amounts don't contribute to recurring monthly amount
+    default:
+      return amount;
+  }
+};
+
+// Function to calculate annual amount from a given amount and frequency
+export const calculateAnnualAmount = (amount: number, frequency: string): number => {
+  if (!amount || amount <= 0) {
+    return 0;
+  }
+
+  switch (frequency) {
+    case 'daily':
+      return amount * 365;
+    case 'weekly':
+      return amount * 52;
+    case 'fortnightly':
+      return amount * 26;
+    case 'monthly':
+      return amount * 12;
+    case 'quarterly':
+      return amount * 4;
+    case 'yearly':
+    case 'annually':
+      return amount;
+    case 'once':
+    case 'one-time':
+    case 'one_time':
+    case 'per_event':
+      return amount; // One-time amounts are included in annual amounts
+    default:
+      return amount;
+  }
+};
+
+// Function to calculate total amounts from billing lines
+export const calculateTotalAmounts = (billingLines: any[] = []): { totalWeeklyAmount: number; totalMonthlyAmount: number; totalAnnualAmount: number } => {
+  if (!billingLines || billingLines.length === 0) {
+    return {
+      totalWeeklyAmount: 0,
+      totalMonthlyAmount: 0,
+      totalAnnualAmount: 0
+    };
+  }
+
+  let totalWeekly = 0;
+  let totalMonthly = 0;
+  let totalAnnual = 0;
+
+  billingLines.forEach(line => {
+    // Skip lines that are on hold
+    if (line.onHold || line.on_hold) {
+      return;
+    }
+
+    const amount = Number(line.amount) || 0;
+    const frequency = line.frequency || 'monthly';
+
+    // Get existing calculated amounts or calculate them
+    const weekly = line.weeklyAmount || calculateWeeklyAmount(amount, frequency);
+    const monthly = line.monthlyAmount || calculateMonthlyAmount(amount, frequency);
+    const annual = line.annualAmount || calculateAnnualAmount(amount, frequency);
+
+    // Only add recurring amounts to weekly and monthly totals
+    if (line.isRecurring || line.is_recurring) {
+      totalWeekly += weekly;
+      totalMonthly += monthly;
+    }
+
+    // Always add to annual total (both recurring and one-time amounts)
+    totalAnnual += annual;
+  });
 
   return {
-    laborCost,
-    suppliesCost,
-    equipmentCost,
-    subcontractorCost,
-    overheadCost,
-    totalCostBeforeMargin,
-    marginAmount,
-    totalCost,
-    price
+    totalWeeklyAmount: totalWeekly,
+    totalMonthlyAmount: totalMonthly,
+    totalAnnualAmount: totalAnnual
   };
-}
-
-export function calculateLabourCost(
-  shifts: QuoteShift[],
-  baseRates: Record<EmployeeLevel, number>,
-  casualLoading: number
-): number {
-  return shifts.reduce((total, shift) => {
-    // Calculate hours (excluding break)
-    const startTime = new Date(`1970-01-01T${shift.startTime}:00`);
-    const endTime = new Date(`1970-01-01T${shift.endTime}:00`);
-    
-    // If end time is before start time, add a day to end time
-    if (endTime < startTime) {
-      endTime.setDate(endTime.getDate() + 1);
-    }
-    
-    const durationMs = endTime.getTime() - startTime.getTime();
-    let hours = durationMs / (1000 * 60 * 60);
-    
-    // Subtract break duration
-    hours -= shift.breakDuration / 60;
-    
-    // Get base rate for this employee level
-    const baseRate = baseRates[shift.level] || 0;
-    
-    // Apply casual loading if applicable
-    const rate = shift.employmentType === 'casual' 
-      ? baseRate * (1 + casualLoading / 100) 
-      : baseRate;
-    
-    // Calculate cost for this shift
-    const cost = rate * hours * shift.numberOfCleaners;
-    
-    return total + cost;
-  }, 0);
-}
-
-export function calculateSubcontractorTotalCost(subcontractors: Subcontractor[]): number {
-  return subcontractors.reduce((total, sub) => {
-    // For monthly costs, we need to convert to per-job cost based on frequency
-    let jobCost = sub.cost;
-    
-    switch (sub.frequency) {
-      case 'weekly':
-        // No change needed for weekly
-        break;
-      case 'fortnightly':
-        jobCost = sub.cost / 2;
-        break;
-      case 'monthly':
-        jobCost = sub.cost / 4.33;
-        break;
-      case 'quarterly':
-        jobCost = sub.cost / 13;
-        break;
-      case 'annually':
-      case 'yearly':
-        jobCost = sub.cost / 52;
-        break;
-      case 'one-time':
-      case 'one_time':
-      case 'per_event':
-        // For one-time costs, keep as is
-        break;
-      default:
-        // Default to as-is
-        break;
-    }
-    
-    return total + jobCost;
-  }, 0);
-}
+};

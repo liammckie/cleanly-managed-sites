@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useContracts } from '@/hooks/useContracts';
 import { DataTable } from '@/components/ui/data-table';
 import { ContractData, getColumns } from '@/components/contracts/ContractColumns';
@@ -17,6 +16,13 @@ export default function Contracts() {
     navigate('/contracts/create');
   };
   
+  const contractsData = useMemo(() => {
+    if (contractData && contractData.length > 0) {
+      return adaptContractDataArray(contractData);
+    }
+    return [];
+  }, [contractData]);
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -26,7 +32,7 @@ export default function Contracts() {
   }
   
   // Convert the contract data to the format expected by the DataTable
-  const adaptedContracts = contractData || [];
+  const adaptedContracts = contractsData || [];
   
   return (
     <div className="container py-10">
