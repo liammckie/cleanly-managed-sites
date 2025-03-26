@@ -22,10 +22,10 @@ export interface QuoteFormDetailsProps {
 
 export interface ShiftPlannerProps {
   shifts: QuoteShift[];
-  onAddShift?: (shiftData: Partial<QuoteShift>) => void;
-  onRemoveShift?: (shiftId: string) => void;
   onShiftsChange?: (newShifts: QuoteShift[]) => void;
   quoteId?: string | null;
+  onAddShift?: (shiftData: Partial<QuoteShift>) => void;
+  onRemoveShift?: (shiftId: string) => void;
 }
 
 export interface SubcontractorSectionProps {
@@ -58,4 +58,10 @@ export interface ContractSummary {
   totalValue: number;
   expiringWithin30Days: number;
   renewalRate: number;
+}
+
+// Interface for ShiftList component
+export interface ShiftListProps {
+  shifts: QuoteShift[];
+  onRemoveShift?: (shiftId: string) => void;
 }

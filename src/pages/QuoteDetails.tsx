@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
-import { fetchQuote } from '@/lib/api/quotes/quotesApi';
+import { fetchQuote } from '@/lib/api/quotes';
 import { QuoteDetails as QuoteDetailsComponent } from '@/components/quoting/QuoteDetails';
 import { adaptQuote } from '@/utils/typeAdapters';
 

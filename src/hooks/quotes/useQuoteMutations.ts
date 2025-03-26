@@ -1,54 +1,64 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { 
-  createQuoteMutation, 
-  updateQuoteMutation, 
-  deleteQuoteMutation 
-} from '@/lib/api/quotes';
+import { Quote } from '@/types/models';
+import { createQuoteMutation, updateQuoteMutation, deleteQuoteMutation } from '@/lib/api/quotes';
+import { adaptQuote } from '@/utils/typeAdapters';
 
-export function useCreateQuote() {
+export function useQuoteCreate() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: createQuoteMutation,
+    mutationFn: async (quoteData: Partial<Quote>) => {
+      const result = await createQuoteMutation(quoteData);
+      return adaptQuote(result);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote created successfully');
     },
     onError: (error: Error) => {
-      toast.error('Failed to create quote: ' + error.message);
+      toast.error(`Failed to create quote: ${error.message}`);
     }
   });
 }
 
-export function useUpdateQuote() {
+export function useQuoteUpdate() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: updateQuoteMutation,
+    mutationFn: async (quoteData: Quote) => {
+      const result = await updateQuoteMutation(quoteData as any);
+      return adaptQuote(result);
+    },
     onSuccess: (data) => {
+      const quoteId = (data as any).id;
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      queryClient.invalidateQueries({ queryKey: ['quote', data.id] });
+      if (quoteId) {
+        queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
+      }
       toast.success('Quote updated successfully');
     },
     onError: (error: Error) => {
-      toast.error('Failed to update quote: ' + error.message);
+      toast.error(`Failed to update quote: ${error.message}`);
     }
   });
 }
 
-export function useDeleteQuote() {
+export function useQuoteDelete() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: deleteQuoteMutation,
+    mutationFn: async (quoteId: string) => {
+      await deleteQuoteMutation(quoteId);
+      return quoteId;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote deleted successfully');
     },
     onError: (error: Error) => {
-      toast.error('Failed to delete quote: ' + error.message);
+      toast.error(`Failed to delete quote: ${error.message}`);
     }
   });
 }

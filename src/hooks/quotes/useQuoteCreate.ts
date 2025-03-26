@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Quote } from '@/types/models';
-import { createQuoteMutation } from '@/lib/api/quotes/quotesApi';
+import { createQuoteMutation } from '@/lib/api/quotes';
 import { adaptQuote } from '@/utils/typeAdapters';
 
 export function useQuoteCreate() {

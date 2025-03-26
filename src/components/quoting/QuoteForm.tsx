@@ -13,7 +13,6 @@ import { QuoteDetailsForm } from './QuoteDetailsForm';
 import { QuoteSummary } from './QuoteSummary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useOverheadProfiles } from '@/hooks/quotes/useOverheadProfiles';
-import { OverheadProfile } from '@/lib/utils/typeAdapters';
 import { Quote } from '@/types/models';
 
 // The component handles both creation and editing of quotes
@@ -149,27 +148,54 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
       // Create or update quote based on whether we have a quoteId
       if (quoteId) {
         // Update
-        await updateQuote({
+        const updatedQuote = await updateQuote({
           ...quoteData,
           id: quoteId
-        } as Quote);
+        } as any);
+        
         toast({
           title: "Quote Updated",
           description: "The quote has been successfully updated.",
         });
+        
         navigate(`/quotes/${quoteId}`);
       } else {
         // Create
-        const result = await createQuote(quoteData as Quote);
-        toast({
-          title: "Quote Created",
-          description: "The quote has been successfully created.",
-        });
-        if (result && result.id) {
-          navigate(`/quotes/${result.id}`);
-        } else {
-          // If result doesn't have id, just navigate to quotes list
-          navigate('/quotes');
+        try {
+          const result: any = await new Promise((resolve) => {
+            // Call createQuote and pass the callback to handle the result
+            createQuote(quoteData as Quote, {
+              onSuccess: (data) => {
+                resolve(data);
+              },
+              onError: (error) => {
+                resolve(null);
+                console.error('Error creating quote:', error);
+              }
+            });
+          });
+          
+          if (result && result.id) {
+            toast({
+              title: "Quote Created",
+              description: "The quote has been successfully created.",
+            });
+            navigate(`/quotes/${result.id}`);
+          } else {
+            // If result doesn't have id, just navigate to quotes list
+            toast({
+              title: "Quote Created",
+              description: "The quote has been successfully created.",
+            });
+            navigate('/quotes');
+          }
+        } catch (error) {
+          console.error('Error in quote creation:', error);
+          toast({
+            title: "Error",
+            description: "There was a problem saving the quote. Please try again.",
+            variant: "destructive",
+          });
         }
       }
     } catch (error) {
