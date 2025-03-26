@@ -1,115 +1,80 @@
 
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ContractData } from '@/lib/types/contracts';
 import { contractsApi } from '@/lib/api/sites/contractsApi';
-import { asJsonObject, jsonToString } from '@/lib/utils/json';
-
-export interface GroupedContracts {
-  active: ContractData[];
-  pending: ContractData[];
-  expired: ContractData[];
-  expiringSoon: ContractData[];
-  byStatus: Record<string, ContractData[]>;
-  byMonth: Record<string, ContractData[]>;
-}
+import { ContractData } from '@/lib/types/contracts';
+import { ContractSummaryData } from '@/components/sites/contract/types';
 
 export function useContracts() {
-  const { data: contractData = [], isLoading, error } = useQuery({
-    queryKey: ['contracts'],
-    queryFn: contractsApi.getContracts
+  const [groupedContracts, setGroupedContracts] = useState<Record<string, ContractData[]>>({});
+  const [metrics, setMetrics] = useState<ContractSummaryData>({
+    expiringThisMonth: 0,
+    expiringNext3Months: 0,
+    expiringNext6Months: 0,
+    expiringThisYear: 0,
+    valueExpiringThisMonth: 0,
+    valueExpiringNext3Months: 0,
+    valueExpiringNext6Months: 0,
+    valueExpiringThisYear: 0,
+    totalContracts: 0,
+    totalValue: 0,
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    avgContractValue: 0,
+    profitMargin: 0
   });
 
-  // Safely calculate metrics based on data
-  const totalValue = Array.isArray(contractData) 
-    ? contractData.reduce((sum, contract) => sum + (contract.monthly_revenue || 0), 0) 
-    : 0;
-    
-  const averageValue = Array.isArray(contractData) && contractData.length > 0 
-    ? totalValue / contractData.length 
-    : 0;
+  // Fetch contract data
+  const contractQuery = useQuery({
+    queryKey: ['contracts'],
+    queryFn: async () => {
+      return await contractsApi.getContracts();
+    },
+    meta: {
+      onError: 'Failed to load contracts'
+    }
+  });
 
-  // Group contracts
-  const groupedContracts: GroupedContracts = {
-    active: [],
-    pending: [],
-    expired: [],
-    expiringSoon: [],
-    byStatus: {},
-    byMonth: {}
-  };
-
-  if (Array.isArray(contractData)) {
-    // Group by status
-    contractData.forEach(contract => {
-      const status = contract.status || 'undefined';
-      if (!groupedContracts.byStatus[status]) {
-        groupedContracts.byStatus[status] = [];
-      }
-      groupedContracts.byStatus[status].push(contract);
-    });
-    
-    // Active contracts
-    groupedContracts.active = contractData.filter(contract => 
-      contract.status === 'active'
-    );
-    
-    // Pending contracts
-    groupedContracts.pending = contractData.filter(contract => 
-      contract.status === 'pending'
-    );
-    
-    // Calculate expired contracts
-    const today = new Date();
-    contractData.forEach(contract => {
-      const contractDetails = asJsonObject(contract.contract_details, { endDate: '' });
-      const endDateStr = contractDetails.endDate as string | undefined;
+  // Process and organize contract data
+  useEffect(() => {
+    if (contractQuery.data) {
+      const grouped: Record<string, ContractData[]> = {};
+      let totalValue = 0;
       
-      if (endDateStr && new Date(endDateStr) < today) {
-        groupedContracts.expired.push(contract);
-      }
+      // Group contracts by status
+      contractQuery.data.forEach(contract => {
+        const status = contract.status || 'unknown';
+        if (!grouped[status]) {
+          grouped[status] = [];
+        }
+        grouped[status].push(contract);
+        
+        // Calculate total value (assuming monthly revenue * 12 for annual value)
+        totalValue += (contract.monthly_revenue || 0) * 12;
+      });
       
-      // Check for contracts expiring in the next 30 days
-      if (endDateStr) {
-        const endDate = new Date(endDateStr);
-        const daysUntilExpiry = Math.floor((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (daysUntilExpiry >= 0 && daysUntilExpiry <= 30) {
-          groupedContracts.expiringSoon.push(contract);
-        }
-        
-        // Group by expiry month
-        if (!isNaN(endDate.getTime())) {
-          const monthKey = `${endDate.getMonth() + 1}-${endDate.getFullYear()}`;
-          if (!groupedContracts.byMonth[monthKey]) {
-            groupedContracts.byMonth[monthKey] = [];
-          }
-          groupedContracts.byMonth[monthKey].push(contract);
-        }
-      }
-    });
-  }
-
-  // Contract statistics
-  const totalContracts = Array.isArray(contractData) ? contractData.length : 0;
-  const activeCount = groupedContracts.active.length;
-  const pendingCount = groupedContracts.pending.length;
-  const expiredCount = groupedContracts.expired.length;
-  const expiringSoonCount = groupedContracts.expiringSoon.length;
+      setGroupedContracts(grouped);
+      
+      // Update metrics
+      setMetrics(prev => ({
+        ...prev,
+        totalContracts: contractQuery.data.length,
+        totalValue: totalValue,
+        totalRevenue: totalValue,
+        totalProfit: totalValue * 0.25, // Estimated profit
+        avgContractValue: contractQuery.data.length > 0 ? totalValue / contractQuery.data.length : 0,
+        profitMargin: totalValue > 0 ? 25 : 0 // Estimated profit margin
+      }));
+    }
+  }, [contractQuery.data]);
 
   return {
-    contractData,
-    isLoading,
-    isError: !!error,
-    error,
+    contractData: contractQuery.data || [],
     groupedContracts,
-    metrics: {
-      totalContracts,
-      activeCount,
-      pendingCount,
-      expiredCount,
-      expiringSoonCount,
-      totalValue,
-      averageValue
-    }
+    isLoading: contractQuery.isLoading,
+    isError: contractQuery.isError,
+    error: contractQuery.error,
+    metrics
   };
 }

@@ -6,6 +6,7 @@ import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
 import { SiteRecord } from '@/lib/types';
 import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 import { SiteFormHandlers } from './types/siteFormHandlers';
+import { SiteFormData } from './types/siteFormData';
 
 // Import the new components
 import { EditSiteFormHeader } from './edit/EditSiteFormHeader';
@@ -19,16 +20,22 @@ interface EditSiteFormProps {
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
   // Get form state and handlers from the useSiteForm hook
-  const siteForm = useSiteForm() as SiteFormHandlers;
+  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
   
   // Use our custom hooks to organize logic
   const { handleSubmit, isSaving } = useEditSiteActions(site, siteForm.formData);
   useSiteFormData(site, siteForm.formData, siteForm.setFormData, siteForm.form);
+
+  // Convert the handler function to the expected event handler type
+  const handleChangeFn = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    siteForm.handleChange && siteForm.handleChange(name as keyof SiteFormData, value);
+  };
   
   // Initialize the stepper with enhanced SiteFormHandlers type
   const steps = getSiteFormSteps(
     siteForm.formData,
-    siteForm.handleChange || (() => {}),
+    handleChangeFn,
     siteForm.handleNestedChange || (() => {}),
     (field, values) => console.log(`Array change for ${field}:`, values),
     (field, index, value) => console.log(`Array update for ${field} at index ${index}:`, value),

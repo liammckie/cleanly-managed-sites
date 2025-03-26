@@ -28,14 +28,14 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
   const expiringSites = sites.filter(site => {
     if (!site.contract_details) return false;
 
-    const contractDetails = asJsonObject(site.contract_details, {});
-    const endDate = contractDetails.endDate;
-
-    if (!endDate) return false;
-
-    const expiryDate = parseISO(endDate as string);
+    const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
+    const endDateStr = contractDetails.endDate as string | undefined;
+    
+    if (!endDateStr) return false;
+    
+    const endDate = parseISO(endDateStr);
     const now = new Date();
-    const timeDiff = expiryDate.getTime() - now.getTime();
+    const timeDiff = endDate.getTime() - now.getTime();
     const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
     return daysUntilExpiry <= 90 && daysUntilExpiry >= 0;
@@ -43,8 +43,8 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
 
   // Sort sites by expiry date
   expiringSites.sort((a, b) => {
-    const contractDetailsA = asJsonObject(a.contract_details || {}, {});
-    const contractDetailsB = asJsonObject(b.contract_details || {}, {});
+    const contractDetailsA = asJsonObject(a.contract_details || {}, { endDate: '' });
+    const contractDetailsB = asJsonObject(b.contract_details || {}, { endDate: '' });
 
     const endDateA = contractDetailsA.endDate as string | undefined;
     const endDateB = contractDetailsB.endDate as string | undefined;
@@ -66,7 +66,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
         <ScrollArea className="h-[450px] w-full">
           <div className="p-4">
             {expiringSites.map(site => {
-              const contractDetails = asJsonObject(site.contract_details || {}, {});
+              const contractDetails = asJsonObject(site.contract_details || {}, { endDate: '', contractNumber: '' });
               const endDate = contractDetails.endDate as string | undefined;
 
               if (!endDate) return null;

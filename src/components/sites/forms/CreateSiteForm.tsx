@@ -17,15 +17,21 @@ export function CreateSiteForm() {
   const formMethods = useForm<SiteFormData>();
   
   // Use the custom hooks
-  const siteForm = useSiteForm() as SiteFormHandlers;
+  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
   
   // Use the form submission hook
   const { handleSubmit, isSubmitting } = useCreateSiteFormSubmit(siteForm.formData);
 
+  // Convert the handler function to the expected event handler type
+  const handleChangeFn = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    siteForm.handleChange && siteForm.handleChange(name as keyof SiteFormData, value);
+  };
+
   // Initialize the stepper with enhanced SiteFormHandlers type
   const steps = getSiteFormSteps(
     siteForm.formData,
-    siteForm.handleChange || (() => {}),
+    handleChangeFn,
     siteForm.handleNestedChange || (() => {}),
     (field, values) => console.log(`Array change for ${field}:`, values),
     (field, index, value) => console.log(`Array update for ${field} at index ${index}:`, value),

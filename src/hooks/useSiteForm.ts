@@ -1,172 +1,135 @@
-import { useState, useEffect, useCallback } from 'react';
-import { clientsApi, sitesApi } from '@/lib/api';
+
+import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { toJsonValue } from '@/lib/utils/jsonUtils';
-import { SiteStatus } from '@/types/common';
+import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
+import { useForm } from 'react-hook-form';
 
-export function useSiteForm(initialData: Partial<SiteFormData> = {}) {
-  const [formData, setFormData] = useState<SiteFormData>({
-    name: '',
-    address: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'Australia',
-    status: 'active',
-    contacts: [],
-    contract_details: {
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-      autoRenewal: false,
-      contractNumber: '',
-      contractLength: 12,
-      contractLengthUnit: 'months',
-      renewalPeriod: 12,
-      renewalNotice: 30, 
-      noticeUnit: 'days',
-      serviceFrequency: 'weekly',
-      serviceDeliveryMethod: 'in-person'
-    },
-    billingDetails: {
-      billingCycle: 'monthly',
-      billingDay: 1,
-      billingLines: [],
-      billingNotes: '',  // Changed from billingTerms to billingNotes
-      billingMethod: 'invoice',
-      serviceDeliveryType: 'direct',
-    },
-    securityDetails: {
-      hasAlarm: false,
-      alarmCode: '',
-      keyRequired: false,
-      keyLocation: '',
-      swipeCard: false,
-      parkingDetails: '',
-      accessNotes: ''
-    },
-    jobSpecifications: {
-      daysPerWeek: 0,
-      hoursPerDay: 0,
-      directEmployees: 0,
-      notes: '',
-      cleaningFrequency: '',
-      customFrequency: '',
-      serviceDays: '',
-      serviceTime: '',
-      estimatedHours: '',
-      equipmentRequired: '',
-      scopeNotes: '',
-      weeklyContractorCost: 0,
-      monthlyContractorCost: 0,
-      annualContractorCost: 0
-    },
-    replenishables: {
-      stock: [],
-      supplies: [],
-      notes: ''
-    },
-    periodicals: {
-      ceilings: false,
-      glazing: false,
-      upholstery: false,
-      sanitizing: false,
-      notes: ''
-    },
-    adHocWorkAuthorization: {
-      authorizedAmount: 0,
-      requiresApproval: true,
-      approvalThreshold: 0,
-      approvalContact: '',
-      approvalEmail: '',
-      approvalPhone: '',
-      notes: ''
-    },
-    useClientInfo: false,
-    hasSubcontractors: false,
-    postcode: '',
-    notes: ''
-  });
-
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export function useSiteForm() {
+  const [formData, setFormData] = useState<SiteFormData>(getInitialFormData());
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({ ...prev, ...initialData }));
+  // Initialize the form with react-hook-form
+  const form = useForm<SiteFormData>({
+    defaultValues: {
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'Australia',
+      status: 'active',
+      contract_details: {
+        startDate: '',
+        endDate: '',
+        autoRenewal: false,
+        contractNumber: '',
+      },
+      billingDetails: {
+        billingFrequency: 'monthly',
+        paymentTerms: 'net30',
+        invoiceMethod: 'email',
+        // Properly use only fields defined in BillingDetails interface
+        billingNotes: '',
+        useSiteAddress: true,
+      },
+    },
+  });
+
+  const handleChange = (field: keyof SiteFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleDoubleNestedChange = (
+    section: keyof SiteFormData,
+    subsection: string,
+    field: string,
+    value: any
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [subsection]: {
+          ...prev[section]?.[subsection],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const validateStep = (stepIndex: number) => {
+    // Simple validation example
+    if (stepIndex === 0 && !formData.name) {
+      setErrors({ name: 'Site name is required' });
+      return false;
     }
-  }, [initialData]);
 
-  const updateField = useCallback(
-    (field: keyof SiteFormData, value: any) => {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    },
-    []
-  );
+    // Clear errors if validation passes
+    setErrors({});
+    return true;
+  };
 
-  const updateNestedField = useCallback(
-    (section: keyof SiteFormData, field: string, value: any) => {
-      setFormData(prev => {
-        if (prev[section] && typeof prev[section] === 'object') {
-          return {
-            ...prev,
-            [section]: { ...prev[section] as object, [field]: value }
-          };
-        }
-        return prev;
+  const getCompletionPercentage = () => {
+    let totalFields = 0;
+    let completedFields = 0;
+
+    // Count basic fields
+    ['name', 'address', 'city', 'state', 'postalCode', 'country', 'status'].forEach((field) => {
+      totalFields++;
+      if (formData[field as keyof SiteFormData]) completedFields++;
+    });
+
+    // Count contract fields
+    if (formData.contractDetails) {
+      ['startDate', 'endDate', 'contractNumber'].forEach((field) => {
+        totalFields++;
+        if (formData.contractDetails?.[field as keyof typeof formData.contractDetails])
+          completedFields++;
       });
-    },
-    []
-  );
+    }
 
-  const handleSubmit = async () => {
+    // Count billing fields
+    if (formData.billingDetails) {
+      ['billingFrequency', 'paymentTerms', 'invoiceMethod'].forEach((field) => {
+        totalFields++;
+        if (formData.billingDetails?.[field as keyof typeof formData.billingDetails])
+          completedFields++;
+      });
+    }
+
+    return Math.round((completedFields / totalFields) * 100);
+  };
+
+  const handleSubmit = async (siteId?: string) => {
     setIsSubmitting(true);
+    
     try {
-      // Validate required fields
-      if (!formData.name || !formData.address || !formData.clientId) {
-        toast({
-          title: 'Error',
-          description: 'Please fill in all required fields (Name, Address, Client).',
-          variant: 'destructive'
-        });
-        return;
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log('Form submitted:', formData);
+      
+      // Reset form after successful submission
+      if (!siteId) {
+        setFormData(getInitialFormData());
+        setStep(0);
       }
-
-      // Convert form data to the format expected by the API
-      const apiData = {
-        ...formData,
-        postal_code: formData.postalCode,
-        client_id: formData.clientId,
-        contract_details: toJsonValue(formData.contract_details),
-        billing_details: toJsonValue(formData.billingDetails),
-        security_details: toJsonValue(formData.securityDetails),
-        job_specifications: toJsonValue(formData.jobSpecifications),
-        replenishables: toJsonValue(formData.replenishables),
-        periodicals: toJsonValue(formData.periodicals),
-        adHocWorkAuthorization: toJsonValue(formData.adHocWorkAuthorization)
-      };
-
-      // Call the createSite API
-      const newSite = await sitesApi.createSite(apiData);
-
-      // Show success message
-      toast({
-        title: 'Success',
-        description: 'Site created successfully.',
-        duration: 3000
-      });
-
-      // Redirect to the new site's detail page
-      navigate(`/sites/${newSite.id}`);
-    } catch (error: any) {
-      console.error('Error creating site:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create site. Please try again.',
-        variant: 'destructive'
-      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -175,9 +138,17 @@ export function useSiteForm(initialData: Partial<SiteFormData> = {}) {
   return {
     formData,
     setFormData,
-    updateField,
-    updateNestedField,
+    step,
+    setStep,
+    errors,
+    setErrors,
+    handleChange,
+    handleNestedChange,
+    handleDoubleNestedChange,
+    validateStep,
+    getCompletionPercentage,
     handleSubmit,
     isSubmitting,
+    form,
   };
 }

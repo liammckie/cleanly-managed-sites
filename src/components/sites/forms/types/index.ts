@@ -12,7 +12,7 @@ export * from './formValidation';
 export * from './initialFormData';
 export * from './siteFormHandlers';
 
-// Export billing types
+// Export billing types with proper 'export type' syntax
 export { 
   BillingFrequency, 
   BillingContact, 

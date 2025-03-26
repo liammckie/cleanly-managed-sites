@@ -11,7 +11,7 @@ export const contractsApi = {
         .from('sites')
         .select(`
           id,
-          name as site_name,
+          name,
           client_id,
           client_name,
           monthly_revenue,
@@ -27,7 +27,7 @@ export const contractsApi = {
         return {
           id: site.id,
           site_id: site.id,
-          site_name: site.site_name || '',
+          site_name: site.name || '',
           client_id: site.client_id || '',
           client_name: site.client_name || '',
           monthly_revenue: site.monthly_revenue || 0,
@@ -49,7 +49,7 @@ export const contractsApi = {
         .from('sites')
         .select(`
           id,
-          name as site_name,
+          name,
           client_id,
           client_name,
           monthly_revenue,
@@ -66,7 +66,7 @@ export const contractsApi = {
       // Filter contracts expiring in the specified timeframe
       return (data || [])
         .filter(site => {
-          const contractDetails = asJsonObject(site.contract_details, {});
+          const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
           const endDateStr = contractDetails.endDate as string | undefined;
           
           if (!endDateStr) return false;
@@ -77,7 +77,7 @@ export const contractsApi = {
         .map(site => ({
           id: site.id,
           site_id: site.id,
-          site_name: site.site_name || '',
+          site_name: site.name || '',
           client_id: site.client_id || '',
           client_name: site.client_name || '',
           monthly_revenue: site.monthly_revenue || 0,

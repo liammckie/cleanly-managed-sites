@@ -31,6 +31,7 @@ export interface BillingDetails {
   billingLines?: BillingLine[];
   contacts?: BillingContact[];
   billingNotes?: string;
+  notes?: string;
   // Billing status fields
   billingOnHold?: boolean;
   billingHoldStartDate?: string;
@@ -38,6 +39,7 @@ export interface BillingDetails {
   billingHoldReason?: string;
   // Billing configuration
   billingFrequency?: BillingFrequency;
+  billingCycle?: string;
   paymentTerms?: string;
   invoiceMethod?: string;
   billingEmail?: string;
@@ -58,4 +60,30 @@ export interface BillingDetails {
   totalWeeklyAmount?: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
+  // Invoice fields
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  // Revenue fields
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  // Rate field
+  rate?: number;
+  // Service delivery fields
+  serviceDeliveryType?: string;
+  serviceType?: string;
+  deliveryMethod?: string;
+  // Contractor cost fields
+  weeklyBudget?: number;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  contractorCostFrequency?: string;
+  contractorInvoiceFrequency?: string;
 }

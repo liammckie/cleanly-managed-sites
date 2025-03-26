@@ -1,165 +1,139 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { SiteRecord } from '@/lib/types';
-import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
-import { asJsonObject, jsonToString } from '@/lib/utils/json';
+import { asJsonObject } from '@/lib/utils/json';
+import { ContractForecast, ContractSummaryData } from '@/components/sites/contract/types';
+import { ContractData } from '@/lib/types/contracts';
+import { addMonths, format, parseISO, startOfMonth } from 'date-fns';
+import { useContracts } from './useContracts';
 
-/**
- * Generate contract forecast data from site data
- */
-export function useContractForecast() {
-  const query = useQuery({
-    queryKey: ['contract-forecast'],
-    queryFn: async () => {
-      try {
-        // Fetch sites data
-        const response = await fetch('/api/sites');
-        const sites = await response.json() as SiteRecord[];
-        
-        return calculateForecast(sites);
-      } catch (error) {
-        console.error('Error generating contract forecast:', error);
-        throw error;
-      }
-    }
-  });
-
-  return query;
+interface ForecastData {
+  forecasts: ContractForecast[];
+  summaryData: ContractSummaryData;
 }
 
-/**
- * Calculate forecast data from sites
- */
-function calculateForecast(sites: SiteRecord[]) {
-  const forecast: ContractForecast[] = [];
-  let totalRevenue = 0;
-  let totalCost = 0;
-  let totalProfit = 0;
-  let sitesWithValidContracts = 0;
+export function useContractForecast() {
+  const { contractData } = useContracts();
 
-  // Process each site
-  sites.forEach(site => {
-    const details = asJsonObject(site.contract_details, {});
-    const contractStartStr = details.startDate as string | undefined;
-    const contractEndStr = details.endDate as string | undefined;
+  return useQuery({
+    queryKey: ['contractForecast'],
+    queryFn: async () => calculateContractForecast(contractData || []),
+    enabled: !!contractData && contractData.length > 0
+  });
+}
+
+// Calculate contract forecasts and summary data
+const calculateContractForecast = (contracts: ContractData[]): ForecastData => {
+  const now = new Date();
+  const thisMonth = startOfMonth(now);
+  const in3Months = addMonths(thisMonth, 3);
+  const in6Months = addMonths(thisMonth, 6);
+  const in12Months = addMonths(thisMonth, 12);
+  
+  // Initialize summary counters
+  const summary: ContractSummaryData = {
+    expiringThisMonth: 0,
+    expiringNext3Months: 0,
+    expiringNext6Months: 0,
+    expiringThisYear: 0,
+    valueExpiringThisMonth: 0,
+    valueExpiringNext3Months: 0,
+    valueExpiringNext6Months: 0,
+    valueExpiringThisYear: 0,
+    totalContracts: contracts.length,
+    totalValue: 0,
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    avgContractValue: 0,
+    profitMargin: 0
+  };
+  
+  const monthlyForecasts: Record<string, ContractForecast> = {};
+  
+  // Process each contract
+  contracts.forEach(contract => {
+    const details = asJsonObject(contract.contract_details, { startDate: '', endDate: '' });
     
-    const contractStart = contractStartStr ? new Date(contractStartStr) : null;
-    const contractEnd = contractEndStr ? new Date(contractEndStr) : null;
+    // Get contract dates
+    const startDateStr = details.startDate as string;
+    const endDateStr = details.endDate as string;
     
-    // Skip sites without contract dates
-    if (!contractStart || !contractEnd) return;
+    // Skip contracts without valid dates
+    if (!startDateStr || !endDateStr) return;
     
-    sitesWithValidContracts++;
-    
-    // Calculate financial metrics
-    const monthlyRevenue = site.monthly_revenue || 0;
-    const monthlyCost = site.monthly_cost || 0;
-    const monthlyProfit = monthlyRevenue - monthlyCost;
-    
-    totalRevenue += monthlyRevenue;
-    totalCost += monthlyCost;
-    totalProfit += monthlyProfit;
-    
-    // Generate monthly forecast (simplified)
-    const startMonth = contractStart.getMonth();
-    const endMonth = contractEnd.getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    for (let i = 0; i <= 11; i++) {
-      const monthDate = new Date(currentYear, i, 1);
-      const monthName = monthDate.toLocaleString('default', { month: 'short' });
+    try {
+      const startDate = parseISO(startDateStr);
+      const endDate = parseISO(endDateStr);
+      const monthlyValue = contract.monthly_revenue || 0;
       
-      // If this month is within the contract period
-      if (i >= startMonth && i <= endMonth) {
-        const existingEntry = forecast.find(entry => entry.month === monthName);
+      // Add to total value
+      summary.totalValue += monthlyValue * 12;
+      summary.totalRevenue += monthlyValue * 12;
+      
+      // Check expiration timelines
+      if (endDate <= in12Months) {
+        summary.expiringThisYear++;
+        summary.valueExpiringThisYear += monthlyValue * 12;
         
-        if (existingEntry) {
-          existingEntry.revenue += monthlyRevenue;
-          existingEntry.cost += monthlyCost;
-          existingEntry.profit += monthlyProfit;
-        } else {
-          forecast.push({
-            month: monthName,
-            revenue: monthlyRevenue,
-            cost: monthlyCost,
-            profit: monthlyProfit
-          });
+        if (endDate <= in6Months) {
+          summary.expiringNext6Months++;
+          summary.valueExpiringNext6Months += monthlyValue * 12;
+          
+          if (endDate <= in3Months) {
+            summary.expiringNext3Months++;
+            summary.valueExpiringNext3Months += monthlyValue * 12;
+            
+            if (endDate <= addMonths(thisMonth, 1)) {
+              summary.expiringThisMonth++;
+              summary.valueExpiringThisMonth += monthlyValue * 12;
+            }
+          }
         }
       }
+      
+      // Calculate and add to monthly forecasts
+      let currentMonth = startOfMonth(startDate > thisMonth ? startDate : thisMonth);
+      const endMonth = startOfMonth(endDate);
+      
+      while (currentMonth <= endMonth && currentMonth <= addMonths(thisMonth, 24)) {
+        const monthKey = format(currentMonth, 'yyyy-MM');
+        
+        if (!monthlyForecasts[monthKey]) {
+          monthlyForecasts[monthKey] = {
+            month: format(currentMonth, 'MMM yyyy'),
+            revenue: 0,
+            cost: 0,
+            profit: 0
+          };
+        }
+        
+        monthlyForecasts[monthKey].revenue += monthlyValue;
+        monthlyForecasts[monthKey].profit += monthlyValue * 0.25; // Assumed profit margin
+        
+        currentMonth = addMonths(currentMonth, 1);
+      }
+    } catch (error) {
+      console.error('Error processing contract dates:', error);
     }
   });
   
-  // Sort forecast by month
-  forecast.sort((a, b) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months.indexOf(a.month) - months.indexOf(b.month);
+  // Calculate average contract value and profit margin
+  if (contracts.length > 0) {
+    summary.avgContractValue = summary.totalValue / contracts.length;
+  }
+  
+  summary.totalProfit = summary.totalRevenue * 0.25; // Assumed profit margin
+  summary.profitMargin = summary.totalRevenue > 0 ? (summary.totalProfit / summary.totalRevenue) * 100 : 0;
+  
+  // Convert forecasts object to array and sort by month
+  const forecasts = Object.values(monthlyForecasts).sort((a, b) => {
+    const monthA = parseISO(`${a.month.slice(-4)}-${a.month.slice(0, 3)}-01`);
+    const monthB = parseISO(`${b.month.slice(-4)}-${b.month.slice(0, 3)}-01`);
+    return monthA.getTime() - monthB.getTime();
   });
   
-  // Generate expiration metrics
-  const now = new Date();
-  const expiringThisMonth = countExpiringSites(sites, 0, 30);
-  const expiringNext3Months = countExpiringSites(sites, 0, 90);
-  const expiringNext6Months = countExpiringSites(sites, 0, 180);
-  const expiringThisYear = countExpiringSites(sites, 0, 365);
-  
-  const valueExpiringThisMonth = calculateExpiringValue(sites, 0, 30);
-  const valueExpiringNext3Months = calculateExpiringValue(sites, 0, 90);
-  const valueExpiringNext6Months = calculateExpiringValue(sites, 0, 180);
-  const valueExpiringThisYear = calculateExpiringValue(sites, 0, 365);
-  
-  // Return forecast and summary data
   return {
-    forecast,
-    summaryData: {
-      totalRevenue,
-      totalCost,
-      totalProfit,
-      avgContractValue: sitesWithValidContracts > 0 ? totalRevenue / sitesWithValidContracts : 0,
-      profitMargin: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
-      expiringThisMonth,
-      expiringNext3Months,
-      expiringNext6Months,
-      expiringThisYear,
-      valueExpiringThisMonth,
-      valueExpiringNext3Months,
-      valueExpiringNext6Months,
-      valueExpiringThisYear,
-      totalContracts: sitesWithValidContracts
-    },
-    hasValidContract: sitesWithValidContracts.toString()
+    forecasts,
+    summaryData: summary
   };
-}
-
-/**
- * Count sites expiring within a date range
- */
-function countExpiringSites(sites: SiteRecord[], minDays: number, maxDays: number): number {
-  const now = new Date();
-  return sites.filter(site => {
-    const details = asJsonObject(site.contract_details, {});
-    const endDateStr = details.endDate as string | undefined;
-    if (!endDateStr) return false;
-    
-    const endDate = new Date(endDateStr);
-    const daysUntilExpiry = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry >= minDays && daysUntilExpiry <= maxDays;
-  }).length;
-}
-
-/**
- * Calculate total value of contracts expiring within a date range
- */
-function calculateExpiringValue(sites: SiteRecord[], minDays: number, maxDays: number): number {
-  const now = new Date();
-  return sites
-    .filter(site => {
-      const details = asJsonObject(site.contract_details, {});
-      const endDateStr = details.endDate as string | undefined;
-      if (!endDateStr) return false;
-      
-      const endDate = new Date(endDateStr);
-      const daysUntilExpiry = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return daysUntilExpiry >= minDays && daysUntilExpiry <= maxDays;
-    })
-    .reduce((sum, site) => sum + (site.monthly_revenue || 0), 0);
-}
+};
