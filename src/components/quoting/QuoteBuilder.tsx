@@ -7,10 +7,11 @@ import { QuoteSummary } from './QuoteSummary';
 import { QuoteDetails } from './QuoteDetails';
 import { SubcontractorSection } from './SubcontractorSection';
 import { Calendar, FileText, DollarSign, Users } from 'lucide-react';
-import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
+import { Quote, QuoteShift, Subcontractor } from '@/lib/types/quotes';
 
 export function QuoteBuilder() {
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [shifts, setShifts] = useState<QuoteShift[]>([]);
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [overheadPercentage, setOverheadPercentage] = useState(15);
@@ -22,6 +23,10 @@ export function QuoteBuilder() {
   
   const handleSubcontractorsChange = (newSubcontractors: Subcontractor[]) => {
     setSubcontractors(newSubcontractors);
+  };
+
+  const handleQuoteSelect = (quoteId: string) => {
+    setActiveQuoteId(quoteId);
   };
 
   return (
@@ -56,8 +61,8 @@ export function QuoteBuilder() {
             
             <TabsContent value="details">
               <QuoteDetails
-                quoteId={activeQuoteId}
-                onQuoteSelect={setActiveQuoteId}
+                quote={quote}
+                onQuoteSelect={handleQuoteSelect}
               />
             </TabsContent>
             

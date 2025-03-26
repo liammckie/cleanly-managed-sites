@@ -1,11 +1,12 @@
 
 import { Quote, QuoteShift, Subcontractor, QuoteSubcontractor } from '@/lib/types/quotes';
+import { Json } from '@/lib/types';
 
 // Database interface definitions
 export interface DbQuote {
   id: string;
   name: string;
-  title?: string;  // Add title
+  title?: string;
   client_name: string;
   site_name?: string;
   description?: string;
@@ -93,7 +94,7 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     // Use snake_case properties directly from DB
     id: dbQuote.id,
     name: dbQuote.name,
-    title: dbQuote.title || dbQuote.name, // Add title field
+    title: dbQuote.title || dbQuote.name,
     client_name: dbQuote.client_name,
     site_name: dbQuote.site_name,
     status: dbQuote.status as any,
@@ -134,6 +135,8 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     marginPercentage: dbQuote.margin_percentage,
     totalPrice: dbQuote.total_price,
     laborCost: dbQuote.labor_cost,
+    supplies_cost: dbQuote.supplies_cost || 0,
+    equipment_cost: dbQuote.equipment_cost || 0,
     suppliesCost: dbQuote.supplies_cost || 0,
     equipmentCost: dbQuote.equipment_cost || 0,
     subcontractorCost: dbQuote.subcontractor_cost,
@@ -162,7 +165,7 @@ export function quoteToDb(quote: Quote): DbQuote {
   return {
     id: quote.id,
     name: quote.name || quote.title || '',
-    title: quote.title || quote.name, // Add title field
+    title: quote.title || quote.name,
     client_name: quote.client_name || quote.clientName || '',
     site_name: quote.site_name || quote.siteName || '',
     description: quote.description,

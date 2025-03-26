@@ -6,12 +6,12 @@ export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarte
 export interface QuoteShift {
   id: string;
   quoteId: string;
-  day: Day | string;
+  day: Day | string;  // Support both string and Day enum
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: EmploymentType | string;
+  employmentType: EmploymentType | string;  // Support both string and EmploymentType enum
   level: EmployeeLevel | number;
   allowances: string[];
   estimatedCost: number;
@@ -95,13 +95,21 @@ export interface Quote {
   userId?: string;
   createdBy?: string;
   created_by?: string;
+  
+  // Additional duplicated properties needed for type compatibility
   overheadPercentage: number;
   marginPercentage: number;
   totalPrice: number;
   laborCost: number;
+  suppliesCost?: number;
+  equipmentCost?: number;
   subcontractorCost: number;
   createdAt: string;
   updatedAt: string;
+  quoteNumber?: string;
+  validUntil?: string;
+  clientId?: string;
+  siteId?: string;
 }
 
 export interface QuoteSubcontractor extends Subcontractor {

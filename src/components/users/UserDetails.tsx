@@ -33,6 +33,8 @@ const getInitials = (name: string) => {
 
 export function UserDetails({ user, onEdit, onDelete }: UserDetailsProps) {
   const userFullName = user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  const roleName = user.role && typeof user.role === 'object' ? user.role.name : 
+                  typeof user.role === 'string' ? user.role : 'User';
   
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -49,7 +51,7 @@ export function UserDetails({ user, onEdit, onDelete }: UserDetailsProps) {
             </Badge>
           </div>
           <CardDescription className="mt-1">{user.title || 'Team Member'}</CardDescription>
-          <CardDescription className="mt-1">{user.role && typeof user.role === 'object' ? user.role.name : user.role || ''}</CardDescription>
+          <CardDescription className="mt-1">{roleName}</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">

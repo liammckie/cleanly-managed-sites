@@ -48,11 +48,18 @@ export function ShiftScheduler({
   onCancel,
   onAddShiftClick
 }: ShiftSchedulerProps) {
+  // Ensure the day value is always a valid Day enum when passing to award/types components
+  const typeSafeNewShift = {
+    ...newShift,
+    day: (newShift.day || 'monday') as Day,
+    employmentType: (newShift.employmentType || 'full_time') as EmploymentType
+  };
+  
   // Render the appropriate view based on activeView prop
   if (activeView === 'add') {
     return (
       <ShiftForm 
-        shift={newShift}
+        shift={typeSafeNewShift}
         onShiftChange={onShiftChange}
         onAllowanceToggle={onAllowanceToggle}
         onAddShift={onAddShift}

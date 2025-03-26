@@ -1,100 +1,47 @@
-import { QuoteShift, EmploymentType, EmployeeLevel, Day, PayCondition } from './types';
-import { cleaningServicesAward } from './awardData';
 
-export const getPayConditionForDay = (day: Day): PayCondition => {
-  switch (day) {
-    case 'saturday':
-      return 'saturday';
-    case 'sunday':
-      return 'sunday';
-    case 'public_holiday':
-      return 'public_holiday';
-    case 'monday':
-      return 'monday';
-    case 'tuesday':
-      return 'tuesday';
-    case 'wednesday':
-      return 'wednesday';
-    case 'thursday':
-      return 'thursday';
-    case 'friday':
-      return 'friday';
-    default:
-      return 'weekday';
-  }
-};
-
-export const getShiftDurationHours = (startTime: string, endTime: string, breakDuration: number): number => {
-  // Convert the time strings to Date objects for comparison
-  const start = new Date(`2000-01-01T${startTime}`);
-  const end = new Date(`2000-01-01T${endTime}`);
-  
-  // If end time is before start time, assume it's the next day
-  let endTime24h = end;
-  if (end < start) {
-    endTime24h = new Date(`2000-01-02T${endTime}`);
-  }
-  
-  // Calculate the difference in milliseconds
-  const diff = endTime24h.getTime() - start.getTime();
-  
-  // Convert to hours and subtract break
-  const hours = diff / (1000 * 60 * 60);
-  const workHours = hours - (breakDuration / 60);
-  
-  return workHours;
-};
-
-export const calculateShiftCost = (
-  shift: QuoteShift,
-  allowanceRates: Record<string, number>
+/**
+ * Calculate the duration of a shift in hours
+ * @param startTime - Shift start time in format "HH:MM"
+ * @param endTime - Shift end time in format "HH:MM"
+ * @param breakDuration - Break duration in minutes
+ * @returns Duration in hours (with decimal for minutes)
+ */
+export const getShiftDurationHours = (
+  startTime: string,
+  endTime: string,
+  breakDuration: number = 0
 ): number => {
-  // Get the employee level rates
-  const employeeRates = cleaningServicesAward.levels.find(
-    level => level.level === shift.level && level.employmentType === shift.employmentType
-  );
+  // Parse times into hours and minutes
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const [endHours, endMinutes] = endTime.split(':').map(Number);
   
-  if (!employeeRates) {
-    console.error('Employee rates not found for level', shift.level, 'and type', shift.employmentType);
-    return 0;
-  }
+  // Convert to minutes since midnight
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
   
-  // Get the base hourly rate for the specific level and employment type
-  const hourlyRate = employeeRates.hourlyRate;
+  // Handle overnight shifts
+  let durationMinutes = endTotalMinutes >= startTotalMinutes
+    ? endTotalMinutes - startTotalMinutes
+    : (24 * 60 - startTotalMinutes) + endTotalMinutes;
   
-  // Calculate the duration of the shift in hours (excluding breaks)
-  const workHours = getShiftDurationHours(shift.startTime, shift.endTime, shift.breakDuration);
+  // Subtract break time
+  durationMinutes -= breakDuration;
   
-  // Determine the rate multiplier based on the day of the week
-  let condition = getPayConditionForDay(shift.day as Day);
-  let rateMultiplier = 1.0;
-  
-  // Use the correct key for public_holiday
-  if (condition === 'weekday') {
-    rateMultiplier = employeeRates.rates.weekday.multiplier;
-  } else if (condition === 'saturday') {
-    rateMultiplier = employeeRates.rates.saturday.multiplier;
-  } else if (condition === 'sunday') {
-    rateMultiplier = employeeRates.rates.sunday.multiplier;
-  } else if (condition === 'public_holiday') {
-    rateMultiplier = employeeRates.rates['public_holiday'].multiplier;
-  } else if (employeeRates.rates[condition]) {
-    // Handle other days explicitly
-    rateMultiplier = employeeRates.rates[condition].multiplier;
-  }
-  
-  // Calculate the base labor cost
-  let laborCost = hourlyRate * workHours * rateMultiplier * shift.numberOfCleaners;
-  
-  // Add allowances if applicable
-  let allowanceCost = 0;
-  if (shift.allowances && shift.allowances.length > 0) {
-    for (const allowance of shift.allowances) {
-      if (allowanceRates[allowance]) {
-        allowanceCost += allowanceRates[allowance] * workHours * shift.numberOfCleaners;
-      }
-    }
-  }
-  
-  return laborCost + allowanceCost;
+  // Convert to hours (with decimal)
+  return durationMinutes / 60;
+};
+
+/**
+ * Calculate the cost of a shift based on hours, rate, and number of cleaners
+ * @param hours - Shift duration in hours
+ * @param hourlyRate - Hourly rate for the cleaner
+ * @param numberOfCleaners - Number of cleaners for this shift
+ * @returns Total cost for the shift
+ */
+export const calculateShiftCost = (
+  hours: number,
+  hourlyRate: number,
+  numberOfCleaners: number = 1
+): number => {
+  return hours * hourlyRate * numberOfCleaners;
 };
