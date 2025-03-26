@@ -1,5 +1,11 @@
-
-import { Day, EmployeeLevel, EmploymentType, Frequency, Json, QuoteStatus, SiteStatus } from './common';
+import { 
+  Day, 
+  EmployeeLevel, 
+  EmploymentType, 
+  BillingFrequency, 
+  SiteStatus, 
+  Frequency 
+} from './common';
 
 // User related types
 export interface SystemUser {

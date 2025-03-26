@@ -1,180 +1,101 @@
 
-import { DbQuoteShift, DbQuoteSubcontractor, DbQuote } from "@/types/api";
-import { Quote, QuoteShift, QuoteSubcontractor, OverheadProfile, DbOverheadProfile } from "@/types/models";
-import { Day, EmploymentType, EmployeeLevel, Frequency } from "@/types/common";
+import { Day as AwardDay } from '@/lib/award/types';
+import { Day as QuoteDay } from '@/lib/types/award/types';
+import { Json } from '@/lib/types';
+import { QuoteShift as AwardQuoteShift } from '@/lib/award/types';
+import { QuoteShift as TypesQuoteShift } from '@/lib/types/award/types';
+import { QuoteShift as QuotesQuoteShift } from '@/lib/types/quotes';
+import { Quote as AwardQuote } from '@/lib/award/types';
+import { Quote as TypesQuote } from '@/lib/types/award/types';
+import { Quote as QuotesQuote } from '@/lib/types/quotes';
+import { Quote as QuoteTypesQuote } from '@/lib/types/quoteTypes';
 
-// Type adapter to convert database form of a quote to our app model
-export function dbToQuote(dbQuote: DbQuote): Quote {
-  return {
-    id: dbQuote.id,
-    name: dbQuote.name,
-    title: dbQuote.title,
-    client_name: dbQuote.client_name,
-    clientName: dbQuote.client_name,
-    site_name: dbQuote.site_name,
-    siteName: dbQuote.site_name || '',
-    description: dbQuote.description,
-    status: dbQuote.status as any,
-    overhead_percentage: dbQuote.overhead_percentage,
-    overheadPercentage: dbQuote.overhead_percentage,
-    margin_percentage: dbQuote.margin_percentage,
-    marginPercentage: dbQuote.margin_percentage,
-    total_price: dbQuote.total_price,
-    totalPrice: dbQuote.total_price,
-    labor_cost: dbQuote.labor_cost,
-    laborCost: dbQuote.labor_cost,
-    supplies_cost: dbQuote.supplies_cost,
-    equipment_cost: dbQuote.equipment_cost,
-    subcontractor_cost: dbQuote.subcontractor_cost,
-    subcontractorCost: dbQuote.subcontractor_cost,
-    created_at: dbQuote.created_at,
-    createdAt: dbQuote.created_at,
-    updated_at: dbQuote.updated_at,
-    updatedAt: dbQuote.updated_at,
-    quote_number: dbQuote.quote_number,
-    quoteNumber: dbQuote.quote_number,
-    valid_until: dbQuote.valid_until,
-    validUntil: dbQuote.valid_until,
-    client_id: dbQuote.client_id,
-    clientId: dbQuote.client_id,
-    site_id: dbQuote.site_id,
-    siteId: dbQuote.site_id,
-    notes: dbQuote.notes || '',
-    overheadCost: dbQuote.overhead_cost,
-    totalCost: dbQuote.total_cost,
-    marginAmount: dbQuote.margin_amount,
-    startDate: dbQuote.start_date,
-    start_date: dbQuote.start_date,
-    endDate: dbQuote.end_date,
-    end_date: dbQuote.end_date,
-    expiryDate: dbQuote.expiry_date,
-    expiry_date: dbQuote.expiry_date,
-    contractLength: dbQuote.contract_length,
-    contractLengthUnit: dbQuote.contract_length_unit as any,
-    overheadProfile: dbQuote.overhead_profile,
-    userId: dbQuote.user_id,
-    createdBy: dbQuote.created_by,
-    created_by: dbQuote.created_by,
-    shifts: [],
-    subcontractors: []
-  };
+/**
+ * Unified Day type with all possible values to avoid TypeScript errors
+ */
+export type UnifiedDay = 
+  | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" 
+  | "saturday" | "sunday" | "weekday" | "public_holiday";
+
+/**
+ * Converts a string day to the appropriate Day type
+ * This helps us handle inconsistencies between different Day type definitions
+ */
+export function adaptDay(day: string): UnifiedDay {
+  return day as UnifiedDay;
 }
 
-// Type adapter to convert app model of a quote to database form
-export function quoteToDb(quote: Quote): DbQuote {
-  return {
-    id: quote.id,
-    name: quote.name,
-    title: quote.title,
-    client_name: quote.clientName || quote.client_name,
-    site_name: quote.siteName || quote.site_name,
-    description: quote.description,
-    status: quote.status,
-    overhead_percentage: quote.overheadPercentage || quote.overhead_percentage,
-    margin_percentage: quote.marginPercentage || quote.margin_percentage,
-    total_price: quote.totalPrice || quote.total_price,
-    labor_cost: quote.laborCost || quote.labor_cost,
-    supplies_cost: quote.supplies_cost,
-    equipment_cost: quote.equipment_cost,
-    subcontractor_cost: quote.subcontractorCost || quote.subcontractor_cost,
-    overhead_cost: quote.overheadCost,
-    total_cost: quote.totalCost,
-    margin_amount: quote.marginAmount,
-    created_at: quote.createdAt || quote.created_at,
-    updated_at: quote.updatedAt || quote.updated_at,
-    user_id: quote.userId,
-    created_by: quote.createdBy || quote.created_by,
-    start_date: quote.startDate || quote.start_date,
-    end_date: quote.endDate || quote.end_date,
-    expiry_date: quote.expiryDate || quote.expiry_date,
-    contract_length: quote.contractLength,
-    contract_length_unit: quote.contractLengthUnit,
-    overhead_profile: quote.overheadProfile,
-    notes: quote.notes,
-    quote_number: quote.quoteNumber || quote.quote_number,
-    valid_until: quote.validUntil || quote.valid_until,
-    client_id: quote.clientId || quote.client_id,
-    site_id: quote.siteId || quote.site_id
-  };
+/**
+ * Type assertion helper to safely cast QuoteShift types between different modules
+ */
+export function adaptQuoteShift<T, U>(shift: T): U {
+  if (shift && typeof shift === 'object' && 'day' in shift) {
+    // Make a copy to avoid modifying the original
+    const newShift = { ...shift as any };
+    // Ensure day is a string
+    if (newShift.day) {
+      newShift.day = adaptDay(newShift.day as any);
+    }
+    return newShift as unknown as U;
+  }
+  return shift as unknown as U;
 }
 
-// Convert database quote shift to app model
-export function dbToQuoteShift(dbShift: DbQuoteShift): QuoteShift {
-  return {
-    id: dbShift.id,
-    quoteId: dbShift.quote_id,
-    day: dbShift.day as Day,
-    startTime: dbShift.start_time,
-    endTime: dbShift.end_time,
-    breakDuration: dbShift.break_duration,
-    numberOfCleaners: dbShift.number_of_cleaners,
-    employmentType: dbShift.employment_type as EmploymentType,
-    level: dbShift.level as EmployeeLevel,
-    allowances: dbShift.allowances || [],
-    estimatedCost: dbShift.estimated_cost,
-    location: dbShift.location || '',
-    notes: dbShift.notes || ''
-  };
+/**
+ * Type assertion helper for Quote objects between different modules
+ */
+export function adaptQuote<T, U>(quote: T): U {
+  if (quote && typeof quote === 'object') {
+    const newQuote = { ...quote as any };
+    
+    // If the quote has shifts, adapt each shift
+    if ('shifts' in newQuote && Array.isArray(newQuote.shifts)) {
+      newQuote.shifts = newQuote.shifts.map((shift: any) => 
+        adaptQuoteShift(shift)
+      );
+    }
+    
+    return newQuote as unknown as U;
+  }
+  return quote as unknown as U;
 }
 
-// Convert app model quote shift to database form
-export function quoteShiftToDb(shift: QuoteShift): DbQuoteShift {
-  return {
-    id: shift.id,
-    quote_id: shift.quoteId,
-    day: shift.day,
-    start_time: shift.startTime,
-    end_time: shift.endTime,
-    break_duration: shift.breakDuration,
-    number_of_cleaners: shift.numberOfCleaners,
-    employment_type: shift.employmentType,
-    level: shift.level,
-    allowances: shift.allowances || [],
-    estimated_cost: shift.estimatedCost,
-    location: shift.location || '',
-    notes: shift.notes || '',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+/**
+ * Type assertion helper for SystemUser objects between different modules
+ */
+export function adaptSystemUser<T, U>(user: T): U {
+  return user as unknown as U;
 }
 
-// Convert database subcontractor to app model
-export function dbToQuoteSubcontractor(dbSub: DbQuoteSubcontractor): QuoteSubcontractor {
-  return {
-    id: dbSub.id,
-    quoteId: dbSub.quote_id || '',
-    name: dbSub.name,
-    description: dbSub.description,
-    cost: dbSub.cost,
-    frequency: dbSub.frequency as Frequency,
-    email: dbSub.email,
-    phone: dbSub.phone,
-    service: dbSub.service,
-    notes: dbSub.notes,
-    services: dbSub.services || []
-  };
+/**
+ * Helper to convert from DB overhead profile to application model
+ */
+export interface DbOverheadProfile {
+  id: string;
+  name: string;
+  description?: string;
+  labor_percentage: number;
+  created_at: string;
+  updated_at: string;
+  user_id?: string;
 }
 
-// Convert app model subcontractor to database form
-export function quoteSubcontractorToDb(sub: QuoteSubcontractor): DbQuoteSubcontractor {
-  return {
-    id: sub.id,
-    quote_id: sub.quoteId,
-    name: sub.name,
-    description: sub.description,
-    cost: sub.cost,
-    frequency: sub.frequency,
-    email: sub.email,
-    phone: sub.phone,
-    service: sub.service,
-    notes: sub.notes,
-    services: sub.services || [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+/**
+ * Application model for overhead profiles
+ */
+export interface OverheadProfile {
+  id: string;
+  name: string;
+  description?: string;
+  laborPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
 }
 
-// Adapter for overhead profiles
+/**
+ * Convert DB overhead profile to application model
+ */
 export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
   return {
     id: dbProfile.id,
@@ -187,18 +108,29 @@ export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfi
   };
 }
 
-// Helper to adapt a QuoteShift between different interfaces
-export function adaptQuoteShift<T, U>(source: T, template: U): U {
-  const result = { ...template };
-  
-  if (typeof source === 'object' && source !== null) {
-    // Copy properties that exist both in source and template
-    Object.keys(template).forEach(key => {
-      if (key in source) {
-        (result as any)[key] = (source as any)[key];
-      }
-    });
-  }
-  
-  return result;
+/**
+ * Unified type for Subcontractor
+ */
+export interface UnifiedSubcontractor {
+  id: string;
+  quoteId?: string;
+  quote_id?: string;
+  name: string;
+  description?: string;
+  cost: number;
+  frequency: string;
+  email?: string;
+  phone?: string;
+  services?: string[];
+  service?: string;
+  notes?: string;
+  customServices?: string;
+  monthlyCost?: number;
+  monthly_cost?: number;
+  isFlatRate?: boolean;
+  is_flat_rate?: boolean;
+  business_name?: string;
+  contact_name?: string;
+  created_at?: string;
+  updated_at?: string;
 }
