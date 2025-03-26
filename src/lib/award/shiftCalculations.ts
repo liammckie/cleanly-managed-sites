@@ -10,6 +10,16 @@ export const getPayConditionForDay = (day: Day): PayCondition => {
       return 'sunday';
     case 'public_holiday':
       return 'public_holiday';
+    case 'monday':
+      return 'monday';
+    case 'tuesday':
+      return 'tuesday';
+    case 'wednesday':
+      return 'wednesday';
+    case 'thursday':
+      return 'thursday';
+    case 'friday':
+      return 'friday';
     default:
       return 'weekday';
   }
@@ -49,6 +59,7 @@ export const calculateShiftCost = (
   let condition = getPayConditionForDay(shift.day as Day);
   let rateMultiplier = 1.0;
   
+  // Use the correct key for public_holiday
   if (condition === 'weekday') {
     rateMultiplier = employeeRates.rates.weekday.multiplier;
   } else if (condition === 'saturday') {
@@ -56,7 +67,10 @@ export const calculateShiftCost = (
   } else if (condition === 'sunday') {
     rateMultiplier = employeeRates.rates.sunday.multiplier;
   } else if (condition === 'public_holiday') {
-    rateMultiplier = employeeRates.rates['public-holiday'].multiplier;
+    rateMultiplier = employeeRates.rates['public_holiday'].multiplier;
+  } else if (employeeRates.rates[condition]) {
+    // Handle other days explicitly
+    rateMultiplier = employeeRates.rates[condition].multiplier;
   }
   
   // Calculate the base labor cost

@@ -1,146 +1,240 @@
 
 import { supabase } from '@/lib/supabase';
-import { SystemUser } from '@/lib/types';
+import { SystemUser, UserRole } from '@/lib/types';
 
-// Define the users API object
+// Define the API functions for users
 export const usersApi = {
-  // Get all users
-  async getUsers(): Promise<SystemUser[]> {
-    try {
-      // Query the user_profiles table which has all the user data
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*');
-        
-      if (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
-      
-      // Cast data to SystemUser[] and convert string status to enum
-      return (data || []).map(user => ({
-        ...user,
-        status: (user.status as "active" | "pending" | "inactive") || "active"
-      })) as SystemUser[];
-    } catch (error) {
-      console.error('Error in getUsers:', error);
-      throw error;
+  // Fetch all users
+  fetchUsers: async (): Promise<SystemUser[]> => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw new Error(error.message);
     }
+    
+    return data.map(user => ({
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      full_name: user.full_name,
+      avatar_url: user.avatar_url,
+      role_id: user.role_id,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      title: user.title,
+      phone: user.phone,
+      status: user.status,
+      last_login: user.last_login,
+      custom_id: user.custom_id,
+      note: user.notes,
+      territories: user.territories
+    }));
   },
   
-  // Get a single user by ID
-  async getUserById(userId: string): Promise<SystemUser> {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error('Error fetching user by ID:', error);
-        throw error;
+  // Fetch a single user by ID
+  fetchUserById: async (userId: string): Promise<SystemUser | null> => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // User not found
       }
-      
-      if (!data) {
-        throw new Error(`User with ID ${userId} not found`);
-      }
-      
-      // Cast to SystemUser and ensure status is valid enum
-      return {
-        ...data,
-        status: (data.status as "active" | "pending" | "inactive") || "active"
-      } as SystemUser;
-    } catch (error) {
-      console.error('Error in getUserById:', error);
-      throw error;
+      console.error('Error fetching user:', error);
+      throw new Error(error.message);
     }
+    
+    return {
+      id: data.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      full_name: data.full_name,
+      avatar_url: data.avatar_url,
+      role_id: data.role_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      title: data.title,
+      phone: data.phone,
+      status: data.status,
+      last_login: data.last_login,
+      custom_id: data.custom_id,
+      note: data.notes,
+      territories: data.territories
+    };
   },
   
   // Create a new user
-  async createUser(userData: Partial<SystemUser>): Promise<SystemUser> {
-    try {
-      // Ensure required fields are present
-      if (!userData.email) {
-        throw new Error('Email is required to create a user');
-      }
-      
-      // Validate status is a valid enum value
-      const validStatus: ("active" | "pending" | "inactive")[] = ["active", "pending", "inactive"];
-      const status = validStatus.includes(userData.status as any) 
-        ? userData.status 
-        : "pending";
-      
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .insert({
-          ...userData,
-          status
-        })
-        .select()
-        .single();
-        
-      if (error) {
-        console.error('Error creating user:', error);
-        throw error;
-      }
-      
-      return data as SystemUser;
-    } catch (error) {
-      console.error('Error in createUser:', error);
-      throw error;
+  createUser: async (userData: Partial<SystemUser>): Promise<SystemUser> => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .insert({
+        email: userData.email || '',
+        full_name: userData.full_name || '',
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        avatar_url: userData.avatar_url,
+        role_id: userData.role_id,
+        title: userData.title,
+        phone: userData.phone,
+        status: userData.status || 'active',
+        custom_id: userData.custom_id,
+        notes: userData.note,
+        territories: userData.territories || []
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating user:', error);
+      throw new Error(error.message);
     }
+    
+    return {
+      id: data.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      full_name: data.full_name,
+      avatar_url: data.avatar_url,
+      role_id: data.role_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      title: data.title,
+      phone: data.phone,
+      status: data.status,
+      last_login: data.last_login,
+      custom_id: data.custom_id,
+      note: data.notes,
+      territories: data.territories
+    };
   },
   
   // Update an existing user
-  async updateUser(userId: string, userData: Partial<SystemUser>): Promise<SystemUser> {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(userData)
-        .eq('id', userId)
-        .select()
-        .single();
-        
-      if (error) {
-        console.error('Error updating user:', error);
-        throw error;
-      }
-      
-      return data as SystemUser;
-    } catch (error) {
-      console.error('Error in updateUser:', error);
-      throw error;
+  updateUser: async (userId: string, userData: Partial<SystemUser>): Promise<SystemUser> => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({
+        email: userData.email,
+        full_name: userData.full_name,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        avatar_url: userData.avatar_url,
+        role_id: userData.role_id,
+        title: userData.title,
+        phone: userData.phone,
+        status: userData.status,
+        custom_id: userData.custom_id,
+        notes: userData.note,
+        territories: userData.territories
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating user:', error);
+      throw new Error(error.message);
     }
+    
+    return {
+      id: data.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      full_name: data.full_name,
+      avatar_url: data.avatar_url,
+      role_id: data.role_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      title: data.title,
+      phone: data.phone,
+      status: data.status,
+      last_login: data.last_login,
+      custom_id: data.custom_id,
+      note: data.notes,
+      territories: data.territories
+    };
   },
   
   // Delete a user
-  async deleteUser(userId: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', userId);
-        
-      if (error) {
-        console.error('Error deleting user:', error);
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error in deleteUser:', error);
-      throw error;
+  deleteUser: async (userId: string): Promise<void> => {
+    const { error } = await supabase
+      .from('user_profiles')
+      .delete()
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('Error deleting user:', error);
+      throw new Error(error.message);
     }
+  },
+  
+  // Get user roles
+  getUserRoles: async (): Promise<UserRole[]> => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching user roles:', error);
+      throw new Error(error.message);
+    }
+    
+    return data.map(role => ({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions,
+      created_at: role.created_at,
+      updated_at: role.updated_at
+    }));
+  },
+  
+  // Get a single role
+  getUserRoleById: async (roleId: string): Promise<UserRole | null> => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('id', roleId)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Role not found
+      }
+      console.error('Error fetching user role:', error);
+      throw new Error(error.message);
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      permissions: data.permissions,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   }
 };
 
-// Create a hook for user creation
-export const useCreateUser = () => {
-  return {
-    createUser: async (userData: Partial<SystemUser>) => {
-      return await usersApi.createUser(userData);
-    }
-  };
-};
+// Export the users API
+export default usersApi;
 
-// Add this export for backward compatibility
-export { usersApi };
+// For backward compatibility
+export const { 
+  fetchUsers, 
+  fetchUserById, 
+  createUser, 
+  updateUser, 
+  deleteUser,
+  getUserRoles,
+  getUserRoleById
+} = usersApi;

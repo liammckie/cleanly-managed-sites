@@ -118,9 +118,38 @@ export const cleaningServicesAward = {
           rate: baseRates[1] * 2.0, 
           multiplier: 2.0 
         },
-        'public-holiday': { 
+        'public_holiday': { 
           rate: baseRates[1] * 2.5, 
           multiplier: 2.5 
+        },
+        // Add support for other conditions
+        standard: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        base: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        monday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        tuesday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        wednesday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        thursday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        friday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
         }
       }
     },
@@ -141,9 +170,38 @@ export const cleaningServicesAward = {
           rate: baseRates[2] * 2.0, 
           multiplier: 2.0 
         },
-        'public-holiday': { 
+        'public_holiday': { 
           rate: baseRates[2] * 2.5, 
           multiplier: 2.5 
+        },
+        // Add support for other conditions
+        standard: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        base: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        monday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        tuesday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        wednesday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        thursday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        friday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
         }
       }
     },
@@ -164,9 +222,38 @@ export const cleaningServicesAward = {
           rate: baseRates[3] * 2.0, 
           multiplier: 2.0 
         },
-        'public-holiday': { 
+        'public_holiday': { 
           rate: baseRates[3] * 2.5, 
           multiplier: 2.5 
+        },
+        // Add support for other conditions
+        standard: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        base: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        monday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        tuesday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        wednesday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        thursday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        friday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
         }
       }
     }

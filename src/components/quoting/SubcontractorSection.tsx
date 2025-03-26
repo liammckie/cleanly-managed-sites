@@ -30,7 +30,7 @@ export function SubcontractorSection({
   onSubcontractorsChange 
 }: SubcontractorSectionProps) {
   const [editMode, setEditMode] = useState<boolean>(false);
-  const [currentSubcontractor, setCurrentSubcontractor] = useState<Subcontractor>({
+  const [currentSubcontractor, setCurrentSubcontractor] = useState<Partial<Subcontractor>>({
     id: '',
     name: '',
     description: '',
@@ -47,9 +47,11 @@ export function SubcontractorSection({
   };
 
   const handleAddSubcontractor = () => {
+    const newId = editMode ? currentSubcontractor.id : uuidv4();
     const newSubcontractor: Subcontractor = {
-      ...currentSubcontractor,
-      id: editMode ? currentSubcontractor.id : uuidv4(),
+      ...currentSubcontractor as any,
+      id: newId as string,
+      quoteId: '' // Add empty quoteId to satisfy type requirements
     };
 
     if (editMode) {
@@ -73,7 +75,7 @@ export function SubcontractorSection({
   };
 
   const handleEditSubcontractor = (subcontractor: Subcontractor) => {
-    setCurrentSubcontractor(subcontractor);
+    setCurrentSubcontractor({...subcontractor});
     setEditMode(true);
   };
 
@@ -98,8 +100,6 @@ export function SubcontractorSection({
       case 'annually':
         return subcontractor.cost / 12;
       case 'one_time':
-        return subcontractor.cost;
-      case 'per_event':
         return subcontractor.cost;
       default:
         return subcontractor.cost;
@@ -140,7 +140,7 @@ export function SubcontractorSection({
             <div>
               <Label htmlFor="frequency">Frequency</Label>
               <Select
-                value={currentSubcontractor.frequency}
+                value={currentSubcontractor.frequency as string}
                 onValueChange={(value) => handleInputChange('frequency', value)}
               >
                 <SelectTrigger id="frequency">
@@ -154,7 +154,6 @@ export function SubcontractorSection({
                   <SelectItem value="quarterly">Quarterly</SelectItem>
                   <SelectItem value="annually">Annually</SelectItem>
                   <SelectItem value="one_time">One-time</SelectItem>
-                  <SelectItem value="per_event">Per event</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -211,13 +210,11 @@ export function SubcontractorSection({
                       <TableCell className="capitalize">
                         {subcontractor.frequency === 'one_time' 
                           ? 'One-time' 
-                          : subcontractor.frequency === 'per_event'
-                          ? 'Per event'
                           : subcontractor.frequency}
                       </TableCell>
                       <TableCell>{formatCurrency(subcontractor.cost)}</TableCell>
                       <TableCell>
-                        {subcontractor.frequency === 'one_time' || subcontractor.frequency === 'per_event'
+                        {subcontractor.frequency === 'one_time'
                           ? '—'
                           : formatCurrency(calculateMonthlyCost(subcontractor))}
                       </TableCell>

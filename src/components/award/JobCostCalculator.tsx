@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { EmploymentType, PayCondition, EmployeeLevel } from '@/lib/award/types';
 import { calculateJobCost } from '@/lib/award/awardEngine';
@@ -8,10 +9,14 @@ const conditionDisplayNames: Record<PayCondition, string> = {
   'base': 'Base Rate',
   'standard': 'Standard',
   'weekday': 'Weekday',
+  'monday': 'Monday',
+  'tuesday': 'Tuesday',
+  'wednesday': 'Wednesday',
+  'thursday': 'Thursday',
+  'friday': 'Friday',
   'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
-  'public-holiday': 'Public Holiday',
   'public_holiday': 'Public Holiday',
   'early_morning': 'Early Morning',
   'evening': 'Evening',
@@ -20,12 +25,7 @@ const conditionDisplayNames: Record<PayCondition, string> = {
   'overtime-first-2-hours': 'Overtime (First 2 Hours)',
   'overtime-after-2-hours': 'Overtime (After 2 Hours)',
   'overtime-sunday': 'Overtime (Sunday)',
-  'overtime-public-holiday': 'Overtime (Public Holiday)',
-  'monday': 'Monday',
-  'tuesday': 'Tuesday',
-  'wednesday': 'Wednesday',
-  'thursday': 'Thursday',
-  'friday': 'Friday'
+  'overtime-public-holiday': 'Overtime (Public Holiday)'
 };
 
 export function JobCostCalculator() {
@@ -38,10 +38,14 @@ export function JobCostCalculator() {
     'base': 0,
     'standard': 0,
     'weekday': 0,
+    'monday': 0,
+    'tuesday': 0,
+    'wednesday': 0,
+    'thursday': 0,
+    'friday': 0,
     'shift-early-late': 0,
     'saturday': 0,
     'sunday': 0,
-    'public-holiday': 0,
     'public_holiday': 0,
     'early_morning': 0,
     'evening': 0,
@@ -50,12 +54,7 @@ export function JobCostCalculator() {
     'overtime-first-2-hours': 0,
     'overtime-after-2-hours': 0,
     'overtime-sunday': 0,
-    'overtime-public-holiday': 0,
-    'monday': 0,
-    'tuesday': 0,
-    'wednesday': 0,
-    'thursday': 0,
-    'friday': 0
+    'overtime-public-holiday': 0
   });
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [marginPercentage, setMarginPercentage] = useState(20);
@@ -202,7 +201,7 @@ export function JobCostCalculator() {
             {results.items.map((item, index) => (
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {conditionDisplayNames[item.condition]}
+                  {conditionDisplayNames[item.condition] || item.condition}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {item.hours.toFixed(1)}

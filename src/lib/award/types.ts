@@ -20,7 +20,7 @@ export type PayCondition =
   'friday' | 
   'saturday' | 
   'sunday' | 
-  'public_holiday' | 
+  'public_holiday' |  // Added to ensure consistency - use underscores instead of hyphens
   'shift-early-late' | 
   'early_morning' | 
   'evening' | 
@@ -127,6 +127,24 @@ export interface Quote {
   notes: string;
   shifts: QuoteShift[];
   subcontractors: Subcontractor[];
+  
+  // Adding missing properties that are referenced in the code
+  title?: string;
+  description?: string;
+  suppliesCost?: number;
+  equipmentCost?: number;
+  quoteNumber?: string;
+  validUntil?: string;
+  clientId?: string;
+  clientContact?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  siteAddress?: string;
+  siteId?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  userId?: string;
 }
 
 export type Frequency = 'one_time' | 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
@@ -149,12 +167,12 @@ export interface QuoteShift {
 
 export interface Subcontractor {
   id: string;
-  quoteId: string;
+  quoteId?: string;
   name: string;
-  description: string;
+  description?: string;
   cost: number;
   frequency: Frequency | string;
-  services: string[];
+  services?: string[];
   email?: string;
   phone?: string;
   notes?: string;
@@ -163,4 +181,10 @@ export interface Subcontractor {
   rate?: number;
   monthlyCost?: number;
   isFlatRate?: boolean;
+  
+  // Adding aliased properties for backwards compatibility
+  businessName?: string;
+  contactName?: string;
+  business_name?: string;
+  contact_name?: string;
 }

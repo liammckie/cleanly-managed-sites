@@ -8,10 +8,15 @@ const payConditionDisplayNames: Record<PayCondition, string> = {
   'base': 'Base Rate',
   'standard': 'Standard',
   'weekday': 'Weekday',
+  'monday': 'Monday',
+  'tuesday': 'Tuesday',
+  'wednesday': 'Wednesday',
+  'thursday': 'Thursday',
+  'friday': 'Friday',
   'shift-early-late': 'Early/Late Shift',
   'saturday': 'Saturday',
   'sunday': 'Sunday',
-  'public-holiday': 'Public Holiday',
+  'public_holiday': 'Public Holiday',  // Using the correct key format
   'early_morning': 'Early Morning',
   'evening': 'Evening',
   'night': 'Night',
@@ -53,14 +58,18 @@ export function AwardRatesTable({ employmentType = 'full_time' }: AwardRatesTabl
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {displayName}
               </td>
-              {employmentTypeRates.map(level => (
-                <td key={level.level} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${level.rates[condition as PayCondition].rate.toFixed(2)} 
-                  <span className="text-gray-400 ml-1">
-                    ({level.rates[condition as PayCondition].multiplier.toFixed(2)}x)
-                  </span>
-                </td>
-              ))}
+              {employmentTypeRates.map(level => {
+                // Check if this condition exists in the level rates
+                const condRate = level.rates[condition as PayCondition] || level.rates['standard'] || { rate: 0, multiplier: 0 };
+                return (
+                  <td key={level.level} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${condRate.rate?.toFixed(2)} 
+                    <span className="text-gray-400 ml-1">
+                      ({condRate.multiplier?.toFixed(2)}x)
+                    </span>
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

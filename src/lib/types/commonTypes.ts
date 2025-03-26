@@ -29,7 +29,7 @@ export interface QuoteShift {
 
 export interface Subcontractor {
   id: string;
-  quoteId: string;
+  quoteId?: string;
   name: string;
   description?: string;
   cost: number;
@@ -43,6 +43,11 @@ export interface Subcontractor {
   customServices?: string;
   monthlyCost?: number;
   isFlatRate?: boolean;
+  // Support property naming for backwards compatibility
+  businessName?: string;
+  contactName?: string;
+  business_name?: string;
+  contact_name?: string;
 }
 
 // PayCondition type for award calculations
@@ -53,7 +58,7 @@ export type PayCondition =
   'shift-early-late' | 
   'saturday' | 
   'sunday' | 
-  'public-holiday' | 
+  'public_holiday' | 
   'early_morning' | 
   'evening' | 
   'night' | 
@@ -62,7 +67,6 @@ export type PayCondition =
   'overtime-after-2-hours' | 
   'overtime-sunday' | 
   'overtime-public-holiday' |
-  'public_holiday' | 
   'monday' | 
   'tuesday' | 
   'wednesday' | 

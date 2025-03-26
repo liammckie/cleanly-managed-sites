@@ -1,69 +1,84 @@
 
-import { useErrorHandledQuery } from '@/hooks/useErrorHandledQuery';
-import { usersApi } from '@/lib/api/users';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SystemUser } from '@/lib/types';
+import { usersApi } from '@/lib/api/users/index';
 
-export function useUsers() {
-  const usersQuery = useErrorHandledQuery({
+// Hook for fetching all users
+export const useUsers = () => {
+  return useQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      try {
-        return await usersApi.getUsers();
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        throw error;
-      }
-    },
-    errorMessage: 'Failed to load users'
+    queryFn: usersApi.fetchUsers
   });
+};
 
-  const userRolesQuery = useErrorHandledQuery({
-    queryKey: ['userRoles'],
-    queryFn: async () => {
-      try {
-        // This would be implemented in userRolesApi
-        // For now return a simple array
-        return [{ id: '1', name: 'Admin' }, { id: '2', name: 'User' }];
-      } catch (error) {
-        console.error('Error fetching user roles:', error);
-        throw error;
-      }
-    },
-    errorMessage: 'Failed to load user roles'
-  });
-
-  return {
-    users: usersQuery.data as SystemUser[] || [],
-    userRoles: userRolesQuery.data || [],
-    isLoading: usersQuery.isLoading || userRolesQuery.isLoading,
-    isError: usersQuery.isError || userRolesQuery.isError,
-    error: usersQuery.error || userRolesQuery.error
-  };
-}
-
-// Export useUser for individual user lookups
-export function useUser(userId: string) {
-  const userQuery = useErrorHandledQuery({
-    queryKey: ['user', userId],
-    queryFn: async () => {
-      try {
-        return await usersApi.getUserById(userId);
-      } catch (error) {
-        console.error(`Error fetching user ${userId}:`, error);
-        throw error;
-      }
-    },
-    errorMessage: 'Failed to load user details',
+// Hook for fetching a specific user by ID
+export const useUser = (userId: string) => {
+  return useQuery({
+    queryKey: ['users', userId],
+    queryFn: () => usersApi.fetchUserById(userId),
     enabled: !!userId
   });
+};
 
+// Hook for user operations (create, update, delete)
+export const useUserOperations = () => {
+  const queryClient = useQueryClient();
+  
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: (userData: Partial<SystemUser>) => usersApi.createUser(userData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+  
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, userData }: { userId: string; userData: Partial<SystemUser> }) => 
+      usersApi.updateUser(userId, userData),
+    onSuccess: (updatedUser) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['users', updatedUser.id] });
+    }
+  });
+  
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => usersApi.deleteUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+  
   return {
-    user: userQuery.data as SystemUser | undefined,
-    isLoading: userQuery.isLoading,
-    isError: userQuery.isError,
-    error: userQuery.error
+    createUser: createUserMutation.mutate,
+    isCreating: createUserMutation.isPending,
+    updateUser: updateUserMutation.mutate,
+    isUpdating: updateUserMutation.isPending,
+    deleteUser: deleteUserMutation.mutate,
+    isDeleting: deleteUserMutation.isPending
   };
-}
+};
 
-// Export for backward compatibility
-export { useCreateUser } from '@/lib/api/users';
+// Combined hook with a specific user's data and operations for that user
+export const useUserWithOperations = (userId: string) => {
+  const { data: user, isLoading, isError, error } = useUser(userId);
+  const { updateUser, isUpdating, deleteUser, isDeleting } = useUserOperations();
+  const queryClient = useQueryClient();
+  
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ['users', userId] });
+  };
+  
+  return {
+    user,
+    isLoading,
+    isError,
+    error,
+    updateUser,
+    isUpdating,
+    deleteUser,
+    isDeleting,
+    refetch
+  };
+};
