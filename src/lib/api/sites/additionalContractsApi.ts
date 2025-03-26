@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractDetails } from '@/components/sites/contract/types';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
 export const additionalContractsApi = {
   /**
@@ -28,6 +28,8 @@ export const additionalContractsApi = {
       terminationPeriod: contract.termination_period,
       notes: contract.notes,
       autoRenewal: contract.auto_renew,
+      value: contract.value,
+      billingCycle: contract.billing_cycle,
       // Add required properties from ContractDetails that aren't in our db model
       contractLength: 0,
       contractLengthUnit: 'months',
@@ -55,6 +57,8 @@ export const additionalContractsApi = {
       termination_period: contractData.terminationPeriod,
       notes: contractData.notes,
       auto_renew: contractData.autoRenewal,
+      value: contractData.value,
+      billing_cycle: contractData.billingCycle,
       // Any other fields needed by the DB
     };
 
@@ -86,6 +90,8 @@ export const additionalContractsApi = {
       termination_period: contractData.terminationPeriod,
       notes: contractData.notes,
       auto_renew: contractData.autoRenewal,
+      value: contractData.value,
+      billing_cycle: contractData.billingCycle,
       // Any other fields needed by the DB
     };
 

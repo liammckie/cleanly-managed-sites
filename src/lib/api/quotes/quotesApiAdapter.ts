@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { Quote, QuoteShift, QuoteSubcontractor } from '@/types/models';
 import { toQuoteStatus, toDay, toFrequency, toEmploymentType, toEmployeeLevel, toContractLengthUnit } from './utils/quoteDbTypeAdapter';
@@ -70,7 +69,8 @@ export function dbToAppQuote(dbQuote: any): Quote {
     siteId: dbQuote.site_id || '',
     site_id: dbQuote.site_id || '',
     notes: dbQuote.notes || '',
-    // We'll add shifts and subcontractors separately
+    shifts: [],
+    subcontractors: [],
   };
 }
 

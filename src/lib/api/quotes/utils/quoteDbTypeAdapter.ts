@@ -1,65 +1,98 @@
 
-import { QuoteStatus, Frequency, Day, EmployeeLevel, EmploymentType } from '@/types/common';
+import { Day, QuoteStatus, EmployeeLevel, EmploymentType, Frequency } from '@/types/common';
 
-// Function to safely cast string to QuoteStatus
+// Convert string status to QuoteStatus enum
 export function toQuoteStatus(status: string): QuoteStatus {
-  // Define valid statuses
-  const validStatuses: QuoteStatus[] = [
-    'draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'
-  ];
-  
-  return validStatuses.includes(status as QuoteStatus) 
-    ? (status as QuoteStatus) 
-    : 'draft'; // Default to draft if invalid
+  switch (status) {
+    case 'draft':
+    case 'sent':
+    case 'approved':
+    case 'rejected':
+    case 'expired':
+    case 'pending':
+    case 'accepted':
+      return status as QuoteStatus;
+    default:
+      return 'draft';
+  }
 }
 
-// Function to safely cast string to Day
+// Convert string day to Day enum
 export function toDay(day: string): Day {
-  const validDays: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
-  return validDays.includes(day.toLowerCase() as Day) 
-    ? (day.toLowerCase() as Day) 
-    : 'monday'; // Default to Monday if invalid
+  switch (day) {
+    case 'monday':
+    case 'tuesday':
+    case 'wednesday':
+    case 'thursday':
+    case 'friday':
+    case 'saturday':
+    case 'sunday':
+      return day as Day;
+    default:
+      return 'monday';
+  }
 }
 
-// Function to safely cast string to Frequency
-export function toFrequency(frequency: string): Frequency {
-  const validFrequencies: Frequency[] = [
-    'daily', 'weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly', 'once'
-  ];
-  
-  return validFrequencies.includes(frequency as Frequency) 
-    ? (frequency as Frequency) 
-    : 'monthly'; // Default to monthly if invalid
-}
-
-// Function to safely cast string to EmploymentType
+// Convert string employment type to EmploymentType enum
 export function toEmploymentType(type: string): EmploymentType {
-  const validTypes: EmploymentType[] = ['casual', 'part_time', 'full_time'];
-  
-  // Handle legacy values
-  if (type === 'partTime') return 'part_time';
-  if (type === 'fullTime') return 'full_time';
-  
-  return validTypes.includes(type as EmploymentType) 
-    ? (type as EmploymentType) 
-    : 'casual'; // Default to casual if invalid
+  switch (type) {
+    case 'part_time':
+    case 'full_time':
+    case 'casual':
+    case 'contractor':
+      return type as EmploymentType;
+    case 'partTime':
+      return 'part_time';
+    case 'fullTime':
+      return 'full_time';
+    default:
+      return 'casual';
+  }
 }
 
-// Function to safely cast number to EmployeeLevel
-export function toEmployeeLevel(level: number): EmployeeLevel {
-  const validLevels: EmployeeLevel[] = [1, 2, 3, 4, 5, 6, 7, 8];
+// Convert string employee level to EmployeeLevel enum
+export function toEmployeeLevel(level: string | number): EmployeeLevel {
+  if (typeof level === 'number') {
+    if (level >= 1 && level <= 5) {
+      return level as EmployeeLevel;
+    }
+    return 1;
+  }
   
-  return validLevels.includes(level as EmployeeLevel) 
-    ? (level as EmployeeLevel) 
-    : 1; // Default to level 1 if invalid
+  // If it's a string, try parsing as number
+  const numLevel = parseInt(level, 10);
+  if (!isNaN(numLevel) && numLevel >= 1 && numLevel <= 5) {
+    return numLevel as EmployeeLevel;
+  }
+  
+  return 1;
 }
 
-// Function to safely cast string to contract length unit
-export function toContractLengthUnit(unit: string): "months" | "weeks" | "days" | "years" {
-  const validUnits = ["months", "weeks", "days", "years"];
-  
-  return validUnits.includes(unit as any) 
-    ? (unit as "months" | "weeks" | "days" | "years") 
-    : "months"; // Default to months if invalid
+// Convert string frequency to Frequency enum
+export function toFrequency(frequency: string): Frequency {
+  switch (frequency) {
+    case 'daily':
+    case 'weekly':
+    case 'fortnightly':
+    case 'monthly':
+    case 'quarterly':
+    case 'yearly':
+    case 'once':
+      return frequency as Frequency;
+    default:
+      return 'monthly';
+  }
+}
+
+// Convert contract length unit string to accepted values
+export function toContractLengthUnit(unit: string): 'days' | 'weeks' | 'months' | 'years' {
+  switch (unit) {
+    case 'days':
+    case 'weeks':
+    case 'months':
+    case 'years':
+      return unit as 'days' | 'weeks' | 'months' | 'years';
+    default:
+      return 'months';
+  }
 }

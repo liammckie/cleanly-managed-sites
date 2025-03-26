@@ -6,12 +6,12 @@ export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarte
 export interface QuoteShift {
   id: string;
   quoteId: string;
-  day: Day | string;  // Support both string and Day enum
+  day: Day;  // Changed from string to Day enum
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: EmploymentType | string;  // Support both string and EmploymentType enum
+  employmentType: EmploymentType;  // Changed from string to EmploymentType enum
   level: EmployeeLevel | number;
   allowances: string[];
   estimatedCost: number;
@@ -25,7 +25,7 @@ export interface Subcontractor {
   name: string;
   description?: string;
   cost: number;
-  frequency: Frequency | string;
+  frequency: Frequency;  // Changed from string to Frequency enum
   email?: string;
   phone?: string;
   services?: string[];

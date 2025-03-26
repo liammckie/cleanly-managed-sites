@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase';
 import { InvoiceRecord } from './types';
 import { validateInvoiceData, validateInvoiceLineItemData } from './validation/invoiceValidation';
@@ -48,9 +47,9 @@ export const importInvoices = async (invoices: InvoiceRecord[]): Promise<void> =
     
     // Process invoice line items if they exist
     for (const invoice of invoices) {
-      if (invoice.lineItems && Array.isArray(invoice.lineItems) && invoice.lineItems.length > 0) {
+      if (invoice.line_items && Array.isArray(invoice.line_items) && invoice.line_items.length > 0) {
         // For each invoice, process its line items
-        await importInvoiceLineItems(invoice.id as string, invoice.lineItems);
+        await importInvoiceLineItems(invoice.id as string, invoice.line_items);
       }
     }
     

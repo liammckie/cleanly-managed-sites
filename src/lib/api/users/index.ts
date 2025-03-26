@@ -50,7 +50,7 @@ export const usersApi = {
       status: data.status,
       last_login: data.last_login,
       custom_id: data.custom_id,
-      note: data.note,
+      notes: data.notes,
       territories: data.territories,
       created_at: data.created_at,
       updated_at: data.updated_at
@@ -71,7 +71,7 @@ export const usersApi = {
           phone: user.phone,
           status: user.status,
           custom_id: user.custom_id,
-          note: user.note,
+          notes: user.notes,
           territories: user.territories,
         },
       ])

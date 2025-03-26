@@ -1,116 +1,173 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteRecord } from '@/lib/types';
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { handleSiteAdditionalContracts } from './additionalContractsApi';
-import { handleSiteBillingLines } from './billingLinesApi';
-import { handleSiteContacts } from './siteContactsApi';
+import { toast } from 'sonner';
 
-// Site creation API functions
-export const sitesCreate = {
-  // Create a new site
-  async createSite(siteData: SiteFormData): Promise<SiteRecord> {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Prepare the site data for insertion
-    const siteRecord = {
-      name: siteData.name,
-      address: siteData.address,
-      city: siteData.city,
-      state: siteData.state,
-      postcode: siteData.postcode,
-      status: siteData.status,
-      representative: siteData.representative,
-      phone: siteData.phone,
-      email: siteData.email,
-      user_id: user.id,
-      client_id: siteData.clientId,
-      monthly_cost: siteData.monthlyCost,
-      monthly_revenue: siteData.monthlyRevenue,
-      weekly_revenue: siteData.weeklyRevenue,
-      annual_revenue: siteData.annualRevenue,
-      // Store the detailed data as JSON
-      security_details: JSON.stringify(siteData.securityDetails) as any,
-      job_specifications: JSON.stringify(siteData.jobSpecifications) as any,
-      periodicals: JSON.stringify(siteData.periodicals) as any,
-      replenishables: JSON.stringify(siteData.replenishables) as any,
-      contract_details: JSON.stringify(siteData.contractDetails) as any,
-      billing_details: JSON.stringify(siteData.billingDetails) as any,
-      // If there are subcontractors, store them
-      has_subcontractors: siteData.subcontractors.length > 0,
+// Create a new site
+export const createSite = async (formData: SiteFormData): Promise<SiteRecord> => {
+  try {
+    console.log("Creating site:", formData);
+
+    // Format the data for database insertion
+    const insertData: any = {
+      name: formData.name,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      postcode: formData.postalCode, // Field name mapping
+      country: formData.country,
+      client_id: formData.client_id, // Field name mapping
+      status: formData.status,
+      email: formData.email,
+      phone: formData.phone,
+      representative: formData.representative,
+      custom_id: formData.customId, // Field name mapping
     };
-    
+
+    // Process JSON data
+    if (formData.contract_details) {
+      insertData.contract_details = formData.contract_details;
+    }
+
+    if (formData.billingDetails) {
+      insertData.billing_details = {
+        ...formData.billingDetails,
+        // If there are billing lines, include them
+        billingLines: formData.billingDetails.billingLines || []
+      };
+    }
+
+    if (formData.jobSpecifications) {
+      insertData.job_specifications = formData.jobSpecifications;
+    }
+
+    if (formData.subcontractors && formData.hasSubcontractors) {
+      insertData.has_subcontractors = true;
+      // Convert field names to snake_case for database consistency
+      insertData.subcontractors = formData.subcontractors.map(sub => ({
+        id: sub.id,
+        business_name: sub.business_name, // Use correct snake_case field name
+        contact_name: sub.contact_name, // Use correct snake_case field name
+        email: sub.email,
+        phone: sub.phone,
+        services: sub.services,
+        is_flat_rate: sub.is_flat_rate, // Use correct snake_case field name
+        monthly_cost: sub.monthly_cost, // Use correct snake_case field name
+        notes: sub.notes
+      }));
+    } else {
+      insertData.has_subcontractors = false;
+      insertData.subcontractors = [];
+    }
+
+    if (formData.replenishables) {
+      insertData.replenishables = formData.replenishables;
+    }
+
+    if (formData.periodicals) {
+      insertData.periodicals = formData.periodicals;
+    }
+
+    if (formData.securityDetails) {
+      insertData.security_details = formData.securityDetails;
+    }
+
+    // Set billing metrics if provided
+    if (formData.monthlyRevenue !== undefined) {
+      insertData.monthly_revenue = formData.monthlyRevenue;
+    }
+
+    if (formData.weeklyRevenue !== undefined) {
+      insertData.weekly_revenue = formData.weeklyRevenue;
+    }
+
+    if (formData.annualRevenue !== undefined) {
+      insertData.annual_revenue = formData.annualRevenue;
+    }
+
+    // Insert the site into the database
     const { data, error } = await supabase
       .from('sites')
-      .insert(siteRecord)
-      .select()
+      .insert([insertData])
+      .select('*')
       .single();
-    
+
     if (error) {
       console.error('Error creating site:', error);
       throw error;
     }
-    
-    // If there are subcontractors, store them separately
-    if (siteData.subcontractors.length > 0) {
-      const subcontractorRecords = siteData.subcontractors.map(sub => ({
-        site_id: data.id,
-        business_name: sub.business_name,
-        contact_name: sub.contact_name,
-        email: sub.email,
-        phone: sub.phone,
-        user_id: user.id,
-      }));
-      
-      const { error: subError } = await supabase
-        .from('subcontractors')
-        .insert(subcontractorRecords);
-      
-      if (subError) {
-        console.error('Error inserting subcontractors:', subError);
+
+    const siteId = data.id;
+
+    // Process contacts
+    if (formData.contacts && formData.contacts.length > 0) {
+      // Split into primary and non-primary contacts for easier management
+      const primaryContact = formData.contacts.find(c => c.isPrimary);
+
+      if (primaryContact) {
+        insertData.primary_contact = {
+          name: primaryContact.name,
+          email: primaryContact.email,
+          phone: primaryContact.phone,
+          role: primaryContact.role
+        };
+      }
+
+      // Update contacts in the contacts table if needed
+      // This would require separate API calls to the contacts endpoint
+      // For each contact, check if it exists and update or create accordingly
+      for (const contact of formData.contacts) {
+        // Here we would call the contacts API to create/update contacts
+        console.log("Contact to update:", {
+          ...contact,
+          entity_id: siteId,
+          entity_type: "site",
+          is_primary: contact.isPrimary // Fixed property name
+        });
       }
     }
-    
-    // Handle contacts if they exist
-    if (siteData.contacts && siteData.contacts.length > 0) {
-      try {
-        await handleSiteContacts(data.id, siteData.contacts, user.id);
-      } catch (contactError) {
-        console.error('Error handling site contacts:', contactError);
-      }
-    }
-    
-    // Handle additional contracts if they exist
-    if (siteData.additionalContracts && siteData.additionalContracts.length > 0) {
-      try {
-        await handleSiteAdditionalContracts(data.id, siteData.additionalContracts, user.id);
-      } catch (contractError) {
-        console.error('Error handling additional contracts:', contractError);
-      }
-    }
-    
-    // Handle billing lines if they exist
-    if (siteData.billingDetails && 
-        siteData.billingDetails.billingLines && 
-        siteData.billingDetails.billingLines.length > 0) {
-      try {
-        await handleSiteBillingLines(data.id, siteData.billingDetails.billingLines);
-      } catch (billingError) {
-        console.error('Error handling billing lines:', billingError);
-      }
-    }
-    
-    // Create a result that includes the contacts
-    const result = {
-      ...data,
-      contacts: siteData.contacts || []
-    } as SiteRecord;
-    
-    return result;
+
+    console.log("Site created successfully:", data);
+    return data as SiteRecord;
+  } catch (error) {
+    console.error('Error in createSite:', error);
+    toast.error('Failed to create site');
+    throw error;
   }
+};
+
+const handleSiteContacts = async (siteId: string, contacts: any[]) => {
+  if (!contacts || contacts.length === 0) {
+    return;
+  }
+
+  try {
+    // Prepare contacts for insertion
+    const contactsToInsert = contacts.map(contact => ({
+      ...contact,
+      entity_id: siteId,
+      entity_type: 'site',
+      is_primary: contact.isPrimary || false // Ensure is_primary is always set
+    }));
+
+    // Insert contacts into the contacts table
+    const { error: contactsError } = await supabase
+      .from('contacts')
+      .insert(contactsToInsert);
+
+    if (contactsError) {
+      console.error('Error creating site contacts:', contactsError);
+      throw contactsError;
+    } else {
+      console.log('Site contacts created successfully.');
+    }
+  } catch (error) {
+    console.error('Error in handleSiteContacts:', error);
+    throw error;
+  }
+};
+
+// Export a named object for compatibility
+export const sitesCreate = {
+  createSite
 };

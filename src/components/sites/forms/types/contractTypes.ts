@@ -31,6 +31,9 @@ export interface ContractDetails {
   // For compatibility with existing DB-based interfaces
   id?: string;
   additionalContracts?: ContractDetails[];
+  // Additional fields needed by ContractDetailsStep
+  value?: number;
+  billingCycle?: string;
 }
 
 export interface ContractHistoryEntry {
@@ -41,4 +44,12 @@ export interface ContractHistoryEntry {
   notes?: string;
   created_by?: string;
   created_at: string;
+}
+
+// Adding ContractForecast interface
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
 }
