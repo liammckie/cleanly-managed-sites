@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { SiteFormData } from '@/components/sites/forms/types';
@@ -13,6 +14,7 @@ export const useSiteFormSubcontractors = (
   const addSubcontractor = () => {
     const newSubcontractor: Subcontractor = {
       id: uuidv4(),
+      name: '', // Add required name field
       business_name: '',
       contact_name: '',
       email: '',

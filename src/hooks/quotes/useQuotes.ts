@@ -1,11 +1,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchQuotes } from '@/lib/api/quotes';
-import { Quote } from '@/lib/types/quotes';
+import { Quote } from '@/types/models';
+import { adaptQuote } from '@/utils/typeAdapters';
 
 export function useQuotes() {
   return useQuery<Quote[]>({
     queryKey: ['quotes'],
-    queryFn: fetchQuotes,
+    queryFn: async () => {
+      const data = await fetchQuotes();
+      return data.map(quote => adaptQuote(quote));
+    },
   });
 }

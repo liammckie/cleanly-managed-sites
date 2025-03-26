@@ -3,10 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QuoteShift, QuoteSubcontractor, Quote } from '@/types/models';
+import { QuoteShift, QuoteSubcontractor } from '@/types/models';
 import { QuoteDetailsProps } from '@/components/quoting/types';
 
-export const QuoteDetails: React.FC<QuoteDetailsProps> = ({ quote, onQuoteSelect }) => {
+export const QuoteDetails: React.FC<QuoteDetailsProps> = ({ quote }) => {
   // Format currency values
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -212,19 +212,27 @@ const SubcontractorItem: React.FC<SubcontractorItemProps> = ({ subcontractor }) 
         <h3 className="font-medium">{subcontractor.name}</h3>
         <Badge variant="outline">{subcontractor.frequency}</Badge>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-        <div>
-          <span className="text-muted-foreground">Cost:</span> {formatCurrency(subcontractor.cost)}
-        </div>
-        {subcontractor.service && (
-          <div>
-            <span className="text-muted-foreground">Service:</span> {subcontractor.service}
-          </div>
-        )}
-      </div>
       {subcontractor.description && (
         <div className="mt-2 text-sm">
           <span className="text-muted-foreground">Description:</span> {subcontractor.description}
+        </div>
+      )}
+      <div className="mt-2 text-sm">
+        <span className="text-muted-foreground">Cost:</span> {formatCurrency(subcontractor.cost)}
+      </div>
+      {subcontractor.service && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Service:</span> {subcontractor.service}
+        </div>
+      )}
+      {subcontractor.email && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Email:</span> {subcontractor.email}
+        </div>
+      )}
+      {subcontractor.phone && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Phone:</span> {subcontractor.phone}
         </div>
       )}
       {subcontractor.notes && (

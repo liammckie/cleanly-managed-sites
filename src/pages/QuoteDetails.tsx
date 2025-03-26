@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { fetchQuote } from '@/lib/api/quotes/quotesApi';
 import { QuoteDetails as QuoteDetailsComponent } from '@/components/quoting/QuoteDetails';
-import { adaptQuoteShift } from '@/utils/typeAdapters';
+import { adaptQuote } from '@/utils/typeAdapters';
 
 export default function QuoteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,15 +17,15 @@ export default function QuoteDetailsPage() {
   
   const { data: quote, isLoading, error } = useQuery({
     queryKey: ['quote', id],
-    queryFn: () => id ? fetchQuote(id) : Promise.reject('No quote ID provided'),
+    queryFn: async () => {
+      if (!id) return Promise.reject('No quote ID provided');
+      const data = await fetchQuote(id);
+      return adaptQuote(data);
+    },
     enabled: !!id
   });
   
   const handleBack = () => navigate(-1);
-  
-  const handleQuoteSelect = (quoteId: string) => {
-    navigate(`/quotes/${quoteId}`);
-  };
   
   if (isLoading) {
     return (
@@ -82,12 +83,7 @@ export default function QuoteDetailsPage() {
         </Button>
       </div>
       
-      <QuoteDetailsComponent
-        quote={{
-          ...quote,
-          shifts: quote.shifts?.map(shift => adaptQuoteShift(shift))
-        }}
-      />
+      <QuoteDetailsComponent quote={quote} />
     </div>
   );
 }

@@ -137,7 +137,7 @@ export const updateQuoteSubcontractor = async (
   subcontractor: Partial<QuoteSubcontractor>
 ): Promise<QuoteSubcontractor> => {
   // Create valid DB format for the update
-  const updateData = {
+  const updateData: any = {
     name: subcontractor.name,
     description: subcontractor.description,
     cost: subcontractor.cost,

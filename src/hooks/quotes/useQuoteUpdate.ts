@@ -3,12 +3,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Quote } from '@/types/models';
 import { updateQuoteMutation } from '@/lib/api/quotes/quotesApi';
+import { adaptQuote } from '@/utils/typeAdapters';
 
 export function useQuoteUpdate() {
   const queryClient = useQueryClient();
   
   const mutation = useMutation({
-    mutationFn: updateQuoteMutation,
+    mutationFn: async (quoteData: Quote) => {
+      const result = await updateQuoteMutation(quoteData);
+      return adaptQuote(result);
+    },
     onSuccess: (data: Quote) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote', data.id] });

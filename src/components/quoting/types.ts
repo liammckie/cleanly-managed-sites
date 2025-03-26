@@ -9,6 +9,7 @@ export interface QuoteDetailsFormProps {
 
 export interface QuoteDetailsProps {
   quote: Quote;
+  onQuoteSelect?: (quoteId: string) => void;
 }
 
 export interface QuoteFormDetailsProps {
@@ -39,4 +40,20 @@ export interface DeleteUserModalProps {
   userName: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onClose?: () => void;
+}
+
+export interface ContractTerm {
+  name: string;
+  startDate: string;
+  endDate: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+  autoRenew: boolean;
+}
+
+export interface ContractSummary {
+  totalValue: number;
+  expiringWithin30Days: number;
+  renewalRate: number;
 }
