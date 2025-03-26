@@ -24,6 +24,8 @@ import ErrorPage from './pages/ErrorPage';
 import GlobalErrorPage from './components/error/GlobalErrorPage';
 import { ErrorBoundary } from './components/ui/error-boundary/ErrorBoundary';
 import { Toaster } from 'sonner';
+import Contracts from './pages/Contracts';
+import CreateWorkOrder from './pages/CreateWorkOrder';
 
 function App() {
   return (
@@ -31,7 +33,6 @@ function App() {
       showToast={true}
       fallback={<ErrorPage />}
     >
-      {/* Removed errorElement prop as it's not supported in react-router v6 Routes component */}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={
@@ -89,6 +90,16 @@ function App() {
             <WorkOrders />
           </ProtectedRoute>
         } />
+        <Route path="/workorders" element={
+          <ProtectedRoute>
+            <WorkOrders />
+          </ProtectedRoute>
+        } />
+        <Route path="/workorders/create" element={
+          <ProtectedRoute>
+            <CreateWorkOrder />
+          </ProtectedRoute>
+        } />
         <Route path="/subcontractors/:siteId" element={
           <ProtectedRoute>
             <Subcontractors />
@@ -124,7 +135,12 @@ function App() {
             <AwardCalculator />
           </ProtectedRoute>
         } />
-        <Route path="*" element={<GlobalErrorPage />} />
+        <Route path="/contracts" element={
+          <ProtectedRoute>
+            <Contracts />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<GlobalErrorPage statusCode="404" message="Page not found" />} />
       </Routes>
       <Toaster position="top-right" closeButton />
     </ErrorBoundary>

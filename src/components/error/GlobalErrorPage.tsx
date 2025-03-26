@@ -1,26 +1,25 @@
 
 import React from 'react';
-import { useRouteError, useNavigate, isRouteErrorResponse } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Home, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function GlobalErrorPage() {
-  const error = useRouteError();
+interface GlobalErrorPageProps {
+  error?: Error;
+  statusCode?: string;
+  message?: string;
+}
+
+export function GlobalErrorPage({ 
+  error,
+  statusCode = 'Error',
+  message = 'An unexpected error occurred'
+}: GlobalErrorPageProps) {
   const navigate = useNavigate();
   
-  // Parse route error information
-  let errorMessage = 'An unexpected error occurred';
-  let errorStatus = 'Error';
-  
-  if (isRouteErrorResponse(error)) {
-    errorStatus = `${error.status}`;
-    errorMessage = error.statusText || error.data?.message || 'Page not found';
-  } else if (error instanceof Error) {
-    errorMessage = error.message || 'An unexpected error occurred';
-  } else if (typeof error === 'string') {
-    errorMessage = error;
-  }
+  // Use provided error message or default
+  const errorMessage = error?.message || message;
   
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
@@ -28,7 +27,7 @@ export function GlobalErrorPage() {
         <CardHeader className="bg-destructive/10">
           <CardTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            {errorStatus === '404' ? 'Page Not Found' : 'Something went wrong'}
+            {statusCode === '404' ? 'Page Not Found' : 'Something went wrong'}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -36,7 +35,7 @@ export function GlobalErrorPage() {
             <div className="p-6 bg-muted rounded-full">
               <AlertTriangle className="h-12 w-12 text-destructive" />
             </div>
-            <h2 className="text-2xl font-bold">{errorStatus}</h2>
+            <h2 className="text-2xl font-bold">{statusCode}</h2>
             <p className="text-lg text-muted-foreground">{errorMessage}</p>
           </div>
         </CardContent>
