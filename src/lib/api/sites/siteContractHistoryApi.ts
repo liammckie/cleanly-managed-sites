@@ -3,13 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { ContractHistoryEntry } from '@/hooks/useSiteContractHistory';
 import { Json } from '@/types';
 
-/**
- * API functions for working with site contract history
- */
 export const contractHistoryApi = {
-  /**
-   * Fetch the contract history for a site
-   */
   async fetchContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
     const { data, error } = await supabase
       .from('site_contract_history')
@@ -25,16 +19,12 @@ export const contractHistoryApi = {
     return data as ContractHistoryEntry[];
   },
 
-  /**
-   * Save a new version of a contract to the history
-   */
   async saveContractVersion(
-    siteId: string,
-    contractDetails: Json,
+    siteId: string, 
+    contractDetails: Json, 
     notes: string = 'Contract updated'
   ): Promise<void> {
     try {
-      // First get the highest version number for this site
       const { data: lastVersion, error: versionError } = await supabase
         .from('site_contract_history')
         .select('version_number')
@@ -49,14 +39,13 @@ export const contractHistoryApi = {
 
       const nextVersionNumber = lastVersion ? lastVersion.version_number + 1 : 1;
 
-      // Insert the new history entry with the calculated version number
       const { error } = await supabase
         .from('site_contract_history')
         .insert({
           site_id: siteId,
           contract_details: contractDetails,
           notes: notes,
-          created_by: supabase.auth.getUser()?.data?.user?.id,
+          created_by: (await supabase.auth.getUser())?.data?.user?.id,
           version_number: nextVersionNumber
         });
 
