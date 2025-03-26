@@ -30,3 +30,18 @@ export function convertSubcontractorsToQuoteFormat(
   if (!Array.isArray(subcontractors)) return [];
   return subcontractors.map(convertToQuoteSubcontractor);
 }
+
+/**
+ * Prepare a quote subcontractor for API submission
+ */
+export function prepareQuoteSubcontractorForApi(subcontractor: QuoteSubcontractor): any {
+  return {
+    id: subcontractor.id,
+    quote_id: subcontractor.quoteId,
+    name: subcontractor.name,
+    description: subcontractor.description,
+    cost: subcontractor.cost,
+    frequency: subcontractor.frequency,
+    // Add any other fields needed for the API
+  };
+}

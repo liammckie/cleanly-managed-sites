@@ -1,6 +1,77 @@
 
+import { adaptQuoteData } from './quoteTypeAdapter';
 import { Quote, QuoteShift, QuoteSubcontractor } from '@/types/models';
 import { adaptDay, adaptFrequency } from './typeAdapters';
+
+/**
+ * Adapt a quote from one format to another
+ */
+export function adaptQuote(quote: any): Quote {
+  return adaptQuoteData(quote);
+}
+
+/**
+ * Adapt an array of quotes from database models to application models
+ */
+export function adaptModelsToQuotes(quotes: any[]): Quote[] {
+  if (!Array.isArray(quotes)) return [];
+  return quotes.map(adaptQuoteData);
+}
+
+/**
+ * Adapt a quote status string to the QuoteStatus type
+ */
+function adaptQuoteStatus(status: string): 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted' {
+  const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'];
+  return validStatuses.includes(status) ? status as any : 'draft';
+}
+
+/**
+ * Adapt a shift object to the QuoteShift type
+ */
+function adaptQuoteShift(shift: any): QuoteShift {
+  return {
+    id: shift.id || crypto.randomUUID(),
+    quoteId: shift.quoteId || shift.quote_id || '',
+    day: adaptDay(shift.day || 'monday') as any,
+    startTime: shift.startTime || shift.start_time || '09:00',
+    endTime: shift.endTime || shift.end_time || '17:00',
+    breakDuration: Number(shift.breakDuration || shift.break_duration || 30),
+    numberOfCleaners: Number(shift.numberOfCleaners || shift.number_of_cleaners || 1),
+    employmentType: (shift.employmentType || shift.employment_type || 'casual') as any,
+    level: Number(shift.level || 1) as any, // Cast to EmployeeLevel type
+    allowances: Array.isArray(shift.allowances) ? shift.allowances : [],
+    estimatedCost: Number(shift.estimatedCost || shift.estimated_cost || 0),
+    location: shift.location || '',
+    notes: shift.notes || ''
+  };
+}
+
+/**
+ * Adapt a subcontractor object to the QuoteSubcontractor type
+ */
+function adaptQuoteSubcontractor(sub: any): QuoteSubcontractor {
+  return {
+    id: sub.id || crypto.randomUUID(),
+    quoteId: sub.quoteId || sub.quote_id || '',
+    name: sub.name || sub.business_name || '',
+    description: sub.description || sub.custom_services || '',
+    cost: Number(sub.cost || sub.monthly_cost || 0),
+    frequency: adaptFrequency(sub.frequency || 'monthly') as any,
+    email: sub.email || '',
+    phone: sub.phone || '',
+    service: sub.service || '',
+    notes: sub.notes || '',
+    services: Array.isArray(sub.services) ? sub.services : [],
+    customServices: sub.customServices || sub.custom_services || '',
+    monthlyCost: Number(sub.monthlyCost || sub.monthly_cost || 0),
+    monthly_cost: Number(sub.monthly_cost || sub.monthlyCost || 0),
+    isFlatRate: Boolean(sub.isFlatRate || sub.is_flat_rate || true),
+    is_flat_rate: Boolean(sub.is_flat_rate || sub.isFlatRate || true),
+    business_name: sub.business_name || sub.name || '',
+    contact_name: sub.contact_name || ''
+  };
+}
 
 /**
  * Adapt a quote from one format to another
@@ -53,68 +124,13 @@ export function adaptQuoteData(quote: any): Quote {
 
   // Adapt shifts if available
   if (quote.shifts && Array.isArray(quote.shifts)) {
-    adaptedQuote.shifts = quote.shifts.map((shift: any) => adaptQuoteShift(shift));
+    adaptedQuote.shifts = quote.shifts.map(adaptQuoteShift);
   }
 
   // Adapt subcontractors if available
   if (quote.subcontractors && Array.isArray(quote.subcontractors)) {
-    adaptedQuote.subcontractors = quote.subcontractors.map((sub: any) => adaptQuoteSubcontractor(sub));
+    adaptedQuote.subcontractors = quote.subcontractors.map(adaptQuoteSubcontractor);
   }
 
   return adaptedQuote;
-}
-
-/**
- * Adapt a quote status string to the QuoteStatus enum
- */
-function adaptQuoteStatus(status: string): any {
-  const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'];
-  return validStatuses.includes(status) ? status : 'draft';
-}
-
-/**
- * Adapt a shift object to the QuoteShift type
- */
-function adaptQuoteShift(shift: any): QuoteShift {
-  return {
-    id: shift.id || crypto.randomUUID(),
-    quoteId: shift.quoteId || shift.quote_id || '',
-    day: adaptDay(shift.day || 'monday') as any,
-    startTime: shift.startTime || shift.start_time || '09:00',
-    endTime: shift.endTime || shift.end_time || '17:00',
-    breakDuration: Number(shift.breakDuration || shift.break_duration || 30),
-    numberOfCleaners: Number(shift.numberOfCleaners || shift.number_of_cleaners || 1),
-    employmentType: (shift.employmentType || shift.employment_type || 'casual') as any,
-    level: Number(shift.level || 1),
-    allowances: Array.isArray(shift.allowances) ? shift.allowances : [],
-    estimatedCost: Number(shift.estimatedCost || shift.estimated_cost || 0),
-    location: shift.location || '',
-    notes: shift.notes || ''
-  };
-}
-
-/**
- * Adapt a subcontractor object to the QuoteSubcontractor type
- */
-function adaptQuoteSubcontractor(sub: any): QuoteSubcontractor {
-  return {
-    id: sub.id || crypto.randomUUID(),
-    quoteId: sub.quoteId || sub.quote_id || '',
-    name: sub.name || sub.business_name || '',
-    description: sub.description || sub.custom_services || '',
-    cost: Number(sub.cost || sub.monthly_cost || 0),
-    frequency: adaptFrequency(sub.frequency || 'monthly') as any,
-    email: sub.email || '',
-    phone: sub.phone || '',
-    service: sub.service || '',
-    notes: sub.notes || '',
-    services: Array.isArray(sub.services) ? sub.services : [],
-    customServices: sub.customServices || sub.custom_services || '',
-    monthlyCost: Number(sub.monthlyCost || sub.monthly_cost || 0),
-    monthly_cost: Number(sub.monthly_cost || sub.monthlyCost || 0),
-    isFlatRate: Boolean(sub.isFlatRate || sub.is_flat_rate || true),
-    is_flat_rate: Boolean(sub.is_flat_rate || sub.isFlatRate || true),
-    business_name: sub.business_name || sub.name || '',
-    contact_name: sub.contact_name || ''
-  };
 }

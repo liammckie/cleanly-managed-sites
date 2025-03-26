@@ -16,12 +16,12 @@ export function ensureContractHistoryIds(entries: Partial<ContractHistoryEntry>[
   return entries.map(entry => ({
     id: entry.id || crypto.randomUUID(),
     site_id: entry.site_id || '',
-    contractor_id: (entry as any).contractor_id || '',
     contract_details: entry.contract_details || {},
     version_number: entry.version_number || 0,
     notes: entry.notes || '',
     created_by: entry.created_by || '',
-    created_at: entry.created_at || new Date().toISOString()
+    created_at: entry.created_at || new Date().toISOString(),
+    contractor_id: (entry as any).contractor_id || ''
   }));
 }
 
@@ -29,13 +29,15 @@ export function ensureContractHistoryIds(entries: Partial<ContractHistoryEntry>[
  * Utility to adapt Subcontractor array to QuoteSubcontractor array
  */
 export function adaptSubcontractorsToQuoteFormat(subcontractors: Subcontractor[]): QuoteSubcontractor[] {
+  if (!Array.isArray(subcontractors)) return [];
+  
   return subcontractors.map(sub => ({
-    id: sub.id || '',
+    id: sub.id || crypto.randomUUID(),
     quoteId: sub.id || '', // Use sub.id as quoteId if not provided
     name: sub.business_name || '',
     description: sub.customServices || '',
     cost: typeof sub.monthly_cost === 'number' ? sub.monthly_cost : 0,
-    frequency: 'monthly', // Default frequency
+    frequency: 'monthly' as any, // Default frequency, cast to any to avoid TS errors
     email: sub.email || '',
     phone: sub.phone || '',
     notes: '',
@@ -75,4 +77,26 @@ export function parseContractDetails(details: any): any {
     }
   }
   return details;
+}
+
+/**
+ * Extend ContractorRecord type with missing properties
+ */
+export function extendContractorRecord(contractor: any): any {
+  return {
+    ...contractor,
+    city: contractor.city || '',
+    state: contractor.state || '',
+    postcode: contractor.postcode || '',
+    custom_id: contractor.custom_id || contractor.customId || '',
+    services: contractor.services || []
+  };
+}
+
+/**
+ * Adapt client record without user_id for CSV imports
+ */
+export function adaptClientRecordForImport(client: any): any {
+  const { user_id, ...clientData } = client;
+  return clientData;
 }

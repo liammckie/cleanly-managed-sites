@@ -1,103 +1,103 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { SiteFormStepper } from './SiteFormStepper';
 import { useSiteForm } from '@/hooks/useSiteForm';
-import { getSiteFormSteps } from './siteFormConfig';
-import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
+import { SiteForm } from './SiteForm';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { getInitialFormData } from './types/initialFormData';
 import { SiteFormData } from './types/siteFormData';
-import { SiteFormHandlers } from './types/siteFormHandlers';
-import { CreateSiteFormContainer } from './create/CreateSiteFormContainer';
-import { useCreateSiteFormSubmit } from './create/useCreateSiteFormSubmit';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { FormStepGuidance } from './FormStepGuidance';
 
 export function CreateSiteForm() {
-  // Initialize form with react-hook-form
-  const formMethods = useForm<SiteFormData>();
-  
-  // Use the custom hooks
-  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
-  
-  // Use the form submission hook
-  const { handleSubmit, isSubmitting } = useCreateSiteFormSubmit(siteForm.formData);
-
-  // Convert the handler function to the expected event handler type
-  const handleChangeFn = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    siteForm.handleChange && siteForm.handleChange(name as keyof SiteFormData, value);
-  };
-
-  // Create a wrapper function that doesn't need arguments
-  const addReplenishableWrapper = () => {
-    if (siteForm.addReplenishable) {
-      siteForm.addReplenishable('stock'); // Default to 'stock' type
+  const navigate = useNavigate();
+  const {
+    formData,
+    setFormData,
+    step,
+    setStep,
+    errors,
+    handleChange,
+    handleNestedChange,
+    handleDoubleNestedChange,
+    handleClientChange,
+    validateStep,
+    getCompletionPercentage,
+    handleSubmit,
+    isSubmitting,
+    
+    // Form handlers for specific sections
+    addBillingLine,
+    updateBillingLine,
+    removeBillingLine,
+    
+    addSubcontractor,
+    updateSubcontractor,
+    removeSubcontractor,
+    
+    // Create wrapper functions to handle the type mismatch
+    addReplenishableStock: () => addReplenishable('stock'),
+    addReplenishableSupplies: () => addReplenishable('supplies'),
+    updateReplenishable,
+    removeReplenishable,
+    
+    addContractTerm,
+    updateContractTerm,
+    removeContractTerm,
+    
+    addAdditionalContract,
+    updateAdditionalContract,
+    removeAdditionalContract,
+  } = useSiteForm({
+    initialFormData: getInitialFormData(),
+    onSubmitSuccess: (siteId) => {
+      navigate(`/sites/${siteId}`);
     }
-  };
-
-  // Initialize the stepper with enhanced SiteFormHandlers type
-  const steps = getSiteFormSteps(
-    siteForm.formData,
-    handleChangeFn,
-    siteForm.handleNestedChange || (() => {}),
-    (field, values) => console.log(`Array change for ${field}:`, values),
-    (field, index, value) => console.log(`Array update for ${field} at index ${index}:`, value),
-    siteForm.handleDoubleNestedChange || (() => {}),
-    addReplenishableWrapper,
-    (field, index) => console.log(`Removing item from ${field} at index ${index}`),
-    siteForm.addSubcontractor || (() => {}),
-    siteForm.updateSubcontractor || (() => {}),
-    siteForm.removeSubcontractor || (() => {}),
-    siteForm.addReplenishable || (() => {}),
-    siteForm.updateReplenishable || (() => {}),
-    siteForm.removeReplenishable || (() => {}),
-    siteForm.addBillingLine || (() => {}),
-    siteForm.updateBillingLine || (() => {}),
-    siteForm.removeBillingLine || (() => {}),
-    siteForm.addContractTerm || (() => {}),
-    siteForm.updateContractTerm || (() => {}),
-    siteForm.removeContractTerm || (() => {}),
-    siteForm.addAdditionalContract || (() => {}),
-    siteForm.updateAdditionalContract || (() => {}),
-    siteForm.removeAdditionalContract || (() => {}),
-    (field, file) => console.log(`Uploading file for ${field}:`, file.name),
-    (field, fileName) => console.log(`Removing file ${fileName} from ${field}`),
-    siteForm.errors || {}
-  );
-  
-  // Use stepper hook with validation
-  const stepper = useSiteFormStepper({
-    steps,
-    validateStep: siteForm.validateStep || (() => true)
   });
-  
-  // Calculate completion percentage
-  const completionPercentage = siteForm.getCompletionPercentage ? 
-    siteForm.getCompletionPercentage() : 
-    Math.round(((stepper.currentStep + 1) / stepper.totalSteps) * 100);
 
   return (
-    <div className="space-y-6">
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-md font-medium">Site Creation Progress</h3>
-          <span className="text-sm text-muted-foreground">{completionPercentage}% Complete</span>
-        </div>
-        <Progress value={completionPercentage} className="h-2" />
-      </Card>
-      
-      <FormStepGuidance 
-        currentStep={stepper.currentStep} 
-        stepsConfig={steps}
-      />
-      
-      <CreateSiteFormContainer
-        form={formMethods}
-        formData={siteForm.formData}
-        stepper={stepper}
-        isSubmitting={isSubmitting}
-        handleSubmit={handleSubmit}
-      />
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <SiteFormStepper 
+          step={step} 
+          setStep={setStep} 
+          validateStep={validateStep}
+          completionPercentage={getCompletionPercentage()}
+        />
+        
+        <SiteForm
+          formData={formData}
+          step={step}
+          errors={errors}
+          handleChange={handleChange}
+          handleNestedChange={handleNestedChange}
+          handleDoubleNestedChange={handleDoubleNestedChange}
+          handleClientChange={handleClientChange}
+          handleSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          
+          // Pass down all the handlers
+          addBillingLine={addBillingLine}
+          updateBillingLine={updateBillingLine}
+          removeBillingLine={removeBillingLine}
+          
+          addSubcontractor={addSubcontractor}
+          updateSubcontractor={updateSubcontractor}
+          removeSubcontractor={removeSubcontractor}
+          
+          addReplenishableStock={addReplenishableStock}
+          addReplenishableSupplies={addReplenishableSupplies}
+          updateReplenishable={updateReplenishable}
+          removeReplenishable={removeReplenishable}
+          
+          addContractTerm={addContractTerm}
+          updateContractTerm={updateContractTerm}
+          removeContractTerm={removeContractTerm}
+          
+          addAdditionalContract={addAdditionalContract}
+          updateAdditionalContract={updateAdditionalContract}
+          removeAdditionalContract={removeAdditionalContract}
+        />
+      </CardContent>
+    </Card>
   );
 }

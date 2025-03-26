@@ -1,97 +1,125 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { SiteFormStepper } from './SiteFormStepper';
 import { useSiteForm } from '@/hooks/useSiteForm';
-import { getSiteFormSteps } from './siteFormConfig';
-import { useSiteFormStepper } from '@/hooks/useSiteFormStepper';
-import { SiteRecord } from '@/lib/types';
-import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
-import { SiteFormHandlers } from './types/siteFormHandlers';
-import { SiteFormData } from './types/siteFormData';
+import { SiteForm } from './SiteForm';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSite } from '@/hooks/useSite';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { getInitialFormData } from './types/initialFormData';
 
-// Import the new components
-import { EditSiteFormHeader } from './edit/EditSiteFormHeader';
-import { EditSiteFormContainer } from './edit/EditSiteFormContainer';
-import { useSiteFormData } from './edit/useSiteFormData';
-import { useEditSiteActions } from './edit/useEditSiteActions';
-
-interface EditSiteFormProps {
-  site: SiteRecord;
-}
-
-export function EditSiteForm({ site }: EditSiteFormProps) {
-  // Get form state and handlers from the useSiteForm hook
-  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
+export function EditSiteForm() {
+  const { siteId } = useParams<{ siteId: string }>();
+  const navigate = useNavigate();
+  const { site, isLoading } = useSite(siteId);
+  const [isSiteLoaded, setIsSiteLoaded] = useState(false);
   
-  // Use our custom hooks to organize logic
-  const { handleSubmit, isSaving } = useEditSiteActions(site, siteForm.formData);
-  useSiteFormData(site, siteForm.formData, siteForm.setFormData, siteForm.form);
-
-  // Convert the handler function to the expected event handler type
-  const handleChangeFn = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    siteForm.handleChange && siteForm.handleChange(name as keyof SiteFormData, value);
-  };
-  
-  // Create a wrapper function that doesn't need arguments
-  const addReplenishableWrapper = () => {
-    if (siteForm.addReplenishable) {
-      siteForm.addReplenishable('stock'); // Default to 'stock' type
+  const {
+    formData,
+    setFormData,
+    step,
+    setStep,
+    errors,
+    handleChange,
+    handleNestedChange,
+    handleDoubleNestedChange,
+    handleClientChange,
+    loadSiteData,
+    validateStep,
+    getCompletionPercentage,
+    handleSubmit,
+    isSubmitting,
+    
+    // Form handlers for specific sections
+    addBillingLine,
+    updateBillingLine,
+    removeBillingLine,
+    
+    addSubcontractor,
+    updateSubcontractor,
+    removeSubcontractor,
+    
+    // Create wrapper functions to handle the type mismatch
+    addReplenishableStock: () => addReplenishable('stock'),
+    addReplenishableSupplies: () => addReplenishable('supplies'),
+    updateReplenishable,
+    removeReplenishable,
+    
+    addContractTerm,
+    updateContractTerm,
+    removeContractTerm,
+    
+    addAdditionalContract,
+    updateAdditionalContract,
+    removeAdditionalContract,
+  } = useSiteForm({
+    initialFormData: getInitialFormData(),
+    onSubmitSuccess: () => {
+      navigate(`/sites/${siteId}`);
     }
-  };
-  
-  // Initialize the stepper with enhanced SiteFormHandlers type
-  const steps = getSiteFormSteps(
-    siteForm.formData,
-    handleChangeFn,
-    siteForm.handleNestedChange || (() => {}),
-    (field, values) => console.log(`Array change for ${field}:`, values),
-    (field, index, value) => console.log(`Array update for ${field} at index ${index}:`, value),
-    siteForm.handleDoubleNestedChange || (() => {}),
-    addReplenishableWrapper,
-    (field, index) => console.log(`Removing item from ${field} at index ${index}`),
-    siteForm.addSubcontractor || (() => {}),
-    siteForm.updateSubcontractor || (() => {}),
-    siteForm.removeSubcontractor || (() => {}),
-    siteForm.addReplenishable || (() => {}),
-    siteForm.updateReplenishable || (() => {}),
-    siteForm.removeReplenishable || (() => {}),
-    siteForm.addBillingLine || (() => {}),
-    siteForm.updateBillingLine || (() => {}),
-    siteForm.removeBillingLine || (() => {}),
-    siteForm.addContractTerm || (() => {}),
-    siteForm.updateContractTerm || (() => {}),
-    siteForm.removeContractTerm || (() => {}),
-    siteForm.addAdditionalContract || (() => {}),
-    siteForm.updateAdditionalContract || (() => {}),
-    siteForm.removeAdditionalContract || (() => {}),
-    (field, file) => console.log(`Uploading file for ${field}:`, file.name),
-    (field, fileName) => console.log(`Removing file ${fileName} from ${field}`),
-    siteForm.errors || {}
-  );
-  
-  // Use stepper hook with validation
-  const stepper = useSiteFormStepper({
-    steps,
-    validateStep: siteForm.validateStep || (() => true)
   });
-  
+
+  // Load site data when available
+  useEffect(() => {
+    if (site && !isSiteLoaded) {
+      loadSiteData(site);
+      setIsSiteLoaded(true);
+    }
+  }, [site, isSiteLoaded, loadSiteData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
   return (
-    <ErrorBoundary>
-      <div className="max-w-4xl mx-auto">
-        <EditSiteFormHeader 
-          site={site} 
-          isSaving={isSaving} 
-          onSave={handleSubmit} 
+    <Card>
+      <CardContent className="pt-6">
+        <SiteFormStepper 
+          step={step} 
+          setStep={setStep} 
+          validateStep={validateStep}
+          completionPercentage={getCompletionPercentage()}
         />
         
-        <EditSiteFormContainer
-          site={site}
-          form={siteForm.form}
-          stepper={stepper}
-          handleSubmit={handleSubmit}
-          isSaving={isSaving}
+        <SiteForm
+          formData={formData}
+          step={step}
+          errors={errors}
+          handleChange={handleChange}
+          handleNestedChange={handleNestedChange}
+          handleDoubleNestedChange={handleDoubleNestedChange}
+          handleClientChange={handleClientChange}
+          handleSubmit={() => handleSubmit(siteId)}
+          isSubmitting={isSubmitting}
+          
+          // Pass down all the handlers
+          addBillingLine={addBillingLine}
+          updateBillingLine={updateBillingLine}
+          removeBillingLine={removeBillingLine}
+          
+          addSubcontractor={addSubcontractor}
+          updateSubcontractor={updateSubcontractor}
+          removeSubcontractor={removeSubcontractor}
+          
+          addReplenishableStock={addReplenishableStock}
+          addReplenishableSupplies={addReplenishableSupplies}
+          updateReplenishable={updateReplenishable}
+          removeReplenishable={removeReplenishable}
+          
+          addContractTerm={addContractTerm}
+          updateContractTerm={updateContractTerm}
+          removeContractTerm={removeContractTerm}
+          
+          addAdditionalContract={addAdditionalContract}
+          updateAdditionalContract={updateAdditionalContract}
+          removeAdditionalContract={removeAdditionalContract}
         />
-      </div>
-    </ErrorBoundary>
+      </CardContent>
+    </Card>
   );
 }

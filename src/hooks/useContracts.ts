@@ -1,124 +1,184 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ContractData } from '@/lib/types/contracts';
-import { ContractSummaryData, GroupedContracts } from '@/components/sites/contract/types';
-import { supabase } from '@/lib/supabase';
+import { contractsApi } from '@/lib/api/sites/contractsApi';
+import { ContractSummaryData, ContractData, GroupedContracts } from '@/components/sites/contract/types';
 
-/**
- * Hook to fetch and manage contract data
- */
 export function useContracts() {
-  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({});
+  const [contractData, setContractData] = useState<ContractData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [metrics, setMetrics] = useState<ContractSummaryData>({
+    // Expiration counts
     expiringThisMonth: 0,
     expiringNext3Months: 0,
     expiringNext6Months: 0,
     expiringThisYear: 0,
+    
+    // Expiration values
     valueExpiringThisMonth: 0,
     valueExpiringNext3Months: 0,
     valueExpiringNext6Months: 0,
     valueExpiringThisYear: 0,
+    
+    // Overall contract data
     totalContracts: 0,
     totalValue: 0,
+    
+    // Financial metrics
     totalRevenue: 0,
     totalCost: 0,
     totalProfit: 0,
     avgContractValue: 0,
     profitMargin: 0,
+    
+    // Additional metrics
     activeCount: 0
   });
+  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({});
 
-  // Fetch contract data from the API
-  const contractQuery = useQuery({
-    queryKey: ['contracts'],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('sites')
-          .select(`
-            id,
-            name,
-            client_id,
-            client_name,
-            monthly_revenue,
-            contract_details,
-            status
-          `)
-          .order('name');
-
-        if (error) throw error;
-
-        // Transform the data to the expected format with defaults
-        return (data || []).map(site => {
-          return {
-            id: site.id,
-            site_id: site.id,
-            site_name: site.name || '',
-            client_id: site.client_id || '',
-            client_name: site.client_name || '',
-            monthly_revenue: site.monthly_revenue || 0,
-            contract_details: site.contract_details || {},
-            status: site.status || 'inactive',
-            is_primary: true // Default to primary
-          };
-        });
-      } catch (error) {
-        console.error('Error fetching contracts:', error);
-        return [];
-      }
-    },
-    meta: {
-      onError: 'Failed to load contracts'
-    }
-  });
-
-  // Process and organize contract data
   useEffect(() => {
-    if (contractQuery.data) {
-      const grouped: GroupedContracts = {};
-      let totalValue = 0;
-      let activeCount = 0;
-      
-      // Group contracts by status
-      contractQuery.data.forEach(contract => {
-        const status = contract.status || 'unknown';
-        if (!grouped[status]) {
-          grouped[status] = [];
-        }
-        grouped[status].push(contract);
+    const fetchContracts = async () => {
+      setIsLoading(true);
+      try {
+        const contracts = await contractsApi.getContracts();
         
-        // Calculate total value (assuming monthly revenue * 12 for annual value)
-        totalValue += (contract.monthly_revenue || 0) * 12;
+        // Set contract data
+        setContractData(contracts);
         
-        // Count active contracts
-        if (status === 'active') {
-          activeCount++;
-        }
-      });
-      
-      setGroupedContracts(grouped);
-      
-      // Update metrics
-      setMetrics(prev => ({
-        ...prev,
-        totalContracts: contractQuery.data.length,
-        totalValue: totalValue,
-        totalRevenue: totalValue,
-        totalProfit: totalValue * 0.25, // Estimated profit
-        avgContractValue: contractQuery.data.length > 0 ? totalValue / contractQuery.data.length : 0,
-        profitMargin: totalValue > 0 ? 25 : 0, // Estimated profit margin
-        activeCount: activeCount
-      }));
+        // Process contracts for metrics
+        calculateMetrics(contracts);
+        
+        // Group contracts for charts
+        groupContractsByKey(contracts);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch contracts'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchContracts();
+  }, []);
+  
+  const calculateMetrics = (contracts: ContractData[]) => {
+    if (!contracts || !Array.isArray(contracts)) {
+      return;
     }
-  }, [contractQuery.data]);
+    
+    // Default metrics
+    const newMetrics: ContractSummaryData = {
+      expiringThisMonth: 0,
+      expiringNext3Months: 0,
+      expiringNext6Months: 0,
+      expiringThisYear: 0,
+      valueExpiringThisMonth: 0,
+      valueExpiringNext3Months: 0,
+      valueExpiringNext6Months: 0,
+      valueExpiringThisYear: 0,
+      totalContracts: contracts.length,
+      totalValue: 0,
+      totalRevenue: 0,
+      totalCost: 0,
+      totalProfit: 0,
+      avgContractValue: 0,
+      profitMargin: 0,
+      activeCount: 0
+    };
+    
+    const now = new Date();
+    const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const next3Months = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+    const next6Months = new Date(now.getFullYear(), now.getMonth() + 6, 0);
+    const thisYearEnd = new Date(now.getFullYear(), 11, 31);
+    
+    // Calculate metrics
+    contracts.forEach(contract => {
+      // Add to total revenue
+      const monthlyRevenue = contract.monthly_revenue || 0;
+      newMetrics.totalValue += monthlyRevenue;
+      
+      // Count active contracts
+      if (contract.status === 'active') {
+        newMetrics.activeCount++;
+      }
+      
+      // Check expiration dates
+      if (contract.contract_details && contract.contract_details.endDate) {
+        try {
+          const endDate = new Date(contract.contract_details.endDate);
+          
+          // This month
+          if (endDate <= thisMonthEnd) {
+            newMetrics.expiringThisMonth++;
+            newMetrics.valueExpiringThisMonth += monthlyRevenue;
+          }
+          
+          // Next 3 months
+          if (endDate <= next3Months) {
+            newMetrics.expiringNext3Months++;
+            newMetrics.valueExpiringNext3Months += monthlyRevenue;
+          }
+          
+          // Next 6 months
+          if (endDate <= next6Months) {
+            newMetrics.expiringNext6Months++;
+            newMetrics.valueExpiringNext6Months += monthlyRevenue;
+          }
+          
+          // This year
+          if (endDate <= thisYearEnd) {
+            newMetrics.expiringThisYear++;
+            newMetrics.valueExpiringThisYear += monthlyRevenue;
+          }
+        } catch (e) {
+          // Skip invalid dates
+        }
+      }
+    });
+    
+    // Calculate averages and other derived metrics
+    if (newMetrics.totalContracts > 0) {
+      newMetrics.avgContractValue = newMetrics.totalValue / newMetrics.totalContracts;
+    }
+    
+    // Estimate profit (this is a simplified calculation, adapt as needed)
+    newMetrics.totalRevenue = newMetrics.totalValue * 12; // Annualized revenue
+    newMetrics.totalCost = newMetrics.totalRevenue * 0.7; // Assuming 70% cost
+    newMetrics.totalProfit = newMetrics.totalRevenue - newMetrics.totalCost;
+    
+    if (newMetrics.totalRevenue > 0) {
+      newMetrics.profitMargin = (newMetrics.totalProfit / newMetrics.totalRevenue) * 100;
+    }
+    
+    setMetrics(newMetrics);
+  };
+  
+  const groupContractsByKey = (contracts: ContractData[]) => {
+    if (!contracts || !Array.isArray(contracts)) {
+      return;
+    }
+    
+    // Group by status
+    const byStatus: GroupedContracts = {};
+    
+    contracts.forEach(contract => {
+      const status = contract.status || 'unknown';
+      if (!byStatus[status]) {
+        byStatus[status] = [];
+      }
+      byStatus[status].push(contract);
+    });
+    
+    setGroupedContracts({
+      byStatus
+    });
+  };
 
   return {
-    contractData: contractQuery.data || [],
-    groupedContracts,
-    isLoading: contractQuery.isLoading,
-    isError: contractQuery.isError,
-    error: contractQuery.error,
-    metrics
+    contractData,
+    isLoading,
+    error,
+    metrics,
+    groupedContracts
   };
 }

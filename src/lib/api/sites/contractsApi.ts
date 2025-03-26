@@ -14,7 +14,6 @@ export const contractsApi = {
           id,
           name,
           client_id,
-          client_name,
           monthly_revenue,
           contract_details,
           status
@@ -30,7 +29,7 @@ export const contractsApi = {
           site_id: site.id,
           site_name: site.name || '',
           client_id: site.client_id || '',
-          client_name: site.client_name || '',
+          client_name: '', // We don't have client_name in the query
           monthly_revenue: site.monthly_revenue || 0,
           contract_details: site.contract_details || {},
           status: site.status || 'inactive',
@@ -52,7 +51,6 @@ export const contractsApi = {
           id,
           name,
           client_id,
-          client_name,
           monthly_revenue,
           contract_details,
           status
@@ -68,12 +66,10 @@ export const contractsApi = {
       return (data || [])
         .filter(site => {
           const detailsObj = parseContractDetails(site.contract_details);
-          const endDateStr = detailsObj?.endDate || '';
-          
-          if (!endDateStr) return false;
+          if (!detailsObj || !detailsObj.endDate) return false;
           
           try {
-            const endDate = new Date(endDateStr);
+            const endDate = new Date(detailsObj.endDate);
             return endDate >= now && endDate <= futureDate;
           } catch (e) {
             return false;
@@ -84,7 +80,7 @@ export const contractsApi = {
           site_id: site.id,
           site_name: site.name || '',
           client_id: site.client_id || '',
-          client_name: site.client_name || '',
+          client_name: '', // We don't have client_name in the query
           monthly_revenue: site.monthly_revenue || 0,
           contract_details: site.contract_details || {},
           status: site.status || 'inactive',
