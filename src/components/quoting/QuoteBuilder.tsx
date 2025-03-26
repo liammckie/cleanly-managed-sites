@@ -8,6 +8,7 @@ import { QuoteDetails } from './QuoteDetails';
 import { SubcontractorSection } from './SubcontractorSection';
 import { Calendar, FileText, DollarSign, Users } from 'lucide-react';
 import { Quote, QuoteShift, Subcontractor } from '@/lib/types/quotes';
+import { adaptQuote } from '@/lib/utils/typeAdapters';
 
 export function QuoteBuilder() {
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null);
@@ -60,10 +61,11 @@ export function QuoteBuilder() {
             </TabsList>
             
             <TabsContent value="details">
-              <QuoteDetails
-                quote={quote}
-                onQuoteSelect={handleQuoteSelect}
-              />
+              {quote && (
+                <QuoteDetails
+                  quote={adaptQuote<typeof quote, import('@/lib/types/award/types').Quote>(quote)}
+                />
+              )}
             </TabsContent>
             
             <TabsContent value="shifts">

@@ -1,5 +1,4 @@
 
-// Only updating the section with the laborPercentage error
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -114,9 +113,15 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
   
   useEffect(() => {
     const overheadProfileId = form.watch('overheadProfile');
-    const selectedProfile = overheadProfiles.find(p => p.id === overheadProfileId);
+    const selectedProfile = overheadProfiles.find(profile => {
+      // Type-check before accessing properties
+      if (typeof profile === 'object' && profile !== null && 'id' in profile) {
+        return profile.id === overheadProfileId;
+      }
+      return false;
+    });
     
-    if (selectedProfile) {
+    if (selectedProfile && typeof selectedProfile === 'object' && 'laborPercentage' in selectedProfile) {
       form.setValue('overheadPercentage', selectedProfile.laborPercentage);
     }
   }, [form.watch('overheadProfile'), overheadProfiles]);
@@ -159,6 +164,20 @@ export function QuoteForm({ quoteId, initialData }: QuoteFormProps) {
     } catch (error) {
       console.error('Error saving quote:', error);
     }
+  };
+  
+  const renderProfileOptions = () => {
+    return overheadProfiles.map((profile) => {
+      // Type-check before accessing properties
+      if (typeof profile === 'object' && profile !== null && 'id' in profile && 'name' in profile) {
+        return (
+          <SelectItem key={profile.id.toString()} value={profile.id.toString()}>
+            {profile.name}
+          </SelectItem>
+        );
+      }
+      return null;
+    });
   };
   
   return (

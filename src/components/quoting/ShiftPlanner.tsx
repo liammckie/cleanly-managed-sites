@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, CalendarDays, List, PlusCircle } from 'lucide-react';
-import { QuoteShift, Subcontractor } from '@/lib/types/quotes';
+import { QuoteShift } from '@/lib/types/award/types';
 import { calculateTotalCosts, detectOvertimeHours } from '@/lib/award/utils';
 import useShiftManagement from '@/hooks/useShiftManagement';
 import { useAllowances } from '@/hooks/quotes/useAllowances';
@@ -14,6 +14,7 @@ import { ShiftWarnings } from './shift-planner/ShiftWarnings';
 import { ShiftTemplates } from './shift-planner/ShiftTemplates';
 import { WarningSection } from './shift-planner/WarningSection';
 import { Day } from '@/lib/award/types';
+import { adaptDay, adaptQuoteShift } from '@/lib/utils/typeAdapters';
 
 // Custom function to detect broken shifts (multiple shifts in same day)
 const detectBrokenShifts = (shifts: QuoteShift[]): Record<string, number> => {
@@ -48,10 +49,13 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const [activeView, setActiveView] = useState<'calendar' | 'list' | 'add'>('list');
   const { data: allowances = [], isLoading: isLoadingAllowances } = useAllowances();
   
+  // Adapt shifts for type compatibility
+  const adaptedShifts = shifts.map(shift => adaptQuoteShift<typeof shift, QuoteShift>(shift));
+  
   const initialShift: Partial<QuoteShift> = {
     id: uuidv4(),
     quoteId: quoteId || '',
-    day: 'monday' as Day,
+    day: adaptDay('monday'),
     startTime: '09:00',
     endTime: '17:00',
     breakDuration: 30,
@@ -67,18 +71,18 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const [newShift, setNewShift] = useState(initialShift);
   
   // Calculate total cost
-  const totalCost = calculateTotalCosts(shifts);
+  const totalCost = calculateTotalCosts(adaptedShifts);
   
   // Detect overtime hours
-  const overtimeHours = detectOvertimeHours(shifts);
+  const overtimeHours = detectOvertimeHours(adaptedShifts);
   
   // Detect broken shifts
-  const brokenShiftDays = detectBrokenShifts(shifts);
+  const brokenShiftDays = detectBrokenShifts(adaptedShifts);
   
   const handleShiftChange = (field: string, value: any) => {
     setNewShift(prev => ({
       ...prev,
-      [field]: value
+      [field]: field === 'day' ? adaptDay(value) : value
     }));
   };
   
@@ -110,10 +114,11 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
       ...newShift,
       id: newShift.id || uuidv4(),
       quoteId: quoteId || '',
-      employmentType: newShift.employmentType || 'full_time'
+      employmentType: newShift.employmentType || 'full_time',
+      day: adaptDay(newShift.day?.toString() || 'monday')
     } as QuoteShift;
     
-    onShiftsChange([...shifts, fullShift]);
+    onShiftsChange([...shifts, adaptQuoteShift<typeof fullShift, QuoteShift>(fullShift)]);
     setActiveView('list');
     setNewShift(initialShift); // Reset form
   };
@@ -125,15 +130,16 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const handleDuplicateShift = (shift: QuoteShift) => {
     const duplicatedShift = {
       ...shift,
-      id: uuidv4()
+      id: uuidv4(),
+      day: adaptDay(shift.day.toString())
     };
     
-    onShiftsChange([...shifts, duplicatedShift]);
+    onShiftsChange([...shifts, adaptQuoteShift<typeof duplicatedShift, QuoteShift>(duplicatedShift)]);
   };
   
   const handleUpdateShift = (updatedShift: QuoteShift) => {
     onShiftsChange(shifts.map(shift => 
-      shift.id === updatedShift.id ? updatedShift : shift
+      shift.id === updatedShift.id ? adaptQuoteShift<typeof updatedShift, QuoteShift>(updatedShift) : shift
     ));
   };
   
@@ -193,8 +199,8 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
       
       <ShiftScheduler 
         activeView={activeView}
-        shifts={shifts}
-        newShift={newShift}
+        shifts={adaptedShifts}
+        newShift={adaptQuoteShift<typeof newShift, Partial<QuoteShift>>(newShift)}
         allowances={allowances}
         isLoadingAllowances={isLoadingAllowances}
         onShiftChange={handleShiftChange}
@@ -210,7 +216,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
       {shifts.length > 0 && (
         <>
           <ShiftSummary 
-            shifts={shifts}
+            shifts={adaptedShifts}
             totalCost={totalCost}
           />
           

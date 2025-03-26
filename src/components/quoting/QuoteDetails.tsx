@@ -4,19 +4,22 @@ import { Quote } from '@/lib/types/award/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { QuoteStatusBadge } from './QuoteStatusBadge';
+import { adaptQuote } from '@/lib/utils/typeAdapters';
 
 export interface QuoteDetailsProps {
   quote: Quote;
-  onQuoteSelect?: (quoteId: string) => void;
 }
 
-export function QuoteDetails({ quote, onQuoteSelect }: QuoteDetailsProps) {
+export function QuoteDetails({ quote }: QuoteDetailsProps) {
+  // Adapt the quote to meet the expected type
+  const adaptedQuote = adaptQuote<typeof quote, Quote>(quote);
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>{quote.name}</span>
-          <QuoteStatusBadge status={quote.status} />
+          <span>{adaptedQuote.name}</span>
+          <QuoteStatusBadge status={adaptedQuote.status} />
         </CardTitle>
       </CardHeader>
       
@@ -24,75 +27,75 @@ export function QuoteDetails({ quote, onQuoteSelect }: QuoteDetailsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Client</h3>
-            <p>{quote.clientName}</p>
+            <p>{adaptedQuote.clientName}</p>
           </div>
           
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Site</h3>
-            <p>{quote.siteName || 'N/A'}</p>
+            <p>{adaptedQuote.siteName || 'N/A'}</p>
           </div>
           
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Total Price</h3>
-            <p className="font-semibold">{formatCurrency(quote.totalPrice)}</p>
+            <p className="font-semibold">{formatCurrency(adaptedQuote.totalPrice)}</p>
           </div>
           
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Created</h3>
-            <p>{formatDate(quote.createdAt)}</p>
+            <p>{formatDate(adaptedQuote.createdAt)}</p>
           </div>
           
-          {quote.validUntil && (
+          {adaptedQuote.validUntil && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Valid Until</h3>
-              <p>{formatDate(quote.validUntil)}</p>
+              <p>{formatDate(adaptedQuote.validUntil)}</p>
             </div>
           )}
           
-          {quote.quoteNumber && (
+          {adaptedQuote.quoteNumber && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Quote Number</h3>
-              <p>{quote.quoteNumber}</p>
+              <p>{adaptedQuote.quoteNumber}</p>
             </div>
           )}
         </div>
         
-        {quote.notes && (
+        {adaptedQuote.notes && (
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
-            <p className="text-sm mt-1">{quote.notes}</p>
+            <p className="text-sm mt-1">{adaptedQuote.notes}</p>
           </div>
         )}
         
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Labor Cost</h3>
-            <p className="text-sm">{formatCurrency(quote.laborCost)}</p>
+            <p className="text-sm">{formatCurrency(adaptedQuote.laborCost)}</p>
           </div>
           
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Subcontractor Cost</h3>
-            <p className="text-sm">{formatCurrency(quote.subcontractorCost)}</p>
+            <p className="text-sm">{formatCurrency(adaptedQuote.subcontractorCost)}</p>
           </div>
           
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Overhead</h3>
-            <p className="text-sm">{formatCurrency(quote.overheadCost || 0)} ({quote.overheadPercentage}%)</p>
+            <p className="text-sm">{formatCurrency(adaptedQuote.overheadCost || 0)} ({adaptedQuote.overheadPercentage}%)</p>
           </div>
           
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Margin</h3>
-            <p className="text-sm">{formatCurrency(quote.marginAmount || 0)} ({quote.marginPercentage}%)</p>
+            <p className="text-sm">{formatCurrency(adaptedQuote.marginAmount || 0)} ({adaptedQuote.marginPercentage}%)</p>
           </div>
           
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Total Cost</h3>
-            <p className="text-sm">{formatCurrency(quote.totalCost || 0)}</p>
+            <p className="text-sm">{formatCurrency(adaptedQuote.totalCost || 0)}</p>
           </div>
           
           <div>
             <h3 className="text-xs font-medium text-muted-foreground">Profit</h3>
-            <p className="text-sm">{formatCurrency((quote.totalPrice || 0) - (quote.totalCost || 0))}</p>
+            <p className="text-sm">{formatCurrency((adaptedQuote.totalPrice || 0) - (adaptedQuote.totalCost || 0))}</p>
           </div>
         </div>
       </CardContent>

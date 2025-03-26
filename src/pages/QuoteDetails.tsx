@@ -8,6 +8,7 @@ import { QuoteDetails } from '@/components/quoting/QuoteDetails';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { adaptQuote } from '@/lib/utils/typeAdapters';
 
 const QuoteDetailsPage = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
@@ -36,7 +37,9 @@ const QuoteDetailsPage = () => {
             <p>{(error as any)?.message || 'Unable to load quote details'}</p>
           </div>
         ) : quote ? (
-          <QuoteDetails quote={quote} />
+          <QuoteDetails 
+            quote={adaptQuote<typeof quote, import('@/lib/types/award/types').Quote>(quote)} 
+          />
         ) : (
           <div className="text-center">
             <h3 className="text-xl font-semibold mb-2">Quote Not Found</h3>
