@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
-import { asJsonObject } from '@/lib/utils/json';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 interface SuppliesTabProps {
   site: SiteRecord;
@@ -23,7 +23,7 @@ export function SuppliesTab({ site }: SuppliesTabProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {replenishables.stock.map((item, index) => (
               <div key={index} className="bg-secondary p-2 rounded-md">
-                {item}
+                {jsonToString(item)}
               </div>
             ))}
           </div>
@@ -31,7 +31,7 @@ export function SuppliesTab({ site }: SuppliesTabProps) {
         
         <div>
           <p className="text-sm text-muted-foreground">Contact Details</p>
-          <p className="mt-1">{replenishables.contactDetails}</p>
+          <p className="mt-1">{jsonToString(replenishables.contactDetails)}</p>
         </div>
       </div>
     </div>

@@ -4,20 +4,15 @@ import { Quote } from '@/lib/types/quotes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 
-interface QuoteStatsProps {
-  quotes: Quote[];
+export interface QuoteStatsProps {
+  pending: number;
+  approved: number;
+  total: number;
+  value: number;
+  average: number;
 }
 
-export function QuoteStats({ quotes }: QuoteStatsProps) {
-  const totalQuotes = quotes.length;
-  const draftQuotes = quotes.filter(q => q.status === 'draft').length;
-  const sentQuotes = quotes.filter(q => q.status === 'sent').length;
-  const approvedQuotes = quotes.filter(q => q.status === 'approved').length;
-  
-  const totalValue = quotes
-    .filter(q => q.status === 'approved')
-    .reduce((sum, quote) => sum + (quote.totalPrice || quote.total_price || 0), 0);
-  
+export function QuoteStats({ pending, approved, total, value, average }: QuoteStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card>
@@ -25,35 +20,35 @@ export function QuoteStats({ quotes }: QuoteStatsProps) {
           <CardTitle className="text-sm text-muted-foreground">Total Quotes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalQuotes}</div>
+          <div className="text-2xl font-bold">{total}</div>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-muted-foreground">Draft Quotes</CardTitle>
+          <CardTitle className="text-sm text-muted-foreground">Pending Quotes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{draftQuotes}</div>
+          <div className="text-2xl font-bold">{pending}</div>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-muted-foreground">Sent Quotes</CardTitle>
+          <CardTitle className="text-sm text-muted-foreground">Approved Quotes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{sentQuotes}</div>
+          <div className="text-2xl font-bold">{approved}</div>
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm text-muted-foreground">Approved Value</CardTitle>
+          <CardTitle className="text-sm text-muted-foreground">Total Value</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalValue)}</div>
-          <div className="text-sm text-muted-foreground">{approvedQuotes} quotes</div>
+          <div className="text-2xl font-bold">{formatCurrency(value)}</div>
+          <div className="text-sm text-muted-foreground">Average: {formatCurrency(average)}</div>
         </CardContent>
       </Card>
     </div>

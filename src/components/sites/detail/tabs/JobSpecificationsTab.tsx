@@ -2,7 +2,7 @@
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
 import { FileText } from 'lucide-react';
-import { asJsonObject } from '@/lib/utils/json';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 interface JobSpecificationsTabProps {
   site: SiteRecord;
@@ -26,12 +26,12 @@ export function JobSpecificationsTab({ site }: JobSpecificationsTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <p className="text-sm text-muted-foreground">Days Per Week</p>
-          <p className="text-xl font-medium">{jobSpecs.daysPerWeek}</p>
+          <p className="text-xl font-medium">{jsonToString(jobSpecs.daysPerWeek)}</p>
         </div>
         
         <div>
           <p className="text-sm text-muted-foreground">Hours Per Day</p>
-          <p className="text-xl font-medium">{jobSpecs.hoursPerDay}</p>
+          <p className="text-xl font-medium">{jsonToString(jobSpecs.hoursPerDay)}</p>
         </div>
         
         <div>

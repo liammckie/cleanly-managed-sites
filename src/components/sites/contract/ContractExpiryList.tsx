@@ -8,7 +8,7 @@ import { SiteRecord } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-import { asJsonObject } from '@/lib/utils/json';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 interface ContractExpiryListProps {
   sites: SiteRecord[];
@@ -28,12 +28,12 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
       })
       .map(site => {
         const contractDetails = asJsonObject(site.contract_details, { endDate: '', contractNumber: '' });
-        const endDate = parseISO(contractDetails.endDate);
+        const endDate = parseISO(jsonToString(contractDetails.endDate));
         const daysUntilExpiry = differenceInDays(endDate, today);
         return {
           ...site,
           daysUntilExpiry,
-          contractNumber: contractDetails.contractNumber
+          contractNumber: jsonToString(contractDetails.contractNumber)
         };
       })
       .filter(site => site.daysUntilExpiry < 180) // Show contracts expiring within 6 months
@@ -100,7 +100,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">{site.name}</TableCell>
                   <TableCell>{site.contractNumber || 'N/A'}</TableCell>
-                  <TableCell>{format(parseISO(contractDetails.endDate), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>{format(parseISO(jsonToString(contractDetails.endDate)), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>
                       {site.daysUntilExpiry < 0

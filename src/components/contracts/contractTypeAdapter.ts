@@ -7,7 +7,11 @@ import { asJsonObject } from '@/lib/utils/json';
  * Converts a ContractData from lib/types/contracts to the format expected by ContractColumns
  */
 export function adaptContractData(contractData: ContractTypes): ContractColumns {
-  const contractDetails = asJsonObject(contractData.contract_details, {});
+  // Make sure we have default values if contract_details is null or undefined
+  const contractDetails = asJsonObject(contractData.contract_details, {
+    startDate: '',
+    endDate: ''
+  });
   
   return {
     id: contractData.id,

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
-import { asJsonObject } from '@/lib/utils/json';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 interface SecurityTabProps {
   site: SiteRecord;
@@ -36,7 +36,7 @@ export function SecurityTab({ site }: SecurityTabProps) {
         
         <div className="md:col-span-2">
           <p className="text-sm text-muted-foreground">Key Location</p>
-          <p className="font-medium">{securityDetails.keyLocation}</p>
+          <p className="font-medium">{jsonToString(securityDetails.keyLocation)}</p>
         </div>
         
         <div>

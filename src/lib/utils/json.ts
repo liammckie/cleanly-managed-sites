@@ -1,5 +1,10 @@
 
 /**
+ * Define the Json type for use throughout the application
+ */
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+/**
  * Safely parse a JSON string and return an object
  * @param jsonString The JSON string to parse
  * @param defaultValue The default value to return if parsing fails
@@ -57,4 +62,17 @@ export function parseJsonData(jsonData: string | object | null | undefined): Rec
   }
   
   return {};
+}
+
+/**
+ * Convert a Json value to a string, handling various types
+ * @param value The Json value to convert
+ * @returns The string representation of the value
+ */
+export function jsonToString(value: Json): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return value.toString();
+  if (typeof value === 'object') return JSON.stringify(value);
+  return '';
 }

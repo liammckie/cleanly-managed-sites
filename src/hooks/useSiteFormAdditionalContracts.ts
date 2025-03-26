@@ -19,6 +19,7 @@ export const useSiteFormAdditionalContracts = (
       noticeUnit: 'months',
       serviceFrequency: '',
       serviceDeliveryMethod: '',
+      // Add contractNumber field
       contractNumber: '',
       renewalTerms: '',
       terminationPeriod: '',

@@ -1,6 +1,7 @@
 
 // Re-export all form types for easier imports
 export * from './siteFormData';
+// Export BillingAmounts from only one location to avoid ambiguity
 export * from './billingTypes';
 export * from './contractTypes';
 export * from './subcontractorTypes';

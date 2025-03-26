@@ -1,204 +1,130 @@
 
 import React from 'react';
+import { useContractorVersionHistory } from '@/hooks/useContractorVersionHistory';
 import { format } from 'date-fns';
-import { ContractorVersionHistoryEntry, ContractorRecord, Json } from '@/lib/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { History, AlertTriangle } from 'lucide-react';
-import { asJsonObject } from '@/lib/utils/json';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Clock, FileText } from 'lucide-react';
+import { jsonToString } from '@/lib/utils/json';
 
 interface ContractorVersionHistoryProps {
-  history: ContractorVersionHistoryEntry[];
-  isLoading: boolean;
-  currentContractor?: ContractorRecord;
+  contractorId: string;
 }
 
-export const ContractorVersionHistory: React.FC<ContractorVersionHistoryProps> = ({ 
-  history, 
-  isLoading,
-  currentContractor 
-}) => {
+export function ContractorVersionHistory({ contractorId }: ContractorVersionHistoryProps) {
+  const { versionHistory, isLoading } = useContractorVersionHistory(contractorId);
+  const [selectedVersion, setSelectedVersion] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    if (versionHistory.length > 0 && !selectedVersion) {
+      setSelectedVersion(versionHistory[0].id);
+    }
+  }, [versionHistory, selectedVersion]);
+  
   if (isLoading) {
     return (
-      <div className="h-64 flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-
-  if (!history || history.length === 0) {
+  
+  if (versionHistory.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <History className="h-12 w-12 mx-auto text-muted-foreground opacity-20 mb-4" />
-          <h3 className="text-lg font-medium mb-2">No Version History</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            {currentContractor ? 
-              'This contractor has no previous versions. History will be created when changes are made.' :
-              'No contractor data found.'
-            }
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center p-6">
+        <p className="text-muted-foreground">No version history available for this contractor.</p>
+      </div>
     );
   }
-
+  
+  const selectedVersionData = versionHistory.find(v => v.id === selectedVersion);
+  const contractorData = selectedVersionData?.contractor_data || {};
+  
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-muted-foreground mb-4">
-        Showing {history.length} version{history.length !== 1 ? 's' : ''} of this contractor
-      </div>
-
-      {history.map((entry, index) => {
-        // Safely convert the contractor_data to a ContractorRecord type
-        const contractorData = asJsonObject<ContractorRecord>(entry.contractor_data, {
-          id: '',
-          name: '',
-          business_name: '',
-          contact_name: '',
-          email: '',
-          phone: '',
-          status: 'active',
-        } as ContractorRecord);
+    <div className="space-y-6">
+      <Tabs defaultValue={selectedVersion || ''} onValueChange={setSelectedVersion}>
+        <TabsList className="mb-4 flex overflow-x-auto pb-2">
+          {versionHistory.map((version) => (
+            <TabsTrigger key={version.id} value={version.id} className="flex-shrink-0">
+              Version {version.version_number}
+              <span className="ml-2 text-xs opacity-70">
+                {format(new Date(version.created_at), 'MMM d, yyyy')}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
         
-        const formattedDate = format(new Date(entry.created_at), 'PPpp');
-        
-        // For comparing what changed, we need the previous version
-        const previousEntry = history[index + 1];
-        const previousData = previousEntry ? 
-          asJsonObject<ContractorRecord>(previousEntry.contractor_data, {} as ContractorRecord) : 
-          undefined;
-        
-        // Determine what fields changed
-        const changedFields: string[] = [];
-        if (previousData) {
-          Object.keys(contractorData).forEach(key => {
-            // Skip id, created_at, etc.
-            if (['id', 'created_at', 'updated_at', 'user_id'].includes(key)) return;
-            
-            // Compare values
-            const currentValue = (contractorData as any)[key];
-            const prevValue = (previousData as any)[key];
-            
-            // Special handling for array comparison
-            if (Array.isArray(currentValue) && Array.isArray(prevValue)) {
-              if (JSON.stringify(currentValue) !== JSON.stringify(prevValue)) {
-                changedFields.push(key);
-              }
-            } else if (currentValue !== prevValue) {
-              changedFields.push(key);
-            }
-          });
-        }
-        
-        return (
-          <Card key={entry.id} className="overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center">
-              <div>
-                <div className="font-medium">Version {entry.version_number}</div>
-                <div className="text-sm text-muted-foreground">{formattedDate}</div>
-              </div>
-              {changedFields.length > 0 && (
-                <div className="bg-primary/10 text-primary py-1 px-3 rounded-full text-xs">
-                  {changedFields.length} field{changedFields.length !== 1 ? 's' : ''} changed
+        {versionHistory.map((version) => (
+          <TabsContent key={version.id} value={version.id}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Version {version.version_number}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(version.created_at), 'PPP')}
+                  </span>
                 </div>
-              )}
-            </div>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Basic Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Business Name:</span> {contractorData.business_name}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Contact Name:</span> {contractorData.contact_name}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Email:</span> {contractorData.email || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Phone:</span> {contractorData.phone || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Status:</span> {contractorData.status}
-                    </div>
+              </CardHeader>
+              <CardContent>
+                {version.notes && (
+                  <div className="mb-4 p-3 bg-muted rounded-md">
+                    <p className="text-sm font-medium mb-1">Notes</p>
+                    <p className="text-sm whitespace-pre-line">{jsonToString(version.notes)}</p>
                   </div>
-                </div>
+                )}
                 
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Business Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Type:</span> {(contractorData as any).contractor_type || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">ABN:</span> {contractorData.abn || 'N/A'}
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Tax ID:</span> {(contractorData as any).tax_id || 'N/A'}
-                    </div>
-                    {(contractorData as any).hourly_rate && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Business Information</h3>
+                    <div className="space-y-2">
                       <div>
-                        <span className="text-muted-foreground">Hourly Rate:</span> ${(contractorData as any).hourly_rate.toFixed(2)}
+                        <p className="text-xs text-muted-foreground">Business Name</p>
+                        <p>{contractorData.business_name || 'N/A'}</p>
                       </div>
-                    )}
-                    {(contractorData as any).day_rate && (
                       <div>
-                        <span className="text-muted-foreground">Day Rate:</span> ${(contractorData as any).day_rate.toFixed(2)}
+                        <p className="text-xs text-muted-foreground">Contact Name</p>
+                        <p>{contractorData.contact_name || 'N/A'}</p>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-xs text-muted-foreground">Status</p>
+                        <Badge variant={
+                          contractorData.status === 'active' ? 'default' :
+                          contractorData.status === 'pending' ? 'outline' : 'secondary'
+                        }>
+                          {contractorData.status || 'Unknown'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Contact Information</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Email</p>
+                        <p>{contractorData.email || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p>{contractorData.phone || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Address</p>
+                        <p>{contractorData.address || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {changedFields.length > 0 && previousData && (
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium mb-2">Changes</h4>
-                  <div className="space-y-2">
-                    {changedFields.map(field => {
-                      const currentValue = (contractorData as any)[field];
-                      const prevValue = (previousData as any)[field];
-                      
-                      // Format values for display
-                      const formatValue = (val: any) => {
-                        if (val === null || val === undefined) return 'None';
-                        if (Array.isArray(val)) return val.join(', ') || 'None';
-                        if (typeof val === 'object') return JSON.stringify(val);
-                        return String(val);
-                      };
-                      
-                      return (
-                        <div key={field} className="text-sm bg-muted p-2 rounded">
-                          <div className="font-medium capitalize">{field.replace('_', ' ')}</div>
-                          <div className="grid grid-cols-2 gap-2 mt-1">
-                            <div className="text-xs">
-                              <div className="text-muted-foreground">Previous:</div>
-                              <div>{formatValue(prevValue)}</div>
-                            </div>
-                            <div className="text-xs">
-                              <div className="text-muted-foreground">New:</div>
-                              <div>{formatValue(currentValue)}</div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              {entry.notes && (
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium mb-1">Notes</h4>
-                  <p className="text-sm">{entry.notes}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
-};
+}

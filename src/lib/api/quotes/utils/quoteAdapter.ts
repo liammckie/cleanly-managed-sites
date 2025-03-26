@@ -1,94 +1,116 @@
 
-import { Quote } from '@/types/models';
-
-/**
- * Adapts database quote data to the Quote type used in the application
- */
-export function adaptDbQuoteToAppQuote(dbQuote: any): Partial<Quote> {
+// Add proper exports for adaptQuote, adaptQuotes, and prepareQuoteForApi
+export function adaptQuote(dbQuote: any): any {
   return {
     id: dbQuote.id,
-    name: dbQuote.name,
-    description: dbQuote.description || '',
-    clientName: dbQuote.client_name,
-    siteName: dbQuote.site_name,
-    status: dbQuote.status as any,
-    
-    // Financial data
-    laborCost: dbQuote.labor_cost || 0,
+    name: dbQuote.name || '',
+    title: dbQuote.title || '',
+    client_name: dbQuote.client_name || '',
+    clientName: dbQuote.client_name || '',
+    site_name: dbQuote.site_name || '',
+    siteName: dbQuote.site_name || '',
+    status: dbQuote.status || 'draft',
+    overhead_percentage: dbQuote.overhead_percentage || 0,
+    margin_percentage: dbQuote.margin_percentage || 0,
+    total_price: dbQuote.total_price || 0,
+    labor_cost: dbQuote.labor_cost || 0,
     supplies_cost: dbQuote.supplies_cost || 0,
     equipment_cost: dbQuote.equipment_cost || 0,
-    subcontractorCost: dbQuote.subcontractor_cost || 0,
-    overheadCost: dbQuote.overhead_cost || 0,
-    overheadPercentage: dbQuote.overhead_percentage || 15,
-    marginAmount: dbQuote.margin_amount || 0,
-    marginPercentage: dbQuote.margin_percentage || 20,
-    totalCost: dbQuote.total_cost || 0,
-    totalPrice: dbQuote.total_price || 0,
+    subcontractor_cost: dbQuote.subcontractor_cost || 0,
+    created_at: dbQuote.created_at || new Date().toISOString(),
+    updated_at: dbQuote.updated_at || new Date().toISOString(),
+    quote_number: dbQuote.quote_number || '',
+    valid_until: dbQuote.valid_until || '',
+    client_id: dbQuote.client_id || '',
+    site_id: dbQuote.site_id || '',
     
-    // Dates
-    startDate: dbQuote.start_date || '',
-    endDate: dbQuote.end_date || '',
-    expiryDate: dbQuote.expiry_date || '',
-    createdAt: dbQuote.created_at || '',
-    updatedAt: dbQuote.updated_at || '',
-    
-    // Contract details
-    contractLength: dbQuote.contract_length || 0,
-    contractLengthUnit: dbQuote.contract_length_unit as any || 'months',
-    
-    // Client and site details
+    // Duplicate fields for compatibility
     clientContact: dbQuote.client_contact || '',
+    client_contact: dbQuote.client_contact || '',
     clientEmail: dbQuote.client_email || '',
+    client_email: dbQuote.client_email || '',
     clientPhone: dbQuote.client_phone || '',
+    client_phone: dbQuote.client_phone || '',
     siteAddress: dbQuote.site_address || '',
+    site_address: dbQuote.site_address || '',
+    
+    // More fields
+    description: dbQuote.description || '',
+    notes: dbQuote.notes || '',
     frequency: dbQuote.frequency || '',
     scope: dbQuote.scope || '',
     terms: dbQuote.terms || '',
     
-    // Reference IDs
+    // Cost fields
+    overhead_cost: dbQuote.overhead_cost || 0,
+    overheadCost: dbQuote.overhead_cost || 0,
+    total_cost: dbQuote.total_cost || 0,
+    totalCost: dbQuote.total_cost || 0,
+    margin_amount: dbQuote.margin_amount || 0,
+    marginAmount: dbQuote.margin_amount || 0,
+    
+    // Dates
+    startDate: dbQuote.start_date || '',
+    start_date: dbQuote.start_date || '',
+    endDate: dbQuote.end_date || '',
+    end_date: dbQuote.end_date || '',
+    expiryDate: dbQuote.expiry_date || '',
+    expiry_date: dbQuote.expiry_date || '',
+    
+    // Additional fields
+    contractLength: dbQuote.contract_length || 0,
+    contractLengthUnit: dbQuote.contract_length_unit || 'months',
+    overheadProfile: dbQuote.overhead_profile || '',
+    userId: dbQuote.user_id || '',
+    createdBy: dbQuote.created_by || '',
+    created_by: dbQuote.created_by || '',
+    
+    // Required duplicated properties
+    overheadPercentage: dbQuote.overhead_percentage || 0,
+    marginPercentage: dbQuote.margin_percentage || 0,
+    totalPrice: dbQuote.total_price || 0,
+    laborCost: dbQuote.labor_cost || 0,
+    suppliesCost: dbQuote.supplies_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost || 0,
+    createdAt: dbQuote.created_at || new Date().toISOString(),
+    updatedAt: dbQuote.updated_at || new Date().toISOString(),
+    quoteNumber: dbQuote.quote_number || '',
+    validUntil: dbQuote.valid_until || '',
     clientId: dbQuote.client_id || '',
     siteId: dbQuote.site_id || '',
-    createdBy: dbQuote.created_by || '',
-    userId: dbQuote.user_id || '',
-    
-    notes: dbQuote.notes || ''
   };
 }
 
-/**
- * Adapts application Quote type to database format
- */
-export function adaptAppQuoteToDb(quote: Partial<Quote>): any {
-  return {
-    id: quote.id,
-    name: quote.name,
-    description: quote.description,
-    client_name: quote.clientName,
-    site_name: quote.siteName,
-    status: quote.status,
+export function adaptQuotes(dbQuotes: any[]): any[] {
+  return dbQuotes.map(adaptQuote);
+}
+
+export function prepareQuoteForApi(quote: any): any {
+  const dbQuote: any = {
+    // Map fields for the database
+    name: quote.name || '',
+    title: quote.title || quote.name || '',
+    client_name: quote.clientName || quote.client_name || '',
+    site_name: quote.siteName || quote.site_name || '',
+    status: quote.status || 'draft',
+    overhead_percentage: quote.overheadPercentage || quote.overhead_percentage || 0,
+    margin_percentage: quote.marginPercentage || quote.margin_percentage || 0,
+    total_price: quote.totalPrice || quote.total_price || 0,
+    labor_cost: quote.laborCost || quote.labor_cost || 0,
+    supplies_cost: quote.suppliesCost || quote.supplies_cost || 0,
+    equipment_cost: quote.equipmentCost || quote.equipment_cost || 0,
+    subcontractor_cost: quote.subcontractorCost || quote.subcontractor_cost || 0,
+    quote_number: quote.quoteNumber || quote.quote_number || '',
+    valid_until: quote.validUntil || quote.valid_until || '',
+    client_id: quote.clientId || quote.client_id || '',
+    site_id: quote.siteId || quote.site_id || '',
     
-    // Financial data
-    labor_cost: quote.laborCost || 0,
-    supplies_cost: quote.supplies_cost || 0,
-    equipment_cost: quote.equipment_cost || 0, 
-    subcontractor_cost: quote.subcontractorCost || 0,
-    overhead_cost: quote.overheadCost || 0,
-    overhead_percentage: quote.overheadPercentage || 15,
-    margin_amount: quote.marginAmount || 0,
-    margin_percentage: quote.marginPercentage || 20,
-    total_cost: quote.totalCost || 0,
-    total_price: quote.totalPrice || 0,
-    
-    // Dates
-    start_date: quote.startDate || null,
-    end_date: quote.endDate || null,
-    expiry_date: quote.expiryDate || null,
-    
-    // Contract details
+    // Additional fields
     contract_length: quote.contractLength || 0,
     contract_length_unit: quote.contractLengthUnit || 'months',
-    
-    // Client and site details
+    description: quote.description || '',
+    notes: quote.notes || '',
     client_contact: quote.clientContact || '',
     client_email: quote.clientEmail || '',
     client_phone: quote.clientPhone || '',
@@ -96,36 +118,21 @@ export function adaptAppQuoteToDb(quote: Partial<Quote>): any {
     frequency: quote.frequency || '',
     scope: quote.scope || '',
     terms: quote.terms || '',
-    
-    // Reference IDs
-    client_id: quote.clientId || null,
-    site_id: quote.siteId || null,
-    created_by: quote.createdBy || null,
-    user_id: quote.userId || null,
-    
-    notes: quote.notes || ''
+    overhead_cost: quote.overheadCost || quote.overhead_cost || 0,
+    total_cost: quote.totalCost || quote.total_cost || 0,
+    margin_amount: quote.marginAmount || quote.margin_amount || 0,
+    start_date: quote.startDate || quote.start_date || '',
+    end_date: quote.endDate || quote.end_date || '',
+    expiry_date: quote.expiryDate || quote.expiry_date || '',
+    overhead_profile: quote.overheadProfile || '',
+    user_id: quote.userId || '',
+    created_by: quote.createdBy || quote.created_by || '',
   };
-}
-
-// Add these functions that are imported elsewhere but missing from the exports
-
-/**
- * Convert database quote to application model
- */
-export function adaptQuote(dbQuote: any): Quote {
-  return adaptDbQuoteToAppQuote(dbQuote) as Quote;
-}
-
-/**
- * Convert array of database quotes to application models
- */
-export function adaptQuotes(dbQuotes: any[]): Quote[] {
-  return dbQuotes.map(quote => adaptQuote(quote));
-}
-
-/**
- * Prepare a quote for API submission
- */
-export function prepareQuoteForApi(quote: Partial<Quote>): any {
-  return adaptAppQuoteToDb(quote);
+  
+  // If it's an update, include the id
+  if (quote.id) {
+    dbQuote.id = quote.id;
+  }
+  
+  return dbQuote;
 }

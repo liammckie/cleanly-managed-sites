@@ -3,6 +3,30 @@ import { Day, Frequency } from '@/types/common';
 import { Quote as LibQuote, QuoteShift as LibQuoteShift, QuoteSubcontractor as LibQuoteSubcontractor } from '@/lib/types/quotes';
 import { Quote as ModelQuote, QuoteShift as ModelQuoteShift, QuoteSubcontractor as ModelQuoteSubcontractor } from '@/types/models';
 
+// Helper function to convert any string to a valid Day type
+function ensureValidDay(day: string): Day {
+  const validDays: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  return validDays.includes(day.toLowerCase() as Day) 
+    ? (day.toLowerCase() as Day) 
+    : 'monday';
+}
+
+// Helper function to convert any string to a valid Frequency type
+function ensureValidFrequency(frequency: string): Frequency {
+  const validFrequencies: Frequency[] = ['daily', 'weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly', 'once', 'annually'];
+  return validFrequencies.includes(frequency.toLowerCase() as Frequency)
+    ? (frequency.toLowerCase() as Frequency)
+    : 'monthly';
+}
+
+// Helper function to convert any string to a valid QuoteStatus
+function ensureValidQuoteStatus(status: string): 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted' {
+  const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'];
+  return validStatuses.includes(status.toLowerCase()) 
+    ? (status.toLowerCase() as 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted')
+    : 'draft';
+}
+
 /**
  * Adapts a quote from lib/types/quotes.ts to types/models.ts
  */
@@ -10,7 +34,7 @@ export function adaptQuoteToModel(quote: LibQuote): ModelQuote {
   return {
     ...quote,
     // Convert string-based status to enum
-    status: quote.status as any,
+    status: ensureValidQuoteStatus(quote.status),
     // Convert shifts with proper day type
     shifts: adaptShiftsToModel(quote.shifts || []),
     // Convert subcontractors with proper frequency type
@@ -25,7 +49,7 @@ export function adaptShiftsToModel(shifts: LibQuoteShift[]): ModelQuoteShift[] {
   return shifts.map(shift => ({
     ...shift,
     // Convert string day to Day enum
-    day: shift.day as Day,
+    day: ensureValidDay(shift.day as string),
     // Convert string employment type to enum
     employmentType: shift.employmentType as any,
     // Convert numeric level to EmployeeLevel enum
@@ -37,10 +61,18 @@ export function adaptShiftsToModel(shifts: LibQuoteShift[]): ModelQuoteShift[] {
  * Adapts subcontractors from lib/types/quotes.ts to types/models.ts
  */
 export function adaptSubcontractorsToModel(subcontractors: LibQuoteSubcontractor[]): ModelQuoteSubcontractor[] {
-  return subcontractors.map(sub => ({
+  // First ensure all subcontractors have the required quoteId property
+  const withQuoteId = subcontractors.map(sub => {
+    if (!sub.quoteId) {
+      return { ...sub, quoteId: sub.id }; // Use the subcontractor's ID if quoteId is missing
+    }
+    return sub;
+  });
+  
+  return withQuoteId.map(sub => ({
     ...sub,
     // Convert string frequency to Frequency enum
-    frequency: sub.frequency as Frequency
+    frequency: ensureValidFrequency(sub.frequency as string)
   }));
 }
 

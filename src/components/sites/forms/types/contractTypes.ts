@@ -24,6 +24,8 @@ export interface ContractDetails {
   // Additional fields needed by ContractDetailsStep
   value?: number;
   billingCycle?: string;
+  // Add contractNumber property
+  contractNumber?: string;
   // Optional fields for additional contracts
   contractType?: string;
   renewalTerms?: string;
@@ -55,6 +57,7 @@ export interface ContractForecast {
 
 // Adding BillingAmounts interface
 export interface BillingAmounts {
+  // Adding required properties for BillingAmounts
   totalWeeklyAmount: number;
   totalMonthlyAmount: number;
   totalAnnualAmount: number;
