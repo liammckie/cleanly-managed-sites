@@ -1,19 +1,19 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { formatDate } from '@/lib/utils/formatters';
-import { ContractDetails as ContractDetailsType } from '../forms/types/contractTypes';
+import { SiteRecord } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { format, addMonths, differenceInDays } from 'date-fns';
+import { CalendarIcon, ClockIcon } from 'lucide-react';
 
 interface ContractDetailsProps {
-  contractDetails: ContractDetailsType;
+  contractDetails: any;
+  site: SiteRecord;
+  refetchSite: () => void;
 }
 
-export const ContractDetails: React.FC<ContractDetailsProps> = ({
-  contractDetails
-}) => {
-  // Check if the contract details are empty
-  if (!contractDetails || Object.keys(contractDetails).length === 0) {
+const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site, refetchSite }) => {
+  if (!contractDetails) {
     return (
       <Card>
         <CardHeader>
@@ -26,93 +26,144 @@ export const ContractDetails: React.FC<ContractDetailsProps> = ({
     );
   }
 
-  // Calculate contract status based on dates
-  const getContractStatus = () => {
-    if (!contractDetails.endDate) return { status: 'active', label: 'Active' };
-    
-    const now = new Date();
-    const endDate = new Date(contractDetails.endDate);
-    
-    if (endDate < now) {
-      return { status: 'destructive', label: 'Expired' };
-    }
-    
-    // Check if expiring within 30 days
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
-    
-    if (endDate <= thirtyDaysFromNow) {
-      return { status: 'outline', label: 'Expiring Soon' };
-    }
-    
-    return { status: 'success', label: 'Active' };
+  const startDate = contractDetails.startDate 
+    ? new Date(contractDetails.startDate) 
+    : null;
+  
+  const endDate = contractDetails.endDate 
+    ? new Date(contractDetails.endDate) 
+    : null;
+  
+  // Calculate if the contract is expiring soon (within 60 days)
+  const isExpiringSoon = endDate && differenceInDays(endDate, new Date()) <= 60;
+  
+  // Determine renewal period text
+  const getRenewalPeriodText = () => {
+    if (!contractDetails.autoRenewal) return 'No automatic renewal';
+    return `Auto-renews every ${contractDetails.renewalPeriod || ''} ${contractDetails.noticeUnit || 'months'}`;
   };
-
-  const { status, label } = getContractStatus();
-
+  
+  // Calculate the badge status and style
+  const getBadgeVariant = () => {
+    if (!endDate) return "secondary";
+    
+    const today = new Date();
+    
+    if (endDate < today) {
+      return "destructive";
+    } else if (isExpiringSoon) {
+      return "warning";
+    } else {
+      return "success";
+    }
+  };
+  
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Contract Details</CardTitle>
-        <Badge variant={status as "default" | "secondary" | "destructive" | "success" | "outline"}>
-          {label}
-        </Badge>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Start Date</h3>
-            <p>{formatDate(contractDetails.startDate)}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">End Date</h3>
-            <p>{contractDetails.endDate ? formatDate(contractDetails.endDate) : 'No end date'}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Contract Length</h3>
-            <p>{contractDetails.contractLength} {contractDetails.contractLengthUnit}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Auto Renewal</h3>
-            <p>{contractDetails.autoRenewal ? 'Yes' : 'No'}</p>
-          </div>
-          {contractDetails.renewalPeriod && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Renewal Period</h3>
-              <p>{contractDetails.renewalPeriod} days</p>
-            </div>
-          )}
-          {contractDetails.renewalNotice && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Renewal Notice</h3>
-              <p>{contractDetails.renewalNotice} {contractDetails.noticeUnit}</p>
-            </div>
-          )}
-          {contractDetails.terminationPeriod && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Termination Period</h3>
-              <p>{contractDetails.terminationPeriod}</p>
-            </div>
-          )}
-          {contractDetails.renewalTerms && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Renewal Terms</h3>
-              <p>{contractDetails.renewalTerms}</p>
-            </div>
-          )}
-          {contractDetails.serviceFrequency && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Service Frequency</h3>
-              <p className="capitalize">{contractDetails.serviceFrequency}</p>
-            </div>
-          )}
-          {contractDetails.serviceDeliveryMethod && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Delivery Method</h3>
-              <p className="capitalize">{contractDetails.serviceDeliveryMethod}</p>
-            </div>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Contract Details</CardTitle>
+          {endDate && (
+            <Badge variant={getBadgeVariant()}>
+              {endDate < new Date() 
+                ? 'Expired' 
+                : isExpiringSoon 
+                  ? 'Expiring Soon' 
+                  : 'Active'}
+            </Badge>
           )}
         </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-medium mb-2">Contract Period</h3>
+            <div className="space-y-2">
+              <div className="flex items-center text-sm">
+                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span className="font-medium text-muted-foreground w-24">Start Date:</span>
+                <span>{startDate ? format(startDate, 'PP') : 'Not specified'}</span>
+              </div>
+              <div className="flex items-center text-sm">
+                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span className="font-medium text-muted-foreground w-24">End Date:</span>
+                <span>{endDate ? format(endDate, 'PP') : 'Not specified'}</span>
+              </div>
+              {contractDetails.contractLength && (
+                <div className="flex items-center text-sm">
+                  <ClockIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-muted-foreground w-24">Duration:</span>
+                  <span>{contractDetails.contractLength} {contractDetails.contractLengthUnit || 'months'}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2">Renewal Terms</h3>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium text-muted-foreground">Auto Renewal:</span>
+                <span className="ml-2">{contractDetails.autoRenewal ? 'Yes' : 'No'}</span>
+              </div>
+              {contractDetails.autoRenewal && (
+                <div className="text-sm">
+                  <span className="font-medium text-muted-foreground">Renewal Period:</span>
+                  <span className="ml-2">{contractDetails.renewalPeriod} {contractDetails.noticeUnit}</span>
+                </div>
+              )}
+              {contractDetails.renewalNotice && (
+                <div className="text-sm">
+                  <span className="font-medium text-muted-foreground">Notice Required:</span>
+                  <span className="ml-2">{contractDetails.renewalNotice} {contractDetails.noticeUnit}</span>
+                </div>
+              )}
+              {contractDetails.terminationPeriod && (
+                <div className="text-sm">
+                  <span className="font-medium text-muted-foreground">Termination Period:</span>
+                  <span className="ml-2">{contractDetails.terminationPeriod}</span>
+                </div>
+              )}
+              {contractDetails.renewalTerms && (
+                <div className="text-sm">
+                  <span className="font-medium text-muted-foreground">Renewal Terms:</span>
+                  <span className="ml-2">{contractDetails.renewalTerms}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="font-medium mb-2">Service Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="text-sm">
+              <span className="font-medium text-muted-foreground">Service Frequency:</span>
+              <span className="ml-2">{contractDetails.serviceFrequency || 'Not specified'}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium text-muted-foreground">Delivery Method:</span>
+              <span className="ml-2">{contractDetails.serviceDeliveryMethod || 'Not specified'}</span>
+            </div>
+          </div>
+        </div>
+        
+        {contractDetails.value && (
+          <div>
+            <h3 className="font-medium mb-2">Financial Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="text-sm">
+                <span className="font-medium text-muted-foreground">Contract Value:</span>
+                <span className="ml-2">${contractDetails.value.toFixed(2)}</span>
+              </div>
+              {contractDetails.billingCycle && (
+                <div className="text-sm">
+                  <span className="font-medium text-muted-foreground">Billing Cycle:</span>
+                  <span className="ml-2">{contractDetails.billingCycle}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

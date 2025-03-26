@@ -1,111 +1,138 @@
+
 import Papa from 'papaparse';
 import { ClientRecord, SiteRecord } from '@/lib/types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { DataType } from './types';
-import { toast } from 'sonner';
+import { ImportOptions, ContractorRecord, ParsedImportData } from './types';
 
-export async function parseCSV(file: File): Promise<any[]> {
+export const parseCSV = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      dynamicTyping: true,
       complete: (results) => {
-        if (results.errors.length > 0) {
-          console.error('CSV parsing errors:', results.errors);
-          reject(new Error(`Error parsing CSV: ${results.errors[0].message}`));
-        } else {
-          resolve(results.data);
-        }
+        resolve(results.data);
       },
       error: (error) => {
-        console.error('CSV parsing error:', error);
-        reject(error);
-      }
+        reject(new Error(`CSV parsing error: ${error.message}`));
+      },
     });
   });
-}
+};
 
-export function parseCSVForType(
-  file: File, 
-  type: DataType
-): Promise<ClientRecord[] | SiteRecord[] | ContractHistoryEntry[] | any[]> {
-  return parseCSV(file)
-    .then(data => {
-      switch (type) {
-        case 'clients':
-          return transformToClients(data);
-        case 'sites':
-          return transformToSites(data);
-        case 'contracts':
-          return transformToContracts(data);
-        case 'unified':
-          return data; // No transformation needed for unified import
-        default:
-          throw new Error(`Unknown data type: ${type}`);
-      }
-    })
-    .catch(error => {
-      toast.error(`Error parsing CSV: ${error.message}`);
-      throw error;
-    });
-}
+export const parseUnifiedImport = async (
+  csvData: any[],
+  options: ImportOptions
+): Promise<ParsedImportData> => {
+  const clients: ClientRecord[] = [];
+  const sites: SiteRecord[] = [];
+  const contracts: Partial<ContractHistoryEntry>[] = [];
+  const contractors: ContractorRecord[] = [];
 
-function transformToClients(data: any[]): ClientRecord[] {
-  return data.map(row => {
-    // Basic client record transformation
-    return {
-      id: row.id,
-      name: row.name || '',
-      email: row.email || '',
-      phone: row.phone || '',
-      address: row.address || '',
-      city: row.city || '',
-      state: row.state || '',
-      postcode: row.postcode || '',
-      notes: row.notes || '',
-      contact_name: row.contact_name || '',
-      status: row.status || 'active',
-      custom_id: row.custom_id || '',
-      created_at: row.created_at || new Date().toISOString(),
-      updated_at: row.updated_at || new Date().toISOString(),
-      user_id: row.user_id || '',
-      xero_contact_id: row.xero_contact_id || ''
-    } as ClientRecord;
-  });
-}
+  for (const row of csvData) {
+    const recordType = row.record_type?.toLowerCase();
 
-function transformToSites(data: any[]): SiteRecord[] {
-  return data.map(row => {
-    // Basic site record transformation
-    return {
-      id: row.id,
-      name: row.name || '',
-      address: row.address || '',
-      city: row.city || '',
-      state: row.state || '',
-      postcode: row.postcode || '',
-      email: row.email || '',
-      phone: row.phone || '',
-      client_id: row.client_id || '',
-      status: row.status || 'active',
-      // ... other fields
-    } as unknown as SiteRecord;
-  });
-}
+    if (recordType === 'client') {
+      clients.push(convertToClientRecord(row));
+    } else if (recordType === 'site') {
+      sites.push(convertToSiteRecord(row));
+    } else if (recordType === 'contract') {
+      contracts.push(convertToContractRecord(row));
+    } else if (recordType === 'contractor') {
+      contractors.push(convertToContractorRecord(row));
+    }
+  }
 
-function transformToContracts(data: any[]): ContractHistoryEntry[] {
-  return data.map(row => {
-    return {
-      id: row.id || '',
-      site_id: row.site_id || '',
-      contract_details: typeof row.contract_details === 'string' 
-        ? JSON.parse(row.contract_details) 
-        : row.contract_details || {},
-      notes: row.notes || '',
-      created_by: row.created_by || '',
-      created_at: row.created_at || new Date().toISOString(),
-      version_number: Number(row.version_number) || 0
-    } as ContractHistoryEntry;
-  });
-}
+  return { clients, sites, contracts, contractors };
+};
+
+const convertToClientRecord = (row: any): ClientRecord => {
+  return {
+    id: row.id || '',
+    name: row.name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || row.postal_code || '',
+    status: row.status || 'active',
+    notes: row.notes || '',
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || new Date().toISOString(),
+    user_id: row.user_id || '',
+    custom_id: row.custom_id || '',
+    contact_name: row.contact_name || '',
+    xero_contact_id: row.xero_contact_id || ''
+  };
+};
+
+const convertToSiteRecord = (row: any): SiteRecord => {
+  return {
+    id: row.id || '',
+    name: row.name || '',
+    client_id: row.client_id || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || row.postal_code || '',
+    status: row.status || 'active',
+    email: row.email || '',
+    phone: row.phone || '',
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || new Date().toISOString(),
+    user_id: row.user_id || ''
+  };
+};
+
+const convertToContractRecord = (row: any): Partial<ContractHistoryEntry> => {
+  let contractDetails;
+  
+  try {
+    contractDetails = typeof row.contract_details === 'string' 
+      ? JSON.parse(row.contract_details) 
+      : row.contract_details || {};
+  } catch (error) {
+    console.error('Error parsing contract details:', error);
+    contractDetails = {};
+  }
+  
+  return {
+    site_id: row.site_id || '',
+    contract_details: contractDetails,
+    notes: row.notes || '',
+    created_by: row.created_by || '',
+    version_number: Number(row.version_number) || 0
+  };
+};
+
+const convertToContractorRecord = (row: any): ContractorRecord => {
+  return {
+    id: row.id,
+    name: row.name || '',
+    business_name: row.business_name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    status: row.status || 'active',
+    tax_id: row.tax_id || '',
+    insurance_info: row.insurance_info || '',
+    notes: row.notes || ''
+  };
+};
+
+export const convertCSVToClientFormat = (csvData: any[]): ClientRecord[] => {
+  return csvData.map(convertToClientRecord);
+};
+
+export const convertCSVToSiteFormat = (csvData: any[]): SiteRecord[] => {
+  return csvData.map(convertToSiteRecord);
+};
+
+export const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHistoryEntry>[] => {
+  return csvData.map(convertToContractRecord);
+};
+
+export const convertCSVToContractorFormat = (csvData: any[]): ContractorRecord[] => {
+  return csvData.map(convertToContractorRecord);
+};

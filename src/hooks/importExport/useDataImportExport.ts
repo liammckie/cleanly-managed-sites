@@ -2,7 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
-import { getClientCSVTemplate, getSiteCSVTemplate, getContractCSVTemplate } from '@/lib/importValidation';
 import { useImportClients } from './useImportClients';
 import { useImportSites } from './useImportSites';
 import { useImportContracts } from './useImportContracts';
@@ -49,6 +48,18 @@ export function useDataImportExport() {
         await handleCSVImportContracts(file);
         break;
     }
+  };
+
+  const getClientCSVTemplate = () => {
+    return 'name,email,phone,address,city,state,postcode,status\nExample Corp,contact@example.com,555-1234,123 Main St,New York,NY,10001,active';
+  };
+
+  const getSiteCSVTemplate = () => {
+    return 'name,client_id,address,city,state,postcode,status,phone,email\nMain Office,client_123,456 Business Ave,Chicago,IL,60601,active,555-5678,site@example.com';
+  };
+
+  const getContractCSVTemplate = () => {
+    return 'site_id,contract_details,notes,created_by,version_number\nsite_123,"{\"startDate\":\"2023-01-01\",\"endDate\":\"2024-01-01\"}",Initial contract,john.doe@example.com,1';
   };
 
   return {

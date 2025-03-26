@@ -1,6 +1,6 @@
 
-import { parseCSV, parseUnifiedImport, convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat, convertCSVToContractorFormat } from './csvParser';
-import { exportToJson, exportToCSV, exportClients, exportSites, exportContracts, exportContractors, generateUnifiedImportTemplate } from './exportOperations';
+import { parseCSV } from './csvParser';
+import { exportJson, exportCsv } from './exportOperations';
 import { parseImportedFile } from './importUtils';
 import { importClients } from './clientImport';
 import { importSites } from './siteImport';
@@ -18,17 +18,30 @@ import {
   validateInvoiceLineItemData
 } from './validation';
 import { generateTestData, setupTestData } from './testData';
-import { ParsedImportData, ImportOptions, ContractorRecord, InvoiceRecord, InvoiceLineItemRecord, ValidationMessage, ValidationResult } from './types';
+import { 
+  parseUnifiedImport, 
+  convertCSVToClientFormat, 
+  convertCSVToSiteFormat, 
+  convertCSVToContractFormat, 
+  convertCSVToContractorFormat 
+} from './csvParser';
+import { generateTemplateCSV } from './csvGenerator';
 
 // Handle unified import of data
-export const handleUnifiedImport = async (file: File, options: ImportOptions): Promise<void> => {
+export const handleUnifiedImport = async (file: File, options: { mode: 'full' | 'incremental' }): Promise<void> => {
   try {
     console.log('Starting unified import with mode:', options.mode);
     const csvData = await parseCSV(file);
     console.log(`Parsed ${csvData.length} rows from CSV`);
     
     // Parse the data into separate entity types
-    const { clients, sites, contracts, contractors } = await parseUnifiedImport(csvData, options);
+    const importOptions = {
+      format: 'csv' as const,
+      type: 'unified' as const,
+      mode: options.mode
+    };
+    
+    const { clients, sites, contracts, contractors } = await parseUnifiedImport(csvData, importOptions);
     
     console.log(`Unified import parsed:
       - ${clients.length} clients
@@ -89,6 +102,11 @@ export const handleUnifiedImport = async (file: File, options: ImportOptions): P
   }
 };
 
+// Generate a unified import template
+export const generateUnifiedImportTemplate = (): string => {
+  return generateTemplateCSV('unified');
+};
+
 // The rest of the exports
 export {
   // CSV Parser exports
@@ -100,13 +118,8 @@ export {
   convertCSVToContractorFormat,
   
   // Export operations
-  exportToJson,
-  exportToCSV,
-  exportClients,
-  exportSites,
-  exportContracts,
-  exportContractors,
-  generateUnifiedImportTemplate,
+  exportJson,
+  exportCsv,
   
   // Import operations
   parseImportedFile,
@@ -128,12 +141,5 @@ export {
   
   // Test data
   generateTestData,
-  setupTestData,
-  
-  // Types
-  type ValidationMessage,
-  type ValidationResult,
-  type ContractorRecord,
-  type InvoiceRecord,
-  type InvoiceLineItemRecord
+  setupTestData
 };

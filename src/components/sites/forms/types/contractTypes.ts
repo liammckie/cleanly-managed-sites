@@ -9,6 +9,9 @@ export interface ContractTerm {
   name?: string;
   startDate?: string;
   endDate?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  autoRenew?: boolean;
 }
 
 export interface ContractDetails {

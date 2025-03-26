@@ -1,6 +1,7 @@
 
 import { ClientRecord, SiteRecord } from '@/lib/types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
+import { Json } from '@/lib/types';
 
 export type ImportFormat = 'json' | 'csv' | 'xlsx';
 export type ExportFormat = 'json' | 'csv' | 'xlsx';
@@ -25,6 +26,7 @@ export interface ImportOptions {
   type: DataType;
   validateOnly?: boolean;
   skipValidation?: boolean;
+  mode?: 'full' | 'incremental';
 }
 
 export interface ExportOptions {
@@ -58,4 +60,52 @@ export interface ImportData {
   clients?: ClientRecord[];
   sites?: SiteRecord[];
   contracts?: ContractHistoryEntry[];
+}
+
+export interface ContractorRecord {
+  id?: string;
+  name: string;
+  business_name: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  status: 'active' | 'inactive' | 'pending';
+  tax_id: string;
+  insurance_info: string;
+  notes: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface InvoiceRecord {
+  id?: string;
+  invoice_number: string;
+  site_id: string;
+  client_id: string;
+  issue_date: string;
+  due_date: string;
+  amount: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  notes: string;
+  line_items?: InvoiceLineItemRecord[];
+}
+
+export interface InvoiceLineItemRecord {
+  id?: string;
+  invoice_id: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  tax_rate?: number;
+  service_date?: string;
+  service_type?: string;
+}
+
+export interface ParsedImportData {
+  clients: ClientRecord[];
+  sites: SiteRecord[];
+  contracts: ContractHistoryEntry[];
+  contractors?: ContractorRecord[];
 }

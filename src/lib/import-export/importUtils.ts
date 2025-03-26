@@ -1,13 +1,30 @@
 
-import { supabase } from '../supabase';
+import Papa from 'papaparse';
 
-// Parse an imported file (JSON or CSV)
-export const parseImportedFile = async (file: File): Promise<any> => {
-  try {
+export const parseImportedFile = async (file: File): Promise<any[]> => {
+  const fileExt = file.name.split('.').pop()?.toLowerCase();
+  
+  if (fileExt === 'csv') {
+    return new Promise((resolve, reject) => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          resolve(results.data);
+        },
+        error: (error) => {
+          reject(error);
+        },
+      });
+    });
+  } else if (fileExt === 'json') {
     const text = await file.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Error parsing imported file:', error);
-    throw new Error('Invalid file format. Please ensure the file is valid JSON.');
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error('Invalid JSON file');
+    }
+  } else {
+    throw new Error('Unsupported file type. Please upload a CSV or JSON file.');
   }
 };
