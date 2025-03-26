@@ -5,6 +5,11 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteRecord } from '@/lib/types';
 import { toast } from 'sonner';
 
+// Export a named object for compatibility
+export const sitesUpdate = {
+  updateSite
+};
+
 // Update an existing site
 export const updateSite = async (siteId: string, formData: Partial<SiteFormData>): Promise<SiteRecord> => {
   try {
