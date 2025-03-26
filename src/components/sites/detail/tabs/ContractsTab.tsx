@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
 import { asJsonObject, jsonToString } from '@/lib/utils/json';
@@ -7,7 +8,13 @@ interface ContractsTabProps {
 }
 
 export function ContractsTab({ site }: ContractsTabProps) {
-  const contractDetails = asJsonObject(site.contract_details, { startDate: '', endDate: '', contractNumber: '' });
+  const contractDetails = asJsonObject(site.contract_details, { 
+    startDate: '', 
+    endDate: '', 
+    contractNumber: '',
+    terminationPeriod: '',
+    renewalTerms: '' 
+  });
   
   return (
     <div className="glass-card p-6">

@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { SiteRecord } from '@/lib/types';
 import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
@@ -39,12 +38,12 @@ function calculateForecast(sites: SiteRecord[]) {
 
   // Process each site
   sites.forEach(site => {
-    const contractDetails = asJsonObject(site.contract_details, {});
-    const startDate = jsonToString(contractDetails.startDate || '');
-    const endDate = jsonToString(contractDetails.endDate || '');
+    const details = asJsonObject(site.contract_details, { startDate: '', endDate: '' });
+    const contractStart = details.startDate ? new Date(details.startDate) : null;
+    const contractEnd = details.endDate ? new Date(details.endDate) : null;
     
     // Skip sites without contract dates
-    if (!startDate || !endDate) return;
+    if (!contractStart || !contractEnd) return;
     
     sitesWithValidContracts++;
     
@@ -58,8 +57,8 @@ function calculateForecast(sites: SiteRecord[]) {
     totalProfit += monthlyProfit;
     
     // Generate monthly forecast (simplified)
-    const startMonth = new Date(startDate).getMonth();
-    const endMonth = new Date(endDate).getMonth();
+    const startMonth = contractStart.getMonth();
+    const endMonth = contractEnd.getMonth();
     const currentYear = new Date().getFullYear();
     
     for (let i = 0; i <= 11; i++) {

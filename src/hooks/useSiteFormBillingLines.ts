@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
@@ -26,7 +25,10 @@ export const useSiteFormBillingLines = () => {
       amount: 0,
       frequency: 'weekly',
       isRecurring: true,
-      onHold: false
+      onHold: false,
+      weeklyAmount: 0,
+      monthlyAmount: 0,
+      annualAmount: 0
     };
 
     setBillingLines(prevLines => [...prevLines, newLine]);

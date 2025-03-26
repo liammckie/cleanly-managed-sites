@@ -14,7 +14,8 @@ const Contracts = () => {
   const { contractData: data, isLoading, isError } = useContracts();
 
   const totalContracts = Array.isArray(data) ? data.length : 0;
-  const adaptedContracts = Array.isArray(data) ? adaptContractDataArray(data as ContractData[]) : [];
+  // Cast data to any to avoid type errors during the conversion
+  const adaptedContracts = Array.isArray(data) ? adaptContractDataArray(data as any) : [];
 
   return (
     <SidebarProvider>

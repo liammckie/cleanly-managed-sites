@@ -69,7 +69,7 @@ type ContractorFormProps = {
 export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormProps) => {
   const navigate = useNavigate();
   const { createContractor, updateContractor, deleteContractor } = useContractors();
-  const { history, isLoading: isLoadingHistory } = useContractorVersionHistory(
+  const { versionHistory, isLoading: isLoadingHistory, isError, error } = useContractorVersionHistory(
     mode === 'edit' && contractor ? contractor.id : null
   );
 
@@ -532,8 +532,10 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
       {mode === 'edit' && (
         <TabsContent value="history">
           <ContractorVersionHistory 
-            versionHistory={history || []} 
+            versionHistory={versionHistory || []} 
             isLoading={isLoadingHistory}
+            isError={isError}
+            error={error}
             currentContractor={contractor}
           />
         </TabsContent>

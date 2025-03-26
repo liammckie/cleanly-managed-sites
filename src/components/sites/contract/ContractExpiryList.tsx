@@ -106,7 +106,11 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
               return (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">{site.name}</TableCell>
-                  <TableCell>{jsonToString(contractDetails.contractNumber) || 'N/A'}</TableCell>
+                  <TableCell>
+                    <p className="text-sm text-muted-foreground">
+                      {contractDetails.contractNumber || 'No contract number'}
+                    </p>
+                  </TableCell>
                   <TableCell>{format(parseISO(jsonToString(contractDetails.endDate)), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>

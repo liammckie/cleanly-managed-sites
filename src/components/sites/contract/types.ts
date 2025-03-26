@@ -30,10 +30,29 @@ export interface ContractDetails {
   renewalNotice?: number;
   noticeUnit?: string;
   terminationPeriod?: string;
+  renewalTerms?: string;
   contractLength?: number;
   contractLengthUnit?: string;
   serviceFrequency?: string;
   serviceDeliveryMethod?: string;
   terms?: { id: string; name: string; description: string }[];
   additionalContracts?: any[];
+}
+
+export interface ContractSummaryData {
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  totalContracts: number;
+  totalValue: number;
+  totalRevenue?: number;
+  totalCost?: number;
+  totalProfit?: number;
+  avgContractValue?: number;
+  profitMargin?: number;
 }

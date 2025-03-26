@@ -7,6 +7,7 @@ import { ContractExpiryList } from './ContractExpiryList';
 import { useContractForecast } from '@/hooks/useContractForecast';
 import { useQuery } from '@tanstack/react-query';
 import { SiteRecord } from '@/lib/types';
+import { ContractSummaryData } from './types';
 
 /**
  * Dashboard component for contract management
@@ -18,7 +19,7 @@ export function ContractDashboard() {
   const { data: sitesData } = useSites();
   
   // Convert summary data to the expected format
-  const summaryData = forecastData?.summaryData || {
+  const summaryData: ContractSummaryData = forecastData?.summaryData || {
     expiringThisMonth: 0,
     expiringNext3Months: 0,
     expiringNext6Months: 0,
@@ -28,14 +29,19 @@ export function ContractDashboard() {
     valueExpiringNext6Months: 0,
     valueExpiringThisYear: 0,
     totalContracts: metrics?.totalContracts || 0,
-    totalValue: metrics?.totalValue || 0
+    totalValue: metrics?.totalValue || 0,
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    avgContractValue: 0,
+    profitMargin: 0
   };
   
   return (
     <div className="space-y-6">
       {/* Summary metrics section */}
       <ContractSummarySection 
-        contractData={contractData} 
+        contractData={contractData || []}
         isLoading={isLoading} 
         summaryData={summaryData}
       />
@@ -43,7 +49,7 @@ export function ContractDashboard() {
       {/* Charts for visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContractCharts 
-          contractData={contractData} 
+          contractData={contractData || []}
           groupedContracts={groupedContracts}
           isLoading={isLoading}
         />

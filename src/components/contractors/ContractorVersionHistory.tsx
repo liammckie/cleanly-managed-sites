@@ -1,18 +1,25 @@
 
 import React from 'react';
-import { useContractorVersionHistory } from '@/hooks/useContractorVersionHistory';
 import { formatDate } from '@/lib/utils/formatters';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { asJsonObject, jsonToString } from '@/lib/utils/json';
+import { asJsonObject } from '@/lib/utils/json';
+import { ContractorVersionHistoryEntry } from '@/lib/types';
 
 interface ContractorVersionHistoryProps {
-  contractorId: string;
+  versionHistory: ContractorVersionHistoryEntry[];
+  isLoading: boolean;
+  currentContractor?: any;
+  isError?: boolean;
+  error?: Error;
 }
 
-export function ContractorVersionHistory({ contractorId }: ContractorVersionHistoryProps) {
-  const { versionHistory, isLoading, isError, error } = useContractorVersionHistory(contractorId);
-
+export function ContractorVersionHistory({ 
+  versionHistory, 
+  isLoading, 
+  isError, 
+  error 
+}: ContractorVersionHistoryProps) {
   if (isLoading) {
     return <div className="p-4 text-center">Loading version history...</div>;
   }
@@ -32,7 +39,14 @@ export function ContractorVersionHistory({ contractorId }: ContractorVersionHist
   return (
     <div className="space-y-8">
       {versionHistory.map((version) => {
-        const contractorData = asJsonObject(version.contractor_data, {});
+        const contractorData = asJsonObject(version.contractor_data, {
+          business_name: '',
+          contact_name: '',
+          status: '',
+          email: '',
+          phone: '',
+          address: ''
+        });
         
         return (
           <div key={version.id} className="bg-card rounded-lg p-6 border shadow-sm">
@@ -42,7 +56,7 @@ export function ContractorVersionHistory({ contractorId }: ContractorVersionHist
                   Version {version.version_number}
                 </h3>
                 <p className="text-muted-foreground">
-                  {formatDate(jsonToString(version.created_at))}
+                  {formatDate(String(version.created_at))}
                 </p>
               </div>
               {version.notes && (
