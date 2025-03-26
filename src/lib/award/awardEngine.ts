@@ -1,3 +1,4 @@
+
 import {
   EmploymentType,
   EmployeeLevel,
@@ -15,7 +16,7 @@ export function getBaseRate(employmentType: EmploymentType, level: EmployeeLevel
     console.warn(`No level rates found for level ${level}`);
     return 0;
   }
-  const rate = levelRates[employmentType];
+  const rate = levelRates.base;
   if (!rate) {
     console.warn(`No rate found for employment type ${employmentType} and level ${level}`);
     return 0;
@@ -30,7 +31,7 @@ export function calculateConditionRate(baseRate: number, condition: PayCondition
     console.warn(`No rate definition found for condition ${condition}`);
     return baseRate;
   }
-  return baseRate * rateDefinition.percentage;
+  return baseRate * (rateDefinition.percentage / 100);
 }
 
 // Main function to calculate job cost
@@ -72,10 +73,10 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
     totalHours,
     laborCost,
     overheadCost,
-    totalCost: totalCostBeforeMargin + margin,
+    totalCost: totalCostBeforeMargin,
     margin,
     price: totalCostBeforeMargin + margin,
-    totalCostBeforeMargin, // Add this property
+    totalCostBeforeMargin,
     items: costItems
   };
 }

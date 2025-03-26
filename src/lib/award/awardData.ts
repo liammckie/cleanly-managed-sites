@@ -72,8 +72,8 @@ const allowances = {
   other: { amount: 0, unit: 'custom' }
 };
 
-// Award settings
-const settings: AwardSettings = {
+// Export default award settings
+export const defaultAwardSettings: AwardSettings = {
   useModernAward: true,
   usePenalties: true,
   includeAllowances: true,
@@ -90,7 +90,85 @@ const settings: AwardSettings = {
 
 // Export the complete award data
 export const awardData: AwardData = {
-  settings,
+  settings: defaultAwardSettings,
   rates: generateRates(),
-  penalties
+  penalties,
+  // Add these properties to fix the build errors
+  employeeLevelRates: generateRates(),
+  conditionRates: penalties
+};
+
+// Export cleaned up award data for components
+export const cleaningServicesAward = {
+  levels: [
+    {
+      level: 1,
+      employmentType: 'full_time',
+      hourlyRate: baseRates[1],
+      rates: {
+        weekday: { 
+          rate: baseRates[1], 
+          multiplier: 1.0 
+        },
+        saturday: { 
+          rate: baseRates[1] * 1.5, 
+          multiplier: 1.5 
+        },
+        sunday: { 
+          rate: baseRates[1] * 2.0, 
+          multiplier: 2.0 
+        },
+        'public-holiday': { 
+          rate: baseRates[1] * 2.5, 
+          multiplier: 2.5 
+        }
+      }
+    },
+    {
+      level: 2,
+      employmentType: 'full_time',
+      hourlyRate: baseRates[2],
+      rates: {
+        weekday: { 
+          rate: baseRates[2], 
+          multiplier: 1.0 
+        },
+        saturday: { 
+          rate: baseRates[2] * 1.5, 
+          multiplier: 1.5 
+        },
+        sunday: { 
+          rate: baseRates[2] * 2.0, 
+          multiplier: 2.0 
+        },
+        'public-holiday': { 
+          rate: baseRates[2] * 2.5, 
+          multiplier: 2.5 
+        }
+      }
+    },
+    {
+      level: 3,
+      employmentType: 'full_time',
+      hourlyRate: baseRates[3],
+      rates: {
+        weekday: { 
+          rate: baseRates[3], 
+          multiplier: 1.0 
+        },
+        saturday: { 
+          rate: baseRates[3] * 1.5, 
+          multiplier: 1.5 
+        },
+        sunday: { 
+          rate: baseRates[3] * 2.0, 
+          multiplier: 2.0 
+        },
+        'public-holiday': { 
+          rate: baseRates[3] * 2.5, 
+          multiplier: 2.5 
+        }
+      }
+    }
+  ]
 };

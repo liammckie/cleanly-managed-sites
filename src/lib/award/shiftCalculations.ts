@@ -1,6 +1,6 @@
 
+import { QuoteShift, EmploymentType, EmployeeLevel, Day, PayCondition } from './types';
 import { cleaningServicesAward } from './awardData';
-import { QuoteShift, EmploymentType, EmployeeLevel, AllowanceType, Day, PayCondition } from './types';
 
 export const getPayConditionForDay = (day: Day): PayCondition => {
   switch (day) {
@@ -8,8 +8,8 @@ export const getPayConditionForDay = (day: Day): PayCondition => {
       return 'saturday';
     case 'sunday':
       return 'sunday';
-    case 'public-holiday':
-      return 'public-holiday';
+    case 'public_holiday':
+      return 'public_holiday';
     default:
       return 'weekday';
   }
@@ -46,7 +46,7 @@ export const calculateShiftCost = (
   const workHours = durationHours - (shift.breakDuration / 60);
   
   // Determine the rate multiplier based on the day of the week
-  let condition = getPayConditionForDay(shift.day);
+  let condition = getPayConditionForDay(shift.day as Day);
   let rateMultiplier = 1.0;
   
   if (condition === 'weekday') {
@@ -55,7 +55,7 @@ export const calculateShiftCost = (
     rateMultiplier = employeeRates.rates.saturday.multiplier;
   } else if (condition === 'sunday') {
     rateMultiplier = employeeRates.rates.sunday.multiplier;
-  } else if (condition === 'public-holiday') {
+  } else if (condition === 'public_holiday') {
     rateMultiplier = employeeRates.rates['public-holiday'].multiplier;
   }
   
