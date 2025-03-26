@@ -1,86 +1,135 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { QuoteShift } from '@/lib/types/award/types';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateShiftCost } from '@/lib/utils/calculationUtils';
+import { Label } from '@/components/ui/label';
 
-export interface ScenarioComparerProps {
-  shift: QuoteShift;
-  onApplyScenario: (updatedShift: QuoteShift) => void;
+interface ScenarioComparerProps {
+  scenarios: Array<{
+    name: string;
+    shifts: QuoteShift[];
+    totalCost: number;
+  }>;
+  onApplyScenario: (scenarioIndex: number) => void;
 }
 
-export function ScenarioComparer({ shift, onApplyScenario }: ScenarioComparerProps) {
-  const [scenarios, setScenarios] = useState([
-    {
-      id: '1',
-      name: 'Increase rate by 5%',
-      costModifier: 1.05,
-    },
-    {
-      id: '2',
-      name: 'Add additional cleaner',
-      cleanerModifier: 1,
-    },
-    {
-      id: '3',
-      name: 'Extend shift by 30 min',
-      timeModifier: 30,
-    },
-  ]);
-
-  const applyScenario = (scenarioId: string) => {
-    const scenario = scenarios.find(s => s.id === scenarioId);
-    if (!scenario) return;
-
-    const updatedShift = { ...shift };
-
-    if (scenario.costModifier) {
-      // Apply cost modifier (dummy calculation for now)
-      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {}) * scenario.costModifier;
-    }
-
-    if (scenario.cleanerModifier) {
-      // Add additional cleaners
-      updatedShift.numberOfCleaners += scenario.cleanerModifier;
-      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {});
-    }
-
-    if (scenario.timeModifier) {
-      // Extend shift time (dummy implementation)
-      // In a real app we would parse the time and add minutes
-      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {}) * 1.1;
-    }
-
-    onApplyScenario(updatedShift);
+export function ScenarioComparer({ scenarios, onApplyScenario }: ScenarioComparerProps) {
+  // Function to format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
   };
 
+  // Function to generate a summary of shifts
+  const getShiftSummary = (shifts: QuoteShift[]) => {
+    const daysCount: Record<string, number> = {};
+    let totalHours = 0;
+    let totalCleaners = 0;
+    
+    shifts.forEach(shift => {
+      // Count shifts per day
+      daysCount[shift.day] = (daysCount[shift.day] || 0) + 1;
+      
+      // Calculate hours
+      const startParts = shift.startTime.split(':').map(Number);
+      const endParts = shift.endTime.split(':').map(Number);
+      
+      const startMinutes = startParts[0] * 60 + startParts[1];
+      const endMinutes = endParts[0] * 60 + endParts[1];
+      
+      // Handle overnight shifts
+      let durationMinutes = endMinutes - startMinutes;
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60; // Add a full day in minutes
+      }
+      
+      // Subtract break duration
+      durationMinutes -= shift.breakDuration;
+      
+      const hours = durationMinutes / 60;
+      totalHours += hours * shift.numberOfCleaners;
+      totalCleaners += shift.numberOfCleaners;
+    });
+    
+    const daysWithShifts = Object.keys(daysCount).length;
+    
+    return {
+      daysWithShifts,
+      totalHours: Number(totalHours.toFixed(2)),
+      totalCleaners,
+      averageHoursPerDay: daysWithShifts > 0 ? Number((totalHours / daysWithShifts).toFixed(2)) : 0,
+      shiftsPerDay: Object.entries(daysCount).map(([day, count]) => ({ day, count }))
+    };
+  };
+
+  if (scenarios.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>No Scenarios Available</CardTitle>
+          <CardDescription>Create or load scenarios to compare</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg">Scenario Comparison</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {scenarios.map(scenario => (
-            <div key={scenario.id} className="flex justify-between items-center border-b pb-2">
-              <div>
-                <p className="font-medium">{scenario.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  Estimated cost: ${calculateShiftCost(shift, {}) * (scenario.costModifier || 1.1).toFixed(2)}
-                </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {scenarios.map((scenario, index) => {
+        const summary = getShiftSummary(scenario.shifts);
+        
+        return (
+          <Card key={index} className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                {scenario.name}
+                <Badge>{formatCurrency(scenario.totalCost)}</Badge>
+              </CardTitle>
+              <CardDescription>
+                {summary.daysWithShifts} days, {summary.totalHours} hours total
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Schedule</Label>
+                  <div className="mt-1 grid grid-cols-3 gap-2">
+                    {summary.shiftsPerDay.map(({ day, count }) => (
+                      <Badge key={day} variant="outline" className="text-xs">
+                        {day.charAt(0).toUpperCase() + day.slice(1)}: {count}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Total Cleaners</Label>
+                    <p className="text-sm font-medium">{summary.totalCleaners}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Avg Hours/Day</Label>
+                    <p className="text-sm font-medium">{summary.averageHoursPerDay}</p>
+                  </div>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => applyScenario(scenario.id)}
+            </CardContent>
+            <div className="p-4 mt-auto">
+              <Button 
+                onClick={() => onApplyScenario(index)} 
+                variant="secondary" 
+                className="w-full"
               >
-                Apply
+                Apply Scenario
               </Button>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </Card>
+        );
+      })}
+    </div>
   );
 }

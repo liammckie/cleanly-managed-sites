@@ -14,4 +14,25 @@ export interface Periodicals {
   tasks?: PeriodicalTask[];
   notes?: string;
   monthly?: PeriodicalTask[]; // Support for older format
+  quarterly?: PeriodicalTask[]; // Additional frequency
+  // Custom structure for UI rendering
+  carpet?: {
+    cleaning: boolean;
+    shampooing: boolean;
+  };
+  floor?: {
+    buffing: boolean;
+    stripping: boolean;
+  };
+  windows?: {
+    internal: boolean;
+    external: boolean;
+  };
+  highLevel?: {
+    dusting: boolean;
+  };
+  additional?: {
+    upholstery: boolean;
+    pressureWashing: boolean;
+  };
 }

@@ -3,8 +3,12 @@ import { sitesCore } from './sitesCore';
 import { sitesCreate } from './sitesCreate';
 import { sitesUpdate } from './sitesUpdate';
 import { getSiteContacts } from './siteContactsApi';
+import { handleSiteAdditionalContracts } from './additionalContractsApi';
 import { toast } from 'sonner';
 import { handleApiError, withErrorHandling } from '@/lib/utils/errorHandling';
+
+// Re-export for compatibility
+export { handleSiteAdditionalContracts };
 
 // Combine all site API modules into a single export with enhanced error handling
 export const sitesApi = {

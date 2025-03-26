@@ -6,4 +6,6 @@ export interface AdHocWorkAuthorization {
   contactMethod?: 'email' | 'sms' | 'both';
   autoApproveUnder?: number;
   notes?: string;
+  approvalLimit?: number;
+  requirePurchaseOrder?: boolean;
 }

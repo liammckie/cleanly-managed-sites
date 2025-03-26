@@ -10,6 +10,7 @@ export interface ContractTerm {
 }
 
 export interface ContractDetails {
+  id?: string; // Added for compatibility with API
   contractNumber?: string;
   startDate?: string;
   endDate?: string;

@@ -7,19 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { FormSection } from '@/components/sites/forms/FormSection';
-import { Subcontractor } from '@/lib/types/quoteTypes';
-
-// Define available services
-export const serviceOptions = [
-  { id: 'cleaning', label: 'Cleaning' },
-  { id: 'window_cleaning', label: 'Window Cleaning' },
-  { id: 'carpet_cleaning', label: 'Carpet Cleaning' },
-  { id: 'floor_maintenance', label: 'Floor Maintenance' },
-  { id: 'pest_control', label: 'Pest Control' },
-  { id: 'high_cleaning', label: 'High Cleaning' },
-  { id: 'waste_management', label: 'Waste Management' },
-  { id: 'other', label: 'Other' },
-];
+import { Subcontractor, serviceOptions } from '@/components/sites/forms/types/subcontractorTypes';
 
 export interface SubcontractorsStepProps {
   subcontractors: Subcontractor[];
@@ -51,7 +39,7 @@ export function SubcontractorsStep({
             <div key={index} className="border rounded-md p-4 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-md font-medium">
-                  {subcontractor.name || `Subcontractor #${index + 1}`}
+                  {subcontractor.business_name || `Subcontractor #${index + 1}`}
                 </h4>
                 <Button
                   type="button"
@@ -67,8 +55,8 @@ export function SubcontractorsStep({
                 <div>
                   <label className="block text-sm font-medium mb-1">Business Name</label>
                   <Input
-                    value={subcontractor.name || ''}
-                    onChange={(e) => onSubcontractorChange(index, 'name', e.target.value)}
+                    value={subcontractor.business_name || ''}
+                    onChange={(e) => onSubcontractorChange(index, 'business_name', e.target.value)}
                     placeholder="Enter business name"
                     className={errors[`subcontractors.${index}.business_name`] ? 'border-red-500' : ''}
                   />
@@ -152,13 +140,13 @@ export function SubcontractorsStep({
                 <div className="flex items-center space-x-2">
                   <Switch
                     id={`flat-rate-${index}`}
-                    checked={subcontractor.isFlatRate !== false}
-                    onCheckedChange={(checked) => onSubcontractorChange(index, 'isFlatRate', checked)}
+                    checked={subcontractor.is_flat_rate !== false}
+                    onCheckedChange={(checked) => onSubcontractorChange(index, 'is_flat_rate', checked)}
                   />
                   <Label htmlFor={`flat-rate-${index}`}>Flat Rate Payment</Label>
                 </div>
                 
-                {subcontractor.isFlatRate !== false && (
+                {subcontractor.is_flat_rate !== false && (
                   <div>
                     <label className="block text-sm font-medium mb-1">Monthly Cost</label>
                     <div className="relative">
@@ -168,27 +156,8 @@ export function SubcontractorsStep({
                       <Input
                         className="pl-7"
                         type="number"
-                        value={subcontractor.monthlyCost || 0}
-                        onChange={(e) => onSubcontractorChange(index, 'monthlyCost', parseFloat(e.target.value))}
-                        min={0}
-                        step={0.01}
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {subcontractor.isFlatRate === false && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Hourly Rate</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">$</span>
-                      </div>
-                      <Input
-                        className="pl-7"
-                        type="number"
-                        value={subcontractor.cost || 0}
-                        onChange={(e) => onSubcontractorChange(index, 'cost', parseFloat(e.target.value))}
+                        value={subcontractor.monthly_cost || 0}
+                        onChange={(e) => onSubcontractorChange(index, 'monthly_cost', parseFloat(e.target.value))}
                         min={0}
                         step={0.01}
                       />

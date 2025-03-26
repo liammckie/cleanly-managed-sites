@@ -9,4 +9,7 @@ export interface SecurityDetails {
   hasCameras?: boolean;
   needsSecurityCheck?: boolean;
   accessType?: 'key' | 'card' | 'code' | 'other';
+  accessCode?: string;
+  outOfHoursAccess?: boolean;
+  accessNotes?: string;
 }

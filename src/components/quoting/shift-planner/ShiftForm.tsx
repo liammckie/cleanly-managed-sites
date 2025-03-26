@@ -1,178 +1,244 @@
 
-import React, { useState, useEffect } from 'react';
-import { QuoteShift, Day, EmploymentType, EmployeeLevel } from '@/lib/types/award/types';
+import React from 'react';
+import { QuoteShift } from '@/lib/types/award/types';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { calculateShiftCost } from '@/lib/utils/calculationUtils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger,
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel 
+} from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TimePicker } from '@/components/ui/time-picker';
 
 export interface ShiftFormProps {
-  shift: QuoteShift;
-  onUpdate: (shift: QuoteShift) => void;
-  onDelete: (shift: QuoteShift) => void;
+  shift: Partial<QuoteShift>;
+  onShiftChange: (field: string, value: any) => void;
+  onAllowanceToggle: (allowanceId: string) => void;
+  onAddShift: () => void;
+  onCancel: () => void;
+  allowances: Array<{ id: string; name: string; description?: string }>;
+  isLoadingAllowances: boolean;
 }
 
-export function ShiftForm({ shift, onUpdate, onDelete }: ShiftFormProps) {
-  const [localShift, setLocalShift] = useState<QuoteShift>({ ...shift });
+export function ShiftForm({ 
+  shift, 
+  onShiftChange, 
+  onAllowanceToggle,
+  onAddShift,
+  onCancel,
+  allowances,
+  isLoadingAllowances
+}: ShiftFormProps) {
   
-  useEffect(() => {
-    setLocalShift({ ...shift });
-  }, [shift]);
+  // Day options
+  const dayOptions = [
+    { value: 'monday', label: 'Monday' },
+    { value: 'tuesday', label: 'Tuesday' },
+    { value: 'wednesday', label: 'Wednesday' },
+    { value: 'thursday', label: 'Thursday' },
+    { value: 'friday', label: 'Friday' },
+    { value: 'saturday', label: 'Saturday' },
+    { value: 'sunday', label: 'Sunday' }
+  ];
   
-  const handleInputChange = (field: keyof QuoteShift, value: any) => {
-    setLocalShift(prev => {
-      const updated = { ...prev, [field]: value };
-      
-      // Calculate cost when relevant fields change
-      if (['startTime', 'endTime', 'breakDuration', 'numberOfCleaners', 'employmentType', 'level'].includes(field)) {
-        // Add a dummy second parameter to calculateShiftCost call to match expected type
-        const cost = calculateShiftCost(updated, {});
-        updated.estimatedCost = cost;
-      }
-      
-      return updated;
-    });
-  };
+  // Employment type options
+  const employmentOptions = [
+    { value: 'full_time', label: 'Full Time' },
+    { value: 'part_time', label: 'Part Time' },
+    { value: 'casual', label: 'Casual' }
+  ];
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdate(localShift);
-  };
-  
-  // Calculation with dummy parameter
-  const shiftCost = calculateShiftCost(localShift, {});
-  
+  // Level options
+  const levelOptions = [
+    { value: 1, label: 'Level 1' },
+    { value: 2, label: 'Level 2' },
+    { value: 3, label: 'Level 3' },
+    { value: 4, label: 'Level 4' },
+    { value: 5, label: 'Level 5' }
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Day</label>
-          <select
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.day}
-            onChange={(e) => handleInputChange('day', e.target.value as Day)}
-          >
-            <option value="monday">Monday</option>
-            <option value="tuesday">Tuesday</option>
-            <option value="wednesday">Wednesday</option>
-            <option value="thursday">Thursday</option>
-            <option value="friday">Friday</option>
-            <option value="saturday">Saturday</option>
-            <option value="sunday">Sunday</option>
-          </select>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Location</label>
-          <input
-            type="text"
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.location || ''}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            placeholder="Enter location..."
-          />
-        </div>
-      </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Add New Shift</CardTitle>
+      </CardHeader>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Start Time</label>
-          <input
-            type="time"
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.startTime || ''}
-            onChange={(e) => handleInputChange('startTime', e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">End Time</label>
-          <input
-            type="time"
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.endTime || ''}
-            onChange={(e) => handleInputChange('endTime', e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Break (minutes)</label>
-          <input
-            type="number"
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.breakDuration || 0}
-            onChange={(e) => handleInputChange('breakDuration', parseInt(e.target.value))}
-            min="0"
-            max="120"
-          />
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Number of Cleaners</label>
-          <input
-            type="number"
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.numberOfCleaners || 1}
-            onChange={(e) => handleInputChange('numberOfCleaners', parseInt(e.target.value))}
-            min="1"
-            max="20"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Employment Type</label>
-          <select
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.employmentType}
-            onChange={(e) => handleInputChange('employmentType', e.target.value as EmploymentType)}
-          >
-            <option value="casual">Casual</option>
-            <option value="part_time">Part Time</option>
-            <option value="full_time">Full Time</option>
-          </select>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Level</label>
-          <select
-            className="w-full rounded-md border border-gray-300 p-2"
-            value={localShift.level || 1}
-            onChange={(e) => handleInputChange('level', parseInt(e.target.value) as EmployeeLevel)}
-          >
-            <option value="1">Level 1</option>
-            <option value="2">Level 2</option>
-            <option value="3">Level 3</option>
-            <option value="4">Level 4</option>
-            <option value="5">Level 5</option>
-          </select>
-        </div>
-      </div>
-      
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">Estimated Cost:</p>
-            <p className="text-lg font-bold">${shiftCost.toFixed(2)}</p>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="day">Day</Label>
+            <Select 
+              value={shift.day || 'monday'} 
+              onValueChange={(value) => onShiftChange('day', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select day" />
+              </SelectTrigger>
+              <SelectContent>
+                {dayOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="space-x-2">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => onDelete(localShift)}
-            >
-              Delete
-            </Button>
-            
-            <Button
-              type="submit"
-              variant="default"
-            >
-              Save
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={shift.location || ''}
+              onChange={(e) => onShiftChange('location', e.target.value)}
+              placeholder="e.g., Main Building, Floor 3"
+            />
           </div>
         </div>
-      </div>
-    </form>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="startTime">Start Time</Label>
+            <Input
+              id="startTime"
+              type="time"
+              value={shift.startTime || '09:00'}
+              onChange={(e) => onShiftChange('startTime', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="endTime">End Time</Label>
+            <Input
+              id="endTime"
+              type="time"
+              value={shift.endTime || '17:00'}
+              onChange={(e) => onShiftChange('endTime', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="breakDuration">Break (minutes)</Label>
+            <Input
+              id="breakDuration"
+              type="number"
+              min={0}
+              value={shift.breakDuration || 30}
+              onChange={(e) => onShiftChange('breakDuration', parseInt(e.target.value))}
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="employmentType">Employment Type</Label>
+            <Select 
+              value={shift.employmentType || 'full_time'} 
+              onValueChange={(value) => onShiftChange('employmentType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select employment type" />
+              </SelectTrigger>
+              <SelectContent>
+                {employmentOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="level">Level</Label>
+            <Select 
+              value={shift.level?.toString() || '1'} 
+              onValueChange={(value) => onShiftChange('level', parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select level" />
+              </SelectTrigger>
+              <SelectContent>
+                {levelOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="numberOfCleaners">Number of Cleaners</Label>
+            <Input
+              id="numberOfCleaners"
+              type="number"
+              min={1}
+              value={shift.numberOfCleaners || 1}
+              onChange={(e) => onShiftChange('numberOfCleaners', parseInt(e.target.value))}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <Label>Allowances</Label>
+          
+          {isLoadingAllowances ? (
+            <div className="text-sm text-muted-foreground">Loading allowances...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {allowances.map(allowance => (
+                <div key={allowance.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`allowance-${allowance.id}`}
+                    checked={(shift.allowances || []).includes(allowance.id)}
+                    onCheckedChange={() => onAllowanceToggle(allowance.id)}
+                  />
+                  <div>
+                    <Label 
+                      htmlFor={`allowance-${allowance.id}`}
+                      className="text-sm font-medium"
+                    >
+                      {allowance.name}
+                    </Label>
+                    {allowance.description && (
+                      <p className="text-xs text-muted-foreground">{allowance.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            id="notes"
+            value={shift.notes || ''}
+            onChange={(e) => onShiftChange('notes', e.target.value)}
+            placeholder="Any special instructions or notes about this shift"
+          />
+        </div>
+      </CardContent>
+      
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button onClick={onAddShift}>Add Shift</Button>
+      </CardFooter>
+    </Card>
   );
 }

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteShift } from '@/lib/types/quoteTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,20 +16,19 @@ export const quoteShiftsApi = {
       throw error;
     }
     
-    return data as QuoteShift[];
+    return data as unknown as QuoteShift[];
   },
   
   // Create a new shift
   async createShift(shiftData: Partial<QuoteShift>): Promise<QuoteShift> {
-    // Add an ID if not provided
-    const shiftWithId = {
-      ...shiftData,
-      id: shiftData.id || uuidv4()
-    };
+    // Ensure required fields
+    if (!shiftData.id) {
+      shiftData.id = uuidv4();
+    }
     
     const { data, error } = await supabase
       .from('quote_shifts')
-      .insert([shiftWithId])
+      .insert([shiftData])
       .select()
       .single();
     
@@ -37,7 +37,7 @@ export const quoteShiftsApi = {
       throw error;
     }
     
-    return data as QuoteShift;
+    return data as unknown as QuoteShift;
   },
   
   // Update a shift
@@ -54,7 +54,7 @@ export const quoteShiftsApi = {
       throw error;
     }
     
-    return data as QuoteShift;
+    return data as unknown as QuoteShift;
   },
   
   // Delete a shift

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps';
@@ -143,11 +142,11 @@ export const getSiteFormSteps = (
     description: 'Manage subcontractors for this site',
     component: (
       <SubcontractorsStep
-        formData={formData}
+        subcontractors={formData.subcontractors || []}
+        onSubcontractorAdd={addSubcontractor}
+        onSubcontractorChange={updateSubcontractor}
+        onSubcontractorRemove={removeSubcontractor}
         errors={errors}
-        handleSubcontractorChange={updateSubcontractor}
-        addSubcontractor={addSubcontractor}
-        removeSubcontractor={removeSubcontractor}
       />
     )
   }

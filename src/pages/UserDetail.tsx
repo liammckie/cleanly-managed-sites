@@ -30,6 +30,7 @@ const UserDetail = () => {
   const [formData, setFormData] = useState<Partial<SystemUser>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user && !isEditing) {
@@ -46,21 +47,22 @@ const UserDetail = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
+  const handleUpdate = async () => {
+    setIsSubmitting(true);
+    
     try {
-      if (!userId) return;
-      
-      await updateUser({ 
-        userId, 
-        userData: formData 
+      await updateUser({
+        ...formData,
+        note: formData.note
       });
       
-      toast.success('User updated successfully');
-      setIsEditing(false);
-      refetch();
+      setEditMode(false);
+      toast.success("User information updated successfully");
     } catch (error) {
-      toast.error('Failed to update user');
-      console.error('Error updating user:', error);
+      console.error("Error updating user:", error);
+      toast.error("Failed to update user");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -122,7 +124,7 @@ const UserDetail = () => {
               <Button variant="outline" onClick={() => setIsEditing(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={isUpdating}>
+              <Button onClick={handleUpdate} disabled={isUpdating}>
                 {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Save Changes
               </Button>
@@ -306,13 +308,13 @@ const UserDetail = () => {
               </div>
               
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="note">Notes</Label>
                 {isEditing ? (
                   <Textarea
-                    id="notes"
-                    name="notes"
+                    id="note"
+                    name="note"
                     rows={4}
-                    value={formData.notes || ''}
+                    value={formData.note || ''}
                     onChange={handleInputChange}
                   />
                 ) : (

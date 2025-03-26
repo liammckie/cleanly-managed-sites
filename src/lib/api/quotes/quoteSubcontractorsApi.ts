@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteSubcontractor } from '@/lib/types/quoteTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,20 +16,19 @@ export const quoteSubcontractorsApi = {
       throw error;
     }
     
-    return data as QuoteSubcontractor[];
+    return data as unknown as QuoteSubcontractor[];
   },
   
   // Create a new subcontractor
   async createSubcontractor(subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
-    // Add an ID if not provided
-    const subWithId = {
-      ...subcontractorData,
-      id: subcontractorData.id || uuidv4()
-    };
+    // Ensure required fields
+    if (!subcontractorData.id) {
+      subcontractorData.id = uuidv4();
+    }
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert([subWithId])
+      .insert([subcontractorData])
       .select()
       .single();
     
@@ -37,7 +37,7 @@ export const quoteSubcontractorsApi = {
       throw error;
     }
     
-    return data as QuoteSubcontractor;
+    return data as unknown as QuoteSubcontractor;
   },
   
   // Update an existing subcontractor
@@ -54,7 +54,7 @@ export const quoteSubcontractorsApi = {
       throw error;
     }
     
-    return data as QuoteSubcontractor;
+    return data as unknown as QuoteSubcontractor;
   },
   
   // Delete a subcontractor

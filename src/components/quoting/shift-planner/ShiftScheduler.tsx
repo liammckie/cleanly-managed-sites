@@ -1,29 +1,22 @@
 
 import React from 'react';
-import { QuoteShift } from '@/lib/award/types';
-import { ShiftList } from './ShiftList';
 import { ShiftForm } from './ShiftForm';
+import { ShiftList } from './ShiftList';
 import { ShiftCalendar } from './ShiftCalendar';
-import { Card } from '@/components/ui/card';
+import { QuoteShift } from '@/lib/types/award/types';
 
 interface ShiftSchedulerProps {
   activeView: 'calendar' | 'list' | 'add';
   shifts: QuoteShift[];
   newShift: Partial<QuoteShift>;
-  allowances: Array<{
-    id: string;
-    name: string;
-    amount: number;
-    unit: string;
-    description?: string;
-  }>;
+  allowances: Array<{ id: string; name: string; description?: string }>;
   isLoadingAllowances: boolean;
   onShiftChange: (field: string, value: any) => void;
   onAllowanceToggle: (allowanceId: string) => void;
   onAddShift: () => void;
   onDeleteShift: (shiftId: string) => void;
   onDuplicateShift: (shift: QuoteShift) => void;
-  onUpdateShift: (updatedShift: QuoteShift) => void;
+  onUpdateShift: (shift: QuoteShift) => void;
   onCancel: () => void;
   onAddShiftClick: () => void;
 }
@@ -43,23 +36,11 @@ export function ShiftScheduler({
   onCancel,
   onAddShiftClick
 }: ShiftSchedulerProps) {
-  if (activeView === 'list') {
-    return (
-      <ShiftList 
-        shifts={shifts}
-        onDeleteShift={onDeleteShift}
-        onDuplicateShift={onDuplicateShift}
-        onAddShiftClick={onAddShiftClick}
-        allowances={allowances}
-        onUpdateShift={onUpdateShift}
-      />
-    );
-  }
-  
+  // Render the appropriate view based on activeView prop
   if (activeView === 'add') {
     return (
       <ShiftForm 
-        newShift={newShift}
+        shift={newShift}
         onShiftChange={onShiftChange}
         onAllowanceToggle={onAllowanceToggle}
         onAddShift={onAddShift}
@@ -74,14 +55,21 @@ export function ShiftScheduler({
     return (
       <ShiftCalendar 
         shifts={shifts}
-        onAddShiftClick={onAddShiftClick}
-        onEditShift={onUpdateShift}
-        onDuplicateShift={onDuplicateShift}
         onDeleteShift={onDeleteShift}
+        onDuplicateShift={onDuplicateShift}
+        onUpdateShift={onUpdateShift}
       />
     );
   }
   
-  // Fallback
-  return <Card className="p-6">View not available</Card>;
+  // Default to list view
+  return (
+    <ShiftList 
+      shifts={shifts}
+      onDeleteShift={onDeleteShift}
+      onDuplicateShift={onDuplicateShift}
+      onUpdateShift={onUpdateShift}
+      onAddClick={onAddShiftClick}
+    />
+  );
 }
