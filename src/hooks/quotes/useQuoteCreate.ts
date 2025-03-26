@@ -26,8 +26,14 @@ export function useQuoteCreate() {
     }
   });
 
+  // Helper method for easier access from components
+  const createQuote = async (quoteData: Partial<Quote>) => {
+    return createQuoteMutation.mutateAsync(quoteData);
+  };
+
   return {
     createQuoteMutation,
+    createQuote,
     isCreating: createQuoteMutation.isPending,
     error: createQuoteMutation.error
   };

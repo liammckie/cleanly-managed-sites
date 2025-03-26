@@ -66,7 +66,19 @@ export const createQuoteSubcontractor = async (
   
   const { data, error } = await supabase
     .from('quote_subcontractors')
-    .insert([dbSub])
+    .insert([{
+      id: dbSub.id,
+      quote_id: dbSub.quote_id,
+      name: dbSub.name,
+      services: dbSub.services || [],
+      description: dbSub.description || '',
+      frequency: dbSub.frequency || 'monthly',
+      cost: dbSub.cost || 0,
+      email: dbSub.email || '',
+      phone: dbSub.phone || '',
+      service: dbSub.service || '',
+      notes: dbSub.notes || ''
+    }])
     .select()
     .single();
   

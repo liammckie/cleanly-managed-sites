@@ -1,43 +1,54 @@
 
 import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export interface DeleteUserModalProps {
   isOpen: boolean;
-  onConfirm: () => void;
-  onDismiss: () => void;
   userName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  onClose?: () => void; // Added for backward compatibility
 }
 
-export function DeleteUserModal({ isOpen, onConfirm, onDismiss, userName }: DeleteUserModalProps) {
+export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
+  isOpen,
+  userName,
+  onConfirm,
+  onCancel,
+  onClose
+}) => {
+  const handleClose = () => {
+    // Call both handlers for backward compatibility
+    if (onClose) onClose();
+    onCancel();
+  };
+
   return (
-    <AlertDialog open={isOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            You are about to delete the user <strong>{userName}</strong>. This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onDismiss}>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Confirm User Deletion</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete user {userName}? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Delete User
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-}
+};

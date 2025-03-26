@@ -6,7 +6,6 @@ import { ShiftPlanner } from './ShiftPlanner';
 import { SubcontractorSection } from './SubcontractorSection';
 import { QuoteDetailsForm } from './QuoteDetailsForm';
 import { QuoteDetails } from './QuoteDetails';
-import { adaptQuoteShift } from '@/utils/typeAdapters';
 
 interface QuoteBuilderProps {
   initialQuote?: Partial<Quote>;
@@ -71,10 +70,10 @@ export function QuoteBuilder({ initialQuote, onSave, isEditing = false }: QuoteB
       notes: shiftData.notes || ''
     };
     
-    // Add the new shift to the shifts array using adaptQuoteShift to ensure type compatibility
+    // Add the new shift to the shifts array
     setQuote(prev => ({
       ...prev,
-      shifts: [...(prev.shifts || []), adaptQuoteShift(newShift, newShift)]
+      shifts: [...(prev.shifts || []), newShift]
     }));
   };
   

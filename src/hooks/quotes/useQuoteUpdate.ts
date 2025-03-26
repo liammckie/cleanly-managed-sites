@@ -27,8 +27,14 @@ export function useQuoteUpdate() {
     }
   });
 
+  // Helper method for easier access from components
+  const updateQuote = async (quoteData: Quote) => {
+    return updateQuoteMutation.mutateAsync(quoteData);
+  };
+
   return {
     updateQuoteMutation,
+    updateQuote,
     isUpdating: updateQuoteMutation.isPending,
     error: updateQuoteMutation.error
   };

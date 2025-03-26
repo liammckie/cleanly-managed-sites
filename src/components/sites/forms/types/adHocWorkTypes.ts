@@ -1,11 +1,10 @@
 
 export interface AdHocWorkAuthorization {
-  approvalRequired?: boolean;
+  authorizedAmount?: number;
+  requiresApproval?: boolean;
   approvalThreshold?: number;
-  approvers?: string[];
-  contactMethod?: 'email' | 'sms' | 'both';
-  autoApproveUnder?: number;
+  approvalContact?: string;
+  approvalEmail?: string;
+  approvalPhone?: string;
   notes?: string;
-  approvalLimit?: number;
-  requirePurchaseOrder?: boolean;
 }

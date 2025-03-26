@@ -2,194 +2,236 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatDate } from '@/lib/utils/dateUtils';
-import { Quote } from '@/types/models';
-import { adaptQuoteShift } from '@/utils/typeAdapters';
-import { ApiQuoteDetailsProps } from '@/types/api';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { QuoteShift, QuoteSubcontractor, Quote } from '@/types/models';
+import { QuoteDetailsProps } from '@/components/quoting/types';
 
-export interface QuoteDetailsProps {
-  quote: Quote;
-}
+export const QuoteDetails: React.FC<QuoteDetailsProps> = ({ quote, onQuoteSelect }) => {
+  // Format currency values
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
 
-// Format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD'
-  }).format(amount);
-};
+  // Get status badge color
+  const getStatusColor = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'draft':
+        return 'bg-yellow-200 text-yellow-800';
+      case 'sent':
+        return 'bg-blue-200 text-blue-800';
+      case 'approved':
+        return 'bg-green-200 text-green-800';
+      case 'rejected':
+        return 'bg-red-200 text-red-800';
+      case 'expired':
+        return 'bg-gray-200 text-gray-800';
+      default:
+        return 'bg-gray-200 text-gray-800';
+    }
+  };
 
-// Get appropriate badge color based on quote status
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'draft':
-      return 'bg-gray-200 text-gray-800';
-    case 'sent':
-      return 'bg-blue-100 text-blue-800';
-    case 'approved':
-      return 'bg-green-100 text-green-800';
-    case 'rejected':
-      return 'bg-red-100 text-red-800';
-    case 'expired':
-      return 'bg-amber-100 text-amber-800';
-    default:
-      return 'bg-gray-200 text-gray-800';
-  }
-};
-
-export function QuoteDetails({ quote }: QuoteDetailsProps) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>{quote.name || 'Untitled Quote'}</CardTitle>
-            <Badge className={getStatusBadge(quote.status)}>
-              {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-            </Badge>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle className="text-2xl font-bold">{quote.name}</CardTitle>
+          <Badge className={getStatusColor(quote.status)}>
+            {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
+          </Badge>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <p className="text-sm text-muted-foreground">Client</p>
-                <p className="font-medium">{quote.clientName || 'N/A'}</p>
+                <p className="font-medium">{quote.clientName}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Site</p>
-                <p className="font-medium">{quote.siteName || 'N/A'}</p>
+                <p className="font-medium">{quote.siteName}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Created</p>
-                <p className="font-medium">{formatDate(quote.createdAt, true)}</p>
-              </div>
-              {quote.startDate && (
+              {quote.quoteNumber && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Start Date</p>
-                  <p className="font-medium">{formatDate(quote.startDate)}</p>
+                  <p className="text-sm text-muted-foreground">Quote Number</p>
+                  <p className="font-medium">{quote.quoteNumber}</p>
                 </div>
               )}
-              {quote.endDate && (
+              {quote.validUntil && (
                 <div>
-                  <p className="text-sm text-muted-foreground">End Date</p>
-                  <p className="font-medium">{formatDate(quote.endDate)}</p>
+                  <p className="text-sm text-muted-foreground">Valid Until</p>
+                  <p className="font-medium">{new Date(quote.validUntil).toLocaleDateString()}</p>
                 </div>
               )}
             </div>
-            
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
-                <p className="text-sm text-muted-foreground">Total Quote Value</p>
-                <p className="text-xl font-bold text-primary">{formatCurrency(quote.totalPrice)}</p>
+                <p className="text-sm text-muted-foreground">Total Price</p>
+                <p className="text-xl font-bold">{formatCurrency(quote.totalPrice)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Labor Cost</p>
                 <p className="font-medium">{formatCurrency(quote.laborCost)}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Subcontractor Cost</p>
-                <p className="font-medium">{formatCurrency(quote.subcontractorCost)}</p>
+                <p className="text-sm text-muted-foreground">Overhead ({quote.overheadPercentage}%)</p>
+                <p className="font-medium">{formatCurrency((quote.laborCost * quote.overheadPercentage) / 100)}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Overhead Rate</p>
-                <p className="font-medium">{quote.overheadPercentage}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Margin Rate</p>
-                <p className="font-medium">{quote.marginPercentage}%</p>
+                <p className="text-sm text-muted-foreground">Margin ({quote.marginPercentage}%)</p>
+                <p className="font-medium">{formatCurrency((quote.totalPrice - quote.laborCost) * (quote.marginPercentage / 100))}</p>
               </div>
             </div>
           </div>
-          
-          {quote.description && (
-            <div className="mt-6">
-              <h3 className="font-medium mb-2">Description</h3>
-              <p className="text-muted-foreground">{quote.description}</p>
-            </div>
-          )}
-          
-          {quote.notes && (
-            <div className="mt-6">
-              <h3 className="font-medium mb-2">Notes</h3>
-              <p className="text-muted-foreground">{quote.notes}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
-      
-      {quote.shifts && quote.shifts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Labor Shifts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left">
-                    <th className="px-4 py-2">Day</th>
-                    <th className="px-4 py-2">Time</th>
-                    <th className="px-4 py-2">Staff</th>
-                    <th className="px-4 py-2">Employment</th>
-                    <th className="px-4 py-2">Level</th>
-                    <th className="px-4 py-2">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quote.shifts.map(shift => {
-                    const adaptedShift = adaptQuoteShift(shift, shift);
-                    return (
-                      <tr key={adaptedShift.id} className="border-t">
-                        <td className="px-4 py-2">{adaptedShift.day}</td>
-                        <td className="px-4 py-2">
-                          {adaptedShift.startTime} - {adaptedShift.endTime}
-                        </td>
-                        <td className="px-4 py-2">{adaptedShift.numberOfCleaners}</td>
-                        <td className="px-4 py-2">{adaptedShift.employmentType}</td>
-                        <td className="px-4 py-2">{adaptedShift.level}</td>
-                        <td className="px-4 py-2">{formatCurrency(adaptedShift.estimatedCost)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {quote.subcontractors && quote.subcontractors.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Subcontractors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left">
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Service</th>
-                    <th className="px-4 py-2">Frequency</th>
-                    <th className="px-4 py-2">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quote.subcontractors.map(sub => (
-                    <tr key={sub.id} className="border-t">
-                      <td className="px-4 py-2">{sub.name}</td>
-                      <td className="px-4 py-2">{sub.service || 'General'}</td>
-                      <td className="px-4 py-2">{sub.frequency}</td>
-                      <td className="px-4 py-2">{formatCurrency(sub.cost)}</td>
-                    </tr>
+
+      <Tabs defaultValue="shifts">
+        <TabsList>
+          <TabsTrigger value="shifts">Shifts</TabsTrigger>
+          <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
+          {quote.notes && <TabsTrigger value="notes">Notes</TabsTrigger>}
+        </TabsList>
+        
+        <TabsContent value="shifts">
+          <Card>
+            <CardHeader>
+              <CardTitle>Shifts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {quote.shifts && quote.shifts.length > 0 ? (
+                <div className="space-y-4">
+                  {quote.shifts.map((shift) => (
+                    <ShiftItem key={shift.id} shift={shift} />
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              ) : (
+                <p>No shifts added to this quote.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="subcontractors">
+          <Card>
+            <CardHeader>
+              <CardTitle>Subcontractors</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {quote.subcontractors && quote.subcontractors.length > 0 ? (
+                <div className="space-y-4">
+                  {quote.subcontractors.map((subcontractor) => (
+                    <SubcontractorItem key={subcontractor.id} subcontractor={subcontractor} />
+                  ))}
+                </div>
+              ) : (
+                <p>No subcontractors added to this quote.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {quote.notes && (
+          <TabsContent value="notes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap">{quote.notes}</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
+  );
+};
+
+interface ShiftItemProps {
+  shift: QuoteShift;
+}
+
+const ShiftItem: React.FC<ShiftItemProps> = ({ shift }) => {
+  // Format day string to be more readable
+  const formatDay = (day: string) => {
+    return day.charAt(0).toUpperCase() + day.slice(1);
+  };
+
+  return (
+    <div className="p-4 border rounded-md">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+        <h3 className="font-medium">
+          {formatDay(shift.day)} ({shift.startTime} - {shift.endTime})
+        </h3>
+        <Badge variant="outline">{shift.employmentType}</Badge>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+        <div>
+          <span className="text-muted-foreground">Cleaners:</span> {shift.numberOfCleaners}
+        </div>
+        <div>
+          <span className="text-muted-foreground">Break:</span> {shift.breakDuration} mins
+        </div>
+        <div>
+          <span className="text-muted-foreground">Level:</span> {shift.level}
+        </div>
+      </div>
+      {shift.location && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Location:</span> {shift.location}
+        </div>
+      )}
+      {shift.notes && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Notes:</span> {shift.notes}
+        </div>
       )}
     </div>
   );
+};
+
+interface SubcontractorItemProps {
+  subcontractor: QuoteSubcontractor;
 }
+
+const SubcontractorItem: React.FC<SubcontractorItemProps> = ({ subcontractor }) => {
+  // Format currency
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value);
+  };
+
+  return (
+    <div className="p-4 border rounded-md">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+        <h3 className="font-medium">{subcontractor.name}</h3>
+        <Badge variant="outline">{subcontractor.frequency}</Badge>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <div>
+          <span className="text-muted-foreground">Cost:</span> {formatCurrency(subcontractor.cost)}
+        </div>
+        {subcontractor.service && (
+          <div>
+            <span className="text-muted-foreground">Service:</span> {subcontractor.service}
+          </div>
+        )}
+      </div>
+      {subcontractor.description && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Description:</span> {subcontractor.description}
+        </div>
+      )}
+      {subcontractor.notes && (
+        <div className="mt-2 text-sm">
+          <span className="text-muted-foreground">Notes:</span> {subcontractor.notes}
+        </div>
+      )}
+    </div>
+  );
+};

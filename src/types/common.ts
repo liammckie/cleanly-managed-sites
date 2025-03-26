@@ -10,7 +10,7 @@ export type ContractType = 'cleaning' | 'maintenance' | 'security' | 'other';
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 // Day type used across the application
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'public_holiday';
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
 
 // These types were causing inconsistencies
 export type EmploymentType = 'casual' | 'part_time' | 'full_time';
