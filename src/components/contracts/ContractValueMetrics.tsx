@@ -10,6 +10,10 @@ import { formatCurrency } from '@/lib/utils/formatters';
 export function ContractValueMetrics() {
   const { contractData, isLoading, metrics } = useContracts();
   
+  // Calculate active count if it doesn't exist
+  const activeCount = metrics.activeCount || 
+    (Array.isArray(contractData) ? contractData.filter(c => c.status === 'active').length : 0);
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <ValueCard
@@ -35,8 +39,8 @@ export function ContractValueMetrics() {
       
       <ValueCard
         title="Active Contracts"
-        value={metrics.activeCount.toString()}
-        description={`${metrics.activeCount} of ${metrics.totalContracts} contracts are active`}
+        value={activeCount.toString()}
+        description={`${activeCount} of ${metrics.totalContracts} contracts are active`}
         loading={isLoading}
       />
     </div>

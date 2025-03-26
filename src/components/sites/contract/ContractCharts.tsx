@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ContractData } from '@/lib/types/contracts';
-import { GroupedContracts } from '@/hooks/useContracts';
-import { asJsonObject } from '@/lib/utils/json';
+import { GroupedContracts } from './types';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 interface ContractChartsProps {
   contractData: ContractData[];
@@ -12,55 +14,57 @@ interface ContractChartsProps {
   isLoading: boolean;
 }
 
-export function ContractCharts({ 
-  contractData, 
-  groupedContracts,
-  isLoading 
-}: ContractChartsProps) {
+export function ContractCharts({ contractData, groupedContracts, isLoading }: ContractChartsProps) {
+  // Transform the data for the status distribution chart
+  const statusData = Object.entries(groupedContracts).map(([status, contracts]) => ({
+    name: status.charAt(0).toUpperCase() + status.slice(1),
+    value: Array.isArray(contracts) ? contracts.length : 0
+  }));
+
+  // Calculate contract value distribution by status
+  const valueByStatus = Object.entries(groupedContracts).map(([status, contracts]) => {
+    let totalValue = 0;
+    if (Array.isArray(contracts)) {
+      totalValue = contracts.reduce((sum, contract) => sum + (contract.monthly_revenue || 0) * 12, 0);
+    }
+    return {
+      name: status.charAt(0).toUpperCase() + status.slice(1),
+      value: totalValue,
+      count: Array.isArray(contracts) ? contracts.length : 0
+    };
+  });
+
   if (isLoading) {
     return (
-      <Card className="col-span-1">
-        <CardHeader>
-          <CardTitle>Contract Distribution</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Contract Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <Skeleton className="w-full h-full" />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Contract Value by Status</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <Skeleton className="w-full h-full" />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  // Prepare data for status distribution chart
-  const statusData = Object.entries(groupedContracts.byStatus || {}).map(([status, contracts]) => ({
-    name: status.charAt(0).toUpperCase() + status.slice(1),
-    value: contracts.length,
-    color: getStatusColor(status)
-  }));
-
-  // Prepare data for expiry forecast chart
-  const expiryData = Object.entries(groupedContracts.byMonth || {})
-    .map(([monthKey, contracts]) => {
-      const [month, year] = monthKey.split('-');
-      return {
-        name: `${getMonthName(parseInt(month))}, ${year}`,
-        value: contracts.reduce((sum, contract) => sum + (contract.monthly_revenue || 0), 0),
-        count: contracts.length
-      };
-    })
-    .sort((a, b) => {
-      const [monthA, yearA] = a.name.split(', ');
-      const [monthB, yearB] = b.name.split(', ');
-      return new Date(`${monthA} 1, ${yearA}`).getTime() - new Date(`${monthB} 1, ${yearB}`).getTime();
-    })
-    .slice(0, 6); // Show next 6 months
-
   return (
-    <Card className="col-span-1">
-      <CardHeader>
-        <CardTitle>Contract Distribution</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-80">
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Contract Status Distribution</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -71,45 +75,46 @@ export function ContractCharts({
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
                 {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip formatter={(value) => [`${value} contracts`, 'Count']} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Contract Value by Status</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={valueByStatus}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip 
+                formatter={(value) => [`$${value.toLocaleString()}`, 'Annual Value']} 
+              />
+              <Legend />
+              <Bar dataKey="value" name="Annual Value" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
   );
-}
-
-// Helper function to get status color
-function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return '#10b981'; // Green
-    case 'pending':
-      return '#f59e0b'; // Yellow/Amber
-    case 'expired':
-      return '#ef4444'; // Red
-    case 'renewed':
-      return '#3b82f6'; // Blue
-    case 'on-hold':
-      return '#9ca3af'; // Gray
-    default:
-      return '#8884d8'; // Default purple
-  }
-}
-
-// Helper function to get month name
-function getMonthName(month: number): string {
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  return months[month - 1] || '';
 }

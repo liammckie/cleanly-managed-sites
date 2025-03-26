@@ -32,6 +32,13 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     siteForm.handleChange && siteForm.handleChange(name as keyof SiteFormData, value);
   };
   
+  // Create a wrapper function that doesn't need arguments
+  const addReplenishableWrapper = () => {
+    if (siteForm.addReplenishable) {
+      siteForm.addReplenishable('stock'); // Default to 'stock' type
+    }
+  };
+  
   // Initialize the stepper with enhanced SiteFormHandlers type
   const steps = getSiteFormSteps(
     siteForm.formData,
@@ -40,7 +47,7 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     (field, values) => console.log(`Array change for ${field}:`, values),
     (field, index, value) => console.log(`Array update for ${field} at index ${index}:`, value),
     siteForm.handleDoubleNestedChange || (() => {}),
-    (field) => console.log(`Adding item to ${field}`),
+    addReplenishableWrapper,
     (field, index) => console.log(`Removing item from ${field} at index ${index}`),
     siteForm.addSubcontractor || (() => {}),
     siteForm.updateSubcontractor || (() => {}),

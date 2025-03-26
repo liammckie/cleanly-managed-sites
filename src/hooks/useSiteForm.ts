@@ -1,154 +1,113 @@
 
-import { useState } from 'react';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { useForm } from 'react-hook-form';
+import { useState, useCallback } from 'react';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
 export function useSiteForm() {
-  const [formData, setFormData] = useState<SiteFormData>(getInitialFormData());
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [step, setStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Initialize the form with react-hook-form
-  const form = useForm<SiteFormData>({
-    defaultValues: {
-      name: '',
-      address: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: 'Australia',
-      status: 'active',
-      contract_details: {
-        startDate: '',
-        endDate: '',
-        autoRenewal: false,
-        contractNumber: '',
-      },
-      billingDetails: {
-        billingFrequency: 'monthly',
-        paymentTerms: 'net30',
-        invoiceMethod: 'email',
-        // Properly use only fields defined in BillingDetails interface
-        billingNotes: '',
-        useSiteAddress: true,
-      },
-    },
+  // Initialize form with react-hook-form
+  const form = useForm<SiteFormData>();
+  
+  // Initialize form data state
+  const [formData, setFormData] = useState<SiteFormData>({
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'AU',
+    status: 'active',
+    hasSubcontractors: false,
+    contract_details: {
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      autoRenewal: false,
+      contractNumber: ''
+    } as ContractDetails,
+    contacts: [],
+    billingDetails: {
+      billingLines: [],
+      contacts: [],
+      billingCycle: 'monthly',
+      notes: ''
+    } as BillingDetails
   });
-
-  const handleChange = (field: keyof SiteFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }));
-  };
-
-  const handleDoubleNestedChange = (
-    section: keyof SiteFormData,
-    subsection: string,
-    field: string,
-    value: any
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [subsection]: {
-          ...prev[section]?.[subsection],
-          [field]: value,
-        },
-      },
-    }));
-  };
-
-  const validateStep = (stepIndex: number) => {
-    // Simple validation example
-    if (stepIndex === 0 && !formData.name) {
-      setErrors({ name: 'Site name is required' });
-      return false;
-    }
-
-    // Clear errors if validation passes
-    setErrors({});
-    return true;
-  };
-
-  const getCompletionPercentage = () => {
-    let totalFields = 0;
-    let completedFields = 0;
-
-    // Count basic fields
-    ['name', 'address', 'city', 'state', 'postalCode', 'country', 'status'].forEach((field) => {
-      totalFields++;
-      if (formData[field as keyof SiteFormData]) completedFields++;
+  
+  // Generic handler for updating form fields
+  const handleChange = useCallback((field: keyof SiteFormData, value: any) => {
+    setFormData(prev => {
+      // Create a new object to avoid mutation
+      const newData = {...prev};
+      newData[field] = value;
+      return newData;
     });
-
-    // Count contract fields
-    if (formData.contractDetails) {
-      ['startDate', 'endDate', 'contractNumber'].forEach((field) => {
-        totalFields++;
-        if (formData.contractDetails?.[field as keyof typeof formData.contractDetails])
-          completedFields++;
-      });
-    }
-
-    // Count billing fields
-    if (formData.billingDetails) {
-      ['billingFrequency', 'paymentTerms', 'invoiceMethod'].forEach((field) => {
-        totalFields++;
-        if (formData.billingDetails?.[field as keyof typeof formData.billingDetails])
-          completedFields++;
-      });
-    }
-
-    return Math.round((completedFields / totalFields) * 100);
-  };
-
-  const handleSubmit = async (siteId?: string) => {
-    setIsSubmitting(true);
-    
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Form submitted:', formData);
+  }, []);
+  
+  // Handler for updating nested fields
+  const handleNestedChange = useCallback((section: keyof SiteFormData, field: string, value: any) => {
+    setFormData(prev => {
+      // Create a new object to avoid mutation
+      const newData = {...prev};
       
-      // Reset form after successful submission
-      if (!siteId) {
-        setFormData(getInitialFormData());
-        setStep(0);
+      // Initialize section if it doesn't exist
+      if (!newData[section]) {
+        newData[section] = {};
       }
       
-      return true;
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+      // Create a type-safe copy of the section
+      const sectionCopy = {...(newData[section] as Record<string, any>)};
+      sectionCopy[field] = value;
+      
+      // Update the section
+      newData[section] = sectionCopy;
+      
+      return newData;
+    });
+  }, []);
+  
+  // Handle double-nested changes (useful for complex objects)
+  const handleDoubleNestedChange = useCallback(
+    (section: keyof SiteFormData, subSection: string, field: string, value: any) => {
+      setFormData(prev => {
+        // Create a new object to avoid mutation
+        const newData = {...prev};
+        
+        // Initialize section if it doesn't exist
+        if (!newData[section]) {
+          newData[section] = {};
+        }
+        
+        // Initialize section as a generic object for type safety
+        const sectionCopy = {...(newData[section] as Record<string, any>)};
+        
+        // Initialize subsection if it doesn't exist
+        if (!sectionCopy[subSection]) {
+          sectionCopy[subSection] = {};
+        }
+        
+        // Create a copy of the subsection
+        const subSectionCopy = {...(sectionCopy[subSection] as Record<string, any>)};
+        subSectionCopy[field] = value;
+        
+        // Update the subsection
+        sectionCopy[subSection] = subSectionCopy;
+        
+        // Update the section
+        newData[section] = sectionCopy;
+        
+        return newData;
+      });
+    },
+    []
+  );
+  
   return {
+    form,
     formData,
     setFormData,
-    step,
-    setStep,
-    errors,
-    setErrors,
     handleChange,
     handleNestedChange,
-    handleDoubleNestedChange,
-    validateStep,
-    getCompletionPercentage,
-    handleSubmit,
-    isSubmitting,
-    form,
+    handleDoubleNestedChange
   };
 }

@@ -15,7 +15,6 @@ export * from './siteFormHandlers';
 // Export billing types with proper 'export type' syntax
 export { 
   BillingFrequency, 
-  BillingContact, 
   BillingLine, 
   BillingDetails 
 } from './billingTypes';
@@ -24,6 +23,7 @@ export {
 export { BillingAmounts as BillingAmountTotals } from './billingTypes';
 
 // Fix ambiguity by explicitly re-exporting as types
+export type { BillingContact } from './billingTypes';
 export type { AdHocWorkAuthorization } from './adHocWorkTypes';
 export type { JobSpecifications } from './jobSpecificationTypes';
 export type { SecurityDetails } from './securityTypes';

@@ -16,7 +16,7 @@ export function ensureContractHistoryIds(entries: Partial<ContractHistoryEntry>[
   return entries.map(entry => ({
     id: entry.id || crypto.randomUUID(),
     site_id: entry.site_id || '',
-    contractor_id: entry.contractor_id || '',
+    contractor_id: (entry as any).contractor_id || '',
     contract_details: entry.contract_details || {},
     version_number: entry.version_number || 0,
     notes: entry.notes || '',
@@ -60,4 +60,19 @@ export function adaptFrequencyType(frequency: string): 'daily' | 'weekly' | 'mon
 export function safeContractDetailAccess<T>(details: any, property: string, defaultValue: T): T {
   if (!details) return defaultValue;
   return (details[property] as T) || defaultValue;
+}
+
+/**
+ * Safely parse JSON contract details
+ */
+export function parseContractDetails(details: any): any {
+  if (!details) return {};
+  if (typeof details === 'string') {
+    try {
+      return JSON.parse(details);
+    } catch (e) {
+      return {};
+    }
+  }
+  return details;
 }

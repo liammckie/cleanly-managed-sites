@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { ContractData } from '@/lib/types/contracts';
 import { asJsonObject } from '@/lib/utils/json';
+import { parseContractDetails } from '@/lib/utils/fixes';
 
 export const contractsApi = {
   // Get all contracts
@@ -66,13 +67,17 @@ export const contractsApi = {
       // Filter contracts expiring in the specified timeframe
       return (data || [])
         .filter(site => {
-          const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
-          const endDateStr = contractDetails.endDate as string | undefined;
+          const detailsObj = parseContractDetails(site.contract_details);
+          const endDateStr = detailsObj?.endDate || '';
           
           if (!endDateStr) return false;
           
-          const endDate = new Date(endDateStr);
-          return endDate >= now && endDate <= futureDate;
+          try {
+            const endDate = new Date(endDateStr);
+            return endDate >= now && endDate <= futureDate;
+          } catch (e) {
+            return false;
+          }
         })
         .map(site => ({
           id: site.id,

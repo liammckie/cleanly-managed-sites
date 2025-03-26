@@ -9,6 +9,7 @@ import { Quote as AwardQuote } from '@/lib/award/types';
 import { Quote as TypesQuote } from '@/lib/types/award/types';
 import { Quote as QuotesQuote } from '@/lib/types/quotes';
 import { Quote as QuoteTypesQuote } from '@/lib/types/quoteTypes';
+import { Frequency } from '@/types/common';
 
 /**
  * Unified Day type with all possible values to avoid TypeScript errors
@@ -18,11 +19,25 @@ export type UnifiedDay =
   | "saturday" | "sunday" | "weekday" | "public_holiday";
 
 /**
+ * Unified Frequency type
+ */
+export type UnifiedFrequency = 
+  | "daily" | "weekly" | "fortnightly" | "monthly" | "quarterly" | "yearly" | "once" 
+  | "annually"; // Add annually for compatibility
+
+/**
  * Converts a string day to the appropriate Day type
  * This helps us handle inconsistencies between different Day type definitions
  */
 export function adaptDay(day: string): UnifiedDay {
   return day as UnifiedDay;
+}
+
+/**
+ * Adapts a frequency string to ensure compatibility
+ */
+export function adaptFrequency(frequency: string): UnifiedFrequency {
+  return frequency as UnifiedFrequency;
 }
 
 /**
@@ -53,6 +68,16 @@ export function adaptQuote<T, U>(quote: T): U {
       newQuote.shifts = newQuote.shifts.map((shift: any) => 
         adaptQuoteShift(shift)
       );
+    }
+    
+    // If the quote has subcontractors, adapt each one
+    if ('subcontractors' in newQuote && Array.isArray(newQuote.subcontractors)) {
+      newQuote.subcontractors = newQuote.subcontractors.map((sub: any) => {
+        if (sub.frequency) {
+          sub.frequency = adaptFrequency(sub.frequency);
+        }
+        return sub;
+      });
     }
     
     return newQuote as unknown as U;

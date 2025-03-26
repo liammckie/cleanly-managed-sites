@@ -62,6 +62,9 @@ export interface ContractSummaryData {
   totalProfit: number;
   avgContractValue: number;
   profitMargin: number;
+  
+  // Additional metrics
+  activeCount?: number; // Add this property for ContractValueMetrics component
 }
 
 // Define contract forecast interface
@@ -70,4 +73,9 @@ export interface ContractForecast {
   revenue: number;
   cost: number;
   profit: number;
+}
+
+// Define interface for grouped contracts
+export interface GroupedContracts {
+  [key: string]: any[];
 }
