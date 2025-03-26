@@ -106,3 +106,26 @@ export function adaptAppQuoteToDb(quote: Partial<Quote>): any {
     notes: quote.notes || ''
   };
 }
+
+// Add these functions that are imported elsewhere but missing from the exports
+
+/**
+ * Convert database quote to application model
+ */
+export function adaptQuote(dbQuote: any): Quote {
+  return adaptDbQuoteToAppQuote(dbQuote) as Quote;
+}
+
+/**
+ * Convert array of database quotes to application models
+ */
+export function adaptQuotes(dbQuotes: any[]): Quote[] {
+  return dbQuotes.map(quote => adaptQuote(quote));
+}
+
+/**
+ * Prepare a quote for API submission
+ */
+export function prepareQuoteForApi(quote: Partial<Quote>): any {
+  return adaptAppQuoteToDb(quote);
+}

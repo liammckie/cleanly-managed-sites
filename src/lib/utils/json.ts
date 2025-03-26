@@ -1,64 +1,60 @@
 
-// JSON utility functions for type safety
-
 /**
- * Type for JSON-compatible values
+ * Safely parse a JSON string and return an object
+ * @param jsonString The JSON string to parse
+ * @param defaultValue The default value to return if parsing fails
+ * @returns The parsed object or the default value
  */
-export type Json = 
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json }
-  | Json[];
-
-/**
- * Safely parse a JSON string with error handling
- */
-export function parseJson<T>(jsonString: string | null | undefined, fallback: T): T {
-  if (!jsonString) return fallback;
+export function asJsonObject<T extends Record<string, any>>(jsonString: string | null | undefined, defaultValue: T): T {
+  if (!jsonString) return defaultValue;
   
   try {
-    return JSON.parse(jsonString) as T;
+    if (typeof jsonString === 'string') {
+      return JSON.parse(jsonString);
+    } else if (typeof jsonString === 'object') {
+      return jsonString as T;
+    }
+    return defaultValue;
   } catch (error) {
     console.error('Error parsing JSON:', error);
-    return fallback;
+    return defaultValue;
   }
 }
 
 /**
- * Convert a value to a JSON object with a fallback default
+ * Safely stringify an object to JSON
+ * @param obj The object to stringify
+ * @returns The JSON string or an empty object string if stringification fails
  */
-export function asJsonObject<T extends Record<string, any>>(
-  value: Json | undefined | null,
-  defaultValue: T
-): T {
-  if (!value) return defaultValue;
+export function asJsonString(obj: any): string {
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    console.error('Error stringifying object:', error);
+    return '{}';
+  }
+}
+
+/**
+ * Parse a JSON string that could be in string format or already as an object
+ * @param jsonData The JSON data to parse
+ * @returns The parsed object or an empty object if parsing fails
+ */
+export function parseJsonData(jsonData: string | object | null | undefined): Record<string, any> {
+  if (!jsonData) return {};
   
-  if (typeof value === 'string') {
+  if (typeof jsonData === 'string') {
     try {
-      const parsed = JSON.parse(value);
-      return { ...defaultValue, ...parsed };
+      return JSON.parse(jsonData);
     } catch (error) {
-      return defaultValue;
+      console.error('Error parsing JSON string:', error);
+      return {};
     }
   }
   
-  if (typeof value === 'object' && value !== null) {
-    return { ...defaultValue, ...value };
+  if (typeof jsonData === 'object') {
+    return jsonData as Record<string, any>;
   }
   
-  return defaultValue;
-}
-
-/**
- * Safely stringify a value to JSON with error handling
- */
-export function stringifyJson(value: any, fallback: string = '{}'): string {
-  try {
-    return JSON.stringify(value);
-  } catch (error) {
-    console.error('Error stringifying to JSON:', error);
-    return fallback;
-  }
+  return {};
 }

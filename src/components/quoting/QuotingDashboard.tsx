@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { QuoteList } from './QuoteList';
 import { QuoteStats } from './QuoteStats';
@@ -9,8 +10,9 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { adaptModelsToQuotes } from '@/lib/utils/quoteTypeAdapter';
 
 export function QuotingDashboard() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
-  const { quotes, isLoading, error } = useQuotes();
+  const { data: quotes, isLoading, error } = useQuotes();
   const [filteredQuotes, setFilteredQuotes] = useState<any[]>([]);
 
   // Convert quotes to the format expected by the QuoteList component
@@ -34,6 +36,10 @@ export function QuotingDashboard() {
     setActiveFilter(filter);
   };
 
+  const handleCreateNew = () => {
+    navigate('/quoting/create');
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -52,7 +58,7 @@ export function QuotingDashboard() {
   }
 
   if (!quotes || quotes.length === 0) {
-    return <QuotesEmptyState />;
+    return <QuotesEmptyState onCreateNew={handleCreateNew} />;
   }
 
   // Calculate some statistics about quotes
@@ -77,21 +83,25 @@ export function QuotingDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
         <QuoteStats 
-          totalQuotes={filteredQuotes.length}
-          totalValue={totalValue}
-          averageValue={averageValue}
-          pendingCount={pendingCount}
-          approvedCount={approvedCount}
+          pending={pendingCount}
+          approved={approvedCount}
+          total={filteredQuotes.length}
+          value={totalValue}
+          average={averageValue}
         />
       </div>
       
       <div>
         <QuoteFilter 
-          activeFilter={activeFilter} 
-          onFilterChange={handleFilterChange}
-          quoteCount={filteredQuotes.length}
+          filter={activeFilter} 
+          onChange={handleFilterChange}
+          count={filteredQuotes.length}
         />
-        <QuoteList quotes={filteredQuotes} />
+        <QuoteList 
+          quotes={filteredQuotes} 
+          searchTerm=""
+          isLoading={false}
+        />
       </div>
     </div>
   );

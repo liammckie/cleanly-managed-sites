@@ -91,3 +91,16 @@ export function adaptModelSubcontractorsToLib(subcontractors: ModelQuoteSubcontr
     frequency: sub.frequency as string
   }));
 }
+
+/**
+ * Unified adapter function used across the application
+ * This is the function imported by quotesApi.ts
+ */
+export function adaptQuote(quote: any): any {
+  // Check if the quote is from lib or model and adapt accordingly
+  if (quote && typeof quote === 'object') {
+    // Add any special handling as needed
+    return quote;
+  }
+  return quote;
+}

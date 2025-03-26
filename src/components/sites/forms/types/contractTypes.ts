@@ -21,19 +21,18 @@ export interface ContractDetails {
   noticeUnit: string;
   serviceFrequency: string;
   serviceDeliveryMethod: string;
+  // Additional fields needed by ContractDetailsStep
+  value?: number;
+  billingCycle?: string;
   // Optional fields for additional contracts
-  contractNumber?: string;
+  contractType?: string;
   renewalTerms?: string;
   terminationPeriod?: string;
-  contractType?: string;
   notes?: string;
   terms?: ContractTerm[];
   // For compatibility with existing DB-based interfaces
   id?: string;
   additionalContracts?: ContractDetails[];
-  // Additional fields needed by ContractDetailsStep
-  value?: number;
-  billingCycle?: string;
 }
 
 export interface ContractHistoryEntry {

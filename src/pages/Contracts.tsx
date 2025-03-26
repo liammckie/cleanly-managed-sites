@@ -14,7 +14,7 @@ import { adaptContractDataArray } from '@/components/contracts/contractTypeAdapt
 import { Plus } from 'lucide-react';
 
 export default function Contracts() {
-  const { contracts, isLoading, error } = useContracts();
+  const { contractData, isLoading, groupedContracts } = useContracts();
   
   return (
     <SidebarProvider>
@@ -46,14 +46,14 @@ export default function Contracts() {
                   <div className="flex justify-center items-center h-64">
                     <LoadingSpinner />
                   </div>
-                ) : error ? (
-                  <div className="text-center p-4 bg-red-50 text-red-800 rounded">
-                    Error loading contracts: {error.message}
+                ) : contractData.length === 0 ? (
+                  <div className="text-center p-4 bg-gray-50 text-gray-800 rounded">
+                    No contracts found.
                   </div>
                 ) : (
                   <DataTable 
                     columns={contractColumns} 
-                    data={adaptContractDataArray(contracts)}
+                    data={adaptContractDataArray(contractData)}
                   />
                 )}
               </CardContent>

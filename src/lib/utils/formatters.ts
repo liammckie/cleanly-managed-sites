@@ -1,67 +1,84 @@
 
 /**
- * Format a number as currency (USD by default)
+ * Format a number as currency
+ * @param value The number to format
+ * @param currency The currency code (default: USD)
+ * @param locale The locale to use for formatting (default: en-US)
+ * @returns Formatted currency string
  */
-export function formatCurrency(amount: number, currency = 'USD', locale = 'en-US'): string {
+export function formatCurrency(
+  value: number | null | undefined,
+  currency = 'USD',
+  locale = 'en-US'
+): string {
+  if (value === null || value === undefined) {
+    return '$0.00';
+  }
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 /**
- * Format a number as a percentage
+ * Format a date string to a readable format
+ * @param dateString The date string to format
+ * @param options Format options (default: short date)
+ * @returns Formatted date string
  */
-export function formatPercentage(value: number, minimumFractionDigits = 0): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'percent',
-    minimumFractionDigits,
-    maximumFractionDigits: 2
-  }).format(value / 100);
-}
+export function formatDate(
+  dateString: string | null | undefined,
+  options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  }
+): string {
+  if (!dateString) {
+    return 'N/A';
+  }
 
-/**
- * Format a date in standard format
- */
-export function formatDate(dateString: string, formatStyle = 'medium'): string {
   try {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      dateStyle: formatStyle as Intl.DateTimeFormatOptions['dateStyle'] 
-    }).format(date);
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    return date.toLocaleDateString('en-US', options);
   } catch (error) {
     console.error('Error formatting date:', error);
-    return dateString;
+    return 'Error';
   }
 }
 
 /**
- * Format a phone number
+ * Format a number with commas for thousands
+ * @param num The number to format
+ * @returns Formatted number string
  */
-export function formatPhoneNumber(phoneNumber: string): string {
-  // Remove all non-numeric characters
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  
-  // Format based on length
-  if (cleaned.length === 10) {
-    return `(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+export function formatNumber(num: number | null | undefined): string {
+  if (num === null || num === undefined) {
+    return '0';
   }
   
-  // For other formats, just add spaces for readability
-  return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+  return new Intl.NumberFormat().format(num);
 }
 
 /**
- * Format bytes to a human-readable size
+ * Format a percentage
+ * @param value The decimal value to format as percentage
+ * @param decimals Number of decimal places (default: 0)
+ * @returns Formatted percentage string
  */
-export function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
+export function formatPercentage(
+  value: number | null | undefined,
+  decimals = 0
+): string {
+  if (value === null || value === undefined) {
+    return '0%';
+  }
   
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+  return `${(value * 100).toFixed(decimals)}%`;
 }
