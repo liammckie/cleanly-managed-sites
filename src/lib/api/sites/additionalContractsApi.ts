@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 import { v4 as uuidv4 } from 'uuid';
 
+// Export the additional contracts API functions as a named object
 export const additionalContractsApi = {
   // Get all additional contracts for a site
   async getAdditionalContracts(siteId: string): Promise<ContractDetails[]> {
@@ -121,3 +122,91 @@ export const additionalContractsApi = {
     }
   }
 };
+
+// Export the function that handles site additional contracts
+export async function handleSiteAdditionalContracts(
+  siteId: string,
+  additionalContracts: ContractDetails[],
+  userId: string
+): Promise<void> {
+  // Get existing additional contracts for the site
+  const { data: existingContracts, error: fetchError } = await supabase
+    .from('site_additional_contracts')
+    .select('id')
+    .eq('site_id', siteId);
+  
+  if (fetchError) {
+    console.error('Error fetching existing additional contracts:', fetchError);
+    throw fetchError;
+  }
+  
+  // Create a set of existing contract IDs for quick lookup
+  const existingContractIds = new Set(existingContracts.map(contract => contract.id));
+  
+  // Process each additional contract
+  for (const contract of additionalContracts) {
+    // If the contract has an ID and exists in the database, update it
+    if (contract.id && existingContractIds.has(contract.id)) {
+      const { error: updateError } = await supabase
+        .from('site_additional_contracts')
+        .update({
+          contract_number: contract.contractNumber,
+          contract_type: contract.contractType,
+          start_date: contract.startDate,
+          end_date: contract.endDate,
+          auto_renew: contract.autoRenewal,
+          renewal_terms: contract.renewalTerms,
+          termination_period: contract.terminationPeriod,
+          notes: contract.notes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', contract.id);
+      
+      if (updateError) {
+        console.error('Error updating additional contract:', updateError);
+        throw updateError;
+      }
+      
+      // Remove this ID from the set to track what's been processed
+      existingContractIds.delete(contract.id);
+    } 
+    // If the contract doesn't have an ID or it doesn't exist in the database, insert it
+    else {
+      const { error: insertError } = await supabase
+        .from('site_additional_contracts')
+        .insert([{
+          id: contract.id || uuidv4(),
+          site_id: siteId,
+          contract_number: contract.contractNumber,
+          contract_type: contract.contractType,
+          start_date: contract.startDate,
+          end_date: contract.endDate,
+          auto_renew: contract.autoRenewal,
+          renewal_terms: contract.renewalTerms,
+          termination_period: contract.terminationPeriod,
+          notes: contract.notes,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }]);
+      
+      if (insertError) {
+        console.error('Error inserting additional contract:', insertError);
+        throw insertError;
+      }
+    }
+  }
+  
+  // Delete any contracts that exist in the database but not in the provided list
+  if (existingContractIds.size > 0) {
+    const { error: deleteError } = await supabase
+      .from('site_additional_contracts')
+      .delete()
+      .in('id', Array.from(existingContractIds));
+    
+    if (deleteError) {
+      console.error('Error deleting additional contracts:', deleteError);
+      throw deleteError;
+    }
+  }
+}
