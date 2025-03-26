@@ -1,37 +1,55 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractHistoryEntry } from '@/hooks/useSiteContractHistory';
+import { Json } from '@/lib/types';
 
-export async function fetchSiteContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
-  if (!siteId) {
-    throw new Error('Site ID is required to fetch contract history');
-  }
-
-  const { data, error } = await supabase
-    .from('site_contract_history')
-    .select('*')
-    .eq('site_id', siteId)
-    .order('version_number', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching site contract history:', error);
-    throw error;
-  }
-
-  return data || [];
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: Json;
+  created_at: string;
+  created_by?: string;
+  notes?: string;
+  version_number: number;
 }
 
-export async function createSiteContractHistoryEntry(entry: Omit<ContractHistoryEntry, 'id' | 'created_at' | 'version_number'>) {
-  const { data, error } = await supabase
-    .from('site_contract_history')
-    .insert(entry)
-    .select()
-    .single();
+export const contractHistoryApi = {
+  async fetchContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
+    const { data, error } = await supabase
+      .from('site_contract_history')
+      .select('*')
+      .eq('site_id', siteId)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error creating site contract history entry:', error);
-    throw error;
+    if (error) {
+      console.error('Error fetching contract history:', error);
+      throw new Error(`Failed to fetch contract history: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async saveContractVersion(
+    siteId: string,
+    contractDetails: Json,
+    notes: string = ''
+  ): Promise<ContractHistoryEntry> {
+    // Explicitly don't include version_number as it's handled by a trigger
+    const { data, error } = await supabase
+      .from('site_contract_history')
+      .insert({
+        site_id: siteId,
+        contract_details: contractDetails,
+        notes,
+        created_by: (await supabase.auth.getUser()).data?.user?.id
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving contract version:', error);
+      throw new Error(`Failed to save contract version: ${error.message}`);
+    }
+
+    return data;
   }
-
-  return data;
-}
+};

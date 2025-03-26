@@ -1,3 +1,9 @@
+import { 
+  Day, 
+  EmploymentType, 
+  EmployeeLevel,
+  QuoteShift 
+} from '@/lib/types/award/types';
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
 // Simple placeholder calculation function - in reality this would be more complex
@@ -171,4 +177,17 @@ export const calculateTotals = (billingLines: BillingLine[] = []): {
     monthly: parseFloat(totalMonthly.toFixed(2)),
     annual: parseFloat(totalAnnual.toFixed(2))
   };
+}
+
+export function calculateTotalCost(shifts: QuoteShift[]): number {
+  let totalCost = 0;
+  shifts.forEach(shift => {
+    totalCost += calculateShiftCost(shift, {});
+  });
+  return totalCost;
+}
+
+export function getBillingLinesOnHold(billingLines: BillingLine[]): BillingLine[] {
+  if (!billingLines) return [];
+  return billingLines.filter(line => line.onHold);
 }

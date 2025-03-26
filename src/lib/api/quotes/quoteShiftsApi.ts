@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
-import { QuoteShift } from '@/types/models';
+import { QuoteShift } from '@/lib/types/award/types';
+import { convertDbQuoteShiftToModel, convertModelQuoteShiftToDb } from './utils/quoteTypeConversions';
 
 // Fetch shifts for a specific quote
 export const fetchQuoteShiftsByQuoteId = async (quoteId: string): Promise<QuoteShift[]> => {
@@ -14,41 +15,16 @@ export const fetchQuoteShiftsByQuoteId = async (quoteId: string): Promise<QuoteS
     throw new Error(`Failed to fetch quote shifts: ${error.message}`);
   }
 
-  return data.map(shift => ({
-    id: shift.id,
-    quoteId: shift.quote_id,
-    day: shift.day,
-    startTime: shift.start_time,
-    endTime: shift.end_time,
-    breakDuration: shift.break_duration,
-    numberOfCleaners: shift.number_of_cleaners,
-    employmentType: shift.employment_type,
-    level: shift.level,
-    allowances: Array.isArray(shift.allowances) ? shift.allowances : [],
-    estimatedCost: shift.estimated_cost,
-    location: shift.location || '',
-    notes: shift.notes || ''
-  }));
+  return data.map(shift => convertDbQuoteShiftToModel(shift));
 };
 
 // Create a new shift for a quote
 export const createQuoteShift = async (shiftData: Partial<QuoteShift>): Promise<QuoteShift> => {
+  const dbData = convertModelQuoteShiftToDb(shiftData);
+  
   const { data, error } = await supabase
     .from('quote_shifts')
-    .insert([{
-      quote_id: shiftData.quoteId,
-      day: shiftData.day,
-      start_time: shiftData.startTime,
-      end_time: shiftData.endTime,
-      break_duration: shiftData.breakDuration,
-      number_of_cleaners: shiftData.numberOfCleaners,
-      employment_type: shiftData.employmentType,
-      level: shiftData.level,
-      allowances: shiftData.allowances || [],
-      estimated_cost: shiftData.estimatedCost || 0,
-      location: shiftData.location,
-      notes: shiftData.notes
-    }])
+    .insert([dbData])
     .select()
     .single();
 
@@ -57,40 +33,16 @@ export const createQuoteShift = async (shiftData: Partial<QuoteShift>): Promise<
     throw new Error(`Failed to create quote shift: ${error.message}`);
   }
 
-  return {
-    id: data.id,
-    quoteId: data.quote_id,
-    day: data.day,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    breakDuration: data.break_duration,
-    numberOfCleaners: data.number_of_cleaners,
-    employmentType: data.employment_type,
-    level: data.level,
-    allowances: Array.isArray(data.allowances) ? data.allowances : [],
-    estimatedCost: data.estimated_cost,
-    location: data.location || '',
-    notes: data.notes || ''
-  };
+  return convertDbQuoteShiftToModel(data);
 };
 
 // Update an existing quote shift
 export const updateQuoteShift = async (shiftData: QuoteShift): Promise<QuoteShift> => {
+  const dbData = convertModelQuoteShiftToDb(shiftData);
+  
   const { data, error } = await supabase
     .from('quote_shifts')
-    .update({
-      day: shiftData.day,
-      start_time: shiftData.startTime,
-      end_time: shiftData.endTime,
-      break_duration: shiftData.breakDuration,
-      number_of_cleaners: shiftData.numberOfCleaners,
-      employment_type: shiftData.employmentType,
-      level: shiftData.level,
-      allowances: shiftData.allowances || [],
-      estimated_cost: shiftData.estimatedCost,
-      location: shiftData.location,
-      notes: shiftData.notes
-    })
+    .update(dbData)
     .eq('id', shiftData.id)
     .select()
     .single();
@@ -100,21 +52,7 @@ export const updateQuoteShift = async (shiftData: QuoteShift): Promise<QuoteShif
     throw new Error(`Failed to update quote shift: ${error.message}`);
   }
 
-  return {
-    id: data.id,
-    quoteId: data.quote_id,
-    day: data.day,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    breakDuration: data.break_duration,
-    numberOfCleaners: data.number_of_cleaners,
-    employmentType: data.employment_type,
-    level: data.level,
-    allowances: Array.isArray(data.allowances) ? data.allowances : [],
-    estimatedCost: data.estimated_cost,
-    location: data.location || '',
-    notes: data.notes || ''
-  };
+  return convertDbQuoteShiftToModel(data);
 };
 
 // Delete a quote shift

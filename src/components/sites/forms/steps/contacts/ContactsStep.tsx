@@ -1,12 +1,11 @@
-
-import React from 'react';
-import { SiteFormData } from '../../siteFormTypes';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { SiteFormHandlers } from '../../types/formHandlers';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import ContactForm from './ContactForm';
+import ContactCard from './ContactCard';
 import { SiteContact } from '../../types/contactTypes';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { ContactCard } from './ContactCard';
-import { EmptyContactsState } from './EmptyContactsState';
-import { ClientInfoSwitch } from './ClientInfoSwitch';
+import { adaptContactForUI, adaptContactsForAPI } from './contactsAdapter';
 
 export interface ContactsStepProps {
   formData: SiteFormData;
@@ -103,6 +102,8 @@ const AddContactButton = ({ onClick }: { onClick: () => void }) => (
 );
 
 // Re-export necessary components from elsewhere
-import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 import { EntitySearchSelector } from '@/components/contacts/form/EntitySearchSelector';
+import { ClientInfoSwitch } from './ClientInfoSwitch';
+import { EmptyContactsState } from './EmptyContactsState';

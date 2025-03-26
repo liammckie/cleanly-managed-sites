@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { BillingLine } from '../types/billingTypes';
-import { BillingAmounts } from '../BillingAmountsType';
+import { BillingAmounts } from '../types/billingTypes';
 
 interface BillingDetailsStepProps {
   formData: SiteFormData;
@@ -61,7 +61,7 @@ export function BillingDetailsStep({
       handleNestedChange('billingDetails', 'totalAnnualAmount', totalAnnualAmount);
       handleNestedChange('billingDetails', 'annualForecast', totalAnnualAmount.toString());
     }
-  }, [formData.billingDetails.billingLines]);
+  }, [formData.billingDetails.billingLines, handleNestedChange]);
 
   // Update address fields when useSiteAddress changes
   const handleAddressToggle = (checked: boolean) => {
