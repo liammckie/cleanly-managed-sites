@@ -1,7 +1,8 @@
 
 import React from 'react';
+import { UserPlus, UserSearch } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserPlus, UserCheck } from 'lucide-react';
 
 interface EmptyContactsStateProps {
   addContact: () => void;
@@ -10,33 +11,34 @@ interface EmptyContactsStateProps {
 
 export function EmptyContactsState({ addContact, addExistingContact }: EmptyContactsStateProps) {
   return (
-    <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
-      <p className="text-gray-500 mb-4">
-        No contacts added yet. <span className="text-destructive font-medium">At least one contact is required.</span>
-      </p>
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
-        <Button
-          type="button"
-          onClick={addContact}
-          variant="outline"
-          className="flex items-center gap-1"
-        >
-          <UserPlus className="h-4 w-4" />
-          Add New Contact
-        </Button>
-        
-        {addExistingContact && (
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex items-center gap-1"
-            onClick={() => document.querySelector('[role="combobox"]')?.dispatchEvent(new MouseEvent('click'))}
+    <Card>
+      <CardContent className="p-6 flex flex-col items-center justify-center space-y-4">
+        <UserPlus className="h-12 w-12 text-muted-foreground" />
+        <h3 className="text-lg font-medium">No contacts added yet</h3>
+        <p className="text-sm text-muted-foreground text-center">
+          Add contacts to this site to track who to get in touch with for various needs.
+        </p>
+        <div className="flex flex-wrap gap-2 justify-center">
+          <Button 
+            onClick={addContact} 
+            variant="default"
+            className="gap-1"
           >
-            <UserCheck className="h-4 w-4" />
-            Select Existing Contact
+            <UserPlus className="h-4 w-4" />
+            Add New Contact
           </Button>
-        )}
-      </div>
-    </div>
+          {addExistingContact && (
+            <Button 
+              onClick={() => {}} 
+              variant="outline"
+              className="gap-1"
+            >
+              <UserSearch className="h-4 w-4" />
+              Use Existing Contact
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

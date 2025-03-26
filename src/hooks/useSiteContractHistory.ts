@@ -1,59 +1,23 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchSiteContractHistory } from '@/lib/api/sites/siteContractHistoryApi';
-import { Json } from '@/types';
+import { contractHistoryApi } from '@/lib/api/sites/siteContractHistoryApi';
 
-export type ContractHistoryEntry = {
-  id: string;
-  site_id: string;
-  contract_details: Json;
-  notes: string;
-  created_by: string;
-  created_at: string;
-  version_number: number;
-};
-
-export function useSiteContractHistory(siteId: string) {
+export function useSiteContractHistory(siteId?: string) {
   const {
-    data,
+    data: contractHistory,
     isLoading,
-    isError,
-    error
+    error,
+    refetch
   } = useQuery({
-    queryKey: ['siteContractHistory', siteId],
-    queryFn: async () => {
-      if (!siteId) return { history: [], currentDetails: {} };
-      
-      try {
-        const historyData = await fetchSiteContractHistory(siteId);
-        
-        // Get the current contract details from the latest history entry
-        const currentDetails = historyData.length > 0 
-          ? historyData[0].contract_details 
-          : {};
-          
-        return {
-          history: historyData,
-          currentDetails
-        };
-      } catch (err) {
-        console.error('Error fetching site contract history:', err);
-        return { history: [], currentDetails: {} };
-      }
-    },
-    enabled: !!siteId,
-    meta: {
-      errorMessage: 'Failed to load contract history'
-    }
+    queryKey: ['site-contract-history', siteId],
+    queryFn: () => siteId ? contractHistoryApi.fetchContractHistory(siteId) : Promise.resolve([]),
+    enabled: !!siteId
   });
-  
+
   return {
-    history: data?.history || [],
-    currentContractDetails: data?.currentDetails || {},
+    contractHistory: contractHistory || [],
     isLoading,
-    isError,
-    error
+    error,
+    refetch
   };
 }
-
-export default useSiteContractHistory;

@@ -1,48 +1,36 @@
 
 import { Day, EmployeeLevel, EmploymentType } from '@/lib/award/types';
-import { Json } from '@/lib/types';
-import { QuoteShift } from '@/lib/types/award/types';
+import { QuoteShift } from '@/lib/types/quotes';
 
 /**
- * Converts DB quote shift data to the QuoteShift type
+ * Converts API response data to strongly typed QuoteShift objects
  */
-export function convertDbQuoteShiftToModel(dbShift: any): QuoteShift {
-  // Convert the day string to the Day type
-  const day = dbShift.day as Day;
-  
-  // Convert employment type string to EmploymentType
-  const employmentType = dbShift.employment_type as EmploymentType;
-  
-  // Convert level number to EmployeeLevel
-  const level = Number(dbShift.level) as EmployeeLevel;
-  
-  // Convert allowances JSON array to string array
-  const allowances = Array.isArray(dbShift.allowances) 
-    ? dbShift.allowances.map(a => String(a))
-    : [];
-  
+export function convertToQuoteShift(apiData: any): QuoteShift {
   return {
-    id: dbShift.id,
-    quoteId: dbShift.quote_id,
-    day,
-    startTime: dbShift.start_time,
-    endTime: dbShift.end_time,
-    breakDuration: dbShift.break_duration,
-    numberOfCleaners: dbShift.number_of_cleaners,
-    employmentType,
-    level,
-    allowances,
-    estimatedCost: dbShift.estimated_cost,
-    location: dbShift.location || '',
-    notes: dbShift.notes || ''
+    id: apiData.id,
+    quoteId: apiData.quote_id,
+    day: apiData.day as Day,
+    startTime: apiData.start_time,
+    endTime: apiData.end_time,
+    breakDuration: apiData.break_duration,
+    numberOfCleaners: apiData.number_of_cleaners || 1,
+    employmentType: apiData.employment_type as EmploymentType,
+    level: apiData.level as EmployeeLevel,
+    allowances: Array.isArray(apiData.allowances) 
+      ? apiData.allowances.map((a: any) => a.toString())
+      : [],
+    estimatedCost: apiData.estimated_cost || 0,
+    location: apiData.location || '',
+    notes: apiData.notes || ''
   };
 }
 
 /**
- * Converts a QuoteShift model to a DB-ready object
+ * Prepares QuoteShift data for API submission
  */
-export function convertModelQuoteShiftToDb(shift: Partial<QuoteShift>): any {
+export function prepareQuoteShiftForApi(shift: QuoteShift): any {
   return {
+    id: shift.id,
     quote_id: shift.quoteId,
     day: shift.day,
     start_time: shift.startTime,
@@ -51,8 +39,8 @@ export function convertModelQuoteShiftToDb(shift: Partial<QuoteShift>): any {
     number_of_cleaners: shift.numberOfCleaners,
     employment_type: shift.employmentType,
     level: shift.level,
-    allowances: shift.allowances || [],
-    estimated_cost: shift.estimatedCost || 0,
+    allowances: shift.allowances,
+    estimated_cost: shift.estimatedCost,
     location: shift.location,
     notes: shift.notes
   };

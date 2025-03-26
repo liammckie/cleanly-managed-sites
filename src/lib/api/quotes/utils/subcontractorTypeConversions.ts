@@ -1,34 +1,35 @@
 
 import { Frequency } from '@/lib/award/types';
-import { QuoteSubcontractor } from '@/lib/types/award/types';
+import { QuoteSubcontractor } from '@/lib/types/quotes';
 
 /**
- * Converts DB subcontractor data to the QuoteSubcontractor model
+ * Converts API response data to strongly typed QuoteSubcontractor objects
  */
-export function convertDbSubcontractorToModel(dbSubcontractor: any): QuoteSubcontractor {
+export function convertToQuoteSubcontractor(apiData: any): QuoteSubcontractor {
   return {
-    id: dbSubcontractor.id,
-    quoteId: dbSubcontractor.quote_id,
-    name: dbSubcontractor.name,
-    description: dbSubcontractor.description || '',
-    cost: dbSubcontractor.cost,
-    frequency: dbSubcontractor.frequency as Frequency,
-    email: dbSubcontractor.email || undefined,
-    phone: dbSubcontractor.phone || undefined,
-    service: dbSubcontractor.service || undefined,
-    notes: dbSubcontractor.notes || undefined,
-    services: dbSubcontractor.services || [],
-    customServices: dbSubcontractor.custom_services || undefined,
-    monthlyCost: dbSubcontractor.monthly_cost || undefined,
-    isFlatRate: dbSubcontractor.is_flat_rate || false
+    id: apiData.id,
+    quoteId: apiData.quote_id,
+    name: apiData.name,
+    description: apiData.description || '',
+    cost: apiData.cost,
+    frequency: apiData.frequency as Frequency,
+    email: apiData.email || '',
+    phone: apiData.phone || '',
+    service: apiData.service || '',
+    notes: apiData.notes || '',
+    services: apiData.services || [],
+    customServices: apiData.custom_services || '',
+    monthlyCost: apiData.monthly_cost || null,
+    isFlatRate: apiData.is_flat_rate || true
   };
 }
 
 /**
- * Converts a QuoteSubcontractor model to a DB-ready object
+ * Prepares QuoteSubcontractor data for API submission
  */
-export function convertModelSubcontractorToDb(subcontractor: Partial<QuoteSubcontractor>): any {
+export function prepareQuoteSubcontractorForApi(subcontractor: QuoteSubcontractor): any {
   return {
+    id: subcontractor.id,
     quote_id: subcontractor.quoteId,
     name: subcontractor.name,
     description: subcontractor.description,

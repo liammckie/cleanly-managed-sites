@@ -33,14 +33,14 @@ export const contractHistoryApi = {
     contractDetails: Json,
     notes: string = ''
   ): Promise<ContractHistoryEntry> {
-    // Explicitly don't include version_number as it's handled by a trigger
+    // Create a new entry without version_number as it's handled by DB trigger
     const { data, error } = await supabase
       .from('site_contract_history')
       .insert({
         site_id: siteId,
         contract_details: contractDetails,
         notes,
-        created_by: (await supabase.auth.getUser()).data?.user?.id
+        created_by: (await supabase.auth.getUser()).data?.user?.id || null
       })
       .select()
       .single();
