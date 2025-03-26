@@ -1,99 +1,72 @@
+import { supabase } from '@/integrations/supabase/client';
+import { QuoteShift } from '@/lib/types/quoteTypes';
+import { v4 as uuidv4 } from 'uuid';
 
-import { supabase } from '@/lib/supabase';
-import { QuoteShift } from '@/lib/award/types';
-import { dbToQuoteShift, quoteShiftToDb } from './adapters';
-
-// Fetch shifts for a quote
-export const fetchQuoteShifts = async (quoteId: string) => {
-  if (!quoteId) return [];
-  
-  const { data, error } = await supabase
-    .from('quote_shifts')
-    .select('*')
-    .eq('quote_id', quoteId);
-  
-  if (error) {
-    console.error('Error fetching quote shifts:', error);
-    throw new Error(error.message);
-  }
-  
-  return (data || []).map(dbToQuoteShift);
-};
-
-// Add shifts to a quote
-export const addQuoteShifts = async (quoteId: string, shifts: Partial<QuoteShift>[]) => {
-  if (!quoteId || !shifts.length) return [];
-  
-  // Insert shifts one by one to avoid Supabase type validation issues
-  let allInsertedShifts: QuoteShift[] = [];
-  
-  for (const shift of shifts) {
-    // Create the DB representation with quote_id
-    const shiftData = quoteShiftToDb({
-      ...shift,
-      quoteId
-    });
+export const quoteShiftsApi = {
+  // Get all shifts for a quote
+  async getShifts(quoteId: string): Promise<QuoteShift[]> {
+    const { data, error } = await supabase
+      .from('quote_shifts')
+      .select('*')
+      .eq('quote_id', quoteId);
     
-    // Ensure required fields are present
-    if (!shiftData.day || !shiftData.employment_type || !shiftData.start_time || 
-        !shiftData.end_time || !shiftData.level) {
-      console.error('Missing required fields for shift:', shiftData);
-      continue;
+    if (error) {
+      console.error('Error fetching quote shifts:', error);
+      throw error;
     }
     
-    // Create a valid object for Supabase insert with all required fields
-    const validShiftData = {
-      id: shiftData.id,
-      quote_id: shiftData.quote_id,
-      day: shiftData.day,
-      start_time: shiftData.start_time,
-      end_time: shiftData.end_time,
-      break_duration: shiftData.break_duration || 0,
-      level: shiftData.level,
-      employment_type: shiftData.employment_type,
-      number_of_cleaners: shiftData.number_of_cleaners || 1,
-      location: shiftData.location || '',
-      allowances: shiftData.allowances || [],
-      estimated_cost: shiftData.estimated_cost || 0,
-      notes: shiftData.notes || ''
+    return data as QuoteShift[];
+  },
+  
+  // Create a new shift
+  async createShift(shiftData: Partial<QuoteShift>): Promise<QuoteShift> {
+    // Add an ID if not provided
+    const shiftWithId = {
+      ...shiftData,
+      id: shiftData.id || uuidv4()
     };
     
     const { data, error } = await supabase
       .from('quote_shifts')
-      .insert([validShiftData])
-      .select();
+      .insert([shiftWithId])
+      .select()
+      .single();
     
     if (error) {
-      console.error('Error adding shift:', error);
-      throw new Error(error.message);
+      console.error('Error creating quote shift:', error);
+      throw error;
     }
     
-    if (data && data.length > 0) {
-      allInsertedShifts = [...allInsertedShifts, ...data.map(dbToQuoteShift)];
+    return data as QuoteShift;
+  },
+  
+  // Update a shift
+  async updateShift(shiftId: string, shiftData: Partial<QuoteShift>): Promise<QuoteShift> {
+    const { data, error } = await supabase
+      .from('quote_shifts')
+      .update(shiftData)
+      .eq('id', shiftId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating quote shift:', error);
+      throw error;
     }
-  }
+    
+    return data as QuoteShift;
+  },
   
-  return allInsertedShifts;
-};
-
-// Update shifts for a quote
-export const updateQuoteShifts = async (quoteId: string, shifts: QuoteShift[]) => {
-  if (!quoteId) return [];
-  
-  // Delete all existing shifts
-  const { error: deleteError } = await supabase
-    .from('quote_shifts')
-    .delete()
-    .eq('quote_id', quoteId);
-  
-  if (deleteError) {
-    console.error('Error deleting existing shifts:', deleteError);
-    throw new Error(deleteError.message);
-  }
-  
-  // If no new shifts, return empty array
-  if (!shifts.length) return [];
-  
-  // Add the new shifts
-  return addQuoteShifts(quoteId, shifts);
+  // Delete a shift
+  async deleteShift(shiftId: string): Promise<void> {
+    const { error } = await supabase
+      .from('quote_shifts')
+      .delete()
+      .eq('id', shiftId);
+    
+    if (error) {
+      console.error('Error deleting quote shift:', error);
+      throw error;
+    }
+  },
 };

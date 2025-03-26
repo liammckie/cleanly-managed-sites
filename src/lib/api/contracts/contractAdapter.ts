@@ -1,21 +1,24 @@
 
-import { ContractData as ContractColumnData } from '@/components/contracts/ContractColumns';
-import { ContractData } from '@/lib/types/contracts';
+import { ContractData } from '@/components/contracts/ContractColumns';
+import { SiteRecord } from '@/lib/types';
+import { asJsonObject } from '@/lib/utils/json';
 
-// Adapter to convert backend contract data to the format expected by the UI
-export const adaptContractToColumnFormat = (contract: ContractData): ContractColumnData => {
-  return {
-    id: contract.id,
-    client: contract.client_name,
-    site: contract.site_name,
-    value: contract.monthly_revenue,
-    startDate: contract.contract_details?.startDate || "",
-    endDate: contract.contract_details?.endDate || "", 
-    status: contract.status as 'active' | 'pending' | 'expired' | 'terminated'
-  };
+export const adaptContractsToColumnFormat = (contracts: any[]): ContractData[] => {
+  return contracts.map(contract => {
+    const contractDetails = typeof contract.contract_details === 'object' 
+      ? contract.contract_details 
+      : asJsonObject(contract.contract_details);
+    
+    return {
+      id: contract.id || '',
+      client: contract.client_name || 'Unknown Client',
+      site: contract.site_name || 'Unknown Site',
+      value: contract.monthly_revenue || 0,
+      startDate: contractDetails?.startDate || '',  // Using optional chaining for safety
+      endDate: contractDetails?.endDate || '',      // Using optional chaining for safety
+      status: (contractDetails?.status as any) || 'active'
+    };
+  });
 };
 
-// Function to convert an array of contracts
-export const adaptContractsToColumnFormat = (contracts: ContractData[]): ContractColumnData[] => {
-  return contracts.map(adaptContractToColumnFormat);
-};
+// More adapter functions...

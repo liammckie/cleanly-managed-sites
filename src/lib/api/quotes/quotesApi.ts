@@ -1,6 +1,6 @@
-
-import { supabase } from '@/lib/supabase';
-import { Quote } from '@/lib/award/types';
+import { supabase } from '@/integrations/supabase/client';
+import { Quote } from '@/lib/types/quoteTypes';
+import { QuoteShift, QuoteSubcontractor } from '@/lib/types/quoteTypes';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -417,3 +417,83 @@ export const deleteQuoteMutation = async (quoteId: string) => {
   
   return { success: true, id: quoteId };
 };
+
+export const quotesApi = {
+  async createShift(shift: Partial<QuoteShift>): Promise<QuoteShift> {
+    const { data, error } = await supabase
+      .from('quote_shifts')
+      .insert([{
+        ...shift,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error creating quote shift:', error);
+      throw error;
+    }
+    
+    return data as QuoteShift;
+  },
+
+  async createSubcontractor(subcontractor: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
+    const { data, error } = await supabase
+      .from('quote_subcontractors')
+      .insert([{
+        ...subcontractor,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error creating quote subcontractor:', error);
+      throw error;
+    }
+    
+    return data as QuoteSubcontractor;
+  },
+
+  async updateShift(shiftId: string, shift: Partial<QuoteShift>): Promise<QuoteShift> {
+    const { data, error } = await supabase
+      .from('quote_shifts')
+      .update({
+        ...shift,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', shiftId)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error updating quote shift:', error);
+      throw error;
+    }
+    
+    return data as QuoteShift;
+  },
+
+  async updateSubcontractor(subcontractorId: string, subcontractor: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
+    const { data, error } = await supabase
+      .from('quote_subcontractors')
+      .update({
+        ...subcontractor,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', subcontractorId)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error updating quote subcontractor:', error);
+      throw error;
+    }
+    
+    return data as QuoteSubcontractor;
+  }
+};
+
+export default quotesApi;

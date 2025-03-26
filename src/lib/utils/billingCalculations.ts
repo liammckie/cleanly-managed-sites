@@ -1,89 +1,103 @@
-import { BillingLine, BillingFrequency } from '@/components/sites/forms/types/billingTypes';
-import { isLineOnHold } from './billingLineUtils';
 
-// Calculate the monthly amount for a billing line
-export const calculateMonthlyAmount = (line: BillingLine): number => {
-  if (isLineOnHold(line) || !line.isRecurring) return 0;
-  
-  const amount = line.amount;
-  
-  switch (line.frequency) {
+import { BillingLine, BillingFrequency, BillingDetails } from '@/components/sites/forms/types/billingTypes';
+
+// Calculate weekly, monthly and annual amounts based on the billing frequency and amount
+export const calculateBillingAmounts = (
+  amount: number,
+  frequency: BillingFrequency
+): { weeklyAmount: number; monthlyAmount: number; annualAmount: number } => {
+  let weeklyAmount = 0;
+  let monthlyAmount = 0;
+  let annualAmount = 0;
+
+  switch (frequency) {
     case 'weekly':
-      return (amount * 52) / 12;
+      weeklyAmount = amount;
+      monthlyAmount = amount * 4.33; // Average weeks in a month
+      annualAmount = amount * 52;
+      break;
     case 'fortnightly':
-      return (amount * 26) / 12;
+      weeklyAmount = amount / 2;
+      monthlyAmount = amount * 2.17; // Average fortnights in a month
+      annualAmount = amount * 26;
+      break;
     case 'monthly':
-      return amount;
+      weeklyAmount = amount / 4.33;
+      monthlyAmount = amount;
+      annualAmount = amount * 12;
+      break;
     case 'quarterly':
-      return amount / 3;
+      weeklyAmount = amount / 13;
+      monthlyAmount = amount / 3;
+      annualAmount = amount * 4;
+      break;
     case 'annually':
-      return amount / 12;
+      weeklyAmount = amount / 52;
+      monthlyAmount = amount / 12;
+      annualAmount = amount;
+      break;
     case 'one-time':
-      return 0; // One-time payments don't contribute to monthly amount
+      weeklyAmount = 0;
+      monthlyAmount = 0;
+      annualAmount = amount;
+      break;
     default:
-      return 0;
+      weeklyAmount = 0;
+      monthlyAmount = 0;
+      annualAmount = 0;
   }
+
+  return {
+    weeklyAmount: Number(weeklyAmount.toFixed(2)),
+    monthlyAmount: Number(monthlyAmount.toFixed(2)),
+    annualAmount: Number(annualAmount.toFixed(2))
+  };
 };
 
-// Calculate the annual amount for a billing line
-export const calculateAnnualAmount = (line: BillingLine): number => {
-  if (isLineOnHold(line) || !line.isRecurring) return 0;
-  
-  const amount = line.amount;
-  
-  switch (line.frequency) {
-    case 'weekly':
-      return amount * 52;
-    case 'fortnightly':
-      return amount * 26;
-    case 'monthly':
-      return amount * 12;
-    case 'quarterly':
-      return amount * 4;
-    case 'annually':
-      return amount;
-    case 'one-time':
-      return 0; // One-time payments don't contribute to annual amount
-    default:
-      return 0;
-  }
+// Calculate total billing amounts from all billing lines
+export const calculateTotalBillingAmounts = (
+  billingLines: BillingLine[]
+): { totalWeeklyAmount: number; totalMonthlyAmount: number; totalAnnualAmount: number } => {
+  let totalWeeklyAmount = 0;
+  let totalMonthlyAmount = 0;
+  let totalAnnualAmount = 0;
+
+  billingLines.forEach(line => {
+    if (line.isRecurring && !line.on_hold) {
+      const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
+        line.amount,
+        line.frequency
+      );
+      
+      totalWeeklyAmount += weeklyAmount;
+      totalMonthlyAmount += monthlyAmount;
+      totalAnnualAmount += annualAmount;
+    }
+  });
+
+  return {
+    totalWeeklyAmount: Number(totalWeeklyAmount.toFixed(2)),
+    totalMonthlyAmount: Number(totalMonthlyAmount.toFixed(2)),
+    totalAnnualAmount: Number(totalAnnualAmount.toFixed(2))
+  };
 };
 
-// Calculate the weekly amount for a billing line
-export const calculateWeeklyAmount = (line: BillingLine): number => {
-  if (isLineOnHold(line) || !line.isRecurring) return 0;
-  
-  const amount = line.amount;
-  
-  switch (line.frequency) {
-    case 'weekly':
-      return amount;
-    case 'fortnightly':
-      return amount / 2;
-    case 'monthly':
-      return (amount * 12) / 52;
-    case 'quarterly':
-      return (amount * 4) / 52;
-    case 'annually':
-      return amount / 52;
-    case 'one-time':
-      return 0; // One-time payments don't contribute to weekly amount
-    default:
-      return 0;
-  }
+// Check if a billing line is on hold
+export const isLineOnHold = (line: BillingLine): boolean => {
+  // Check for either on_hold or onHold property
+  return line.on_hold || !!line.onHold;
 };
 
-// Calculate the total weekly amount for all billing lines
-export const calculateTotalWeeklyAmount = (lines: BillingLine[]): number => {
-  return lines.reduce((total, line) => total + calculateWeeklyAmount(line), 0);
+// Check if site billing is on hold
+export const isSiteBillingOnHold = (billingOnHold?: boolean): boolean => {
+  return !!billingOnHold;
 };
 
-// Calculate the total monthly amount for all billing lines
-export const calculateTotalMonthlyAmount = (lines: BillingLine[]): number => {
-  return lines.reduce((total, line) => total + calculateMonthlyAmount(line), 0);
-};
-
-// Calculate the total annual amount for all billing lines
-export const calculateTotalAnnualAmount = (lines: BillingLine[]): number => {
-  return lines.reduce((total, line) => total + calculateAnnualAmount(line), 0);
+// Format billing line for API
+export const formatBillingLineForAPI = (line: BillingLine): BillingLine => {
+  // Ensure on_hold property is set correctly for API
+  return {
+    ...line,
+    on_hold: isLineOnHold(line)
+  };
 };

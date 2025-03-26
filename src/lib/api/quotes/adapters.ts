@@ -1,6 +1,4 @@
-
-import { Quote, QuoteShift, Subcontractor } from '@/lib/award/types';
-import { Json } from '@/lib/types';
+import { Quote } from '@/lib/types/quoteTypes';
 
 // Database interface definitions
 export interface DbQuote {
@@ -123,7 +121,7 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     overheadCost: dbQuote.overhead_cost,
     totalCost: dbQuote.total_cost,
     marginAmount: dbQuote.margin_amount,
-    startDate: dbQuote.start_date,
+    start_date: dbQuote.start_date,
     endDate: dbQuote.end_date,
     expiryDate: dbQuote.expiry_date,
     contractLength: dbQuote.contract_length,
@@ -260,3 +258,45 @@ export function dbToOverheadProfile(dbProfile: DbOverheadProfile) {
     userId: dbProfile.user_id
   };
 }
+
+export const adaptQuoteToApi = (quote: Quote): any => {
+  return {
+    name: quote.name,
+    client_name: quote.client_name,
+    site_name: quote.site_name,
+    status: quote.status,
+    margin_percentage: quote.margin_percentage,
+    total_cost: quote.total_cost,
+    notes: quote.notes,
+    overhead_profile: 'standard', // Default
+    labor_cost: quote.labor_cost,
+    overhead_cost: quote.overhead_cost,
+    subcontractor_cost: quote.subcontractor_cost,
+    margin_amount: quote.margin_amount,
+    total_price: quote.total_price,
+    start_date: quote.start_date,
+    end_date: quote.end_date,
+    expiry_date: quote.expiry_date,
+    contract_length: quote.contract_length,
+    contract_length_unit: quote.contract_length_unit || 'months', // Use fixed value that matches allowed types
+    overhead_percentage: quote.overhead_percentage,
+    // Additional fields
+    title: quote.title,
+    description: quote.description,
+    supplies_cost: quote.suppliesCost,
+    equipment_cost: quote.equipmentCost,
+    quote_number: quote.quoteNumber,
+    valid_until: quote.validUntil,
+    client_id: quote.clientId,
+    client_contact: quote.clientContact,
+    client_email: quote.clientEmail,
+    client_phone: quote.clientPhone,
+    site_address: quote.siteAddress,
+    site_id: quote.siteId,
+    frequency: quote.frequency,
+    scope: quote.scope,
+    terms: quote.terms,
+    created_by: quote.createdBy,
+    user_id: quote.userId,
+  };
+};

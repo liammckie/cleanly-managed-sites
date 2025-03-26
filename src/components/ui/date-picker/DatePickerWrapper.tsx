@@ -8,11 +8,11 @@ interface DatePickerWrapperProps {
   id?: string; // We'll ignore this prop as it's not needed by DatePicker
 }
 
-export function DatePickerWrapper({ value, onChange, id }: DatePickerWrapperProps) {
+export function DatePickerWrapper({ value, onChange }: DatePickerWrapperProps) {
   return (
     <DatePicker 
-      value={value} 
-      onChange={onChange} 
+      date={value}  // Changed from 'value' to 'date' to match the DatePicker props
+      onSelect={onChange}  // Changed from 'onChange' to 'onSelect' to match the DatePicker props
     />
   );
 }

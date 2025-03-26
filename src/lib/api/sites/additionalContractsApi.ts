@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
@@ -81,3 +80,41 @@ export function convertDbContractsToContractDetails(
     terms: [] // Initialize with empty terms array
   }));
 }
+
+export const additionalContractsApi = {
+  // Create a new additional contract
+  async createAdditionalContract(siteId: string, contractData: ContractDetails): Promise<any> {
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .insert([{
+        site_id: siteId,
+        contract_number: contractData.contractNumber,
+        start_date: contractData.startDate,
+        end_date: contractData.endDate,
+        value: contractData.value,
+        termination_period: contractData.terminationPeriod,
+        renewal_terms: contractData.renewalTerms,
+        auto_renew: contractData.autoRenewal,
+        notes: contractData.notes,
+        contract_type: contractData.contractType
+      }])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating additional contract:', error);
+      throw error;
+    }
+    
+    return data;
+  },
+  
+  // Get additional contracts for a site
+  getSiteAdditionalContracts,
+  
+  // Handle creating/updating site additional contracts
+  handleSiteAdditionalContracts,
+  
+  // Convert database records to contract details objects
+  convertDbContractsToContractDetails
+};

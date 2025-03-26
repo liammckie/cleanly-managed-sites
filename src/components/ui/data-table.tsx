@@ -1,16 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getPaginationRowModel,
-  SortingState,
   getSortedRowModel,
-  ColumnFiltersState,
+  SortingState,
   getFilteredRowModel,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
+
 import {
   Table,
   TableBody,
@@ -21,23 +22,33 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
-export interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchColumn?: string;
-  pagination?: boolean;
+  searchKey?: string;
+  searchColumn?: string; // Added for backward compatibility
+  placeholder?: string;
+  searchPlaceholder?: string; // Added for backward compatibility
+  onSearch?: (value: string) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  searchKey,
   searchColumn,
-  pagination = true,
+  placeholder = "Search...",
+  searchPlaceholder,
+  onSearch,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Use either searchKey or searchColumn, with searchKey taking precedence
+  const effectiveSearchKey = searchKey || searchColumn || '';
+  const effectivePlaceholder = placeholder || searchPlaceholder || 'Search...';
 
   const table = useReactTable({
     data,
@@ -51,26 +62,35 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      globalFilter,
     },
   });
 
+  const handleSearch = (value: string) => {
+    if (effectiveSearchKey) {
+      table.getColumn(effectiveSearchKey)?.setFilterValue(value);
+    } else {
+      setGlobalFilter(value);
+    }
+    
+    if (onSearch) {
+      onSearch(value);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {searchColumn && (
-        <div className="flex items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-              onChange={(event) =>
-                table.getColumn(searchColumn)?.setFilterValue(event.target.value)
-              }
-              className="pl-8"
-            />
-          </div>
+    <div>
+      {effectiveSearchKey && (
+        <div className="flex items-center py-4">
+          <Input
+            placeholder={effectivePlaceholder}
+            value={(table.getColumn(effectiveSearchKey)?.getFilterValue() as string) ?? ""}
+            onChange={(event) => handleSearch(event.target.value)}
+            className="max-w-sm"
+          />
         </div>
       )}
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -108,43 +128,32 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  No results found.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      
-      {pagination && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing {table.getRowModel().rows.length} of {data.length} entries
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 }

@@ -11,14 +11,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Contracts() {
   const navigate = useNavigate();
-  const { contracts, isLoading, error } = useContracts();
+  const { contractData, isLoading } = useContracts();
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const filteredContracts = contracts.filter(contract => 
-    contract.site_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.id?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
   
   const handleAddNewContract = () => {
     navigate('/contracts/create');
@@ -26,45 +20,33 @@ export default function Contracts() {
   
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-48">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
-  if (error) {
-    return (
-      <div className="p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> Failed to load contracts: {error.message}</span>
-        </div>
-      </div>
-    );
-  }
-  
   // Convert the contract data to the format expected by the DataTable
-  const adaptedContracts = adaptContractsToColumnFormat(filteredContracts);
+  const adaptedContracts = adaptContractsToColumnFormat(contractData || []);
   
   return (
     <div className="container py-10">
       <PageHeader
-        heading="Contracts"
-        subheading="Manage all your contracts"
-        action={
-          <Button onClick={handleAddNewContract}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Contract
-          </Button>
-        }
-      />
+        title="Contracts"
+        description="Manage all your contracts"
+      >
+        <Button onClick={handleAddNewContract}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Contract
+        </Button>
+      </PageHeader>
       
       <div className="mt-6">
         <DataTable
           columns={getColumns()}
           data={adaptedContracts}
-          searchColumn="client"
-          searchPlaceholder="Search contracts..."
+          searchKey="client"
+          placeholder="Search contracts..."
           onSearch={setSearchQuery}
         />
       </div>

@@ -1,93 +1,72 @@
+import { supabase } from '@/integrations/supabase/client';
+import { QuoteSubcontractor } from '@/lib/types/quoteTypes';
+import { v4 as uuidv4 } from 'uuid';
 
-import { supabase } from '@/lib/supabase';
-import { Subcontractor } from '@/lib/award/types';
-import { dbToSubcontractor, subcontractorToDb } from './adapters';
-
-// Fetch subcontractors for a quote
-export const fetchQuoteSubcontractors = async (quoteId: string) => {
-  if (!quoteId) return [];
-  
-  const { data, error } = await supabase
-    .from('quote_subcontractors')
-    .select('*')
-    .eq('quote_id', quoteId);
-  
-  if (error) {
-    console.error('Error fetching quote subcontractors:', error);
-    throw new Error(error.message);
-  }
-  
-  return (data || []).map(dbToSubcontractor);
-};
-
-// Add subcontractors to a quote
-export const addQuoteSubcontractors = async (quoteId: string, subcontractors: Partial<Subcontractor>[]) => {
-  if (!quoteId || !subcontractors.length) return [];
-  
-  // Insert subcontractors one by one to avoid Supabase type validation issues
-  let allInsertedSubcontractors: Subcontractor[] = [];
-  
-  for (const sub of subcontractors) {
-    // Create the DB representation with quote_id
-    const subData = subcontractorToDb({
-      ...sub,
-      quoteId
-    });
+export const quoteSubcontractorsApi = {
+  // Get all subcontractors for a quote
+  async getSubcontractors(quoteId: string): Promise<QuoteSubcontractor[]> {
+    const { data, error } = await supabase
+      .from('quote_subcontractors')
+      .select('*')
+      .eq('quote_id', quoteId);
     
-    // Ensure required fields are present
-    if (!subData.name) {
-      console.error('Missing required fields for subcontractor:', subData);
-      continue;
+    if (error) {
+      console.error('Error fetching quote subcontractors:', error);
+      throw error;
     }
     
-    // Create a valid object for Supabase insert with all required fields
-    const validSubData = {
-      id: subData.id,
-      quote_id: subData.quote_id,
-      name: subData.name,
-      service: subData.service || '',
-      description: subData.description || '',
-      frequency: subData.frequency || 'monthly',
-      cost: subData.cost || 0,
-      notes: subData.notes || ''
+    return data as QuoteSubcontractor[];
+  },
+  
+  // Create a new subcontractor
+  async createSubcontractor(subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
+    // Add an ID if not provided
+    const subWithId = {
+      ...subcontractorData,
+      id: subcontractorData.id || uuidv4()
     };
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert([validSubData])
-      .select();
+      .insert([subWithId])
+      .select()
+      .single();
     
     if (error) {
-      console.error('Error adding subcontractor:', error);
-      throw new Error(error.message);
+      console.error('Error creating quote subcontractor:', error);
+      throw error;
     }
     
-    if (data && data.length > 0) {
-      allInsertedSubcontractors = [...allInsertedSubcontractors, ...data.map(dbToSubcontractor)];
+    return data as QuoteSubcontractor;
+  },
+  
+  // Update an existing subcontractor
+  async updateSubcontractor(subcontractorId: string, subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
+    const { data, error } = await supabase
+      .from('quote_subcontractors')
+      .update(subcontractorData)
+      .eq('id', subcontractorId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating quote subcontractor:', error);
+      throw error;
+    }
+    
+    return data as QuoteSubcontractor;
+  },
+  
+  // Delete a subcontractor
+  async deleteSubcontractor(subcontractorId: string): Promise<void> {
+    const { error } = await supabase
+      .from('quote_subcontractors')
+      .delete()
+      .eq('id', subcontractorId);
+    
+    if (error) {
+      console.error('Error deleting quote subcontractor:', error);
+      throw error;
     }
   }
-  
-  return allInsertedSubcontractors;
-};
-
-// Update subcontractors for a quote
-export const updateQuoteSubcontractors = async (quoteId: string, subcontractors: Subcontractor[]) => {
-  if (!quoteId) return [];
-  
-  // Delete all existing subcontractors
-  const { error: deleteError } = await supabase
-    .from('quote_subcontractors')
-    .delete()
-    .eq('quote_id', quoteId);
-  
-  if (deleteError) {
-    console.error('Error deleting existing subcontractors:', deleteError);
-    throw new Error(deleteError.message);
-  }
-  
-  // If no new subcontractors, return empty array
-  if (!subcontractors.length) return [];
-  
-  // Add the new subcontractors
-  return addQuoteSubcontractors(quoteId, subcontractors);
 };

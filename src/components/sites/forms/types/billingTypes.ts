@@ -1,6 +1,4 @@
 
-import { SiteStatus } from '@/lib/types/commonTypes';
-
 // Export the main types
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
 
@@ -34,6 +32,7 @@ export interface BillingContact {
 }
 
 export interface BillingDetails {
+  // Original fields
   rate?: number;
   billingFrequency?: BillingFrequency;
   billingAddress?: string;
@@ -65,6 +64,48 @@ export interface BillingDetails {
   // Display amounts (calculated)
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
+  
+  // Added fields for BillingDetailsStep compatibility
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string;
+  billingHoldEndDate?: string;
+  billingHoldReason?: string;
+  invoiceMethod?: string;
+  useSiteAddress?: boolean;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  accountNumber?: string;
+  taxId?: string;
+  notes?: string;
+  
+  // Invoice form fields
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  
+  // Revenue fields
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  
+  // Contractor cost fields
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  weeklyBudget?: number;
+  contractorCostFrequency?: string;
+  contractorInvoiceFrequency?: string;
+  
+  // Service delivery fields
+  serviceType?: string;
+  deliveryMethod?: string;
+  
+  // Xero integration
+  xeroContactId?: string;
   
   // Special fields for labor cost calculation
   laborCalculation?: {
@@ -101,7 +142,12 @@ export interface BillingDetails {
     hoursPerDay?: number;
     daysPerWeek?: number;
     rate?: number;
+    staffingLevel?: string;
+    headcount?: number;
+    hoursPerWeek?: number;
+    costPerHour?: number;
   };
+  
+  // For backward compatibility
+  totalWeeklyAmount?: number;
 }
-
-// These types are not re-exported to avoid conflicts
