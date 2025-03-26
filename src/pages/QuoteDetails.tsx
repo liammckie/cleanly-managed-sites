@@ -4,8 +4,7 @@ import { useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { useQuote } from '@/hooks/quotes/useQuote';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { QuoteDetailView } from '@/components/quoting/QuoteDetailView';
-import { Quote } from '@/lib/types/quotes';
+import { QuoteDetails as QuoteDetailsComponent } from '@/components/quoting/QuoteDetails';
 
 const QuoteDetails = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
@@ -24,7 +23,7 @@ const QuoteDetails = () => {
             <p>{(error as any)?.message || 'Unable to load quote details'}</p>
           </div>
         ) : quote ? (
-          <QuoteDetailView quote={quote as Quote} />
+          <QuoteDetailsComponent quote={quote} />
         ) : (
           <div className="text-center">
             <h3 className="text-xl font-semibold mb-2">Quote Not Found</h3>

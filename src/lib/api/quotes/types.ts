@@ -28,5 +28,6 @@ export interface DbSubcontractor {
   updated_at: string;
   email?: string;
   phone?: string;
-  services?: string[];
+  service?: string;
+  notes?: string;
 }

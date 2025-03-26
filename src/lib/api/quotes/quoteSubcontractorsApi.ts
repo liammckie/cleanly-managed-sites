@@ -23,10 +23,14 @@ export const quoteSubcontractorsApi = {
       description: item.description,
       cost: item.cost,
       frequency: item.frequency,
-      email: item.email,
-      phone: item.phone,
-      service: item.service,
-      notes: item.notes
+      email: item.email || '',
+      phone: item.phone || '',
+      service: item.service || '',
+      notes: item.notes || '',
+      services: [],
+      customServices: '',
+      monthlyCost: 0,
+      isFlatRate: true
     }));
   },
   
@@ -57,7 +61,7 @@ export const quoteSubcontractorsApi = {
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert([dbSubData])
+      .insert(dbSubData)
       .select()
       .single();
     
@@ -73,10 +77,14 @@ export const quoteSubcontractorsApi = {
       description: data.description,
       cost: data.cost,
       frequency: data.frequency,
-      email: data.email,
-      phone: data.phone,
-      service: data.service,
-      notes: data.notes
+      email: data.email || '',
+      phone: data.phone || '',
+      service: data.service || '',
+      notes: data.notes || '',
+      services: [],
+      customServices: '',
+      monthlyCost: 0,
+      isFlatRate: true
     };
   },
   
@@ -113,10 +121,14 @@ export const quoteSubcontractorsApi = {
       description: data.description,
       cost: data.cost,
       frequency: data.frequency,
-      email: data.email,
-      phone: data.phone,
-      service: data.service,
-      notes: data.notes
+      email: data.email || '',
+      phone: data.phone || '',
+      service: data.service || '',
+      notes: data.notes || '',
+      services: [],
+      customServices: '',
+      monthlyCost: 0,
+      isFlatRate: true
     };
   },
   

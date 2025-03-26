@@ -36,5 +36,6 @@ export interface Periodicals {
   additional?: {
     upholstery: boolean;
     sanitizing: boolean;
+    pressureWashing?: boolean;
   };
 }

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -23,6 +24,15 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { SiteFormData } from '../types';
 
+interface ContractDetailsStepProps {
+  formData: SiteFormData;
+  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  addContractTerm?: (term: any) => void;
+  removeContractTerm?: (index: number) => void;
+  updateContractTerm?: (index: number, field: string, value: any) => void;
+  setFormData?: (formData: any) => void;
+}
+
 interface ServiceDeliveryMethodProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
@@ -31,6 +41,96 @@ interface ServiceDeliveryMethodProps {
   profitMargin: number;
   annualValue: number;
 }
+
+// Define necessary component interfaces
+interface PrimaryContractInformationProps {
+  formData: SiteFormData;
+  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  annualValue: number;
+}
+
+interface ContractTermsSectionProps {
+  formData: SiteFormData;
+  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  addContractTerm?: (term: any) => void;
+  removeContractTerm?: (index: number) => void;
+  updateContractTerm?: (index: number, field: string, value: any) => void;
+}
+
+interface AdditionalContractsSectionProps {
+  formData: SiteFormData;
+  setFormData: (formData: any) => void;
+}
+
+// Placeholder component implementations
+const PrimaryContractInformation = ({ formData, handleNestedChange, annualValue }: PrimaryContractInformationProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Primary Contract Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content for primary contract information */}
+        <p>Contract information fields would go here</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ServiceDeliveryMethod = ({ 
+  formData, 
+  handleNestedChange,
+  annualDirectCost,
+  annualContractorCost,
+  profitMargin,
+  annualValue
+}: ServiceDeliveryMethodProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Service Delivery Method</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content for service delivery method */}
+        <p>Service delivery method fields would go here</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ContractTermsSection = ({ 
+  formData, 
+  handleNestedChange,
+  addContractTerm,
+  removeContractTerm,
+  updateContractTerm
+}: ContractTermsSectionProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Contract Terms</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content for contract terms */}
+        <p>Contract terms fields would go here</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const AdditionalContractsSection = ({ formData, setFormData }: AdditionalContractsSectionProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Additional Contracts</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content for additional contracts */}
+        <p>Additional contracts fields would go here</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 export function ContractDetailsStep({ 
   formData, 
@@ -46,8 +146,8 @@ export function ContractDetailsStep({
   const [profitMargin, setProfitMargin] = useState<number>(0);
 
   useEffect(() => {
-    const value = formData.contractDetails.value || 0;
-    const cycle = formData.contractDetails.billingCycle || 'monthly';
+    const value = formData.contractDetails?.value || 0;
+    const cycle = formData.contractDetails?.billingCycle || 'monthly';
     
     let annual = 0;
     let weekly = 0;
@@ -82,7 +182,7 @@ export function ContractDetailsStep({
     
     setAnnualValue(annual);
     
-    if (value > 0 && formData.billingDetails.billingLines.length === 0) {
+    if (value > 0 && formData.billingDetails?.billingLines?.length === 0) {
       handleNestedChange('billingDetails', 'billingLines', [{
         description: 'Contract payment',
         amount: value,
@@ -97,10 +197,10 @@ export function ContractDetailsStep({
       monthlyRevenue: monthly,
       annualRevenue: annual
     }));
-  }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
+  }, [formData.contractDetails?.value, formData.contractDetails?.billingCycle]);
 
   useEffect(() => {
-    if (formData.billingDetails.serviceDeliveryType === 'direct') {
+    if (formData.billingDetails?.serviceDeliveryType === 'direct') {
       const weeklyBudget = formData.billingDetails.weeklyBudget || 0;
       const annualCost = weeklyBudget * 52;
       setAnnualDirectCost(annualCost);
@@ -113,10 +213,10 @@ export function ContractDetailsStep({
         setProfitMargin(margin);
       }
     }
-  }, [formData.billingDetails.weeklyBudget, annualValue, formData.billingDetails.serviceDeliveryType]);
+  }, [formData.billingDetails?.weeklyBudget, annualValue, formData.billingDetails?.serviceDeliveryType]);
 
   useEffect(() => {
-    if (formData.billingDetails.serviceDeliveryType === 'contractor') {
+    if (formData.billingDetails?.serviceDeliveryType === 'contractor') {
       const contractorCost = formData.billingDetails.annualContractorCost || 0;
       setAnnualContractorCost(contractorCost);
       
@@ -128,7 +228,7 @@ export function ContractDetailsStep({
         setProfitMargin(margin);
       }
     }
-  }, [formData.billingDetails.annualContractorCost, annualValue, formData.billingDetails.serviceDeliveryType]);
+  }, [formData.billingDetails?.annualContractorCost, annualValue, formData.billingDetails?.serviceDeliveryType]);
 
   return (
     <div className="space-y-6">

@@ -48,43 +48,54 @@ export interface Quote {
   id: string;
   name: string;
   client_name: string;
+  clientName: string; // Making this required to match award/types
   site_name?: string;
+  siteName?: string;
   status: QuoteStatus;
   overhead_percentage: number;
+  overheadPercentage: number; // Making this required to match award/types
   margin_percentage: number;
+  marginPercentage: number; // Making this required to match award/types
   total_price: number;
+  totalPrice: number; // Making this required to match award/types
   labor_cost: number;
+  laborCost: number; // Making this required to match award/types
   supplies_cost?: number;
+  suppliesCost?: number;
   equipment_cost?: number;
+  equipmentCost?: number;
   subcontractor_cost: number;
+  subcontractorCost: number; // Making this required to match award/types
   created_at: string;
+  createdAt: string; // Making this required to match award/types
   updated_at: string;
+  updatedAt: string; // Making this required to match award/types
   quote_number?: string;
+  quoteNumber?: string;
   valid_until?: string;
+  validUntil?: string;
   client_id?: string;
+  clientId?: string;
   site_id?: string;
+  siteId?: string;
   shifts?: QuoteShift[];
   subcontractors?: Subcontractor[];
   
-  // Camelcase aliases for frontend compatibility
-  clientName?: string; 
-  siteName?: string;
-  title?: string;
-  overheadPercentage?: number;
-  marginPercentage?: number;
-  totalPrice?: number;
-  laborCost?: number;
-  suppliesCost?: number;
-  equipmentCost?: number;
-  subcontractorCost?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  quoteNumber?: string;
-  validUntil?: string;
-  clientId?: string;
-  siteId?: string;
+  // Required fields to match award/types
+  notes: string;
+  description?: string;
+  clientContact?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  siteAddress?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  overhead_cost?: number;
   overheadCost?: number;
+  total_cost?: number;
   totalCost?: number;
+  margin_amount?: number;
   marginAmount?: number;
   startDate?: string;
   start_date?: string;
@@ -98,20 +109,6 @@ export interface Quote {
   userId?: string;
   createdBy?: string;
   created_by?: string;
-  
-  // Additional fields to match award/types Quote
-  description?: string;
-  clientContact?: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  siteAddress?: string;
-  frequency?: string;
-  scope?: string;
-  terms?: string;
-  notes?: string;
-  overhead_cost?: number;
-  total_cost?: number;
-  margin_amount?: number;
 }
 
 export interface QuoteSubcontractor extends Subcontractor {

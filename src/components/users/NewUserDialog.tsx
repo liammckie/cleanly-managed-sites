@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useUsers } from '@/hooks/useUsers';
-import { SystemUser } from '@/lib/types/userTypes';
+import { SystemUser } from '@/lib/types/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -22,7 +22,7 @@ interface NewUserDialogProps {
 }
 
 export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
-  const { createUser, isCreating } = useUsers();
+  const { createUser } = useUsers();
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       first_name: '',
@@ -33,18 +33,17 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
     }
   });
   
+  const [isCreating, setIsCreating] = React.useState(false);
+  
   const onSubmit = async (data: any) => {
     try {
+      setIsCreating(true);
       // Create the user with role set to default user role
       await createUser({
         status: 'active',
         ...data,
-        role: { 
-          id: '2', // Assuming '2' is the regular user role
-          name: 'User',
-          description: 'Regular user',
-          permissions: []
-        }
+        role: '2', // Set as string for User role ID
+        full_name: `${data.first_name} ${data.last_name}`
       } as Partial<SystemUser>);
       
       toast.success('User created successfully');
@@ -53,6 +52,8 @@ export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error('Failed to create user');
+    } finally {
+      setIsCreating(false);
     }
   };
   

@@ -1,4 +1,3 @@
-
 import { QuoteShift, EmploymentType, EmployeeLevel, Day, PayCondition } from './types';
 import { cleaningServicesAward } from './awardData';
 
@@ -31,12 +30,13 @@ export const getShiftDurationHours = (startTime: string, endTime: string, breakD
   const end = new Date(`2000-01-01T${endTime}`);
   
   // If end time is before start time, assume it's the next day
+  let endTime24h = end;
   if (end < start) {
-    end.setDate(end.getDate() + 1);
+    endTime24h = new Date(`2000-01-02T${endTime}`);
   }
   
   // Calculate the difference in milliseconds
-  const diff = end.getTime() - start.getTime();
+  const diff = endTime24h.getTime() - start.getTime();
   
   // Convert to hours and subtract break
   const hours = diff / (1000 * 60 * 60);

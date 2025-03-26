@@ -5,13 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { getInitials } from '@/lib/utils';
 
 interface UserDetailsProps {
   user: SystemUser;
 }
 
 export function UserDetails({ user }: UserDetailsProps) {
+  // Function to get initials from full name
+  const getInitials = (name: string): string => {
+    if (!name) return '';
+    
+    const parts = name.split(' ').filter(part => part.length > 0);
+    
+    if (parts.length === 0) return '';
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -47,7 +58,7 @@ export function UserDetails({ user }: UserDetailsProps) {
           </div>
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-1">Role</h4>
-            <p>{user.role}</p>
+            <p>{typeof user.role === 'object' ? user.role.name : user.role}</p>
           </div>
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-1">Last Login</h4>

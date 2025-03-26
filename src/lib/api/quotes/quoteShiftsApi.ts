@@ -26,7 +26,7 @@ export const quoteShiftsApi = {
       numberOfCleaners: item.number_of_cleaners,
       employmentType: item.employment_type,
       level: item.level,
-      allowances: Array.isArray(item.allowances) ? item.allowances : [],
+      allowances: Array.isArray(item.allowances) ? (item.allowances as string[]) : [],
       estimatedCost: item.estimated_cost,
       location: item.location || '',
       notes: item.notes || ''
@@ -58,7 +58,7 @@ export const quoteShiftsApi = {
     
     const { data, error } = await supabase
       .from('quote_shifts')
-      .insert([dbShiftData])
+      .insert(dbShiftData)
       .select()
       .single();
     
@@ -77,7 +77,7 @@ export const quoteShiftsApi = {
       numberOfCleaners: data.number_of_cleaners,
       employmentType: data.employment_type,
       level: data.level,
-      allowances: Array.isArray(data.allowances) ? data.allowances : [],
+      allowances: Array.isArray(data.allowances) ? (data.allowances as string[]) : [],
       estimatedCost: data.estimated_cost,
       location: data.location || '',
       notes: data.notes || ''
@@ -123,7 +123,7 @@ export const quoteShiftsApi = {
       numberOfCleaners: data.number_of_cleaners,
       employmentType: data.employment_type,
       level: data.level,
-      allowances: Array.isArray(data.allowances) ? data.allowances : [],
+      allowances: Array.isArray(data.allowances) ? (data.allowances as string[]) : [],
       estimatedCost: data.estimated_cost,
       location: data.location || '',
       notes: data.notes || ''
