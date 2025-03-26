@@ -2,31 +2,24 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { useQuote } from '@/hooks/quotes/useQuote';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useQuote } from '@/hooks/quotes/useQuote';
 import { QuoteDetails } from '@/components/quoting/QuoteDetails';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { adaptQuote } from '@/lib/utils/typeAdapters';
+import { Quote } from '@/lib/types/award/types';
 
 const QuoteDetailsPage = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
   const { data: quote, isLoading, error } = useQuote(quoteId!);
-  const navigate = useNavigate();
+  
+  const handleQuoteSelect = (id: string) => {
+    // Since we're already on the quote details page, this is a no-op
+    console.log(`Quote selected: ${id}`);
+  };
   
   return (
     <PageLayout>
       <div className="flex-1 overflow-y-auto p-6 animate-fade-in">
-        <Button 
-          variant="ghost" 
-          className="mb-4"
-          onClick={() => navigate('/quotes')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Quotes
-        </Button>
-        
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
@@ -38,7 +31,8 @@ const QuoteDetailsPage = () => {
           </div>
         ) : quote ? (
           <QuoteDetails 
-            quote={adaptQuote<typeof quote, import('@/lib/types/award/types').Quote>(quote)} 
+            quote={adaptQuote<typeof quote, Quote>(quote)} 
+            onQuoteSelect={handleQuoteSelect}
           />
         ) : (
           <div className="text-center">

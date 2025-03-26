@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { dbToOverheadProfile, DbOverheadProfile, OverheadProfile } from './overheadAdapters';
+import { dbToOverheadProfile, DbOverheadProfile, OverheadProfile } from '@/lib/utils/typeAdapters';
 
 export const fetchOverheadProfiles = async (): Promise<OverheadProfile[]> => {
   const { data, error } = await supabase

@@ -1,18 +1,16 @@
 
-import { SiteFormData } from './siteForms';
+// This file is maintained for backward compatibility
+// It re-exports everything from the types directory
+import { 
+  SiteFormData,
+  siteStatusOptions
+} from './siteFormData';
+import { getInitialFormData } from './initialFormData';
+import { SiteFormValidationErrors } from './validationUtils';
+import { BillingContact } from './contactTypes';
 
-export function getInitialFormData(): SiteFormData {
-  return {
-    name: '',
-    address: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'Australia',
-    status: 'active',
-    contacts: [],
-    notes: '',
-  };
-}
+// Export types for backward compatibility
+export type { SiteFormData, SiteFormValidationErrors, BillingContact };
 
-export type { SiteFormData };
+// Export functions for backward compatibility
+export { getInitialFormData, siteStatusOptions };

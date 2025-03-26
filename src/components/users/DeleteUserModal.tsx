@@ -10,43 +10,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 
-interface DeleteUserModalProps {
+export interface DeleteUserModalProps {
   isOpen: boolean;
-  userName: string;
-  isDeleting?: boolean;
   onConfirm: () => void;
-  onCancel: () => void;
+  onDismiss: () => void;
+  userName: string;
 }
 
-export function DeleteUserModal({
-  isOpen,
-  userName,
-  isDeleting = false,
-  onConfirm,
-  onCancel,
-}: DeleteUserModalProps) {
+export function DeleteUserModal({ isOpen, onConfirm, onDismiss, userName }: DeleteUserModalProps) {
   return (
     <AlertDialog open={isOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Confirm User Deletion</AlertDialogTitle>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete the user <span className="font-medium">{userName}</span>? This action cannot be undone.
+            You are about to delete the user <strong>{userName}</strong>. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel} disabled={isDeleting}>
-            Cancel
-          </AlertDialogCancel>
-          <Button 
-            onClick={onConfirm} 
-            variant="destructive" 
-            disabled={isDeleting}
+          <AlertDialogCancel onClick={onDismiss}>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? "Deleting..." : "Delete User"}
-          </Button>
+            Delete
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

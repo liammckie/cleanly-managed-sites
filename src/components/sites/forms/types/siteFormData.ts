@@ -23,15 +23,15 @@ export interface SiteFormData {
   customId?: string;
   primary_contact?: {
     name: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string;
     role: string;
   };
-  contacts?: {
+  contacts: {
     id?: string;
     name: string;
-    email: string;
-    phone: string;
+    email?: string;
+    phone?: string;
     role: string;
     isPrimary?: boolean;  // Changed from is_primary
     department?: string;
@@ -70,15 +70,11 @@ export interface SiteFormData {
     monthlyContractorCost?: number;
     annualContractorCost?: number;
   };
+  notes?: string;
   // Add backward compatibility properties
   contractDetails?: ContractDetails;  // Alias for contract_details
   clientId?: string;                  // Alias for client_id
   postcode?: string;                  // Alias for postalCode
-}
-
-// Add compatible aliases to support existing code
-export type {
-  SiteStatus
 }
 
 // Export alias names for backward compatibility

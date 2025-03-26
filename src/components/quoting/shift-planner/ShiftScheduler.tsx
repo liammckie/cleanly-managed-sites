@@ -5,7 +5,7 @@ import { ShiftList } from './ShiftList';
 import { ShiftCalendar } from './ShiftCalendar';
 import { QuoteShift } from '@/lib/types/award/types';
 import { Day, EmploymentType, EmployeeLevel } from '@/lib/types/award/types';
-import { adaptDay } from '@/lib/utils/typeAdapters';
+import { adaptDay, adaptQuoteShift, UnifiedDay } from '@/lib/utils/typeAdapters';
 
 interface ShiftCalendarProps {
   shifts: QuoteShift[];
@@ -52,7 +52,7 @@ export function ShiftScheduler({
   // Ensure the day value is always a valid Day enum when passing to award/types components
   const typeSafeNewShift = {
     ...newShift,
-    day: adaptDay(newShift.day?.toString() || 'monday'),
+    day: newShift.day ? adaptDay(newShift.day.toString()) : adaptDay('monday'),
     employmentType: newShift.employmentType || 'full_time' as EmploymentType
   };
   

@@ -1,73 +1,79 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuoteSubcontractor } from '@/lib/types/quotes';
 import { v4 as uuidv4 } from 'uuid';
+import { UnifiedSubcontractor } from '@/lib/utils/typeAdapters';
+
+// Extended DB schema including optional fields we need
+interface DbSubcontractor {
+  id: string;
+  quote_id: string;
+  name: string;
+  description: string;
+  frequency: string;
+  cost: number;
+  created_at: string;
+  updated_at: string;
+  email?: string;
+  phone?: string;
+  service?: string;
+  services?: string[];
+  notes?: string;
+}
 
 export const quoteSubcontractorsApi = {
-  // Get all subcontractors for a quote
-  async getSubcontractors(quoteId: string): Promise<QuoteSubcontractor[]> {
+  async fetchSubcontractors(quoteId: string): Promise<UnifiedSubcontractor[]> {
     const { data, error } = await supabase
       .from('quote_subcontractors')
       .select('*')
       .eq('quote_id', quoteId);
     
     if (error) {
-      console.error('Error fetching quote subcontractors:', error);
+      console.error('Error fetching subcontractors:', error);
       throw error;
     }
     
-    return (data || []).map((item) => ({
+    return (data || []).map((item: any) => ({
       id: item.id,
       quoteId: item.quote_id,
       name: item.name,
-      description: item.description,
-      cost: item.cost,
-      frequency: item.frequency,
+      description: item.description || '',
+      cost: item.cost || 0,
+      frequency: item.frequency || 'monthly',
       email: item.email || '',
       phone: item.phone || '',
       service: item.service || '',
       notes: item.notes || '',
       services: item.services || [],
-      customServices: '',
-      monthlyCost: 0,
-      isFlatRate: true
     }));
   },
   
-  // Create a new subcontractor
-  async createSubcontractor(subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
-    // Ensure required fields
-    if (!subcontractorData.id) {
-      subcontractorData.id = uuidv4();
-    }
+  async createSubcontractor(subcontractor: Partial<UnifiedSubcontractor>): Promise<UnifiedSubcontractor> {
+    const id = subcontractor.id || uuidv4();
     
-    // Ensure name is present
-    if (!subcontractorData.name) {
-      throw new Error('Subcontractor name is required');
-    }
-    
-    const dbSubData = {
-      id: subcontractorData.id,
-      quote_id: subcontractorData.quoteId,
-      name: subcontractorData.name,
-      description: subcontractorData.description || '',
-      cost: subcontractorData.cost || 0,
-      frequency: subcontractorData.frequency || 'monthly',
-      email: subcontractorData.email || '',
-      phone: subcontractorData.phone || '',
-      service: subcontractorData.service || '',
-      notes: subcontractorData.notes || '',
-      services: subcontractorData.services || []
+    const dbSubcontractor = {
+      id,
+      quote_id: subcontractor.quoteId || subcontractor.quote_id || '',
+      name: subcontractor.name || 'Unnamed Subcontractor',
+      description: subcontractor.description || '',
+      cost: subcontractor.cost || 0,
+      frequency: subcontractor.frequency || 'monthly',
+      email: subcontractor.email || '',
+      phone: subcontractor.phone || '',
+      service: subcontractor.service || '',
+      notes: subcontractor.notes || '',
+      services: subcontractor.services || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .insert(dbSubData)
+      .insert([dbSubcontractor])
       .select()
       .single();
     
     if (error) {
-      console.error('Error creating quote subcontractor:', error);
+      console.error('Error creating subcontractor:', error);
       throw error;
     }
     
@@ -75,44 +81,40 @@ export const quoteSubcontractorsApi = {
       id: data.id,
       quoteId: data.quote_id,
       name: data.name,
-      description: data.description,
-      cost: data.cost,
-      frequency: data.frequency,
+      description: data.description || '',
+      cost: data.cost || 0,
+      frequency: data.frequency || 'monthly',
       email: data.email || '',
       phone: data.phone || '',
       service: data.service || '',
       notes: data.notes || '',
       services: data.services || [],
-      customServices: '',
-      monthlyCost: 0,
-      isFlatRate: true
     };
   },
   
-  // Update an existing subcontractor
-  async updateSubcontractor(subcontractorId: string, subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
-    const dbSubData: any = {};
-    
-    if (subcontractorData.quoteId) dbSubData.quote_id = subcontractorData.quoteId;
-    if (subcontractorData.name) dbSubData.name = subcontractorData.name;
-    if (subcontractorData.description !== undefined) dbSubData.description = subcontractorData.description;
-    if (subcontractorData.cost !== undefined) dbSubData.cost = subcontractorData.cost;
-    if (subcontractorData.frequency) dbSubData.frequency = subcontractorData.frequency;
-    if (subcontractorData.email !== undefined) dbSubData.email = subcontractorData.email;
-    if (subcontractorData.phone !== undefined) dbSubData.phone = subcontractorData.phone;
-    if (subcontractorData.service !== undefined) dbSubData.service = subcontractorData.service;
-    if (subcontractorData.notes !== undefined) dbSubData.notes = subcontractorData.notes;
-    if (subcontractorData.services !== undefined) dbSubData.services = subcontractorData.services;
+  async updateSubcontractor(id: string, subcontractor: Partial<UnifiedSubcontractor>): Promise<UnifiedSubcontractor> {
+    const dbSubcontractor = {
+      name: subcontractor.name,
+      description: subcontractor.description,
+      cost: subcontractor.cost,
+      frequency: subcontractor.frequency,
+      email: subcontractor.email,
+      phone: subcontractor.phone,
+      service: subcontractor.service,
+      notes: subcontractor.notes,
+      services: subcontractor.services,
+      updated_at: new Date().toISOString()
+    };
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
-      .update(dbSubData)
-      .eq('id', subcontractorId)
+      .update(dbSubcontractor)
+      .eq('id', id)
       .select()
       .single();
     
     if (error) {
-      console.error('Error updating quote subcontractor:', error);
+      console.error('Error updating subcontractor:', error);
       throw error;
     }
     
@@ -120,30 +122,30 @@ export const quoteSubcontractorsApi = {
       id: data.id,
       quoteId: data.quote_id,
       name: data.name,
-      description: data.description,
-      cost: data.cost,
-      frequency: data.frequency,
+      description: data.description || '',
+      cost: data.cost || 0,
+      frequency: data.frequency || 'monthly',
       email: data.email || '',
       phone: data.phone || '',
       service: data.service || '',
       notes: data.notes || '',
       services: data.services || [],
-      customServices: '',
-      monthlyCost: 0,
-      isFlatRate: true
     };
   },
   
-  // Delete a subcontractor
-  async deleteSubcontractor(subcontractorId: string): Promise<void> {
+  async deleteSubcontractor(id: string): Promise<{ id: string }> {
     const { error } = await supabase
       .from('quote_subcontractors')
       .delete()
-      .eq('id', subcontractorId);
+      .eq('id', id);
     
     if (error) {
-      console.error('Error deleting quote subcontractor:', error);
+      console.error('Error deleting subcontractor:', error);
       throw error;
     }
+    
+    return { id };
   }
 };
+
+export default quoteSubcontractorsApi;

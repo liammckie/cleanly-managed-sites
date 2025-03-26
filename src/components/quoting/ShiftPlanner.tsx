@@ -14,7 +14,7 @@ import { ShiftWarnings } from './shift-planner/ShiftWarnings';
 import { ShiftTemplates } from './shift-planner/ShiftTemplates';
 import { WarningSection } from './shift-planner/WarningSection';
 import { Day } from '@/lib/award/types';
-import { adaptDay, adaptQuoteShift } from '@/lib/utils/typeAdapters';
+import { adaptDay, adaptQuoteShift, UnifiedDay } from '@/lib/utils/typeAdapters';
 
 // Custom function to detect broken shifts (multiple shifts in same day)
 const detectBrokenShifts = (shifts: QuoteShift[]): Record<string, number> => {
@@ -22,10 +22,10 @@ const detectBrokenShifts = (shifts: QuoteShift[]): Record<string, number> => {
   
   // Count shifts per day
   shifts.forEach(shift => {
-    if (!daysWithMultipleShifts[shift.day]) {
-      daysWithMultipleShifts[shift.day] = 1;
+    if (!daysWithMultipleShifts[shift.day as string]) {
+      daysWithMultipleShifts[shift.day as string] = 1;
     } else {
-      daysWithMultipleShifts[shift.day]++;
+      daysWithMultipleShifts[shift.day as string]++;
     }
   });
   
@@ -55,7 +55,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const initialShift: Partial<QuoteShift> = {
     id: uuidv4(),
     quoteId: quoteId || '',
-    day: adaptDay('monday'),
+    day: adaptDay('monday') as Day,
     startTime: '09:00',
     endTime: '17:00',
     breakDuration: 30,
