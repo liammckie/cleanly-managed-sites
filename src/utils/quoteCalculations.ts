@@ -1,130 +1,69 @@
 
-/**
- * Calculate the total cost for quotes
- */
-export function calculateTotalCosts(laborCost: number, subcontractorCost: number, suppliesCost: number = 0, equipmentCost: number = 0, overheadPercentage: number = 15) {
-  const overheadCost = (laborCost * overheadPercentage) / 100;
-  const totalCost = laborCost + subcontractorCost + suppliesCost + equipmentCost + overheadCost;
-  
+import { Quote, QuoteShift, Subcontractor } from '@/lib/types/award/types';
+
+export function calculateTotalCosts(quote: Quote): {
+  laborCost: number;
+  subcontractorCost: number;
+  overheadCost: number;
+  totalCost: number;
+  marginAmount: number;
+  totalPrice: number;
+} {
+  // Calculate labor cost
+  const laborCost = quote.shifts?.reduce((total, shift) => total + (shift.estimatedCost || 0), 0) || 0;
+
+  // Calculate subcontractor cost
+  const subcontractorCost = quote.subcontractors?.reduce((total, sub) => total + (sub.cost || 0), 0) || 0;
+
+  // Calculate supplies and equipment costs
+  const suppliesCost = quote.supplies_cost || quote.suppliesCost || 0;
+  const equipmentCost = quote.equipment_cost || quote.equipmentCost || 0;
+
+  // Calculate overhead amount
+  const directCosts = laborCost + subcontractorCost + suppliesCost + equipmentCost;
+  const overheadPercentage = quote.overhead_percentage || quote.overheadPercentage || 15;
+  const overheadCost = directCosts * (overheadPercentage / 100);
+
+  // Calculate total cost before margin
+  const totalCost = directCosts + overheadCost;
+
+  // Calculate margin amount
+  const marginPercentage = quote.margin_percentage || quote.marginPercentage || 20;
+  const marginAmount = totalCost * (marginPercentage / 100);
+
+  // Calculate total price
+  const totalPrice = totalCost + marginAmount;
+
   return {
     laborCost,
     subcontractorCost,
-    suppliesCost,
-    equipmentCost,
     overheadCost,
-    totalCost
-  };
-}
-
-/**
- * Calculate the totals including profit margin
- */
-export function calculateWithMargin(totalCost: number, marginPercentage: number = 20) {
-  const marginAmount = (totalCost * marginPercentage) / 100;
-  const totalPrice = totalCost + marginAmount;
-  
-  return {
+    totalCost,
     marginAmount,
     totalPrice
   };
 }
 
-/**
- * Helper function to convert frequency to annual factor
- */
-export function getAnnualFactor(frequency: string): number {
-  switch (frequency.toLowerCase()) {
+export function calculateQuoteFrequencyMultiplier(frequency: string): number {
+  switch (frequency?.toLowerCase()) {
     case 'daily':
-      return 260; // 5 days a week * 52 weeks
+      return 365 / 12;  // monthly equivalent of daily
     case 'weekly':
-      return 52;
+      return 4.33;  // weeks per month
     case 'fortnightly':
-      return 26;
+      return 2.17;  // fortnightly per month
     case 'monthly':
-      return 12;
+      return 1;
     case 'quarterly':
-      return 4;
-    case 'annually':
+      return 1/3;
     case 'yearly':
-      return 1;
+    case 'annually':
+      return 1/12;
     case 'once':
-    case 'one-time':
-      return 1;
+    case 'one_time':
+    case 'per_event':
+      return 1;  // one-time is treated as monthly for the purpose of calculations
     default:
-      return 1;
+      return 1;  // Default to monthly
   }
-}
-
-/**
- * Convert an amount to an annual amount based on frequency
- */
-export function getAnnualAmount(amount: number, frequency: string): number {
-  return amount * getAnnualFactor(frequency);
-}
-
-/**
- * Converting quote data between camelCase and snake_case
- */
-export function convertQuoteToSnakeCase(quote: any) {
-  return {
-    ...quote,
-    client_name: quote.clientName,
-    site_name: quote.siteName,
-    overhead_percentage: quote.overheadPercentage,
-    margin_percentage: quote.marginPercentage,
-    labor_cost: quote.laborCost,
-    total_price: quote.totalPrice,
-    subcontractor_cost: quote.subcontractorCost,
-    overhead_cost: quote.overheadCost,
-    total_cost: quote.totalCost,
-    margin_amount: quote.marginAmount,
-    supplies_cost: quote.suppliesCost,
-    equipment_cost: quote.equipmentCost,
-    quote_number: quote.quoteNumber,
-    valid_until: quote.validUntil,
-    client_id: quote.clientId,
-    site_id: quote.siteId,
-    client_contact: quote.clientContact,
-    client_email: quote.clientEmail,
-    client_phone: quote.clientPhone,
-    site_address: quote.siteAddress,
-    start_date: quote.startDate,
-    end_date: quote.endDate,
-    expiry_date: quote.expiryDate,
-    contract_length: quote.contractLength,
-    contract_length_unit: quote.contractLengthUnit,
-    created_by: quote.createdBy
-  };
-}
-
-export function convertQuoteToCamelCase(quote: any) {
-  return {
-    ...quote,
-    clientName: quote.client_name,
-    siteName: quote.site_name,
-    overheadPercentage: quote.overhead_percentage,
-    marginPercentage: quote.margin_percentage,
-    laborCost: quote.labor_cost,
-    totalPrice: quote.total_price,
-    subcontractorCost: quote.subcontractor_cost,
-    overheadCost: quote.overhead_cost,
-    totalCost: quote.total_cost,
-    marginAmount: quote.margin_amount,
-    suppliesCost: quote.supplies_cost,
-    equipmentCost: quote.equipment_cost,
-    quoteNumber: quote.quote_number,
-    validUntil: quote.valid_until,
-    clientId: quote.client_id,
-    siteId: quote.site_id,
-    clientContact: quote.client_contact,
-    clientEmail: quote.client_email,
-    clientPhone: quote.client_phone,
-    siteAddress: quote.site_address,
-    startDate: quote.start_date,
-    endDate: quote.end_date,
-    expiryDate: quote.expiry_date,
-    contractLength: quote.contract_length,
-    contractLengthUnit: quote.contract_length_unit,
-    createdBy: quote.created_by
-  };
 }

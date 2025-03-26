@@ -5,7 +5,7 @@ export interface Periodicals {
   upholstery: boolean;
   sanitizing: boolean;
   pressureWashing?: boolean;
-  notes: string;
+  notes?: string;
   nextGlazingDate?: string;
   nextCeilingsDate?: string;
   nextUpholsteryDate?: string;

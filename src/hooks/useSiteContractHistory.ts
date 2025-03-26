@@ -1,69 +1,59 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import { useState, useEffect } from 'react';
+import { fetchSiteContractHistory } from '@/lib/api/sites/siteContractHistoryApi';
+import { Json } from '@/types';
 
-export interface ContractHistoryEntry {
+export type ContractHistoryEntry = {
   id: string;
   site_id: string;
-  contract_details: any;
+  contract_details: Json;
+  notes: string;
+  created_by: string;
   created_at: string;
-  created_by?: string;
   version_number: number;
-  notes?: string;
-}
+};
 
 export function useSiteContractHistory(siteId: string) {
-  const [history, setHistory] = useState<ContractHistoryEntry[]>([]);
-  const [currentContractDetails, setCurrentContractDetails] = useState<any>({});
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['contractHistory', siteId],
+  const {
+    data,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['siteContractHistory', siteId],
     queryFn: async () => {
       if (!siteId) return { history: [], currentDetails: {} };
-
-      // Fetch contract history
-      const { data: historyData, error: historyError } = await supabase
-        .from('site_contract_history')
-        .select('*')
-        .eq('site_id', siteId)
-        .order('version_number', { ascending: false });
-
-      if (historyError) {
-        throw new Error(historyError.message);
+      
+      try {
+        const historyData = await fetchSiteContractHistory(siteId);
+        
+        // Get the current contract details from the latest history entry
+        const currentDetails = historyData.length > 0 
+          ? historyData[0].contract_details 
+          : {};
+          
+        return {
+          history: historyData,
+          currentDetails
+        };
+      } catch (err) {
+        console.error('Error fetching site contract history:', err);
+        return { history: [], currentDetails: {} };
       }
-
-      // Fetch current site contract details
-      const { data: siteData, error: siteError } = await supabase
-        .from('sites')
-        .select('contract_details')
-        .eq('id', siteId)
-        .single();
-
-      if (siteError && siteError.code !== 'PGRST116') {
-        throw new Error(siteError.message);
-      }
-
-      return { 
-        history: historyData || [], 
-        currentDetails: siteData?.contract_details || {} 
-      };
     },
     enabled: !!siteId,
     meta: {
-      onError: (err: Error) => {
-        toast.error(`Error loading contract history: ${err.message}`);
-      }
+      errorMessage: 'Failed to load contract history'
     }
   });
-
-  useEffect(() => {
-    if (data) {
-      setHistory(data.history);
-      setCurrentContractDetails(data.currentDetails);
-    }
-  }, [data]);
-
-  return { history, isLoading, error, currentContractDetails };
+  
+  return {
+    history: data?.history || [],
+    currentContractDetails: data?.currentDetails || {},
+    isLoading,
+    isError,
+    error
+  };
 }
+
+export default useSiteContractHistory;

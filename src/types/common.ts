@@ -14,7 +14,7 @@ export type Day =
 
 export type EmploymentType = "casual" | "part_time" | "full_time";
 
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6; // Added level 6
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // Added levels 7 and 8
 
 export type BillingFrequency = 
   | "weekly" 
@@ -29,6 +29,7 @@ export type SiteStatus =
   | "pending" 
   | "inactive" 
   | "on-hold"
+  | "on_hold"  // Added for compatibility
   | "lost";
 
 export type Frequency = 
@@ -38,7 +39,10 @@ export type Frequency =
   | "monthly" 
   | "quarterly" 
   | "yearly" 
-  | "once";
+  | "once"
+  | "annually"
+  | "one_time"
+  | "per_event";
 
 // JSON utility type
 export type JsonPrimitive = string | number | boolean | null;
