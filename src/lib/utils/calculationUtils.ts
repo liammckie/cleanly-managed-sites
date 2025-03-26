@@ -1,4 +1,3 @@
-
 import { QuoteShift } from '@/lib/types/award/types';
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
@@ -140,3 +139,8 @@ export function calculateTotalBillingAmounts(billingLines: BillingLine[]): {
 export function isSiteBillingOnHold(billingDetails: any): boolean {
   return billingDetails?.billingOnHold === true;
 }
+
+export const isLineActive = (line: BillingLine): boolean => {
+  // Replace on_hold with onHold
+  return line.isRecurring && !line.onHold;
+};

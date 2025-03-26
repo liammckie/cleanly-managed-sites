@@ -1,24 +1,36 @@
 
-import { BillingLine, BillingFrequency, BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { BillingFrequency, BillingLine } from '@/components/sites/forms/types/billingTypes';
 
-// Calculate weekly, monthly and annual amounts based on the billing frequency and amount
+interface BillingAmounts {
+  weeklyAmount: number;
+  monthlyAmount: number;
+  annualAmount: number;
+}
+
+/**
+ * Calculates weekly, monthly, and annual amounts based on a billing amount and frequency
+ */
 export const calculateBillingAmounts = (
   amount: number,
   frequency: BillingFrequency
-): { weeklyAmount: number; monthlyAmount: number; annualAmount: number } => {
+): BillingAmounts => {
   let weeklyAmount = 0;
   let monthlyAmount = 0;
   let annualAmount = 0;
 
+  if (amount === 0) {
+    return { weeklyAmount, monthlyAmount, annualAmount };
+  }
+
   switch (frequency) {
     case 'weekly':
       weeklyAmount = amount;
-      monthlyAmount = amount * 4.33; // Average weeks in a month
+      monthlyAmount = amount * 4.33;
       annualAmount = amount * 52;
       break;
     case 'fortnightly':
       weeklyAmount = amount / 2;
-      monthlyAmount = amount * 2.17; // Average fortnights in a month
+      monthlyAmount = amount * 2.165;
       annualAmount = amount * 26;
       break;
     case 'monthly':
@@ -48,56 +60,60 @@ export const calculateBillingAmounts = (
   }
 
   return {
-    weeklyAmount: Number(weeklyAmount.toFixed(2)),
-    monthlyAmount: Number(monthlyAmount.toFixed(2)),
-    annualAmount: Number(annualAmount.toFixed(2))
+    weeklyAmount: parseFloat(weeklyAmount.toFixed(2)),
+    monthlyAmount: parseFloat(monthlyAmount.toFixed(2)),
+    annualAmount: parseFloat(annualAmount.toFixed(2)),
   };
 };
 
-// Calculate total billing amounts from all billing lines
+/**
+ * Calculates the total billing amounts across all lines
+ */
 export const calculateTotalBillingAmounts = (
   billingLines: BillingLine[]
-): { totalWeeklyAmount: number; totalMonthlyAmount: number; totalAnnualAmount: number } => {
-  let totalWeeklyAmount = 0;
-  let totalMonthlyAmount = 0;
-  let totalAnnualAmount = 0;
+): BillingAmounts => {
+  return billingLines.reduce(
+    (totals, line) => {
+      // Skip non-recurring lines for totals
+      if (!line.isRecurring || line.onHold) {
+        return totals;
+      }
 
-  billingLines.forEach(line => {
-    if (line.isRecurring && !line.on_hold) {
       const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
         line.amount,
-        line.frequency
+        line.frequency as BillingFrequency
       );
-      
-      totalWeeklyAmount += weeklyAmount;
-      totalMonthlyAmount += monthlyAmount;
-      totalAnnualAmount += annualAmount;
-    }
-  });
 
+      return {
+        weeklyAmount: totals.weeklyAmount + weeklyAmount,
+        monthlyAmount: totals.monthlyAmount + monthlyAmount,
+        annualAmount: totals.annualAmount + annualAmount,
+      };
+    },
+    { weeklyAmount: 0, monthlyAmount: 0, annualAmount: 0 }
+  );
+};
+
+/**
+ * Creates a BillingLine object with default values
+ */
+export const createBillingLine = (description: string = '', amount: number = 0): BillingLine => {
   return {
-    totalWeeklyAmount: Number(totalWeeklyAmount.toFixed(2)),
-    totalMonthlyAmount: Number(totalMonthlyAmount.toFixed(2)),
-    totalAnnualAmount: Number(totalAnnualAmount.toFixed(2))
+    id: crypto.randomUUID(),
+    description,
+    amount,
+    frequency: 'monthly',
+    isRecurring: true,
+    onHold: false,
+    weeklyAmount: 0,
+    monthlyAmount: 0,
+    annualAmount: 0,
   };
 };
 
-// Check if a billing line is on hold
-export const isLineOnHold = (line: BillingLine): boolean => {
-  // Check for either on_hold or onHold property
-  return line.on_hold || !!line.onHold;
-};
-
-// Check if site billing is on hold
+/**
+ * Checks if a site's billing is on hold
+ */
 export const isSiteBillingOnHold = (billingOnHold?: boolean): boolean => {
   return !!billingOnHold;
-};
-
-// Format billing line for API
-export const formatBillingLineForAPI = (line: BillingLine): BillingLine => {
-  // Ensure on_hold property is set correctly for API
-  return {
-    ...line,
-    on_hold: isLineOnHold(line)
-  };
 };

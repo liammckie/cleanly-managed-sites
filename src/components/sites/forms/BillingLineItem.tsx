@@ -7,8 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
-import { BillingLine } from './types/billingTypes';
-import { BillingFrequency } from '@/types/common';
+import { BillingLine, BillingFrequency } from './types/billingTypes';
 
 interface BillingLineItemProps {
   line: BillingLine;
@@ -79,7 +78,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
         </Label>
         <Select
           value={line.frequency}
-          onValueChange={(value: BillingFrequency) => updateLine(line.id, 'frequency', value)}
+          onValueChange={(value) => updateLine(line.id, 'frequency', value)}
         >
           <SelectTrigger id={`frequency-${line.id}`}>
             <SelectValue placeholder="Select frequency" />
@@ -90,6 +89,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
             <SelectItem value="monthly">Monthly</SelectItem>
             <SelectItem value="quarterly">Quarterly</SelectItem>
             <SelectItem value="annually">Annually</SelectItem>
+            <SelectItem value="one-time">One-time</SelectItem>
           </SelectContent>
         </Select>
       </div>

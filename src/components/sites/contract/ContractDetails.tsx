@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, addMonths, differenceInDays } from 'date-fns';
 import { CalendarIcon, ClockIcon } from 'lucide-react';
+import { BadgeVariant } from '@/types/ui';
 
 interface ContractDetailsProps {
   contractDetails: any;
@@ -44,7 +45,7 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
   };
   
   // Calculate the badge status and style
-  const getBadgeVariant = () => {
+  const getBadgeVariant = (): BadgeVariant => {
     if (!endDate) return "secondary";
     
     const today = new Date();

@@ -1,15 +1,25 @@
 
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
-export const isLineOnHold = (line: BillingLine): boolean => {
-  // Check for either on_hold or onHold property
-  return line.on_hold || !!line.onHold;
+export const toggleLineOnHoldStatus = (line: BillingLine): BillingLine => {
+  if (!line) return line;
+  
+  const newLine = { ...line };
+  newLine.onHold = !newLine.onHold;
+  
+  return newLine;
 };
 
-export const formatBillingLineForAPI = (line: BillingLine): BillingLine => {
-  // Ensure on_hold property is set correctly for API
+export const createEmptyBillingLine = (): BillingLine => {
   return {
-    ...line,
-    on_hold: isLineOnHold(line)
+    id: crypto.randomUUID(),
+    description: '',
+    amount: 0,
+    frequency: 'monthly',
+    isRecurring: true,
+    onHold: false,
+    weeklyAmount: 0,
+    monthlyAmount: 0,
+    annualAmount: 0,
   };
 };

@@ -1,17 +1,15 @@
 
-import { JsonValue } from '@/types';
-
 export interface ContractTerm {
   id: string;
-  description: string;
-  details: string;
-  isActive: boolean;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
-  autoRenew?: boolean;
+  name: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+  autoRenew: boolean;
+  details?: string;
+  isActive?: boolean;
 }
 
 export interface ContractDetails {
@@ -25,31 +23,36 @@ export interface ContractDetails {
   noticeUnit: string;
   serviceFrequency: string;
   serviceDeliveryMethod: string;
-  terms?: ContractTerm[];
-  contractNumber?: string;
-  value?: number;
-  billingCycle?: string;
-  terminationPeriod?: string;
-  renewalTerms?: string;
+  contractType?: string;
   additionalContracts?: ContractDetails[];
-  contractType?: string;  // Added for additional contract support
-  notes?: string;        // Added for additional contract support
-  id?: string;           // Added for additional contract support
+  terms?: any[];
+  notes?: string;
+  contractNumber?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
 }
 
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  contract_details: JsonValue;
-  notes: string;
-  created_by: string;
   created_at: string;
+  created_by?: string;
+  notes?: string;
   version_number: number;
+  contract_details: any;
 }
 
 export interface ContractForecast {
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
+  id: string;
+  contractNumber: string;
+  clientName: string;
+  siteName: string;
+  startDate: string;
+  endDate: string;
+  value: number;
+  status: string;
+  contractType: string;
+  renewalDate?: string;
+  noticeDate?: string;
+  daysRemaining: number;
 }
