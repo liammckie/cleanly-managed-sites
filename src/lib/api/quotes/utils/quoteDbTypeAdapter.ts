@@ -35,7 +35,11 @@ export function toFrequency(frequency: string): Frequency {
 
 // Function to safely cast string to EmploymentType
 export function toEmploymentType(type: string): EmploymentType {
-  const validTypes: EmploymentType[] = ['casual', 'partTime', 'fullTime'];
+  const validTypes: EmploymentType[] = ['casual', 'part_time', 'full_time'];
+  
+  // Handle legacy values
+  if (type === 'partTime') return 'part_time';
+  if (type === 'fullTime') return 'full_time';
   
   return validTypes.includes(type as EmploymentType) 
     ? (type as EmploymentType) 

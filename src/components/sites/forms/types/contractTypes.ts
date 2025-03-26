@@ -2,62 +2,43 @@
 export interface ContractTerm {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   startDate: string;
   endDate: string;
   renewalTerms: string;
   terminationPeriod: string;
   autoRenew: boolean;
-  details?: string;
-  isActive?: boolean;
 }
 
 export interface ContractDetails {
   startDate: string;
   endDate: string;
   contractLength: number;
-  contractLengthUnit: string;
+  contractLengthUnit: 'days' | 'weeks' | 'months' | 'years';
   autoRenewal: boolean;
   renewalPeriod: number;
   renewalNotice: number;
   noticeUnit: string;
   serviceFrequency: string;
   serviceDeliveryMethod: string;
-  contractType?: string;
-  additionalContracts?: ContractDetails[];
-  terms?: any[];
-  notes?: string;
+  // Optional fields for additional contracts
   contractNumber?: string;
   renewalTerms?: string;
   terminationPeriod?: string;
-  // Additional fields
-  value?: number;
-  billingCycle?: string;
+  contractType?: string;
+  notes?: string;
+  terms?: ContractTerm[];
+  // For compatibility with existing DB-based interfaces
   id?: string;
-  autoRenew?: boolean;
+  additionalContracts?: ContractDetails[];
 }
 
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  created_at: string;
-  created_by?: string;
-  notes?: string;
-  version_number: number;
   contract_details: any;
-}
-
-export interface ContractForecast {
-  id: string;
-  contractNumber: string;
-  clientName: string;
-  siteName: string;
-  startDate: string;
-  endDate: string;
-  value: number;
-  status: string;
-  contractType: string;
-  renewalDate?: string;
-  noticeDate?: string;
-  daysRemaining: number;
+  version_number: number;
+  notes?: string;
+  created_by?: string;
+  created_at: string;
 }

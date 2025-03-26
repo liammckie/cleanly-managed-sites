@@ -16,9 +16,10 @@ export interface BillingLine {
 export interface BillingContact {
   id: string;
   name: string;
-  role: string;
-  email: string;
-  phone: string;
+  role?: string;
+  email?: string;
+  phone?: string;
+  isPrimary?: boolean;
 }
 
 export interface BillingAmounts {

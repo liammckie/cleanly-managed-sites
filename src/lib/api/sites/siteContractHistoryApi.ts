@@ -25,6 +25,7 @@ export const contractHistoryApi = {
     notes: string = 'Contract updated'
   ): Promise<void> {
     try {
+      // First get the highest version number for this site
       const { data: lastVersion, error: versionError } = await supabase
         .from('site_contract_history')
         .select('version_number')
@@ -39,6 +40,7 @@ export const contractHistoryApi = {
 
       const nextVersionNumber = lastVersion ? lastVersion.version_number + 1 : 1;
 
+      // Insert the new history entry with the calculated version number
       const { error } = await supabase
         .from('site_contract_history')
         .insert({

@@ -18,4 +18,6 @@ export interface BillingContact {
   position?: string; // Job title/role
   primary?: boolean;
   notes?: string;
+  role?: string; // Added for compatibility
+  isPrimary?: boolean; // Added for compatibility
 }

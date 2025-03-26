@@ -1,70 +1,54 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { 
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  FormDescription
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export function ContractExtensionFields() {
   const form = useFormContext();
-  const watchContractExtended = form.watch('contractExtended');
-  
+  const { watch } = form;
+  const contractExtended = watch('contractExtended');
+  const currentExpiryDate = watch('currentExpiryDate');
+
   return (
-    <div className="space-y-6">
+    <div className="mt-8 mb-6 border rounded-lg p-5 bg-white">
+      <h3 className="text-lg font-semibold mb-4">Contract Extension</h3>
+      
       <FormField
         control={form.control}
         name="contractExtended"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+          <FormItem className="flex flex-row items-center justify-between">
+            <div className="space-y-0.5">
+              <FormLabel>Extend Contract End Date</FormLabel>
+              <FormDescription>
+                Set a new expiry date for the contract with this variation
+              </FormDescription>
+            </div>
             <FormControl>
-              <Checkbox
+              <Switch
                 checked={field.value}
                 onCheckedChange={field.onChange}
               />
             </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>Contract Extended</FormLabel>
-              <FormDescription>
-                Has the contract been extended as part of this variation?
-              </FormDescription>
-            </div>
           </FormItem>
         )}
       />
       
-      {watchContractExtended && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md">
-          <FormField
-            control={form.control}
-            name="currentExpiryDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Current Expiry Date</FormLabel>
-                <Input
-                  value={field.value ? format(field.value, "PPP") : "Not set"}
-                  disabled
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      {contractExtended && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <FormItem className="flex flex-col">
+            <FormLabel>Current Expiry Date</FormLabel>
+            <div className="flex h-10 w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm text-muted-foreground">
+              {currentExpiryDate ? format(currentExpiryDate, 'PPP') : 'Not set'}
+            </div>
+          </FormItem>
           
           <FormField
             control={form.control}
@@ -85,7 +69,7 @@ export function ContractExtensionFields() {
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Pick a date</span>
+                          <span>Select a date</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -96,12 +80,11 @@ export function ContractExtensionFields() {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
                       initialFocus
-                      className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
-                <FormMessage />
               </FormItem>
             )}
           />
