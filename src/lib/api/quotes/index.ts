@@ -4,5 +4,5 @@ export * from './quotesApi';
 export * from './quoteShiftsApi';
 export * from './quoteSubcontractorsApi';
 
-// Export fetchQuote as an alias to getQuoteById
-export { getQuoteById as fetchQuote } from './quotesApi';
+// Export fetchQuoteById as an alias to getQuoteById
+export { fetchQuoteById as getQuoteById } from './quotesApi';

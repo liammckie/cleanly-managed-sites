@@ -1,3 +1,4 @@
+
 import { BillingFrequency } from '@/types/common';
 
 export interface ContractDetails {
@@ -16,6 +17,23 @@ export interface ContractDetails {
   contractTerms?: ContractTerm[];
   additionalServices?: string[];
   notes?: string;
+  // Additional properties needed for various components
+  terminationPeriod?: string;
+  renewalTerms?: string;
+  value?: number;
+  billingCycle?: string;
+  id?: string;
+  terms?: ContractTerm[];
+  status?: string;
+  type?: string;
+  reviewDate?: string;
+  noticePeriodDays?: number;
+  renewalNoticeDays?: number;
+  renewalLengthMonths?: number;
+  nextIncreaseDate?: string;
+  specialTerms?: string;
+  terminationClause?: string;
+  annualValue?: number;
 }
 
 export interface ContractTerm {
@@ -33,7 +51,7 @@ export interface ContractTerm {
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  contract_details: JsonValue;
+  contract_details: any; // Using 'any' instead of JsonValue
   notes?: string;
   created_at: string;
   created_by?: string;

@@ -3,12 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
-import { JsonValue } from '@/types/common';
 
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  contract_details: JsonValue;
+  contract_details: any;
   created_at: string;
   created_by?: string;
   version_number: number;
@@ -17,7 +16,7 @@ export interface ContractHistoryEntry {
 
 export function useSiteContractHistory(siteId: string) {
   const [history, setHistory] = useState<ContractHistoryEntry[]>([]);
-  const [currentContractDetails, setCurrentContractDetails] = useState<JsonValue>({});
+  const [currentContractDetails, setCurrentContractDetails] = useState<any>({});
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['contractHistory', siteId],
@@ -52,8 +51,10 @@ export function useSiteContractHistory(siteId: string) {
       };
     },
     enabled: !!siteId,
-    onError: (err: Error) => {
-      toast.error(`Error loading contract history: ${err.message}`);
+    meta: {
+      onError: (err: Error) => {
+        toast.error(`Error loading contract history: ${err.message}`);
+      }
     }
   });
 

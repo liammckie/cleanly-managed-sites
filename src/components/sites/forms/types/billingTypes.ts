@@ -1,13 +1,5 @@
 
-import { BillingFrequency } from '@/types/common';
-
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  role: string;
-}
+export type BillingFrequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
 export interface BillingLine {
   id: string;
@@ -21,9 +13,18 @@ export interface BillingLine {
   annualAmount?: number;
   holdStartDate?: string;
   holdEndDate?: string;
-  creditAmount?: string;
+  creditAmount?: number;
   creditDate?: string;
   creditReason?: string;
+}
+
+export interface BillingContact {
+  name: string;
+  role: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  isPrimary?: boolean;
 }
 
 export interface BillingDetails {
@@ -33,25 +34,19 @@ export interface BillingDetails {
   billingPostcode?: string;
   billingEmail?: string;
   contacts: BillingContact[];
-  rate: number;
-  billingFrequency: BillingFrequency;
-  billingDay: string;
-  billingTerms: string;
+  rate?: number;
+  billingFrequency?: BillingFrequency;
+  billingDay?: string;
+  billingTerms?: string;
   billingNotes?: string;
-  billingMethod: string;
+  billingMethod?: string;
   billingContact?: string;
   billingContactEmail?: string;
   billingContactPhone?: string;
   billingLines?: BillingLine[];
-  totalWeeklyAmount: number;
+  totalWeeklyAmount?: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
-  
-  // Additional billing properties required by components
-  billingOnHold?: boolean;
-  billingHoldStartDate?: string;
-  billingHoldEndDate?: string;
-  billingHoldReason?: string;
   paymentTerms?: string;
   invoiceMethod?: string;
   useSiteAddress?: boolean;
@@ -60,8 +55,23 @@ export interface BillingDetails {
   accountNumber?: string;
   taxId?: string;
   notes?: string;
-  
-  // Invoice properties
+  xeroContactId?: string;
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  annualContractorCost?: number;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorInvoiceFrequency?: string;
+  laborPlan?: any;
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string;
+  billingHoldEndDate?: string;
+  billingHoldReason?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
   invoiceFrequency?: string;
   invoiceDay?: string;
   invoiceEmail?: string;
@@ -70,23 +80,4 @@ export interface BillingDetails {
   invoiceCity?: string;
   invoiceState?: string;
   invoicePostalCode?: string;
-  
-  // Revenue properties
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  
-  // Service delivery properties
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
-  annualContractorCost?: number;
-  laborPlan?: any;
-  serviceType?: string;
-  deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  contractorInvoiceFrequency?: string;
-  
-  // Xero integration
-  xeroContactId?: string;
 }
