@@ -14,9 +14,9 @@ import { ContractSummaryData } from './types';
  * Displays summary metrics, charts, and upcoming expirations
  */
 export function ContractDashboard() {
-  const { contractData, groupedContracts, isLoading, metrics } = useContracts();
+  const { contractData = [], groupedContracts, isLoading, metrics } = useContracts();
   const { data: forecastData } = useContractForecast();
-  const { data: sitesData } = useSites();
+  const { data: sitesData = [] } = useSites();
   
   // Convert summary data to the expected format with default values for all required properties
   const summaryData: ContractSummaryData = {
@@ -41,7 +41,7 @@ export function ContractDashboard() {
     <div className="space-y-6">
       {/* Summary metrics section */}
       <ContractSummarySection 
-        contractData={contractData || []}
+        contractData={contractData}
         isLoading={isLoading} 
         summaryData={summaryData}
       />
@@ -49,14 +49,14 @@ export function ContractDashboard() {
       {/* Charts for visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContractCharts 
-          contractData={contractData || []}
+          contractData={contractData}
           groupedContracts={groupedContracts}
           isLoading={isLoading}
         />
         
         {/* Contract expirations list */}
         <ContractExpiryList 
-          sites={sitesData || []} 
+          sites={sitesData} 
           isLoading={isLoading} 
         />
       </div>

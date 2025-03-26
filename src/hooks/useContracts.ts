@@ -62,7 +62,7 @@ export function useContracts() {
     const today = new Date();
     contractData.forEach(contract => {
       const contractDetails = asJsonObject(contract.contract_details, { endDate: '' });
-      const endDateStr = jsonToString(contractDetails.endDate);
+      const endDateStr = contractDetails.endDate as string | undefined;
       
       if (endDateStr && new Date(endDateStr) < today) {
         groupedContracts.expired.push(contract);
@@ -97,7 +97,7 @@ export function useContracts() {
   const expiringSoonCount = groupedContracts.expiringSoon.length;
 
   return {
-    contractData: contractData || [],
+    contractData,
     isLoading,
     isError: !!error,
     error,

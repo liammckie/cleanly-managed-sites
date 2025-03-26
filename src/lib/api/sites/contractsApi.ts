@@ -1,59 +1,93 @@
-// Temporary file to provide the missing imports
-// This will be replaced with proper implementation later
 
-import { SiteRecord } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
+import { ContractData } from '@/lib/types/contracts';
+import { asJsonObject } from '@/lib/utils/json';
 
-// These are temporary implementations to fix the TypeScript errors
-// They should be replaced with proper implementations
-export const sitesCore = {
-  getSite: async (id: string): Promise<SiteRecord | null> => {
-    return null;
+export const contractsApi = {
+  // Get all contracts
+  getContracts: async (): Promise<ContractData[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('sites')
+        .select(`
+          id,
+          name as site_name,
+          client_id,
+          client_name,
+          monthly_revenue,
+          contract_details,
+          status
+        `)
+        .order('name');
+
+      if (error) throw error;
+
+      // Transform the data to the expected format with defaults
+      return (data || []).map(site => {
+        return {
+          id: site.id,
+          site_id: site.id,
+          site_name: site.site_name || '',
+          client_id: site.client_id || '',
+          client_name: site.client_name || '',
+          monthly_revenue: site.monthly_revenue || 0,
+          contract_details: site.contract_details || {},
+          status: site.status || 'inactive',
+          is_primary: true // Default to primary
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching contracts:', error);
+      return [];
+    }
   },
-  getSites: async (): Promise<SiteRecord[]> => {
-    return [];
-  }
-};
 
-export const sitesCreate = {
-  createSite: async (data: any): Promise<SiteRecord> => {
-    throw new Error('Not implemented yet');
-  }
-};
+  // Get contracts expiring within a specific timeframe
+  getExpiringContracts: async (days: number = 90): Promise<ContractData[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('sites')
+        .select(`
+          id,
+          name as site_name,
+          client_id,
+          client_name,
+          monthly_revenue,
+          contract_details,
+          status
+        `);
 
-export const sitesUpdate = {
-  updateSite: async (id: string, data: any): Promise<SiteRecord> => {
-    throw new Error('Not implemented yet');
-  }
-};
+      if (error) throw error;
 
-export const siteContactsApi = {
-  addContact: async (siteId: string, contact: any): Promise<any> => {
-    throw new Error('Not implemented yet');
-  },
-  updateContact: async (contactId: string, data: any): Promise<any> => {
-    throw new Error('Not implemented yet');
-  },
-  deleteContact: async (contactId: string): Promise<void> => {
-    throw new Error('Not implemented yet');
-  }
-};
+      const now = new Date();
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + days);
 
-export const additionalContractsApi = {
-  addContract: async (siteId: string, contract: any): Promise<any> => {
-    throw new Error('Not implemented yet');
-  },
-  updateContract: async (contractId: string, data: any): Promise<any> => {
-    throw new Error('Not implemented yet');
-  },
-  deleteContract: async (contractId: string): Promise<void> => {
-    throw new Error('Not implemented yet');
+      // Filter contracts expiring in the specified timeframe
+      return (data || [])
+        .filter(site => {
+          const contractDetails = asJsonObject(site.contract_details, {});
+          const endDateStr = contractDetails.endDate as string | undefined;
+          
+          if (!endDateStr) return false;
+          
+          const endDate = new Date(endDateStr);
+          return endDate >= now && endDate <= futureDate;
+        })
+        .map(site => ({
+          id: site.id,
+          site_id: site.id,
+          site_name: site.site_name || '',
+          client_id: site.client_id || '',
+          client_name: site.client_name || '',
+          monthly_revenue: site.monthly_revenue || 0,
+          contract_details: site.contract_details || {},
+          status: site.status || 'inactive',
+          is_primary: true
+        }));
+    } catch (error) {
+      console.error('Error fetching expiring contracts:', error);
+      return [];
+    }
   }
-};
-
-export const sitesApi = {
-  getSite: sitesCore.getSite,
-  getSites: sitesCore.getSites,
-  createSite: sitesCreate.createSite,
-  updateSite: sitesUpdate.updateSite,
-  // Add other methods as needed
 };

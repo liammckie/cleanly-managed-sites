@@ -57,11 +57,11 @@ export interface ContractSummaryData {
   totalValue: number;
   
   // Financial metrics
-  totalRevenue?: number;
-  totalCost?: number;
-  totalProfit?: number;
-  avgContractValue?: number;
-  profitMargin?: number;
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  avgContractValue: number;
+  profitMargin: number;
 }
 
 // Define contract forecast interface

@@ -16,6 +16,10 @@ export function ContractsTab({ site }: ContractsTabProps) {
     renewalTerms: '' 
   });
   
+  // Access properties safely with optional chaining and defaults
+  const terminationPeriod = contractDetails.terminationPeriod || 'Not specified';
+  const renewalTerms = contractDetails.renewalTerms || 'Not specified';
+  
   return (
     <div className="glass-card p-6">
       <h3 className="text-lg font-medium mb-4">Contract Details</h3>
@@ -39,12 +43,12 @@ export function ContractsTab({ site }: ContractsTabProps) {
           
           <div>
             <p className="text-sm text-muted-foreground">Termination Period</p>
-            <p className="font-medium">{jsonToString(contractDetails.terminationPeriod) || 'Not specified'}</p>
+            <p className="font-medium">{jsonToString(terminationPeriod)}</p>
           </div>
           
           <div className="md:col-span-2">
             <p className="text-sm text-muted-foreground">Renewal Terms</p>
-            <p className="font-medium">{jsonToString(contractDetails.renewalTerms) || 'Not specified'}</p>
+            <p className="font-medium">{jsonToString(renewalTerms)}</p>
           </div>
         </div>
       </div>

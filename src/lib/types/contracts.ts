@@ -35,16 +35,28 @@ export interface ContractForecastItem {
  * Summary data for contract expirations and values
  */
 export interface ContractSummaryData {
+  // Expiration counts
   expiringThisMonth: number;
   expiringNext3Months: number;
   expiringNext6Months: number;
   expiringThisYear: number;
+  
+  // Expiration values
   valueExpiringThisMonth: number;
   valueExpiringNext3Months: number;
   valueExpiringNext6Months: number;
   valueExpiringThisYear: number;
+  
+  // Overall contract data
   totalContracts: number;
   totalValue: number;
+  
+  // Financial metrics
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  avgContractValue: number;
+  profitMargin: number;
 }
 
 /**

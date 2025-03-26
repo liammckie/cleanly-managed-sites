@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SiteRecord } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
@@ -32,7 +33,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
 
     if (!endDate) return false;
 
-    const expiryDate = parseISO(endDate);
+    const expiryDate = parseISO(endDate as string);
     const now = new Date();
     const timeDiff = expiryDate.getTime() - now.getTime();
     const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
@@ -45,8 +46,8 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
     const contractDetailsA = asJsonObject(a.contract_details || {}, {});
     const contractDetailsB = asJsonObject(b.contract_details || {}, {});
 
-    const endDateA = contractDetailsA.endDate;
-    const endDateB = contractDetailsB.endDate;
+    const endDateA = contractDetailsA.endDate as string | undefined;
+    const endDateB = contractDetailsB.endDate as string | undefined;
 
     if (!endDateA || !endDateB) return 0;
 
@@ -66,7 +67,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
           <div className="p-4">
             {expiringSites.map(site => {
               const contractDetails = asJsonObject(site.contract_details || {}, {});
-              const endDate = contractDetails.endDate;
+              const endDate = contractDetails.endDate as string | undefined;
 
               if (!endDate) return null;
 
@@ -76,7 +77,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
               const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
               // Ensure contractNumber is safely accessed
-              const contractNumber = asJsonObject(site.contract_details || {}, {}).contractNumber || 'N/A';
+              const contractNumber = (contractDetails.contractNumber as string) || 'N/A';
 
               return (
                 <div key={site.id} className="mb-4 p-4 border rounded-md">
