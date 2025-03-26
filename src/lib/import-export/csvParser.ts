@@ -1,247 +1,111 @@
-
 import Papa from 'papaparse';
-import { ClientRecord, SiteRecord } from '../types';
+import { ClientRecord, SiteRecord } from '@/lib/types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { ContractorRecord, ParsedImportData } from './types';
+import { DataType } from './types';
+import { toast } from 'sonner';
 
-// Parse CSV file to data array
-export const parseCSV = async (file: File): Promise<any[]> => {
+export async function parseCSV(file: File): Promise<any[]> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      dynamicTyping: true,
       complete: (results) => {
-        resolve(results.data);
+        if (results.errors.length > 0) {
+          console.error('CSV parsing errors:', results.errors);
+          reject(new Error(`Error parsing CSV: ${results.errors[0].message}`));
+        } else {
+          resolve(results.data);
+        }
       },
       error: (error) => {
+        console.error('CSV parsing error:', error);
         reject(error);
-      },
+      }
     });
   });
-};
+}
 
-// Convert CSV data to client format
-export const convertCSVToClientFormat = (csvData: any[]): Partial<ClientRecord>[] => {
-  return csvData.map(row => ({
-    name: row.name || '',
-    contact_name: row.contact_name || '',
-    email: row.email || '',
-    phone: row.phone || '',
-    address: row.address || '',
-    city: row.city || '',
-    state: row.state || '',
-    postcode: row.postcode || '',
-    status: row.status || 'active',
-    notes: row.notes || '',
-    custom_id: row.custom_id || ''
-  }));
-};
-
-// Convert CSV data to site format
-export const convertCSVToSiteFormat = (csvData: any[]): Partial<SiteRecord>[] => {
-  return csvData.map(row => ({
-    name: row.name || '',
-    address: row.address || '',
-    city: row.city || '',
-    state: row.state || '',
-    postcode: row.postcode || '',
-    status: row.status || 'active',
-    representative: row.representative || '',
-    phone: row.phone || '',
-    email: row.email || '',
-    client_id: row.client_id || '',
-    custom_id: row.custom_id || '',
-    monthly_cost: row.monthly_cost ? parseFloat(row.monthly_cost) : undefined,
-    monthly_revenue: row.monthly_revenue ? parseFloat(row.monthly_revenue) : undefined,
-    security_details: {},
-    job_specifications: {},
-    periodicals: {},
-    replenishables: {},
-    contract_details: {},
-    billing_details: {},
-    subcontractors: []
-  }));
-};
-
-// Convert CSV data to contract format
-export const convertCSVToContractFormat = (csvData: any[]): Partial<ContractHistoryEntry>[] => {
-  return csvData.map(row => ({
-    site_id: row.site_id || '',
-    version_number: Number(row.version_number) || 0,
-    notes: row.contract_notes || '',
-    contract_details: {
-      startDate: row.start_date || '',
-      endDate: row.end_date || '',
-      contractNumber: row.contract_number || '',
-      renewalTerms: row.renewal_terms || '',
-      terminationPeriod: row.termination_period || '',
-      terms: []
-    }
-  }));
-};
-
-// Convert CSV data to contractor format
-export const convertCSVToContractorFormat = (csvData: any[]): Partial<ContractorRecord>[] => {
-  return csvData.map(row => ({
-    business_name: row.business_name || '',
-    contact_name: row.contact_name || '',
-    email: row.email || '',
-    phone: row.phone || '',
-    address: row.address || '',
-    city: row.city || '',
-    state: row.state || '',
-    postcode: row.postcode || '',
-    status: row.status || 'active',
-    notes: row.notes || '',
-    custom_id: row.custom_id || '',
-    services: row.services ? (
-      typeof row.services === 'string' 
-        ? row.services.split(',').map((s: string) => s.trim())
-        : row.services
-    ) : undefined
-  }));
-};
-
-// Parse unified import CSV data
-export const parseUnifiedImport = async (
-  csvData: any[], 
-  options: { mode: 'full' | 'incremental' } = { mode: 'incremental' }
-): Promise<ParsedImportData> => {
-  const clients: any[] = [];
-  const sites: any[] = [];
-  const contracts: any[] = [];
-  const contractors: any[] = [];
-  
-  console.log('Parsing unified import with', csvData.length, 'rows');
-
-  csvData.forEach((row, index) => {
-    if (!row.record_type) {
-      console.warn(`Row ${index + 1} missing record_type, skipping`);
-      return;
-    }
-
-    switch (row.record_type.toLowerCase()) {
-      case 'client': {
-        // For client records, map fields directly
-        const client = {
-          name: row.name || '',
-          contact_name: row.contact_name || '',
-          email: row.email || '',
-          phone: row.phone || '',
-          address: row.address || '',
-          city: row.city || '',
-          state: row.state || '',
-          postcode: row.postcode || '',
-          status: row.status || 'active',
-          notes: row.notes || '',
-          custom_id: row.custom_id || '',
-          id: row.id || undefined,
-          action: row.action || 'create'
-        };
-        
-        if (client.name && client.contact_name) {
-          clients.push(client);
-          console.log(`Added client: ${client.name}`);
-        } else {
-          console.warn(`Row ${index + 1}: Client missing required fields (name, contact_name), skipping`);
-        }
-        break;
+export function parseCSVForType(
+  file: File, 
+  type: DataType
+): Promise<ClientRecord[] | SiteRecord[] | ContractHistoryEntry[] | any[]> {
+  return parseCSV(file)
+    .then(data => {
+      switch (type) {
+        case 'clients':
+          return transformToClients(data);
+        case 'sites':
+          return transformToSites(data);
+        case 'contracts':
+          return transformToContracts(data);
+        case 'unified':
+          return data; // No transformation needed for unified import
+        default:
+          throw new Error(`Unknown data type: ${type}`);
       }
-      
-      case 'site': {
-        // For site records, map prefixed fields to the correct properties
-        const site = {
-          // If site_name exists, use it, otherwise fall back to name
-          name: row.site_name || row.name || '',
-          address: row.site_address || row.address || '',
-          city: row.site_city || row.city || '',
-          state: row.site_state || row.state || '',
-          postcode: row.site_postcode || row.postcode || '',
-          status: row.site_status || row.status || 'active',
-          representative: row.representative || '',
-          phone: row.site_phone || row.phone || '',
-          email: row.site_email || row.email || '',
-          client_id: row.client_id || '',
-          custom_id: row.custom_id || '',
-          monthly_cost: row.monthly_cost ? parseFloat(row.monthly_cost) : undefined,
-          monthly_revenue: row.monthly_revenue ? parseFloat(row.monthly_revenue) : undefined,
-          id: row.id || undefined,
-          action: row.action || 'create'
-        };
-        
-        if (site.name && site.address && site.client_id) {
-          sites.push(site);
-          console.log(`Added site: ${site.name}`);
-        } else {
-          console.warn(`Row ${index + 1}: Site missing required fields (name, address, client_id), skipping`);
-        }
-        break;
-      }
-      
-      case 'contract': {
-        // For contract records, extract contract-specific fields
-        const contract = {
-          site_id: row.site_id || '',
-          notes: row.contract_notes || '',
-          version_number: Number(row.version_number) || 0,
-          contract_details: {
-            startDate: row.start_date || '',
-            endDate: row.end_date || '',
-            contractNumber: row.contract_number || '',
-            renewalTerms: row.renewal_terms || '',
-            terminationPeriod: row.termination_period || '',
-            terms: []
-          },
-          id: row.id || undefined,
-          action: row.action || 'create'
-        };
-        
-        if (contract.site_id) {
-          contracts.push(contract);
-          console.log(`Added contract for site: ${contract.site_id}`);
-        } else {
-          console.warn(`Row ${index + 1}: Contract missing required field (site_id), skipping`);
-        }
-        break;
-      }
-      
-      case 'contractor': {
-        // For contractor records, map fields directly
-        const contractor = {
-          business_name: row.business_name || '',
-          contact_name: row.contact_name || '',
-          email: row.email || '',
-          phone: row.phone || '',
-          address: row.address || '',
-          city: row.city || '',
-          state: row.state || '',
-          postcode: row.postcode || '',
-          status: row.status || 'active',
-          notes: row.notes || '',
-          custom_id: row.custom_id || '',
-          services: row.services ? (
-            typeof row.services === 'string' 
-              ? row.services.split(',').map((s: string) => s.trim())
-              : row.services
-          ) : undefined,
-          id: row.id || undefined,
-          action: row.action || 'create'
-        };
-        
-        if (contractor.business_name && contractor.contact_name) {
-          contractors.push(contractor);
-          console.log(`Added contractor: ${contractor.business_name}`);
-        } else {
-          console.warn(`Row ${index + 1}: Contractor missing required fields (business_name, contact_name), skipping`);
-        }
-        break;
-      }
-      
-      default:
-        console.warn(`Row ${index + 1}: Unknown record_type: ${row.record_type}, skipping`);
-    }
+    })
+    .catch(error => {
+      toast.error(`Error parsing CSV: ${error.message}`);
+      throw error;
+    });
+}
+
+function transformToClients(data: any[]): ClientRecord[] {
+  return data.map(row => {
+    // Basic client record transformation
+    return {
+      id: row.id,
+      name: row.name || '',
+      email: row.email || '',
+      phone: row.phone || '',
+      address: row.address || '',
+      city: row.city || '',
+      state: row.state || '',
+      postcode: row.postcode || '',
+      notes: row.notes || '',
+      contact_name: row.contact_name || '',
+      status: row.status || 'active',
+      custom_id: row.custom_id || '',
+      created_at: row.created_at || new Date().toISOString(),
+      updated_at: row.updated_at || new Date().toISOString(),
+      user_id: row.user_id || '',
+      xero_contact_id: row.xero_contact_id || ''
+    } as ClientRecord;
   });
+}
 
-  console.log(`Parsed: ${clients.length} clients, ${sites.length} sites, ${contracts.length} contracts, ${contractors.length} contractors`);
-  return { clients, sites, contracts, contractors };
-};
+function transformToSites(data: any[]): SiteRecord[] {
+  return data.map(row => {
+    // Basic site record transformation
+    return {
+      id: row.id,
+      name: row.name || '',
+      address: row.address || '',
+      city: row.city || '',
+      state: row.state || '',
+      postcode: row.postcode || '',
+      email: row.email || '',
+      phone: row.phone || '',
+      client_id: row.client_id || '',
+      status: row.status || 'active',
+      // ... other fields
+    } as unknown as SiteRecord;
+  });
+}
+
+function transformToContracts(data: any[]): ContractHistoryEntry[] {
+  return data.map(row => {
+    return {
+      id: row.id || '',
+      site_id: row.site_id || '',
+      contract_details: typeof row.contract_details === 'string' 
+        ? JSON.parse(row.contract_details) 
+        : row.contract_details || {},
+      notes: row.notes || '',
+      created_by: row.created_by || '',
+      created_at: row.created_at || new Date().toISOString(),
+      version_number: Number(row.version_number) || 0
+    } as ContractHistoryEntry;
+  });
+}

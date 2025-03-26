@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
-import { SiteDetailView } from '@/components/sites/SiteDetailView';
+import SiteDetailView from '@/components/sites/SiteDetailView';
 import { useSiteDetails } from '@/hooks/useSites';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -31,7 +31,7 @@ const SiteDetail = () => {
                 <p>{(error as any)?.message || 'Unable to load site details'}</p>
               </div>
             ) : site ? (
-              <SiteDetailView site={site} />
+              <SiteDetailView site={site} isLoading={isLoading} refetchSite={() => {}} />
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>

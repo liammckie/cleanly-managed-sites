@@ -15,7 +15,10 @@ export function useContractHistory(siteId: string | undefined) {
         throw error;
       }
     },
-    enabled: !!siteId
+    enabled: !!siteId,
+    meta: {
+      errorMessage: 'Failed to load contract history'
+    }
   });
 
   return {
@@ -38,7 +41,10 @@ export function useContractVersion(versionId: string | undefined) {
         throw error;
       }
     },
-    enabled: !!versionId
+    enabled: !!versionId,
+    meta: {
+      errorMessage: 'Failed to load contract version'
+    }
   });
 
   return {

@@ -7,6 +7,8 @@ export interface ContractTerm {
   details: string;
   isActive: boolean;
   name?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ContractDetails {
@@ -27,4 +29,24 @@ export interface ContractDetails {
   terminationPeriod?: string;
   renewalTerms?: string;
   additionalContracts?: ContractDetails[];
+  contractType?: string;  // Added for additional contract support
+  notes?: string;        // Added for additional contract support
+  id?: string;           // Added for additional contract support
+}
+
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: JsonValue;
+  notes: string;
+  created_by: string;
+  created_at: string;
+  version_number: number;
+}
+
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
 }

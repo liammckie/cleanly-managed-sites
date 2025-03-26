@@ -1,75 +1,61 @@
 
-import { ClientRecord, SiteRecord } from '../types';
+import { ClientRecord, SiteRecord } from '@/lib/types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
-export type ImportMode = 'full' | 'incremental';
+export type ImportFormat = 'json' | 'csv' | 'xlsx';
+export type ExportFormat = 'json' | 'csv' | 'xlsx';
+export type DataType = 'clients' | 'sites' | 'contracts' | 'unified';
 
-export type ImportOptions = {
-  mode: ImportMode;
-};
-
-export type ParsedImportData = {
-  clients: any[];
-  sites: any[];
-  contracts: any[];
-  contractors?: any[];
-  invoices?: any[];
-};
-
-export interface ContractorRecord {
-  id?: string;
-  business_name: string;
-  contact_name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postcode?: string;
-  services?: string[];
-  status: 'active' | 'inactive' | 'pending';
-  notes?: string;
-  custom_id?: string;
-}
-
-export interface InvoiceRecord {
-  id?: string;
-  client_id: string;
-  site_id?: string;
-  work_order_id?: string;
-  invoice_number?: string;
-  xero_invoice_id?: string;
-  invoice_date: string;
-  due_date?: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
-  amount: number;
-  gst_inclusive: boolean;
-  xero_synced_at?: string;
-  sync_status?: string;
-  notes?: string;
-  lineItems?: InvoiceLineItemRecord[];
-}
-
-export interface InvoiceLineItemRecord {
-  id?: string;
-  invoice_id: string;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  tax_type?: string;
-  xero_account_code?: string;
-}
-
-export type ValidationMessage = {
+export interface ValidationMessage {
   row: number;
   field: string;
   message: string;
-  value: any;
-};
+  value?: any;
+}
 
-export type ValidationResult = {
+export interface ValidationResult {
   isValid: boolean;
   errors: ValidationMessage[];
   warnings: ValidationMessage[];
   data: any[];
-};
+}
+
+export interface ImportOptions {
+  format: ImportFormat;
+  type: DataType;
+  validateOnly?: boolean;
+  skipValidation?: boolean;
+}
+
+export interface ExportOptions {
+  format: ExportFormat;
+  type: DataType;
+  filename?: string;
+}
+
+export interface ImportResult {
+  success: boolean;
+  type: DataType;
+  count: number;
+  errors?: ValidationMessage[];
+  warnings?: ValidationMessage[];
+}
+
+export interface TemplateField {
+  name: string;
+  description: string;
+  required: boolean;
+  example: string;
+}
+
+export interface CsvTemplate {
+  headers: string[];
+  fields: TemplateField[];
+  example: Record<string, string>[];
+}
+
+export interface ImportData {
+  clients?: ClientRecord[];
+  sites?: SiteRecord[];
+  contracts?: ContractHistoryEntry[];
+}

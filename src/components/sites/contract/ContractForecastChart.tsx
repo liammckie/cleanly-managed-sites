@@ -1,67 +1,106 @@
 
 import React from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ContractForecast } from '../forms/types/contractTypes';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface ContractForecastChartProps {
-  forecast: ContractForecast[];
-  isLoading: boolean;
+  data: ContractForecast[];
+  title?: string;
 }
 
-export function ContractForecastChart({ forecast, isLoading }: ContractForecastChartProps) {
-  if (isLoading) {
+export const ContractForecastChart: React.FC<ContractForecastChartProps> = ({ 
+  data,
+  title = "Contract Revenue Forecast" 
+}) => {
+  if (!data || data.length === 0) {
     return (
-      <Card className="w-full h-96">
+      <Card>
         <CardHeader>
-          <CardTitle>Contract Revenue Forecast</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-72">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <CardContent className="h-80 flex items-center justify-center">
+          <p className="text-muted-foreground">No forecast data available</p>
         </CardContent>
       </Card>
     );
   }
 
-  const chartConfig = {
-    revenue: { label: 'Revenue', theme: { light: '#4ade80', dark: '#4ade80' } },
-    cost: { label: 'Cost', theme: { light: '#f87171', dark: '#f87171' } },
-    profit: { label: 'Profit', theme: { light: '#60a5fa', dark: '#60a5fa' } },
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>12-Month Contract Revenue Forecast</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-[400px]">
-        <ChartContainer config={chartConfig} className="h-full">
-          <BarChart
-            data={forecast}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      <CardContent className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={data}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" />
+            <defs>
+              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1} />
+              </linearGradient>
+              <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.1} />
+              </linearGradient>
+              <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
             <XAxis dataKey="month" />
-            <YAxis />
-            <ChartTooltip
-              content={({ active, payload, label }) => (
-                <ChartTooltipContent
-                  active={active}
-                  payload={payload}
-                  label={label}
-                  labelKey="month"
-                  labelFormatter={(value) => `${value}`}
-                />
-              )}
+            <YAxis tickFormatter={formatCurrency} />
+            <Tooltip 
+              formatter={(value: number) => formatCurrency(value)}
+              contentStyle={{
+                backgroundColor: '#1f2937',
+                borderColor: '#374151',
+                borderRadius: '4px',
+                color: '#f9fafb'
+              }}
             />
-            <Legend />
-            <Bar dataKey="revenue" name="Revenue" fill="var(--color-revenue)" />
-            <Bar dataKey="cost" name="Cost" fill="var(--color-cost)" />
-            <Bar dataKey="profit" name="Profit" fill="var(--color-profit)" />
-          </BarChart>
-        </ChartContainer>
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              name="Revenue"
+              stroke="#0ea5e9"
+              fillOpacity={1}
+              fill="url(#colorRevenue)"
+            />
+            <Area
+              type="monotone"
+              dataKey="cost"
+              name="Cost"
+              stroke="#f43f5e"
+              fillOpacity={1}
+              fill="url(#colorCost)"
+            />
+            <Area
+              type="monotone"
+              dataKey="profit"
+              name="Profit"
+              stroke="#10b981"
+              fillOpacity={1}
+              fill="url(#colorProfit)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default ContractForecastChart;

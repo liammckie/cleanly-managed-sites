@@ -1,199 +1,92 @@
 
 import { saveAs } from 'file-saver';
-import { ClientRecord, SiteRecord } from '../types';
+import { ClientRecord, SiteRecord } from '@/lib/types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import Papa from 'papaparse';
+import { ExportFormat, ExportOptions, DataType } from './types';
+import { generateCSV } from './csvGenerator';
 
-// Function to export data to JSON file
-export const exportToJson = (data: any, fileName: string): void => {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  saveAs(blob, fileName);
-};
+export async function exportData(
+  data: any[],
+  options: ExportOptions
+): Promise<boolean> {
+  try {
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = options.filename || `${options.type}_export_${timestamp}`;
 
-// Export to CSV file
-export const exportToCSV = (data: any[], fileName: string): void => {
-  const csv = Papa.unparse(data);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  saveAs(blob, `${fileName}-${new Date().toISOString().slice(0, 10)}.csv`);
-};
+    switch (options.format) {
+      case 'json':
+        return exportJson(data, `${filename}.json`);
+      case 'csv':
+        return exportCsv(data, `${filename}.csv`, options.type);
+      default:
+        throw new Error(`Export format '${options.format}' not supported`);
+    }
+  } catch (error) {
+    console.error(`Error exporting ${options.type}:`, error);
+    return false;
+  }
+}
 
-// Export clients to JSON file
-export const exportClients = (clients: ClientRecord[]): void => {
-  exportToJson(clients, `clients-export-${new Date().toISOString().slice(0, 10)}.json`);
-};
+export async function exportJson(data: any[], filename: string): Promise<boolean> {
+  try {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    saveAs(blob, filename);
+    return true;
+  } catch (error) {
+    console.error('Error exporting JSON:', error);
+    return false;
+  }
+}
 
-// Export sites to JSON file
-export const exportSites = (sites: SiteRecord[]): void => {
-  exportToJson(sites, `sites-export-${new Date().toISOString().slice(0, 10)}.json`);
-};
+export async function exportCsv(
+  data: any[], 
+  filename: string, 
+  type: DataType
+): Promise<boolean> {
+  try {
+    const csv = generateCSV(data, type);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    saveAs(blob, filename);
+    return true;
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    return false;
+  }
+}
 
-// Export contracts to JSON file
-export const exportContracts = (contracts: ContractHistoryEntry[]): void => {
-  exportToJson(contracts, `contracts-export-${new Date().toISOString().slice(0, 10)}.json`);
-};
+export function exportClients(clients: ClientRecord[], format: ExportFormat = 'json'): Promise<boolean> {
+  return exportData(clients, {
+    format,
+    type: 'clients',
+  });
+}
 
-// Export contractors to JSON file
-export const exportContractors = (contractors: any[]): void => {
-  exportToJson(contractors, `contractors-export-${new Date().toISOString().slice(0, 10)}.json`);
-};
+export function exportSites(sites: SiteRecord[], format: ExportFormat = 'json'): Promise<boolean> {
+  return exportData(sites, {
+    format,
+    type: 'sites',
+  });
+}
 
-// Generate a single unified import template
-export const generateUnifiedImportTemplate = (): string => {
-  // Define the headers with correct database field names
-  const headers = [
-    'record_type', // Type of record: client, site, contract, or contractor
-    'action', // Action to take: create, update, or delete
-    'id', // Database ID (blank for new records)
-    'custom_id', // Custom identifier
-    
-    // Client fields - use exact database field names
-    'name', // client name
-    'contact_name',
-    'email',
-    'phone',
-    'address',
-    'city',
-    'state',
-    'postcode',
-    'status',
-    'notes',
-    
-    // Site fields - use exact database field names with prefix for mapping
-    'site_name', // mapped to name in site table
-    'site_address', // mapped to address in site table
-    'site_city', // mapped to city in site table
-    'site_state', // mapped to state in site table
-    'site_postcode', // mapped to postcode in site table
-    'site_status', // mapped to status in site table
-    'representative',
-    'site_phone', // mapped to phone in site table
-    'site_email', // mapped to email in site table
-    'client_id',
-    'monthly_cost',
-    'monthly_revenue',
-    
-    // Contract fields
-    'site_id', // Site ID for contract
-    'version_number',
-    'contract_notes', // mapped to notes in contract table
-    'start_date', // Will be mapped to contract_details.startDate
-    'end_date', // Will be mapped to contract_details.endDate
-    'contract_number', // Will be mapped to contract_details.contractNumber
-    'renewal_terms', // Will be mapped to contract_details.renewalTerms
-    'termination_period', // Will be mapped to contract_details.terminationPeriod
-    
-    // Contractor fields
-    'business_name',
-    'services'
-  ];
-  
-  // Sample data for clients
-  const clientSample = {
-    'record_type': 'client',
-    'action': 'create',
-    'id': '',
-    'custom_id': 'CL001',
-    'name': 'ACME Corporation',
-    'contact_name': 'John Doe',
-    'email': 'john@acme.com',
-    'phone': '123-456-7890',
-    'address': '123 Main St',
-    'city': 'New York',
-    'state': 'NY',
-    'postcode': '10001',
-    'status': 'active',
-    'notes': 'New client'
-  };
-  
-  // Sample data for sites
-  const siteSample = {
-    'record_type': 'site',
-    'action': 'create',
-    'id': '',
-    'custom_id': 'ST001',
-    'name': '',
-    'contact_name': '',
-    'email': '',
-    'phone': '',
-    'address': '',
-    'city': '',
-    'state': '',
-    'postcode': '',
-    'status': '',
-    'notes': '',
-    'site_name': 'Main Office',
-    'site_address': '456 Business Ave',
-    'site_city': 'Chicago',
-    'site_state': 'IL',
-    'site_postcode': '60601',
-    'site_status': 'active',
-    'representative': 'Jane Smith',
-    'site_phone': '987-654-3210',
-    'site_email': 'jane@acme.com',
-    'client_id': 'custom:CL001',
-    'monthly_cost': '1000',
-    'monthly_revenue': '1500'
-  };
-  
-  // Sample data for contracts
-  const contractSample = {
-    'record_type': 'contract',
-    'action': 'create',
-    'id': '',
-    'custom_id': '',
-    'name': '',
-    'contact_name': '',
-    'email': '',
-    'phone': '',
-    'address': '',
-    'city': '',
-    'state': '',
-    'postcode': '',
-    'status': '',
-    'notes': '',
-    'site_name': '',
-    'site_address': '',
-    'site_city': '',
-    'site_state': '',
-    'site_postcode': '',
-    'site_status': '',
-    'representative': '',
-    'site_phone': '',
-    'site_email': '',
-    'client_id': '',
-    'monthly_cost': '',
-    'monthly_revenue': '',
-    'site_id': 'custom:ST001',
-    'version_number': '1',
-    'contract_notes': 'Standard service contract',
-    'start_date': '2023-01-01',
-    'end_date': '2024-01-01',
-    'contract_number': 'CNT-001',
-    'renewal_terms': '30 days automatic renewal',
-    'termination_period': '60 days written notice'
-  };
-  
-  // Sample data for contractors
-  const contractorSample = {
-    'record_type': 'contractor',
-    'action': 'create',
-    'id': '',
-    'custom_id': 'CON001',
-    'name': '',
-    'contact_name': 'Robert Smith',
-    'email': 'robert@cleaningpros.com',
-    'phone': '555-123-4567',
-    'address': '789 Service Rd',
-    'city': 'Boston',
-    'state': 'MA',
-    'postcode': '02108',
-    'status': 'active',
-    'notes': 'Specialized in commercial cleaning',
-    'business_name': 'Cleaning Pros LLC',
-    'services': 'Window Cleaning,Carpet Cleaning,Pressure Washing'
-  };
-  
-  // Create one row for each record type so the user can see examples of each
-  return Papa.unparse([clientSample, siteSample, contractSample, contractorSample], { header: true });
-};
+export function exportContracts(contracts: ContractHistoryEntry[], format: ExportFormat = 'json'): Promise<boolean> {
+  return exportData(contracts, {
+    format,
+    type: 'contracts',
+  });
+}
+
+export function exportAll(
+  data: {
+    clients?: ClientRecord[];
+    sites?: SiteRecord[];
+    contracts?: ContractHistoryEntry[];
+  },
+  format: ExportFormat = 'json'
+): Promise<boolean> {
+  return exportData([data], {
+    format,
+    type: 'unified',
+    filename: `all_data_export_${new Date().toISOString().split('T')[0]}`
+  });
+}

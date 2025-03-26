@@ -1,15 +1,15 @@
 
-import { Day } from '@/types/common';
+import { BillingContact } from './contactTypes';
 
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
-
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-}
+export type BillingFrequency = 
+  | 'weekly' 
+  | 'fortnightly' 
+  | 'monthly' 
+  | 'quarterly' 
+  | 'annually' 
+  | 'one-time'
+  | 'one_time'
+  | 'per_event';
 
 export interface BillingLine {
   id: string;
@@ -37,7 +37,7 @@ export interface BillingDetails {
   contacts: BillingContact[];
   rate: number;
   billingFrequency: BillingFrequency;
-  billingDay: Day;
+  billingDay: string;
   billingTerms: string;
   billingNotes: string;
   billingMethod: string;
@@ -46,6 +46,8 @@ export interface BillingDetails {
   billingContactPhone: string;
   billingLines: BillingLine[];
   totalWeeklyAmount: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
   billingOnHold?: boolean;
   billingHoldStartDate?: string;
   billingHoldEndDate?: string;
@@ -57,20 +59,7 @@ export interface BillingDetails {
   purchaseOrderNumber?: string;
   accountNumber?: string;
   taxId?: string;
-  notes?: string; 
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
-  annualContractorCost?: number;
-  serviceType?: string;
-  deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  contractorInvoiceFrequency?: string;
-  laborPlan?: any;
-  xeroContactId?: string;
+  notes?: string;
   invoiceFrequency?: string;
   invoiceDay?: string;
   invoiceEmail?: string;
@@ -79,4 +68,18 @@ export interface BillingDetails {
   invoiceCity?: string;
   invoiceState?: string;
   invoicePostalCode?: string;
+  invoicePostcode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorInvoiceFrequency?: string;
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  laborPlan?: string;
+  xeroContactId?: string;
 }

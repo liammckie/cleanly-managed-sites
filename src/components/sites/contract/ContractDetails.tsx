@@ -2,138 +2,120 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { CalendarIcon, Check, Clock } from 'lucide-react';
+import { formatDate } from '@/lib/utils/formatters';
+import { ContractDetails as ContractDetailsType } from '../forms/types/contractTypes';
 
 interface ContractDetailsProps {
-  site: any;
-  refetchSite: () => void;
+  contractDetails: ContractDetailsType;
 }
 
-export default function ContractDetails({ site, refetchSite }: ContractDetailsProps) {
-  if (!site || !site.contract_details) {
+export const ContractDetails: React.FC<ContractDetailsProps> = ({
+  contractDetails
+}) => {
+  // Check if the contract details are empty
+  if (!contractDetails || Object.keys(contractDetails).length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Contract Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-muted-foreground">No contract details available</div>
+          <p className="text-muted-foreground">No contract details available</p>
         </CardContent>
       </Card>
     );
   }
 
-  const contractDetails = site.contract_details;
-  
-  // Format dates for display
-  const startDate = contractDetails.startDate ? format(new Date(contractDetails.startDate), 'PP') : 'Not set';
-  const endDate = contractDetails.endDate ? format(new Date(contractDetails.endDate), 'PP') : 'Not set';
-  
-  // Calculate days remaining if end date exists
-  const daysRemaining = contractDetails.endDate 
-    ? Math.ceil((new Date(contractDetails.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-    : null;
-  
-  // Determine badge color based on days remaining
-  const getBadgeVariant = () => {
-    if (!daysRemaining) return 'secondary';
-    if (daysRemaining < 0) return 'destructive';
-    if (daysRemaining < 30) return 'warning';
-    return 'success';
+  // Calculate contract status based on dates
+  const getContractStatus = () => {
+    if (!contractDetails.endDate) return { status: 'active', label: 'Active' };
+    
+    const now = new Date();
+    const endDate = new Date(contractDetails.endDate);
+    
+    if (endDate < now) {
+      return { status: 'destructive', label: 'Expired' };
+    }
+    
+    // Check if expiring within 30 days
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
+    
+    if (endDate <= thirtyDaysFromNow) {
+      return { status: 'outline', label: 'Expiring Soon' };
+    }
+    
+    return { status: 'success', label: 'Active' };
   };
+
+  const { status, label } = getContractStatus();
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Contract Details</CardTitle>
-        {daysRemaining !== null && (
-          <Badge variant={getBadgeVariant()} className="ml-auto">
-            {daysRemaining < 0 
-              ? `Expired ${Math.abs(daysRemaining)} days ago` 
-              : `${daysRemaining} days remaining`}
-          </Badge>
-        )}
+        <Badge variant={status as "default" | "secondary" | "destructive" | "success" | "outline"}>
+          {label}
+        </Badge>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-gray-500">Start Date</div>
-              <div className="flex items-center mt-1">
-                <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-                <span>{startDate}</span>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-500">End Date</div>
-              <div className="flex items-center mt-1">
-                <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-                <span>{endDate}</span>
-              </div>
-            </div>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Start Date</h3>
+            <p>{formatDate(contractDetails.startDate)}</p>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-gray-500">Contract Length</div>
-              <div className="mt-1">
-                {contractDetails.contractLength || 0} {contractDetails.contractLengthUnit || 'months'}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-500">Service Frequency</div>
-              <div className="mt-1 capitalize">
-                {contractDetails.serviceFrequency || 'Not specified'}
-              </div>
-            </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">End Date</h3>
+            <p>{contractDetails.endDate ? formatDate(contractDetails.endDate) : 'No end date'}</p>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-gray-500">Auto Renewal</div>
-              <div className="flex items-center mt-1">
-                {contractDetails.autoRenewal ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1 text-green-500" />
-                    <span>Yes - {contractDetails.renewalPeriod} {contractDetails.renewalPeriod === 1 ? 'month' : 'months'}</span>
-                  </>
-                ) : (
-                  <span>No</span>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-500">Notice Period</div>
-              <div className="flex items-center mt-1">
-                <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                <span>{contractDetails.renewalNotice || 0} {contractDetails.noticeUnit || 'days'}</span>
-              </div>
-            </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Contract Length</h3>
+            <p>{contractDetails.contractLength} {contractDetails.contractLengthUnit}</p>
           </div>
-          
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground">Auto Renewal</h3>
+            <p>{contractDetails.autoRenewal ? 'Yes' : 'No'}</p>
+          </div>
+          {contractDetails.renewalPeriod && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Renewal Period</h3>
+              <p>{contractDetails.renewalPeriod} days</p>
+            </div>
+          )}
+          {contractDetails.renewalNotice && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Renewal Notice</h3>
+              <p>{contractDetails.renewalNotice} {contractDetails.noticeUnit}</p>
+            </div>
+          )}
           {contractDetails.terminationPeriod && (
             <div>
-              <div className="text-sm font-medium text-gray-500">Termination Period</div>
-              <div className="mt-1">{contractDetails.terminationPeriod}</div>
+              <h3 className="text-sm font-medium text-muted-foreground">Termination Period</h3>
+              <p>{contractDetails.terminationPeriod}</p>
             </div>
           )}
-          
           {contractDetails.renewalTerms && (
             <div>
-              <div className="text-sm font-medium text-gray-500">Renewal Terms</div>
-              <div className="mt-1">{contractDetails.renewalTerms}</div>
+              <h3 className="text-sm font-medium text-muted-foreground">Renewal Terms</h3>
+              <p>{contractDetails.renewalTerms}</p>
             </div>
           )}
-          
+          {contractDetails.serviceFrequency && (
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Service Frequency</h3>
+              <p className="capitalize">{contractDetails.serviceFrequency}</p>
+            </div>
+          )}
           {contractDetails.serviceDeliveryMethod && (
             <div>
-              <div className="text-sm font-medium text-gray-500">Service Delivery Method</div>
-              <div className="mt-1 capitalize">{contractDetails.serviceDeliveryMethod.replace('_', ' ')}</div>
+              <h3 className="text-sm font-medium text-muted-foreground">Delivery Method</h3>
+              <p className="capitalize">{contractDetails.serviceDeliveryMethod}</p>
             </div>
           )}
         </div>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default ContractDetails;
