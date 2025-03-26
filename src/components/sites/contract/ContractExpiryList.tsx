@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,7 +41,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
         return {
           ...site,
           daysUntilExpiry,
-          contractNumber: jsonToString(contractDetails.contractNumber)
+          contractDetails
         };
       })
       .filter(site => site.daysUntilExpiry < 180) // Show contracts expiring within 6 months
@@ -102,16 +103,15 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
           </TableHeader>
           <TableBody>
             {contractsWithExpiry.map((site) => {
-              const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
               return (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">{site.name}</TableCell>
                   <TableCell>
                     <p className="text-sm text-muted-foreground">
-                      {contractDetails.contractNumber || 'No contract number'}
+                      {jsonToString(site.contractDetails.contractNumber) || 'No contract number'}
                     </p>
                   </TableCell>
-                  <TableCell>{format(parseISO(jsonToString(contractDetails.endDate)), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>{format(parseISO(jsonToString(site.contractDetails.endDate)), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>
                       {site.daysUntilExpiry < 0

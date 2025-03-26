@@ -9,7 +9,7 @@ export const contractsApi = {
         .from('sites')
         .select(`
           id,
-          name as site_name, 
+          name, 
           client_id, 
           clients(name),
           monthly_revenue,
@@ -28,12 +28,13 @@ export const contractsApi = {
         return {
           id: site.id,
           site_id: site.id,
-          site_name: site.site_name,
+          site_name: site.name,
           client_id: site.client_id,
           client_name: site.clients?.name || '',
           monthly_revenue: site.monthly_revenue,
           contract_details: site.contract_details,
-          status: site.status
+          status: site.status,
+          is_primary: true // Add the required is_primary field
         };
       });
     } catch (error) {
@@ -49,7 +50,7 @@ export const contractsApi = {
         .from('sites')
         .select(`
           id,
-          name as site_name, 
+          name, 
           client_id, 
           clients(name),
           monthly_revenue,
@@ -75,12 +76,13 @@ export const contractsApi = {
         return {
           id: site.id,
           site_id: site.id,
-          site_name: site.site_name,
+          site_name: site.name,
           client_id: site.client_id,
           client_name: site.clients?.name || '',
           monthly_revenue: site.monthly_revenue,
           contract_details: site.contract_details,
-          status: site.status
+          status: site.status,
+          is_primary: true // Add the required is_primary field
         };
       });
     } catch (error) {

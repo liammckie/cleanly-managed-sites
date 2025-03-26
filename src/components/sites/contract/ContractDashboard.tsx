@@ -19,22 +19,22 @@ export function ContractDashboard() {
   const { data: sitesData } = useSites();
   
   // Convert summary data to the expected format
-  const summaryData: ContractSummaryData = forecastData?.summaryData || {
-    expiringThisMonth: 0,
-    expiringNext3Months: 0,
-    expiringNext6Months: 0,
-    expiringThisYear: 0,
-    valueExpiringThisMonth: 0,
-    valueExpiringNext3Months: 0,
-    valueExpiringNext6Months: 0,
-    valueExpiringThisYear: 0,
+  const summaryData: ContractSummaryData = {
+    expiringThisMonth: forecastData?.summaryData?.expiringThisMonth || 0,
+    expiringNext3Months: forecastData?.summaryData?.expiringNext3Months || 0,
+    expiringNext6Months: forecastData?.summaryData?.expiringNext6Months || 0,
+    expiringThisYear: forecastData?.summaryData?.expiringThisYear || 0,
+    valueExpiringThisMonth: forecastData?.summaryData?.valueExpiringThisMonth || 0,
+    valueExpiringNext3Months: forecastData?.summaryData?.valueExpiringNext3Months || 0,
+    valueExpiringNext6Months: forecastData?.summaryData?.valueExpiringNext6Months || 0,
+    valueExpiringThisYear: forecastData?.summaryData?.valueExpiringThisYear || 0,
     totalContracts: metrics?.totalContracts || 0,
     totalValue: metrics?.totalValue || 0,
-    totalRevenue: 0,
-    totalCost: 0,
-    totalProfit: 0,
-    avgContractValue: 0,
-    profitMargin: 0
+    totalRevenue: forecastData?.summaryData?.totalRevenue || 0,
+    totalCost: forecastData?.summaryData?.totalCost || 0,
+    totalProfit: forecastData?.summaryData?.totalProfit || 0,
+    avgContractValue: forecastData?.summaryData?.avgContractValue || 0,
+    profitMargin: forecastData?.summaryData?.profitMargin || 0
   };
   
   return (

@@ -56,3 +56,11 @@ export interface ContractSummaryData {
   avgContractValue?: number;
   profitMargin?: number;
 }
+
+// Define contract forecast interface
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
