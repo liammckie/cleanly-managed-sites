@@ -1,16 +1,15 @@
 
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { ContractTerm } from '@/components/sites/forms/types/contractTypes';
 
 export const useSiteFormContractTerms = (
   formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>,
-  errors: Record<string, string>,
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) => {
-  // Add new contract term
+  // Add a new contract term
   const addContractTerm = () => {
-    const newContractTerm: ContractTerm = {
+    const newTerm: ContractTerm = {
+      id: crypto.randomUUID(),
       name: '',
       description: '',
       startDate: '',
@@ -20,69 +19,58 @@ export const useSiteFormContractTerms = (
       autoRenew: false
     };
     
-    const updatedTerms = [...(formData.contractDetails.terms || []), newContractTerm];
-    
-    setFormData(prev => ({
-      ...prev,
-      contractDetails: {
+    setFormData(prev => {
+      const updatedContractDetails = { 
         ...prev.contractDetails,
-        terms: updatedTerms
-      }
-    }));
+        terms: [...(prev.contractDetails?.terms || []), newTerm] 
+      };
+      
+      return {
+        ...prev,
+        contractDetails: updatedContractDetails
+      };
+    });
+  };
+  
+  // Update a contract term field
+  const updateContractTerm = (index: number, field: string, value: any) => {
+    setFormData(prev => {
+      const terms = [...(prev.contractDetails?.terms || [])];
+      terms[index] = { ...terms[index], [field]: value };
+      
+      const updatedContractDetails = { 
+        ...prev.contractDetails,
+        terms
+      };
+      
+      return {
+        ...prev,
+        contractDetails: updatedContractDetails
+      };
+    });
   };
   
   // Remove a contract term
   const removeContractTerm = (index: number) => {
-    const updatedTerms = [...(formData.contractDetails.terms || [])];
-    updatedTerms.splice(index, 1);
-    
-    setFormData(prev => ({
-      ...prev,
-      contractDetails: {
+    setFormData(prev => {
+      const terms = [...(prev.contractDetails?.terms || [])];
+      terms.splice(index, 1);
+      
+      const updatedContractDetails = { 
         ...prev.contractDetails,
-        terms: updatedTerms
-      }
-    }));
-    
-    // Remove any errors related to this term
-    const updatedErrors = { ...errors };
-    Object.keys(updatedErrors).forEach(key => {
-      if (key.startsWith(`contractDetails.terms[${index}]`)) {
-        delete updatedErrors[key];
-      }
+        terms
+      };
+      
+      return {
+        ...prev,
+        contractDetails: updatedContractDetails
+      };
     });
-    setErrors(updatedErrors);
-  };
-  
-  // Update contract term field
-  const updateContractTerm = (index: number, field: keyof ContractTerm, value: any) => {
-    const updatedTerms = [...(formData.contractDetails.terms || [])];
-    
-    updatedTerms[index] = {
-      ...updatedTerms[index],
-      [field]: value
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      contractDetails: {
-        ...prev.contractDetails,
-        terms: updatedTerms
-      }
-    }));
-    
-    // Clear error when field is filled
-    const errorKey = `contractDetails.terms[${index}].${field}`;
-    if (errors[errorKey] && (typeof value === 'string' ? value.trim() : value)) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[errorKey];
-      setErrors(updatedErrors);
-    }
   };
   
   return {
     addContractTerm,
-    removeContractTerm,
-    updateContractTerm
+    updateContractTerm,
+    removeContractTerm
   };
 };

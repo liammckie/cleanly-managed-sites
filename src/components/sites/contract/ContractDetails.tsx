@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format, addMonths, differenceInDays } from 'date-fns';
 import { CalendarIcon, ClockIcon } from 'lucide-react';
-import { BadgeVariant } from '@/types/ui';
+import { getContractField } from '@/lib/utils/contractUtils';
 
 interface ContractDetailsProps {
   contractDetails: any;
@@ -27,30 +27,33 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
     );
   }
 
-  const startDate = contractDetails.startDate 
-    ? new Date(contractDetails.startDate) 
-    : null;
+  const startDate = getContractField(contractDetails, 'startDate', null);
+  const startDateObj = startDate ? new Date(startDate) : null;
   
-  const endDate = contractDetails.endDate 
-    ? new Date(contractDetails.endDate) 
-    : null;
+  const endDate = getContractField(contractDetails, 'endDate', null);
+  const endDateObj = endDate ? new Date(endDate) : null;
   
   // Calculate if the contract is expiring soon (within 60 days)
-  const isExpiringSoon = endDate && differenceInDays(endDate, new Date()) <= 60;
+  const isExpiringSoon = endDateObj && differenceInDays(endDateObj, new Date()) <= 60;
   
   // Determine renewal period text
   const getRenewalPeriodText = () => {
-    if (!contractDetails.autoRenewal) return 'No automatic renewal';
-    return `Auto-renews every ${contractDetails.renewalPeriod || ''} ${contractDetails.noticeUnit || 'months'}`;
+    const autoRenewal = getContractField(contractDetails, 'autoRenewal', false);
+    if (!autoRenewal) return 'No automatic renewal';
+    
+    const renewalPeriod = getContractField(contractDetails, 'renewalPeriod', '');
+    const noticeUnit = getContractField(contractDetails, 'noticeUnit', 'months');
+    
+    return `Auto-renews every ${renewalPeriod || ''} ${noticeUnit || 'months'}`;
   };
   
   // Calculate the badge status and style
-  const getBadgeVariant = (): BadgeVariant => {
-    if (!endDate) return "secondary";
+  const getBadgeVariant = () => {
+    if (!endDateObj) return "secondary";
     
     const today = new Date();
     
-    if (endDate < today) {
+    if (endDateObj < today) {
       return "destructive";
     } else if (isExpiringSoon) {
       return "warning";
@@ -64,9 +67,9 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Contract Details</CardTitle>
-          {endDate && (
+          {endDateObj && (
             <Badge variant={getBadgeVariant()}>
-              {endDate < new Date() 
+              {endDateObj < new Date() 
                 ? 'Expired' 
                 : isExpiringSoon 
                   ? 'Expiring Soon' 
@@ -83,18 +86,21 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
               <div className="flex items-center text-sm">
                 <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span className="font-medium text-muted-foreground w-24">Start Date:</span>
-                <span>{startDate ? format(startDate, 'PP') : 'Not specified'}</span>
+                <span>{startDateObj ? format(startDateObj, 'PP') : 'Not specified'}</span>
               </div>
               <div className="flex items-center text-sm">
                 <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span className="font-medium text-muted-foreground w-24">End Date:</span>
-                <span>{endDate ? format(endDate, 'PP') : 'Not specified'}</span>
+                <span>{endDateObj ? format(endDateObj, 'PP') : 'Not specified'}</span>
               </div>
-              {contractDetails.contractLength && (
+              {getContractField(contractDetails, 'contractLength', 0) && (
                 <div className="flex items-center text-sm">
                   <ClockIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span className="font-medium text-muted-foreground w-24">Duration:</span>
-                  <span>{contractDetails.contractLength} {contractDetails.contractLengthUnit || 'months'}</span>
+                  <span>
+                    {getContractField(contractDetails, 'contractLength', 0)} {' '}
+                    {getContractField(contractDetails, 'contractLengthUnit', 'months')}
+                  </span>
                 </div>
               )}
             </div>
@@ -104,30 +110,36 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
             <div className="space-y-2">
               <div className="text-sm">
                 <span className="font-medium text-muted-foreground">Auto Renewal:</span>
-                <span className="ml-2">{contractDetails.autoRenewal ? 'Yes' : 'No'}</span>
+                <span className="ml-2">{getContractField(contractDetails, 'autoRenewal', false) ? 'Yes' : 'No'}</span>
               </div>
-              {contractDetails.autoRenewal && (
+              {getContractField(contractDetails, 'autoRenewal', false) && (
                 <div className="text-sm">
                   <span className="font-medium text-muted-foreground">Renewal Period:</span>
-                  <span className="ml-2">{contractDetails.renewalPeriod} {contractDetails.noticeUnit}</span>
+                  <span className="ml-2">
+                    {getContractField(contractDetails, 'renewalPeriod', '')} {' '}
+                    {getContractField(contractDetails, 'noticeUnit', '')}
+                  </span>
                 </div>
               )}
-              {contractDetails.renewalNotice && (
+              {getContractField(contractDetails, 'renewalNotice', null) && (
                 <div className="text-sm">
                   <span className="font-medium text-muted-foreground">Notice Required:</span>
-                  <span className="ml-2">{contractDetails.renewalNotice} {contractDetails.noticeUnit}</span>
+                  <span className="ml-2">
+                    {getContractField(contractDetails, 'renewalNotice', '')} {' '}
+                    {getContractField(contractDetails, 'noticeUnit', '')}
+                  </span>
                 </div>
               )}
-              {contractDetails.terminationPeriod && (
+              {getContractField(contractDetails, 'terminationPeriod', null) && (
                 <div className="text-sm">
                   <span className="font-medium text-muted-foreground">Termination Period:</span>
-                  <span className="ml-2">{contractDetails.terminationPeriod}</span>
+                  <span className="ml-2">{getContractField(contractDetails, 'terminationPeriod', '')}</span>
                 </div>
               )}
-              {contractDetails.renewalTerms && (
+              {getContractField(contractDetails, 'renewalTerms', null) && (
                 <div className="text-sm">
                   <span className="font-medium text-muted-foreground">Renewal Terms:</span>
-                  <span className="ml-2">{contractDetails.renewalTerms}</span>
+                  <span className="ml-2">{getContractField(contractDetails, 'renewalTerms', '')}</span>
                 </div>
               )}
             </div>
@@ -139,27 +151,27 @@ const ContractDetails: React.FC<ContractDetailsProps> = ({ contractDetails, site
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="text-sm">
               <span className="font-medium text-muted-foreground">Service Frequency:</span>
-              <span className="ml-2">{contractDetails.serviceFrequency || 'Not specified'}</span>
+              <span className="ml-2">{getContractField(contractDetails, 'serviceFrequency', '') || 'Not specified'}</span>
             </div>
             <div className="text-sm">
               <span className="font-medium text-muted-foreground">Delivery Method:</span>
-              <span className="ml-2">{contractDetails.serviceDeliveryMethod || 'Not specified'}</span>
+              <span className="ml-2">{getContractField(contractDetails, 'serviceDeliveryMethod', '') || 'Not specified'}</span>
             </div>
           </div>
         </div>
         
-        {contractDetails.value && (
+        {getContractField(contractDetails, 'value', null) && (
           <div>
             <h3 className="font-medium mb-2">Financial Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-sm">
                 <span className="font-medium text-muted-foreground">Contract Value:</span>
-                <span className="ml-2">${contractDetails.value.toFixed(2)}</span>
+                <span className="ml-2">${getContractField(contractDetails, 'value', 0).toFixed(2)}</span>
               </div>
-              {contractDetails.billingCycle && (
+              {getContractField(contractDetails, 'billingCycle', null) && (
                 <div className="text-sm">
                   <span className="font-medium text-muted-foreground">Billing Cycle:</span>
-                  <span className="ml-2">{contractDetails.billingCycle}</span>
+                  <span className="ml-2">{getContractField(contractDetails, 'billingCycle', '')}</span>
                 </div>
               )}
             </div>

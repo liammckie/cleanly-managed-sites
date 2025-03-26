@@ -5,9 +5,9 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormTypes';
 import { useSiteCreate } from './useSiteCreate';
 import { useSiteUpdate } from './useSiteUpdate';
 import { useClientData } from './useClientData';
+import { toJsonValue } from '@/lib/utils/jsonUtils';
 
 const initialState: SiteFormData = {
-  // Basic site details
   name: '',
   address: '',
   city: '',
@@ -19,7 +19,6 @@ const initialState: SiteFormData = {
   phone: '',
   clientId: '',
   representative: '',
-  // Contract details
   contractDetails: {
     startDate: '',
     endDate: '',
@@ -33,7 +32,6 @@ const initialState: SiteFormData = {
     serviceDeliveryMethod: 'contractor',
     additionalContracts: []
   },
-  // Other sections
   contacts: [],
   billingDetails: {
     billingAddress: '',
@@ -102,8 +100,8 @@ const initialState: SiteFormData = {
   },
   useClientInfo: false,
   hasSubcontractors: false,
-  // Backward compatibility
-  postcode: ''
+  postcode: '',
+  notes: ''
 };
 
 export const useSiteForm = () => {
@@ -114,15 +112,12 @@ export const useSiteForm = () => {
   const { updateSiteMutation } = useSiteUpdate();
   const navigate = useNavigate();
   
-  // Method to load existing site data
   const loadSiteData = (siteData: any) => {
     if (!siteData) return;
     
     setFormData(prevState => {
-      // Create a properly formatted state object from the site data
       const updatedState = {...prevState};
       
-      // Copy basic fields
       updatedState.name = siteData.name || '';
       updatedState.address = siteData.address || '';
       updatedState.city = siteData.city || '';
@@ -136,7 +131,6 @@ export const useSiteForm = () => {
       updatedState.clientId = siteData.client_id || '';
       updatedState.representative = siteData.representative || '';
       
-      // Load contract details
       if (siteData.contract_details) {
         updatedState.contractDetails = {
           startDate: siteData.contract_details.startDate || '',
@@ -153,7 +147,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load billing details
       if (siteData.billing_details) {
         updatedState.billingDetails = {
           ...updatedState.billingDetails,
@@ -177,7 +170,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load security details
       if (siteData.security_details) {
         updatedState.securityDetails = {
           hasAlarm: siteData.security_details.hasAlarm || false,
@@ -190,7 +182,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load job specifications
       if (siteData.job_specifications) {
         updatedState.jobSpecifications = {
           ...updatedState.jobSpecifications,
@@ -211,7 +202,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load replenishables
       if (siteData.replenishables) {
         updatedState.replenishables = {
           stock: siteData.replenishables.stock || [],
@@ -220,7 +210,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load periodicals
       if (siteData.periodicals) {
         updatedState.periodicals = {
           ceilings: siteData.periodicals.ceilings || false,
@@ -231,7 +220,6 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load ad hoc work authorization
       if (siteData.adHocWorkAuthorization) {
         updatedState.adHocWorkAuthorization = {
           authorizedAmount: siteData.adHocWorkAuthorization.authorizedAmount || 0,
@@ -244,17 +232,14 @@ export const useSiteForm = () => {
         };
       }
       
-      // Load contacts
       updatedState.contacts = siteData.contacts || [];
-      
-      // Load subcontractors flag
       updatedState.hasSubcontractors = siteData.has_subcontractors || false;
+      updatedState.notes = siteData.notes || '';
       
       return updatedState;
     });
   };
   
-  // Handle client change
   const handleClientChange = (clientId: string) => {
     setFormData(prevState => ({
       ...prevState,
@@ -262,18 +247,15 @@ export const useSiteForm = () => {
     }));
   };
   
-  // Load client data
   const loadClientData = (clientId: string) => {
     // This function will be implemented by useClientData hook
     // It's a placeholder here for the interface
   };
   
-  // Handle submit
   const handleSubmit = async (siteId?: string) => {
     try {
       setIsSubmitting(true);
       
-      // Process form data into site record format
       const siteData = {
         name: formData.name,
         address: formData.address,
@@ -287,7 +269,7 @@ export const useSiteForm = () => {
         phone: formData.phone,
         client_id: formData.clientId,
         representative: formData.representative,
-        contract_details: {
+        contract_details: toJsonValue({
           startDate: formData.contractDetails.startDate,
           endDate: formData.contractDetails.endDate,
           contractLength: formData.contractDetails.contractLength,
@@ -298,75 +280,32 @@ export const useSiteForm = () => {
           noticeUnit: formData.contractDetails.noticeUnit,
           serviceFrequency: formData.contractDetails.serviceFrequency,
           serviceDeliveryMethod: formData.contractDetails.serviceDeliveryMethod,
-          additionalContracts: formData.contractDetails.additionalContracts
-        },
-        billing_details: {
-          billingAddress: formData.billingDetails.billingAddress,
-          billingCity: formData.billingDetails.billingCity,
-          billingState: formData.billingDetails.billingState,
-          billingPostcode: formData.billingDetails.billingPostcode,
-          billingEmail: formData.billingDetails.billingEmail,
-          contacts: formData.billingDetails.contacts,
-          rate: formData.billingDetails.rate,
-          billingFrequency: formData.billingDetails.billingFrequency,
-          billingDay: formData.billingDetails.billingDay,
-          billingTerms: formData.billingDetails.billingTerms,
-          billingNotes: formData.billingDetails.billingNotes,
-          billingMethod: formData.billingDetails.billingMethod,
-          billingContact: formData.billingDetails.billingContact,
-          billingContactEmail: formData.billingDetails.billingContactEmail,
-          billingContactPhone: formData.billingDetails.billingContactPhone,
-          billingLines: formData.billingDetails.billingLines,
-          totalWeeklyAmount: formData.billingDetails.totalWeeklyAmount
-        },
-        security_details: {
-          hasAlarm: formData.securityDetails.hasAlarm,
-          alarmCode: formData.securityDetails.alarmCode,
-          keyRequired: formData.securityDetails.keyRequired,
-          keyLocation: formData.securityDetails.keyLocation,
-          swipeCard: formData.securityDetails.swipeCard,
-          parkingDetails: formData.securityDetails.parkingDetails,
-          accessNotes: formData.securityDetails.accessNotes
-        },
-        job_specifications: {
-          daysPerWeek: formData.jobSpecifications.daysPerWeek,
-          hoursPerDay: formData.jobSpecifications.hoursPerDay,
-          directEmployees: formData.jobSpecifications.directEmployees,
-          notes: formData.jobSpecifications.notes,
-          cleaningFrequency: formData.jobSpecifications.cleaningFrequency,
-          customFrequency: formData.jobSpecifications.customFrequency,
-          serviceDays: formData.jobSpecifications.serviceDays,
-          serviceTime: formData.jobSpecifications.serviceTime,
-          estimatedHours: formData.jobSpecifications.estimatedHours,
-          equipmentRequired: formData.jobSpecifications.equipmentRequired,
-          scopeNotes: formData.jobSpecifications.scopeNotes,
-          weeklyContractorCost: formData.jobSpecifications.weeklyContractorCost,
-          monthlyContractorCost: formData.jobSpecifications.monthlyContractorCost,
-          annualContractorCost: formData.jobSpecifications.annualContractorCost
-        },
-        replenishables: formData.replenishables,
-        periodicals: formData.periodicals,
-        adHocWorkAuthorization: formData.adHocWorkAuthorization,
+          additionalContracts: formData.contractDetails.additionalContracts?.map(c => toJsonValue(c)) || []
+        }),
+        billing_details: toJsonValue(formData.billingDetails),
+        security_details: toJsonValue(formData.securityDetails),
+        job_specifications: toJsonValue(formData.jobSpecifications),
+        replenishables: toJsonValue(formData.replenishables),
+        periodicals: toJsonValue(formData.periodicals),
+        adHocWorkAuthorization: toJsonValue(formData.adHocWorkAuthorization),
         has_subcontractors: formData.hasSubcontractors,
-        contacts: formData.contacts
+        contacts: formData.contacts,
+        notes: formData.notes
       };
       
       let result;
       
       if (siteId) {
-        // Update existing site
         result = await updateSiteMutation.mutateAsync({
           id: siteId,
           data: siteData
         });
         toast.success('Site updated successfully!');
       } else {
-        // Create new site
         result = await createSiteMutation.mutateAsync(siteData);
         toast.success('Site created successfully!');
       }
       
-      // Navigate to the site details page
       navigate(`/sites/${result.id}`);
     } catch (error) {
       console.error('Error submitting site form:', error);

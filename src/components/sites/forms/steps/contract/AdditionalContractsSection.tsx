@@ -1,201 +1,206 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePickerWrapper } from '@/components/ui/date-picker/DatePickerWrapper';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-import { FormSection } from '@/components/sites/forms/FormSection';
 
-export interface AdditionalContractsSectionProps {
-  formData: any;
-  handleNestedChange?: (section: string, field: string, value: any) => void;
-  setFormData?: React.Dispatch<React.SetStateAction<any>>;
+interface AdditionalContractsSectionProps {
+  additionalContracts: ContractDetails[];
+  onAddContract: () => void;
+  onRemoveContract: (index: number) => void;
+  onUpdateContract: (index: number, field: string, value: any) => void;
 }
 
-export function AdditionalContractsSection({ 
-  formData, 
-  handleNestedChange, 
-  setFormData 
-}: AdditionalContractsSectionProps) {
-  const additionalContracts = formData.additionalContracts || [];
-  
-  const addAdditionalContract = () => {
-    if (!setFormData) return;
-    
-    const newContract: ContractDetails = {
-      startDate: '',
-      endDate: '',
-      contractNumber: '',
-      renewalTerms: '',
-      terminationPeriod: '',
-      contractType: 'cleaning',
-      terms: []
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      additionalContracts: [...(prev.additionalContracts || []), newContract]
-    }));
+export const AdditionalContractsSection: React.FC<AdditionalContractsSectionProps> = ({
+  additionalContracts,
+  onAddContract,
+  onRemoveContract,
+  onUpdateContract
+}) => {
+  const handleAddContract = () => {
+    onAddContract();
   };
-  
-  const removeAdditionalContract = (index: number) => {
-    if (!setFormData) return;
-    
-    setFormData(prev => {
-      const updatedContracts = [...(prev.additionalContracts || [])];
-      updatedContracts.splice(index, 1);
-      return {
-        ...prev,
-        additionalContracts: updatedContracts
-      };
-    });
-  };
-  
-  const updateAdditionalContract = (index: number, field: string, value: any) => {
-    if (!setFormData) return;
-    
-    setFormData(prev => {
-      const updatedContracts = [...(prev.additionalContracts || [])];
-      updatedContracts[index] = {
-        ...updatedContracts[index],
-        [field]: value
-      };
-      return {
-        ...prev,
-        additionalContracts: updatedContracts
-      };
-    });
-  };
-  
-  const contractTypes = [
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'window', label: 'Window Cleaning' },
-    { value: 'carpet', label: 'Carpet Cleaning' },
-    { value: 'pest', label: 'Pest Control' },
-    { value: 'other', label: 'Other' }
-  ];
 
-  // Get the handler function based on what's available
-  const handleChange = setFormData ? updateAdditionalContract : 
-                       handleNestedChange ? 
-                       (index: number, field: string, value: any) => 
-                         handleNestedChange(`additionalContracts[${index}]`, field, value) : 
-                       () => {};
-  
+  const createNewContract = (): ContractDetails => ({
+    startDate: '',
+    endDate: '',
+    contractLength: 0,
+    contractLengthUnit: 'months',
+    autoRenewal: false,
+    renewalPeriod: 0,
+    renewalNotice: 0,
+    noticeUnit: 'months',
+    serviceFrequency: '',
+    serviceDeliveryMethod: '',
+    contractNumber: '',
+    renewalTerms: '',
+    terminationPeriod: '',
+    contractType: 'cleaning',
+    terms: []
+  });
+
   return (
-    <FormSection
-      title="Additional Contracts"
-      description="Add any additional contracts or service agreements related to this site."
-    >
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Additional Contracts</h3>
+        <Button type="button" variant="outline" size="sm" onClick={handleAddContract}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Contract
+        </Button>
+      </div>
+      
       {additionalContracts.length === 0 ? (
-        <div className="text-center py-4 text-muted-foreground">
-          No additional contracts. Add one below.
-        </div>
+        <p className="text-muted-foreground">No additional contracts have been added.</p>
       ) : (
-        additionalContracts.map((contract: ContractDetails, index: number) => (
-          <div key={index} className="border rounded-md p-4 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-md font-medium">Additional Contract #{index + 1}</h4>
+        <div className="space-y-6">
+          {additionalContracts.map((contract, index) => (
+            <Card key={index} className="relative">
               <Button
                 type="button"
-                variant="destructive"
+                variant="ghost"
                 size="sm"
-                onClick={() => removeAdditionalContract(index)}
+                className="absolute top-2 right-2 text-destructive"
+                onClick={() => onRemoveContract(index)}
               >
-                Remove
+                <Trash2 className="h-4 w-4" />
               </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Contract Type</label>
-                <Select
-                  value={contract.contractType || 'cleaning'}
-                  onValueChange={(value) => handleChange(index, 'contractType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select contract type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contractTypes.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               
-              <div>
-                <label className="block text-sm font-medium mb-1">Contract Number</label>
-                <Input
-                  value={contract.contractNumber || ''}
-                  onChange={(e) => handleChange(index, 'contractNumber', e.target.value)}
-                  placeholder="Enter contract number"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Start Date</label>
-                <DatePickerWrapper
-                  value={contract.startDate ? new Date(contract.startDate) : new Date()}
-                  onChange={(date) => handleChange(index, 'startDate', date?.toISOString().split('T')[0])}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">End Date</label>
-                <DatePickerWrapper
-                  value={contract.endDate ? new Date(contract.endDate) : new Date()}
-                  onChange={(date) => handleChange(index, 'endDate', date?.toISOString().split('T')[0])}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Renewal Terms</label>
-                <Textarea
-                  value={contract.renewalTerms || ''}
-                  onChange={(e) => handleChange(index, 'renewalTerms', e.target.value)}
-                  placeholder="Describe renewal terms"
-                  className="min-h-[80px]"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Termination Period</label>
-                <Input
-                  value={contract.terminationPeriod || ''}
-                  onChange={(e) => handleChange(index, 'terminationPeriod', e.target.value)}
-                  placeholder="e.g., 30 days written notice"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Notes</label>
-              <Textarea
-                value={contract.notes || ''}
-                onChange={(e) => handleChange(index, 'notes', e.target.value)}
-                placeholder="Additional notes about this contract"
-                className="min-h-[100px]"
-              />
-            </div>
-          </div>
-        ))
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Contract Type</label>
+                      <Input
+                        value={contract.contractType || ''}
+                        onChange={(e) => onUpdateContract(index, 'contractType', e.target.value)}
+                        placeholder="e.g. Cleaning, Security, etc."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Contract Number</label>
+                      <Input
+                        value={contract.contractNumber || ''}
+                        onChange={(e) => onUpdateContract(index, 'contractNumber', e.target.value)}
+                        placeholder="Contract reference number"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Start Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            {contract.startDate ? (
+                              format(new Date(contract.startDate), 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={contract.startDate ? new Date(contract.startDate) : undefined}
+                            onSelect={(date) => onUpdateContract(index, 'startDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">End Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            {contract.endDate ? (
+                              format(new Date(contract.endDate), 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={contract.endDate ? new Date(contract.endDate) : undefined}
+                            onSelect={(date) => onUpdateContract(index, 'endDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Renewal Terms</label>
+                      <Input
+                        value={contract.renewalTerms || ''}
+                        onChange={(e) => onUpdateContract(index, 'renewalTerms', e.target.value)}
+                        placeholder="Renewal terms details"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Termination Period</label>
+                      <Input
+                        value={contract.terminationPeriod || ''}
+                        onChange={(e) => onUpdateContract(index, 'terminationPeriod', e.target.value)}
+                        placeholder="e.g. 30 days, 90 days"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`auto-renew-${index}`}
+                        checked={contract.autoRenewal || false}
+                        onCheckedChange={(checked) => onUpdateContract(index, 'autoRenewal', Boolean(checked))}
+                      />
+                      <label
+                        htmlFor={`auto-renew-${index}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Auto Renewal
+                      </label>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Notes</label>
+                      <Textarea
+                        value={contract.notes || ''}
+                        onChange={(e) => onUpdateContract(index, 'notes', e.target.value)}
+                        placeholder="Additional notes about this contract"
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
-      
-      <Button 
-        type="button" 
-        variant="outline" 
-        onClick={addAdditionalContract}
-      >
-        Add Another Contract
-      </Button>
-    </FormSection>
+    </div>
   );
-}
+};

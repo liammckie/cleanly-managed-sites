@@ -30,6 +30,11 @@ export interface ContractDetails {
   contractNumber?: string;
   renewalTerms?: string;
   terminationPeriod?: string;
+  // Additional fields
+  value?: number;
+  billingCycle?: string;
+  id?: string;
+  autoRenew?: boolean;
 }
 
 export interface ContractHistoryEntry {

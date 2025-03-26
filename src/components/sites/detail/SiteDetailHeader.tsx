@@ -7,7 +7,8 @@ import { SiteRecord } from '@/lib/types';
 import { Edit, Clock, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDate, isWithinDays } from '@/lib/utils/date';
+import { formatDate } from '@/lib/utils/date';
+import { isContractExpiringSoon, getContractField } from '@/lib/utils/contractUtils';
 import { BadgeVariant } from '@/types/ui';
 
 interface SiteDetailHeaderProps {
@@ -55,16 +56,7 @@ export const SiteDetailHeader: React.FC<SiteDetailHeaderProps> = ({ site, isLoad
   };
 
   // Check if contract is expiring soon
-  const isContractExpiringSoon = () => {
-    if (!site.contract_details || typeof site.contract_details !== 'object') {
-      return false;
-    }
-    
-    const endDateStr = site.contract_details.endDate;
-    if (!endDateStr) return false;
-    
-    return isWithinDays(endDateStr, 60);
-  };
+  const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details, 60);
 
   return (
     <Card className="mb-6">
@@ -76,8 +68,10 @@ export const SiteDetailHeader: React.FC<SiteDetailHeaderProps> = ({ site, isLoad
               <Badge variant={getStatusBadgeVariant()}>
                 {site.status === 'on-hold' ? 'On Hold' : site.status.charAt(0).toUpperCase() + site.status.slice(1)}
               </Badge>
-              {isContractExpiringSoon() && (
-                <Badge variant="warning">Contract Expiring Soon</Badge>
+              {contractIsExpiringSoon && (
+                <Badge variant="warning">
+                  Contract Expiring Soon
+                </Badge>
               )}
             </div>
             <p className="text-muted-foreground">

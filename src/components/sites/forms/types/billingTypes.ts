@@ -21,6 +21,12 @@ export interface BillingContact {
   phone: string;
 }
 
+export interface BillingAmounts {
+  totalWeeklyAmount: number;
+  totalMonthlyAmount: number;
+  totalAnnualAmount: number;
+}
+
 export interface BillingDetails {
   billingAddress: string;
   billingCity: string;
@@ -46,7 +52,7 @@ export interface BillingDetails {
   invoiceState?: string;
   invoicePostalCode?: string;
   xeroContactId?: string;
-  // Missing fields
+  // Additional fields
   billingOnHold?: boolean;
   billingHoldStartDate?: string;
   billingHoldEndDate?: string;

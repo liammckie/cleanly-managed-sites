@@ -1,19 +1,19 @@
 
 export interface Periodicals {
-  ceilings: boolean;
-  glazing: boolean;
-  upholstery: boolean;
-  sanitizing: boolean;
+  ceilings?: boolean;
+  glazing?: boolean;
+  upholstery?: boolean;
+  sanitizing?: boolean;
   pressureWashing?: boolean;
-  notes?: string;
-  nextGlazingDate?: string;
   nextCeilingsDate?: string;
+  nextGlazingDate?: string;
   nextUpholsteryDate?: string;
   nextSanitizingDate?: string;
   nextPressureWashingDate?: string;
-  glazingFrequency?: string;
   ceilingsFrequency?: string;
+  glazingFrequency?: string;
   upholsteryFrequency?: string;
   sanitizingFrequency?: string;
   pressureWashingFrequency?: string;
+  notes?: string;
 }
