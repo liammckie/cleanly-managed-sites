@@ -3,8 +3,8 @@ import React from 'react';
 import { ShiftForm } from './ShiftForm';
 import { ShiftList } from './ShiftList';
 import { ShiftCalendar } from './ShiftCalendar';
-import { QuoteShift } from '@/lib/types/quotes';
-import { Day, EmploymentType } from '@/lib/award/types';
+import { QuoteShift } from '@/lib/types/award/types';
+import { Day, EmploymentType, EmployeeLevel } from '@/lib/types/award/types';
 
 interface ShiftCalendarProps {
   shifts: QuoteShift[];

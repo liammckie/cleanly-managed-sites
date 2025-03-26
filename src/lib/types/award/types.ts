@@ -41,7 +41,7 @@ export interface QuoteSubcontractor {
   contact_name?: string;
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'accepted';
 
 export interface Quote {
   id: string;
@@ -97,4 +97,10 @@ export interface Quote {
   subcontractorCost: number;
   createdAt: string;
   updatedAt: string;
+  suppliesCost?: number;
+  equipmentCost?: number;
+  quoteNumber?: string;
+  validUntil?: string;
+  clientId?: string;
+  siteId?: string;
 }

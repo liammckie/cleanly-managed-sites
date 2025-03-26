@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuoteSubcontractor, Subcontractor } from '@/lib/types/quotes';
+import { QuoteSubcontractor } from '@/lib/types/quotes';
 import { v4 as uuidv4 } from 'uuid';
 
 export const quoteSubcontractorsApi = {
@@ -27,7 +27,7 @@ export const quoteSubcontractorsApi = {
       phone: item.phone || '',
       service: item.service || '',
       notes: item.notes || '',
-      services: [],
+      services: item.services || [],
       customServices: '',
       monthlyCost: 0,
       isFlatRate: true
@@ -56,7 +56,8 @@ export const quoteSubcontractorsApi = {
       email: subcontractorData.email || '',
       phone: subcontractorData.phone || '',
       service: subcontractorData.service || '',
-      notes: subcontractorData.notes || ''
+      notes: subcontractorData.notes || '',
+      services: subcontractorData.services || []
     };
     
     const { data, error } = await supabase
@@ -81,7 +82,7 @@ export const quoteSubcontractorsApi = {
       phone: data.phone || '',
       service: data.service || '',
       notes: data.notes || '',
-      services: [],
+      services: data.services || [],
       customServices: '',
       monthlyCost: 0,
       isFlatRate: true
@@ -101,6 +102,7 @@ export const quoteSubcontractorsApi = {
     if (subcontractorData.phone !== undefined) dbSubData.phone = subcontractorData.phone;
     if (subcontractorData.service !== undefined) dbSubData.service = subcontractorData.service;
     if (subcontractorData.notes !== undefined) dbSubData.notes = subcontractorData.notes;
+    if (subcontractorData.services !== undefined) dbSubData.services = subcontractorData.services;
     
     const { data, error } = await supabase
       .from('quote_subcontractors')
@@ -125,7 +127,7 @@ export const quoteSubcontractorsApi = {
       phone: data.phone || '',
       service: data.service || '',
       notes: data.notes || '',
-      services: [],
+      services: data.services || [],
       customServices: '',
       monthlyCost: 0,
       isFlatRate: true

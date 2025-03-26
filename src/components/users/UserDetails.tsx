@@ -1,113 +1,99 @@
 
 import React from 'react';
-import { SystemUser } from '@/lib/types/users';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
-
-interface UserDetailsProps {
-  user: SystemUser;
-  onEdit: () => void;
-  onDelete: () => void;
-}
+import { Pencil, Trash2 } from 'lucide-react';
+import { SystemUser } from '@/lib/types';
+import { format } from 'date-fns';
 
 // Helper function to get initials from a name
-const getInitials = (name: string) => {
-  if (!name) return '';
-  
-  const parts = name.split(' ').filter(part => part.length > 0);
-  if (parts.length === 0) return '';
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase();
 };
 
+export interface UserDetailsProps {
+  user: SystemUser;
+  onEdit: (userId: string) => void;
+  onDelete: (userId: string) => void;
+}
+
 export function UserDetails({ user, onEdit, onDelete }: UserDetailsProps) {
-  const userFullName = user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
-  const roleName = user.role && typeof user.role === 'object' ? user.role.name : 
-                  typeof user.role === 'string' ? user.role : 'User';
-  
+  const handleEdit = () => {
+    onEdit(user.id);
+  };
+
+  const handleDelete = () => {
+    onDelete(user.id);
+  };
+
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-        <Avatar className="h-16 w-16">
-          <AvatarImage src={user.avatar_url} alt={userFullName} />
-          <AvatarFallback>{getInitials(userFullName)}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-            <CardTitle className="text-xl">{userFullName}</CardTitle>
-            <Badge variant="outline" className="capitalize mt-2 sm:mt-0">
-              {user.status || 'Active'}
-            </Badge>
+    <Card className="w-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-xl font-semibold">{user.full_name || 'No Name'}</CardTitle>
+          <div className="space-x-2">
+            <Button onClick={handleEdit} size="sm" variant="outline">
+              <Pencil className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+            <Button onClick={handleDelete} size="sm" variant="outline" className="text-destructive">
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
+            </Button>
           </div>
-          <CardDescription className="mt-1">{user.title || 'Team Member'}</CardDescription>
-          <CardDescription className="mt-1">{roleName}</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-          <div>
-            <p className="text-sm text-muted-foreground">Email</p>
-            <p className="text-sm font-medium">{user.email}</p>
+      <CardContent>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col items-center space-y-2">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={user.avatar_url || ''} alt={user.full_name || 'User'} />
+              <AvatarFallback className="text-lg">{getInitials(user.full_name || '')}</AvatarFallback>
+            </Avatar>
+            <Badge variant={user.status === 'active' ? 'success' : user.status === 'pending' ? 'warning' : 'secondary'}>
+              {user.status || 'Unknown'}
+            </Badge>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Phone</p>
-            <p className="text-sm font-medium">{user.phone || 'Not provided'}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Last Login</p>
-            <p className="text-sm font-medium">
-              {user.last_login ? formatDate(user.last_login, 'PPP') : 'Never'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Created</p>
-            <p className="text-sm font-medium">
-              {formatDate(user.created_at || '', 'PPP')}
-            </p>
+          
+          <div className="flex-1 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+                <p>{user.email}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Phone</h3>
+                <p>{user.phone || 'Not provided'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
+                <p>{user.role?.name || 'No role assigned'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Title</h3>
+                <p>{user.title || 'Not provided'}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Last Login</h3>
+                <p>{user.last_login ? format(new Date(user.last_login), 'PPp') : 'Never'}</p>
+              </div>
+            </div>
+            
+            {user.notes && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+                <p className="text-sm mt-1">{user.notes}</p>
+              </div>
+            )}
           </div>
         </div>
-
-        {user.notes && (
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Notes</p>
-            <p className="text-sm">{user.notes}</p>
-          </div>
-        )}
-
-        {user.territories && user.territories.length > 0 && (
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Territories</p>
-            <div className="flex flex-wrap gap-2">
-              {user.territories.map((territory, index) => (
-                <Badge key={index} variant="secondary">
-                  {territory}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm" onClick={onDelete}>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
