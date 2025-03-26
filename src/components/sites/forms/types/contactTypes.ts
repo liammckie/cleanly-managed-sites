@@ -9,3 +9,13 @@ export interface SiteContact {
   is_primary?: boolean;
   notes?: string;
 }
+
+export interface BillingContact {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  position?: string; // Job title/role
+  primary?: boolean;
+  notes?: string;
+}
