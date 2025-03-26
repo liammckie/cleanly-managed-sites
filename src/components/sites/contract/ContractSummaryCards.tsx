@@ -1,73 +1,107 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Calendar, TrendingUp, Clock } from 'lucide-react';
-import { ContractSummary } from '../forms/types/contractTypes';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarIcon, DollarSign, PercentIcon, ClockIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ContractSummary } from './types';
 
 interface ContractSummaryCardsProps {
   summary: ContractSummary;
-  isLoading: boolean;
+  isLoading?: boolean;
+  onRenewClick?: () => void;
 }
 
-export function ContractSummaryCards({ summary, isLoading }: ContractSummaryCardsProps) {
+const ContractSummaryCards: React.FC<ContractSummaryCardsProps> = ({
+  summary,
+  isLoading = false,
+  onRenewClick
+}) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="h-20 bg-muted/40"></CardHeader>
-            <CardContent className="h-12 mt-4 bg-muted/20"></CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Contract Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Loading...</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+            <ClockIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Loading...</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Renewal Rate</CardTitle>
+            <PercentIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Loading...</div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
-
+  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Contract Value</CardTitle>
-          <DollarSign className="w-4 h-4 text-muted-foreground" />
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">${summary.totalValue.toLocaleString()}</div>
-          <p className="text-xs text-muted-foreground">Monthly recurring revenue</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Annual value across all active contracts
+          </p>
         </CardContent>
       </Card>
       
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-          <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{summary.activeContracts}</div>
-          <p className="text-xs text-muted-foreground">Across all sites</p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-          <Clock className="w-4 h-4 text-muted-foreground" />
+          <ClockIcon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.expiringWithin30Days}</div>
-          <p className="text-xs text-muted-foreground">Within 30 days</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Contracts expiring within 30 days
+          </p>
         </CardContent>
+        <CardFooter>
+          {summary.expiringWithin30Days > 0 && onRenewClick && (
+            <Button variant="outline" size="sm" className="w-full" onClick={onRenewClick}>
+              <CalendarIcon className="h-3 w-3 mr-1" />
+              Schedule Renewals
+            </Button>
+          )}
+        </CardFooter>
       </Card>
       
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Renewal Rate</CardTitle>
-          <TrendingUp className="w-4 h-4 text-muted-foreground" />
+          <PercentIcon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.renewalRate}%</div>
-          <p className="text-xs text-muted-foreground">Avg. contract renewal</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Current contract renewal success rate
+          </p>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default ContractSummaryCards;

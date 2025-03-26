@@ -1,115 +1,166 @@
 
-import React from 'react';
-import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React, { useState } from 'react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow
+} from '@/components/ui/table';
+import { formatDate } from '@/lib/utils/formatters';
+import { Button } from '@/components/ui/button';
+import { Eye, ArrowDownToLine } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Clock, FileText, Info } from 'lucide-react';
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { ContractVersionDetails } from './ContractVersionDetails';
+import { JsonValue } from '@/types/common';
+import { ContractDetails } from './types';
 
-interface ContractHistoryTableProps {
-  history: ContractHistoryEntry[];
-  isLoading: boolean;
-  currentContractDetails: any;
+export interface ContractHistoryVersion {
+  id: string;
+  version_number: number;
+  created_at: string;
+  created_by?: string;
+  notes?: string;
+  contract_details: JsonValue;
 }
 
-export function ContractHistoryTable({ history, isLoading, currentContractDetails }: ContractHistoryTableProps) {
+interface ContractHistoryTableProps {
+  versions: ContractHistoryVersion[];
+  isLoading?: boolean;
+}
+
+const ContractHistoryTable: React.FC<ContractHistoryTableProps> = ({ 
+  versions, 
+  isLoading = false 
+}) => {
+  const [selectedVersion, setSelectedVersion] = useState<ContractHistoryVersion | null>(null);
+  
+  // Function to view contract details
+  const handleViewDetails = (version: ContractHistoryVersion) => {
+    setSelectedVersion(version);
+  };
+  
+  // Function to download contract as PDF
+  const handleDownloadContract = (version: ContractHistoryVersion) => {
+    // Implementation for PDF download would go here
+    console.log('Download contract version:', version.version_number);
+  };
+  
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="py-4 text-center">
+        <p>Loading contract history...</p>
       </div>
     );
   }
-
-  if (!history || history.length === 0) {
+  
+  if (!versions || versions.length === 0) {
     return (
-      <div className="text-center py-8 glass-card p-6">
-        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-medium mb-2">No Contract History</h3>
-        <p className="text-muted-foreground">
-          When contract details are updated, versions will be stored and displayed here.
-        </p>
+      <div className="py-4 text-center">
+        <p>No contract history available.</p>
       </div>
     );
   }
-
+  
   return (
-    <div className="glass-card overflow-hidden">
-      <div className="bg-muted/50 p-4 flex items-center gap-2 border-b">
-        <Clock className="h-5 w-5 text-primary" />
-        <h3 className="font-medium">Contract Version History</h3>
-      </div>
+    <>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Version</TableHead>
-            <TableHead>Date Modified</TableHead>
-            <TableHead>Contract Number</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>End Date</TableHead>
+            <TableHead>Date</TableHead>
             <TableHead>Notes</TableHead>
+            <TableHead>Details</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>
-              <Badge variant="outline" className="bg-primary text-primary-foreground">Current</Badge>
-            </TableCell>
-            <TableCell>Current Version</TableCell>
-            <TableCell>{currentContractDetails?.contractNumber || 'N/A'}</TableCell>
-            <TableCell>{currentContractDetails?.startDate || 'N/A'}</TableCell>
-            <TableCell>{currentContractDetails?.endDate || 'N/A'}</TableCell>
-            <TableCell>-</TableCell>
-            <TableCell className="text-right">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="text-xs px-2 py-1 rounded hover:bg-muted flex items-center ml-auto">
-                    <Info className="h-4 w-4 mr-1" />
-                    View
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Contract Details (Current Version)</DialogTitle>
-                  </DialogHeader>
-                  <ContractVersionDetails contractDetails={currentContractDetails} />
-                </DialogContent>
-              </Dialog>
-            </TableCell>
-          </TableRow>
-          {history.map((entry) => (
-            <TableRow key={entry.id}>
-              <TableCell>
-                <Badge variant="outline">v{entry.version_number}</Badge>
-              </TableCell>
-              <TableCell>{format(new Date(entry.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
-              <TableCell>{entry.contract_details.contractNumber}</TableCell>
-              <TableCell>{entry.contract_details.startDate}</TableCell>
-              <TableCell>{entry.contract_details.endDate}</TableCell>
-              <TableCell className="max-w-[200px] truncate">{entry.notes || '-'}</TableCell>
-              <TableCell className="text-right">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="text-xs px-2 py-1 rounded hover:bg-muted flex items-center ml-auto">
-                      <Info className="h-4 w-4 mr-1" />
+          {versions.map((version) => {
+            // Safely cast to the expected shape or provide defaults
+            const details = version.contract_details as ContractDetails;
+            const contractNumber = details?.contractNumber || "N/A";
+            const startDate = details?.startDate || "N/A";
+            const endDate = details?.endDate || "N/A";
+            
+            return (
+              <TableRow key={version.id}>
+                <TableCell>
+                  <Badge variant="outline">v{version.version_number}</Badge>
+                </TableCell>
+                <TableCell>{formatDate(version.created_at)}</TableCell>
+                <TableCell className="max-w-xs truncate">
+                  {version.notes || 'No notes'}
+                </TableCell>
+                <TableCell>
+                  <div className="text-xs space-y-1">
+                    <div>Contract: {contractNumber}</div>
+                    <div>Period: {startDate} to {endDate}</div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(version)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
                       View
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                      <DialogTitle>Contract Details (Version {entry.version_number})</DialogTitle>
-                    </DialogHeader>
-                    <ContractVersionDetails contractDetails={entry.contract_details} />
-                  </DialogContent>
-                </Dialog>
-              </TableCell>
-            </TableRow>
-          ))}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownloadContract(version)}
+                    >
+                      <ArrowDownToLine className="h-4 w-4 mr-1" />
+                      Download
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
-    </div>
+      
+      {selectedVersion && (
+        <Dialog open={!!selectedVersion} onOpenChange={() => setSelectedVersion(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Contract Version {selectedVersion.version_number}</DialogTitle>
+              <DialogDescription>
+                Created on {formatDate(selectedVersion.created_at)}
+                {selectedVersion.created_by && ` by ${selectedVersion.created_by}`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              {selectedVersion.notes && (
+                <div>
+                  <h4 className="font-semibold mb-1">Notes</h4>
+                  <p className="text-sm">{selectedVersion.notes}</p>
+                </div>
+              )}
+              
+              <div>
+                <h4 className="font-semibold mb-2">Contract Details</h4>
+                <pre className="bg-muted p-4 rounded-md text-xs overflow-auto max-h-80">
+                  {JSON.stringify(selectedVersion.contract_details, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
-}
+};
+
+export default ContractHistoryTable;

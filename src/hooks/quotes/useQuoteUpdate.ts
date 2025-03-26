@@ -10,7 +10,7 @@ export function useQuoteUpdate() {
   
   const mutation = useMutation({
     mutationFn: async (quoteData: Quote) => {
-      // Cast Quote to the expected type for updateQuoteMutation
+      // Cast Quote to the expected type for updateQuoteMutation using any
       const result = await updateQuoteMutation(quoteData as any);
       return adaptQuote(result);
     },

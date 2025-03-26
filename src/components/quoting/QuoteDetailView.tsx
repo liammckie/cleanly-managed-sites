@@ -49,7 +49,7 @@ import {
   PieChart,
   DollarSign,
 } from 'lucide-react';
-import { Quote } from '@/lib/award/types';
+import { Quote } from '@/types/models';
 import { useDeleteQuote } from '@/hooks/useQuotes';
 
 interface QuoteDetailViewProps {
@@ -77,6 +77,8 @@ export function QuoteDetailView({ quote }: QuoteDetailViewProps) {
         return <Badge variant="outline" className="bg-red-100 text-red-800">Rejected</Badge>;
       case 'expired':
         return <Badge variant="outline" className="bg-amber-100 text-amber-800">Expired</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800">Pending</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -228,7 +230,7 @@ export function QuoteDetailView({ quote }: QuoteDetailViewProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {quote.shifts.length === 0 ? (
+              {!quote.shifts || quote.shifts.length === 0 ? (
                 <div className="text-center p-6 border rounded-md bg-muted/30">
                   <p className="text-muted-foreground">No shifts added to this quote.</p>
                 </div>
@@ -271,7 +273,7 @@ export function QuoteDetailView({ quote }: QuoteDetailViewProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {quote.subcontractors.length === 0 ? (
+              {!quote.subcontractors || quote.subcontractors.length === 0 ? (
                 <div className="text-center p-6 border rounded-md bg-muted/30">
                   <p className="text-muted-foreground">No subcontractors added to this quote.</p>
                 </div>
@@ -291,7 +293,8 @@ export function QuoteDetailView({ quote }: QuoteDetailViewProps) {
                         <TableCell className="font-medium">{sub.name}</TableCell>
                         <TableCell>{sub.service}</TableCell>
                         <TableCell>
-                          {sub.frequency.charAt(0).toUpperCase() + sub.frequency.slice(1)}
+                          {typeof sub.frequency === 'string' && 
+                            sub.frequency.charAt(0).toUpperCase() + sub.frequency.slice(1)}
                         </TableCell>
                         <TableCell className="text-right">
                           ${sub.cost.toFixed(2)}

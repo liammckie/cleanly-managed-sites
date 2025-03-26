@@ -1,6 +1,7 @@
 
 import { Day, JsonValue, JsonObject } from '@/types/common';
 import { QuoteShift, QuoteSubcontractor, Quote } from '@/types/models';
+import { Frequency } from '@/types/common';
 
 /**
  * Unified Day type with all possible values to avoid TypeScript errors
@@ -98,6 +99,87 @@ export function adaptQuote<T>(quote: T): Quote {
     if ('subcontractor_cost' in newQuote && !('subcontractorCost' in newQuote)) {
       newQuote.subcontractorCost = newQuote.subcontractor_cost;
     }
+
+    if ('supplies_cost' in newQuote && !('suppliesCost' in newQuote)) {
+      newQuote.suppliesCost = newQuote.supplies_cost;
+    }
+
+    if ('equipment_cost' in newQuote && !('equipmentCost' in newQuote)) {
+      newQuote.equipmentCost = newQuote.equipment_cost;
+    }
+    
+    if ('overhead_cost' in newQuote && !('overheadCost' in newQuote)) {
+      newQuote.overheadCost = newQuote.overhead_cost;
+    }
+    
+    if ('margin_amount' in newQuote && !('marginAmount' in newQuote)) {
+      newQuote.marginAmount = newQuote.margin_amount;
+    }
+    
+    if ('total_cost' in newQuote && !('totalCost' in newQuote)) {
+      newQuote.totalCost = newQuote.total_cost;
+    }
+    
+    if ('created_at' in newQuote && !('createdAt' in newQuote)) {
+      newQuote.createdAt = newQuote.created_at;
+    }
+    
+    if ('updated_at' in newQuote && !('updatedAt' in newQuote)) {
+      newQuote.updatedAt = newQuote.updated_at;
+    }
+    
+    if ('client_id' in newQuote && !('clientId' in newQuote)) {
+      newQuote.clientId = newQuote.client_id;
+    }
+    
+    if ('site_id' in newQuote && !('siteId' in newQuote)) {
+      newQuote.siteId = newQuote.site_id;
+    }
+    
+    if ('start_date' in newQuote && !('startDate' in newQuote)) {
+      newQuote.startDate = newQuote.start_date;
+    }
+    
+    if ('end_date' in newQuote && !('endDate' in newQuote)) {
+      newQuote.endDate = newQuote.end_date;
+    }
+    
+    if ('expiry_date' in newQuote && !('expiryDate' in newQuote)) {
+      newQuote.expiryDate = newQuote.expiry_date;
+    }
+    
+    if ('contract_length' in newQuote && !('contractLength' in newQuote)) {
+      newQuote.contractLength = newQuote.contract_length;
+    }
+    
+    if ('contract_length_unit' in newQuote && !('contractLengthUnit' in newQuote)) {
+      newQuote.contractLengthUnit = newQuote.contract_length_unit;
+    }
+    
+    if ('client_contact' in newQuote && !('clientContact' in newQuote)) {
+      newQuote.clientContact = newQuote.client_contact;
+    }
+    
+    if ('client_email' in newQuote && !('clientEmail' in newQuote)) {
+      newQuote.clientEmail = newQuote.client_email;
+    }
+    
+    if ('client_phone' in newQuote && !('clientPhone' in newQuote)) {
+      newQuote.clientPhone = newQuote.client_phone;
+    }
+    
+    if ('site_address' in newQuote && !('siteAddress' in newQuote)) {
+      newQuote.siteAddress = newQuote.site_address;
+    }
+    
+    // Ensure bidirectional properties
+    if ('clientName' in newQuote && !('client_name' in newQuote)) {
+      newQuote.client_name = newQuote.clientName;
+    }
+    
+    if ('siteName' in newQuote && !('site_name' in newQuote)) {
+      newQuote.site_name = newQuote.siteName;
+    }
     
     // If the quote has shifts, adapt each shift
     if ('shifts' in newQuote && Array.isArray(newQuote.shifts)) {
@@ -176,7 +258,7 @@ export interface UnifiedSubcontractor {
   name: string;
   description?: string;
   cost: number;
-  frequency: string | any; // Make more flexible to avoid type errors
+  frequency: Frequency | string; // Allow string for flexibility
   email?: string;
   phone?: string;
   services?: string[];
@@ -226,7 +308,7 @@ export function dbToQuoteSubcontractor(dbSubcontractor: DbQuoteSubcontractor): Q
     name: dbSubcontractor.name,
     description: dbSubcontractor.description || '',
     cost: dbSubcontractor.cost || 0,
-    frequency: dbSubcontractor.frequency || 'monthly',
+    frequency: dbSubcontractor.frequency as Frequency || 'monthly',
     email: dbSubcontractor.email || '',
     phone: dbSubcontractor.phone || '',
     service: dbSubcontractor.service || '',
@@ -248,7 +330,7 @@ export function adaptQuoteSubcontractor(sub: any): QuoteSubcontractor {
     name: sub.name || '',
     description: sub.description || '',
     cost: sub.cost || 0,
-    frequency: sub.frequency || 'monthly',
+    frequency: (sub.frequency || 'monthly') as Frequency,
     email: sub.email || '',
     phone: sub.phone || '',
     service: sub.service || '',

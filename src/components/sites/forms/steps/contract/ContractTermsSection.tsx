@@ -1,170 +1,251 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle
+} from '@/components/ui/card';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
-import { SiteFormData } from '../../siteFormTypes';
+import { Trash2, Plus } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { ContractTerm } from '@/components/sites/contract/types';
 
 interface ContractTermsSectionProps {
-  formData: SiteFormData;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  addContractTerm?: () => void;
-  removeContractTerm?: (index: number) => void;
-  updateContractTerm?: (index: number, field: string, value: any) => void;
+  contractTerms: ContractTerm[];
+  onChange: (newTerms: ContractTerm[]) => void;
 }
 
-export function ContractTermsSection({ 
-  formData, 
-  handleNestedChange,
-  addContractTerm,
-  removeContractTerm,
-  updateContractTerm
-}: ContractTermsSectionProps) {
+export const ContractTermsSection: React.FC<ContractTermsSectionProps> = ({ 
+  contractTerms,
+  onChange
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTerm, setEditingTerm] = useState<ContractTerm | null>(null);
+  const [newTerm, setNewTerm] = useState<ContractTerm>({
+    name: '',
+    startDate: '',
+    endDate: '',
+    renewalTerms: '',
+    terminationPeriod: '',
+    autoRenew: false
+  });
+  
+  const handleOpenDialog = (term?: ContractTerm) => {
+    if (term) {
+      setEditingTerm(term);
+      setNewTerm({...term});
+    } else {
+      setEditingTerm(null);
+      setNewTerm({
+        name: '',
+        startDate: '',
+        endDate: '',
+        renewalTerms: '',
+        terminationPeriod: '',
+        autoRenew: false
+      });
+    }
+    setIsDialogOpen(true);
+  };
+  
+  const handleSaveTerm = () => {
+    if (editingTerm) {
+      // Update existing term
+      const updatedTerms = contractTerms.map(term => 
+        term.id === editingTerm.id ? { ...newTerm, id: term.id } : term
+      );
+      onChange(updatedTerms);
+    } else {
+      // Add new term
+      const termWithId = { ...newTerm, id: uuidv4() };
+      onChange([...contractTerms, termWithId]);
+    }
+    setIsDialogOpen(false);
+  };
+  
+  const handleDeleteTerm = (id: string) => {
+    onChange(contractTerms.filter(term => term.id !== id));
+  };
+  
+  const handleChangeField = (field: keyof ContractTerm, value: any) => {
+    setNewTerm(prev => ({ ...prev, [field]: value }));
+  };
+  
   return (
-    <div className="glass-card p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Special Conditions and Contract Terms</h3>
-        {addContractTerm && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm" 
-            onClick={addContractTerm}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" /> Add Term
-          </Button>
-        )}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Contract Terms</h3>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleOpenDialog()}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Contract Term
+        </Button>
       </div>
       
-      {formData.contractDetails.terms && formData.contractDetails.terms.length > 0 ? (
-        <div className="space-y-4">
-          {formData.contractDetails.terms.map((term, index) => (
-            <Card key={index} className="border border-muted">
-              <CardHeader className="pb-2 flex flex-row items-start justify-between">
-                <CardTitle className="text-base font-medium">
-                  Term {index + 1}: {term.name || 'Untitled Term'}
-                </CardTitle>
-                {removeContractTerm && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => removeContractTerm(index)}
-                    className="h-8 w-8 p-0 text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+      {contractTerms.length === 0 ? (
+        <div className="text-center p-6 border rounded-md bg-muted/30">
+          <p className="text-muted-foreground">No contract terms have been added.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add terms that define the contractual relationship, such as renewal conditions.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {contractTerms.map((term) => (
+            <Card key={term.id}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">{term.name}</CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-name-${index}`}>Term Name</Label>
-                    <Input
-                      id={`term-name-${index}`}
-                      value={term.name}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'name', e.target.value)}
-                      className="glass-input"
-                    />
+              <CardContent className="pb-2">
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Start Date:</span>
+                    <span>{term.startDate}</span>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-description-${index}`}>Description</Label>
-                    <Input
-                      id={`term-description-${index}`}
-                      value={term.description}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'description', e.target.value)}
-                      className="glass-input"
-                    />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">End Date:</span>
+                    <span>{term.endDate}</span>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-start-date-${index}`}>Start Date</Label>
-                    <Input
-                      id={`term-start-date-${index}`}
-                      type="date"
-                      value={term.startDate}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'startDate', e.target.value)}
-                      className="glass-input"
-                    />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Renewal Terms:</span>
+                    <span>{term.renewalTerms}</span>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-end-date-${index}`}>End Date</Label>
-                    <Input
-                      id={`term-end-date-${index}`}
-                      type="date"
-                      value={term.endDate}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'endDate', e.target.value)}
-                      className="glass-input"
-                    />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Termination Period:</span>
+                    <span>{term.terminationPeriod}</span>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-renewal-terms-${index}`}>Renewal Terms</Label>
-                    <Input
-                      id={`term-renewal-terms-${index}`}
-                      value={term.renewalTerms}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'renewalTerms', e.target.value)}
-                      className="glass-input"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor={`term-termination-period-${index}`}>Termination Period</Label>
-                    <Input
-                      id={`term-termination-period-${index}`}
-                      value={term.terminationPeriod}
-                      onChange={(e) => updateContractTerm && updateContractTerm(index, 'terminationPeriod', e.target.value)}
-                      className="glass-input"
-                    />
-                  </div>
-                  
-                  <div className="col-span-2 flex items-center space-x-2 mt-2">
-                    <Checkbox 
-                      id={`term-auto-renew-${index}`} 
-                      checked={term.autoRenew || false}
-                      onCheckedChange={(checked) => updateContractTerm && updateContractTerm(index, 'autoRenew', checked)}
-                    />
-                    <Label htmlFor={`term-auto-renew-${index}`}>Auto-renew this term</Label>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Auto-Renew:</span>
+                    <span>{term.autoRenew ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </CardContent>
+              <CardFooter>
+                <div className="flex justify-between w-full">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleOpenDialog(term)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDeleteTerm(term.id!)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Remove
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
           ))}
         </div>
-      ) : (
-        <div className="text-center py-4 text-muted-foreground">
-          No special conditions or terms added. Click "Add Term" to create a new condition or term.
-        </div>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="termination-period">Main Termination Period</Label>
-        <Input
-          id="termination-period"
-          placeholder="e.g., 30 days notice"
-          value={formData.contractDetails.terminationPeriod}
-          onChange={(e) => handleNestedChange('contractDetails', 'terminationPeriod', e.target.value)}
-          className="glass-input"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="renewal-terms">General Renewal Terms</Label>
-        <Textarea
-          id="renewal-terms"
-          placeholder="Enter renewal terms..."
-          rows={3}
-          value={formData.contractDetails.renewalTerms}
-          onChange={(e) => handleNestedChange('contractDetails', 'renewalTerms', e.target.value)}
-          className="glass-input resize-none"
-        />
-      </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingTerm ? `Edit Contract Term: ${editingTerm.name}` : 'Add Contract Term'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Term Name</Label>
+              <Input 
+                id="name"
+                value={newTerm.name}
+                onChange={(e) => handleChangeField('name', e.target.value)}
+                placeholder="e.g. Initial Contract Term"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input 
+                  id="startDate"
+                  type="date"
+                  value={newTerm.startDate}
+                  onChange={(e) => handleChangeField('startDate', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input 
+                  id="endDate"
+                  type="date"
+                  value={newTerm.endDate}
+                  onChange={(e) => handleChangeField('endDate', e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="renewalTerms">Renewal Terms</Label>
+              <Textarea 
+                id="renewalTerms"
+                value={newTerm.renewalTerms}
+                onChange={(e) => handleChangeField('renewalTerms', e.target.value)}
+                placeholder="e.g. Contract renews for additional 12 months unless terminated"
+                rows={2}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="terminationPeriod">Termination Period</Label>
+              <Input 
+                id="terminationPeriod"
+                value={newTerm.terminationPeriod}
+                onChange={(e) => handleChangeField('terminationPeriod', e.target.value)}
+                placeholder="e.g. 30 days written notice"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="autoRenew" 
+                checked={newTerm.autoRenew}
+                onCheckedChange={(checked) => handleChangeField('autoRenew', checked)}
+              />
+              <Label htmlFor="autoRenew">Auto-Renew</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTerm}>
+              {editingTerm ? 'Update' : 'Add'} Term
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};

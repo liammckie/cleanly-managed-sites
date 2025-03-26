@@ -1,74 +1,152 @@
 
 import { supabase } from '@/lib/supabase';
 import { QuoteSubcontractor } from '@/types/models';
+import { adaptQuoteSubcontractor, quoteSubcontractorToDb } from '@/utils/typeAdapters';
 
-// Fetch all subcontractors for a quote
-export const fetchQuoteSubcontractors = async (quoteId: string): Promise<QuoteSubcontractor[]> => {
+/**
+ * Fetches all quote subcontractors
+ */
+export async function fetchQuoteSubcontractors(): Promise<QuoteSubcontractor[]> {
+  const { data, error } = await supabase
+    .from('quote_subcontractors')
+    .select('*');
+    
+  if (error) throw new Error(`Error fetching quote subcontractors: ${error.message}`);
+  
+  // Create a proper return array with default values for missing properties
+  const subcontractors = data.map(item => {
+    return {
+      id: item.id,
+      quoteId: item.quote_id,
+      name: item.name,
+      description: item.description || '',
+      cost: item.cost,
+      frequency: item.frequency,
+      // The database might not have these fields yet, so we use defaults
+      email: item.email || '',
+      phone: item.phone || '',
+      service: item.service || '',
+      notes: item.notes || '',
+      services: item.services || [],
+      customServices: item.custom_services || '',
+      monthlyCost: item.monthly_cost || 0,
+      isFlatRate: item.is_flat_rate || false
+    };
+  });
+  
+  return subcontractors.map(adaptQuoteSubcontractor);
+}
+
+/**
+ * Fetches quote subcontractors for a specific quote
+ */
+export async function fetchQuoteSubcontractorsByQuoteId(quoteId: string): Promise<QuoteSubcontractor[]> {
   const { data, error } = await supabase
     .from('quote_subcontractors')
     .select('*')
     .eq('quote_id', quoteId);
+    
+  if (error) throw new Error(`Error fetching quote subcontractors by quote ID: ${error.message}`);
+  
+  // Create a proper return array with default values for missing properties
+  const subcontractors = data.map(item => {
+    return {
+      id: item.id,
+      quoteId: item.quote_id,
+      name: item.name,
+      description: item.description || '',
+      cost: item.cost,
+      frequency: item.frequency,
+      // The database might not have these fields yet, so we use defaults
+      email: item.email || '',
+      phone: item.phone || '',
+      service: item.service || '',
+      notes: item.notes || '',
+      services: item.services || [],
+      customServices: item.custom_services || '',
+      monthlyCost: item.monthly_cost || 0,
+      isFlatRate: item.is_flat_rate || false
+    };
+  });
+  
+  return subcontractors.map(adaptQuoteSubcontractor);
+}
 
-  if (error) {
-    throw new Error(`Error fetching subcontractors: ${error.message}`);
-  }
+/**
+ * Fetches a single quote subcontractor by ID
+ */
+export async function fetchQuoteSubcontractor(id: string): Promise<QuoteSubcontractor> {
+  const { data, error } = await supabase
+    .from('quote_subcontractors')
+    .select('*')
+    .eq('id', id)
+    .single();
+    
+  if (error) throw new Error(`Error fetching quote subcontractor: ${error.message}`);
+  
+  // Create a proper return object with default values for missing properties
+  const subcontractor = {
+    id: data.id,
+    quoteId: data.quote_id,
+    name: data.name,
+    description: data.description || '',
+    cost: data.cost,
+    frequency: data.frequency,
+    // The database might not have these fields yet, so we use defaults
+    email: data.email || '',
+    phone: data.phone || '',
+    service: data.service || '',
+    notes: data.notes || '',
+    services: data.services || [],
+    customServices: data.custom_services || '',
+    monthlyCost: data.monthly_cost || 0,
+    isFlatRate: data.is_flat_rate || false
+  };
+  
+  return adaptQuoteSubcontractor(subcontractor);
+}
 
-  return data.map(subcontractor => ({
-    id: subcontractor.id,
-    quoteId: subcontractor.quote_id,
-    name: subcontractor.name,
+/**
+ * Creates a new quote subcontractor
+ */
+export async function createQuoteSubcontractorMutation(subcontractor: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> {
+  const dbSubcontractor = quoteSubcontractorToDb({
+    id: '',
+    quoteId: subcontractor.quoteId || '',
+    name: subcontractor.name || '',
     description: subcontractor.description || '',
-    cost: subcontractor.cost,
+    cost: subcontractor.cost || 0,
     frequency: subcontractor.frequency || 'monthly',
     email: subcontractor.email || '',
     phone: subcontractor.phone || '',
     service: subcontractor.service || '',
     notes: subcontractor.notes || '',
     services: subcontractor.services || [],
-    customServices: subcontractor.custom_services || '',
-    monthlyCost: subcontractor.monthly_cost || 0,
-    isFlatRate: subcontractor.is_flat_rate || false,
-  }));
-};
-
-// Create a new subcontractor for a quote
-export const createQuoteSubcontractor = async (quoteId: string, subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> => {
-  // Convert camelCase to snake_case for database storage
-  const dbSubcontractor = {
-    quote_id: quoteId,
-    name: subcontractorData.name,
-    description: subcontractorData.description || '',
-    cost: subcontractorData.cost || 0,
-    frequency: subcontractorData.frequency || 'monthly',
-    email: subcontractorData.email || '',
-    phone: subcontractorData.phone || '',
-    service: subcontractorData.service || '',
-    notes: subcontractorData.notes || '',
-    services: subcontractorData.services || [],
-    custom_services: subcontractorData.customServices || '',
-    monthly_cost: subcontractorData.monthlyCost || 0,
-    is_flat_rate: subcontractorData.isFlatRate || true
-  };
-
-  // Insert the subcontractor into the database
+    customServices: subcontractor.customServices || '',
+    monthlyCost: subcontractor.monthlyCost || 0,
+    isFlatRate: subcontractor.isFlatRate || false
+  } as QuoteSubcontractor);
+  
+  // Remove the ID field so Supabase will generate a new one
+  delete (dbSubcontractor as any).id;
+  
   const { data, error } = await supabase
     .from('quote_subcontractors')
     .insert(dbSubcontractor)
     .select()
     .single();
-
-  if (error) {
-    throw new Error(`Error creating subcontractor: ${error.message}`);
-  }
-
-  // Convert the database record to the client-side format
-  return {
+    
+  if (error) throw new Error(`Error creating quote subcontractor: ${error.message}`);
+  
+  // Create a proper return object with default values for missing properties
+  const newSubcontractor = {
     id: data.id,
     quoteId: data.quote_id,
     name: data.name,
     description: data.description || '',
     cost: data.cost,
     frequency: data.frequency,
+    // The database might not have these fields yet, so we use defaults
     email: data.email || '',
     phone: data.phone || '',
     service: data.service || '',
@@ -78,46 +156,34 @@ export const createQuoteSubcontractor = async (quoteId: string, subcontractorDat
     monthlyCost: data.monthly_cost || 0,
     isFlatRate: data.is_flat_rate || false
   };
-};
+  
+  return adaptQuoteSubcontractor(newSubcontractor);
+}
 
-// Update an existing subcontractor
-export const updateQuoteSubcontractor = async (subcontractorId: string, subcontractorData: Partial<QuoteSubcontractor>): Promise<QuoteSubcontractor> => {
-  // Convert camelCase to snake_case for database storage
-  const dbSubcontractor = {
-    name: subcontractorData.name,
-    description: subcontractorData.description || '',
-    cost: subcontractorData.cost || 0,
-    frequency: subcontractorData.frequency || 'monthly',
-    email: subcontractorData.email || '',
-    phone: subcontractorData.phone || '',
-    service: subcontractorData.service || '',
-    notes: subcontractorData.notes || '',
-    services: subcontractorData.services || [],
-    custom_services: subcontractorData.customServices || '',
-    monthly_cost: subcontractorData.monthlyCost || 0,
-    is_flat_rate: subcontractorData.isFlatRate || true
-  };
-
-  // Update the subcontractor in the database
+/**
+ * Updates an existing quote subcontractor
+ */
+export async function updateQuoteSubcontractorMutation(subcontractor: QuoteSubcontractor): Promise<QuoteSubcontractor> {
+  const dbSubcontractor = quoteSubcontractorToDb(subcontractor);
+  
   const { data, error } = await supabase
     .from('quote_subcontractors')
     .update(dbSubcontractor)
-    .eq('id', subcontractorId)
+    .eq('id', subcontractor.id)
     .select()
     .single();
-
-  if (error) {
-    throw new Error(`Error updating subcontractor: ${error.message}`);
-  }
-
-  // Convert the database record to the client-side format
-  return {
+    
+  if (error) throw new Error(`Error updating quote subcontractor: ${error.message}`);
+  
+  // Create a proper return object with default values for missing properties
+  const updatedSubcontractor = {
     id: data.id,
     quoteId: data.quote_id,
     name: data.name,
     description: data.description || '',
     cost: data.cost,
     frequency: data.frequency,
+    // The database might not have these fields yet, so we use defaults
     email: data.email || '',
     phone: data.phone || '',
     service: data.service || '',
@@ -127,16 +193,18 @@ export const updateQuoteSubcontractor = async (subcontractorId: string, subcontr
     monthlyCost: data.monthly_cost || 0,
     isFlatRate: data.is_flat_rate || false
   };
-};
+  
+  return adaptQuoteSubcontractor(updatedSubcontractor);
+}
 
-// Delete a subcontractor
-export const deleteQuoteSubcontractor = async (subcontractorId: string): Promise<void> => {
+/**
+ * Deletes a quote subcontractor
+ */
+export async function deleteQuoteSubcontractorMutation(id: string): Promise<void> {
   const { error } = await supabase
     .from('quote_subcontractors')
     .delete()
-    .eq('id', subcontractorId);
-
-  if (error) {
-    throw new Error(`Error deleting subcontractor: ${error.message}`);
-  }
-};
+    .eq('id', id);
+    
+  if (error) throw new Error(`Error deleting quote subcontractor: ${error.message}`);
+}

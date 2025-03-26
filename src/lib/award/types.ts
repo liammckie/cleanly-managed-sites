@@ -1,190 +1,132 @@
 
-// Employee levels
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+// This file contains the types used by the award module
 
-// Employment types
-export type EmploymentType = 'full_time' | 'part_time' | 'casual';
+export type Day = 
+  | "monday" 
+  | "tuesday" 
+  | "wednesday" 
+  | "thursday" 
+  | "friday" 
+  | "saturday" 
+  | "sunday" 
+  | "public_holiday"
+  | "weekday"; // Added to match the common type
 
-// Days of the week
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'public_holiday';
+export type EmploymentType = "casual" | "part_time" | "full_time";
 
-// Pay conditions
-export type PayCondition = 
-  'base' | 
-  'standard' | 
-  'weekday' | 
-  'monday' | 
-  'tuesday' | 
-  'wednesday' | 
-  'thursday' | 
-  'friday' | 
-  'saturday' | 
-  'sunday' | 
-  'public_holiday' |  // Added to ensure consistency - use underscores instead of hyphens
-  'shift-early-late' | 
-  'early_morning' | 
-  'evening' | 
-  'night' | 
-  'overnight' | 
-  'overtime-first-2-hours' | 
-  'overtime-after-2-hours' | 
-  'overtime-sunday' | 
-  'overtime-public-holiday';
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6; // Added 6 to match with the models type
 
-// Rate definition
-export interface RateDefinition {
-  percentage: number;
-  description: string;
-}
+export type Frequency = 
+  | "daily" 
+  | "weekly" 
+  | "fortnightly" 
+  | "monthly" 
+  | "quarterly" 
+  | "yearly" 
+  | "once";
 
-// Level rates
-export interface EmployeeLevelRates {
-  base: number;
-  loading: Record<PayCondition, number>;
-}
-
-// Award settings
-export interface AwardSettings {
-  useModernAward: boolean;
-  usePenalties: boolean;
-  includeAllowances: boolean;
-  awardVersion: string;
-  customRates: boolean;
-  baseRateMultiplier: number;
-  overheadPercentageDefault: number;
-  marginPercentageDefault: number;
-  lastUpdated: string;
-  baseRates: Record<EmployeeLevel, number>;
-  loadingRates: Record<PayCondition, RateDefinition>;
-  allowances: {
-    meal: { amount: number; unit: string };
-    travel: { amount: number; unit: string };
-    uniform: { amount: number; unit: string };
-    laundry: { amount: number; unit: string };
-    other: { amount: number; unit: string };
-  };
-}
-
-// Award data
-export interface AwardData {
-  settings: AwardSettings;
-  rates: Record<EmployeeLevel, EmployeeLevelRates>;
-  penalties: Record<PayCondition, RateDefinition>;
-  employeeLevelRates: Record<EmployeeLevel, EmployeeLevelRates>;
-  conditionRates: Record<PayCondition, RateDefinition>;
-}
-
-// For job cost calculation
-export interface JobCostCalculationInput {
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
-  hours: Record<PayCondition, number>;
-  overheadPercentage: number;
-  marginPercentage: number;
-}
-
-export interface CostCalculationResult {
-  baseRate: number;
-  totalHours: number;
-  laborCost: number;
-  overheadCost: number;
-  totalCost: number;
-  margin: number;
-  price: number;
-  totalCostBeforeMargin: number;
-  items: Array<{
-    condition: PayCondition;
-    hours: number;
-    rate: number;
-    cost: number;
-  }>;
-}
-
-// Quote types
-export interface Quote {
-  id: string;
-  name: string;
-  clientName: string;
-  siteName: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
-  startDate: string;
-  endDate: string;
-  expiryDate: string;
-  contractLength: number;
-  contractLengthUnit: 'days' | 'weeks' | 'months' | 'years';
-  overheadProfile: string;
-  overheadPercentage: number;
-  marginPercentage: number;
-  laborCost: number;
-  overheadCost: number;
-  subcontractorCost: number;
-  totalCost: number;
-  marginAmount: number;
-  totalPrice: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  notes: string;
-  shifts: QuoteShift[];
-  subcontractors: Subcontractor[];
-  
-  // Adding missing properties that are referenced in the code
-  title?: string;
-  description?: string;
-  suppliesCost?: number;
-  equipmentCost?: number;
-  quoteNumber?: string;
-  validUntil?: string;
-  clientId?: string;
-  clientContact?: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  siteAddress?: string;
-  siteId?: string;
-  frequency?: string;
-  scope?: string;
-  terms?: string;
-  userId?: string;
-}
-
-export type Frequency = 'one_time' | 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
+export type QuoteStatus = 
+  | "draft" 
+  | "sent" 
+  | "approved" 
+  | "rejected" 
+  | "expired"
+  | "pending"
+  | "accepted";
 
 export interface QuoteShift {
   id: string;
   quoteId: string;
-  day: Day | string;
+  day: Day;
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: EmploymentType | string;
-  level: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
   allowances: string[];
   estimatedCost: number;
   location: string;
   notes: string;
 }
 
-export interface Subcontractor {
+export interface QuoteSubcontractor {
   id: string;
-  quoteId?: string;
+  quoteId: string;
   name: string;
   description?: string;
   cost: number;
-  frequency: Frequency | string;
-  services?: string[];
+  frequency: Frequency;
   email?: string;
   phone?: string;
   notes?: string;
   service?: string;
   customServices?: string;
-  rate?: number;
   monthlyCost?: number;
   isFlatRate?: boolean;
+}
+
+export interface Quote {
+  id: string;
+  name: string;
+  clientName: string;
+  siteName?: string;
+  description?: string;
+  status: QuoteStatus;
+  overheadPercentage: number;
+  marginPercentage: number;
+  totalPrice: number;
+  laborCost: number;
+  suppliesCost?: number;
+  equipmentCost?: number;
+  subcontractorCost: number;
+  createdAt: string;
+  updatedAt: string;
+  notes: string;
+  overheadCost: number;
+  totalCost: number;
+  marginAmount: number;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
+  contractLength?: number;
+  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
+  clientId?: string;
+  siteId?: string;
+  shifts?: QuoteShift[];
+  subcontractors?: QuoteSubcontractor[];
   
-  // Adding aliased properties for backwards compatibility
-  businessName?: string;
-  contactName?: string;
-  business_name?: string;
-  contact_name?: string;
+  // Additional fields for compatibility
+  client_name: string;
+  site_name?: string;
+  overhead_percentage: number;
+  margin_percentage: number;
+  total_price: number;
+  labor_cost: number;
+  supplies_cost?: number;
+  equipment_cost?: number;
+  subcontractor_cost: number;
+  created_at: string;
+  updated_at: string;
+  overhead_cost: number;
+  total_cost: number;
+  margin_amount: number;
+  start_date?: string;
+  end_date?: string;
+  expiry_date?: string;
+  contract_length?: number;
+  contract_length_unit?: 'days' | 'weeks' | 'months' | 'years';
+  client_id?: string;
+  site_id?: string;
+  clientContact?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  siteAddress?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  client_contact?: string;
+  client_email?: string;
+  client_phone?: string;
+  site_address?: string;
 }

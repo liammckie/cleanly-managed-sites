@@ -14,7 +14,7 @@ export type Day =
 
 export type EmploymentType = "casual" | "part_time" | "full_time";
 
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6; // Added level 6
 
 export type BillingFrequency = 
   | "weekly" 
