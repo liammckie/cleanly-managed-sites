@@ -9,9 +9,10 @@ export * from './replenishableTypes';
 export * from './securityTypes';
 export * from './formValidation';
 export * from './initialFormData';
+export * from './billingTypes';
+export * from './siteFormHandlers';
 
 // Fix ambiguity by explicitly re-exporting as types
 export type { AdHocWorkAuthorization } from './adHocWorkTypes';
 export type { JobSpecifications } from './jobSpecificationTypes';
 export type { SecurityDetails } from './securityTypes';
-export type { BillingDetails, BillingLine, BillingFrequency, BillingContact, BillingAmounts } from './billingTypes';

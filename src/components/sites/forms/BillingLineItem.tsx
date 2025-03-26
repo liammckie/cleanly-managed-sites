@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
-import { BillingLine, BillingFrequency } from './types/billingTypes';
+import { BillingLine } from './types/billingTypes';
 
 interface BillingLineItemProps {
   line: BillingLine;
@@ -27,7 +27,7 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
     if (line.amount !== undefined && line.frequency) {
       const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
         line.amount,
-        line.frequency as BillingFrequency
+        line.frequency
       );
       
       // Only update if values have changed

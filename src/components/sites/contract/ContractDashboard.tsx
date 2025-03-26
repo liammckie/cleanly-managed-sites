@@ -18,7 +18,7 @@ export function ContractDashboard() {
   const { data: forecastData } = useContractForecast();
   const { data: sitesData } = useSites();
   
-  // Convert summary data to the expected format
+  // Convert summary data to the expected format with default values for all required properties
   const summaryData: ContractSummaryData = {
     expiringThisMonth: forecastData?.summaryData?.expiringThisMonth || 0,
     expiringNext3Months: forecastData?.summaryData?.expiringNext3Months || 0,

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { getSiteFormSteps } from './siteFormConfig';
@@ -19,7 +18,7 @@ interface EditSiteFormProps {
 
 export function EditSiteForm({ site }: EditSiteFormProps) {
   // Get form state and handlers from the useSiteForm hook
-  const siteForm = useSiteForm() as SiteFormHandlers;
+  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
   
   // Use our custom hooks to organize logic
   const { handleSubmit, isSaving } = useEditSiteActions(site, siteForm.formData);

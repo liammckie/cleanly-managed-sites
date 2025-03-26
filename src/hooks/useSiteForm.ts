@@ -21,6 +21,13 @@ export function useSiteForm(initialData: Partial<SiteFormData> = {}) {
       endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
       autoRenewal: false,
       contractNumber: '',
+      contractLength: 12,
+      contractLengthUnit: 'months',
+      renewalPeriod: 12,
+      renewalNotice: 30, 
+      noticeUnit: 'days',
+      serviceFrequency: 'weekly',
+      serviceDeliveryMethod: 'in-person'
     },
     billingDetails: {
       billingCycle: 'monthly',

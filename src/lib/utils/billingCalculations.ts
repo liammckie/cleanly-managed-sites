@@ -1,45 +1,34 @@
 
-import { BillingFrequency, BillingLine } from '@/components/sites/forms/types/billingTypes';
+import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
-interface BillingAmounts {
-  weeklyAmount: number;
-  monthlyAmount: number;
-  annualAmount: number;
-}
+export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
 
 /**
- * Calculates weekly, monthly, and annual amounts based on a billing amount and frequency
+ * Calculate derived billing amounts based on the primary amount and frequency
  */
-export const calculateBillingAmounts = (
-  amount: number,
-  frequency: BillingFrequency
-): BillingAmounts => {
+export function calculateBillingAmounts(amount: number, frequency: string) {
   let weeklyAmount = 0;
   let monthlyAmount = 0;
   let annualAmount = 0;
 
-  if (amount === 0) {
-    return { weeklyAmount, monthlyAmount, annualAmount };
-  }
-
   switch (frequency) {
     case 'weekly':
       weeklyAmount = amount;
-      monthlyAmount = amount * 4.33;
+      monthlyAmount = amount * 52 / 12;
       annualAmount = amount * 52;
       break;
     case 'fortnightly':
       weeklyAmount = amount / 2;
-      monthlyAmount = amount * 2.165;
+      monthlyAmount = amount * 26 / 12;
       annualAmount = amount * 26;
       break;
     case 'monthly':
-      weeklyAmount = amount / 4.33;
+      weeklyAmount = amount * 12 / 52;
       monthlyAmount = amount;
       annualAmount = amount * 12;
       break;
     case 'quarterly':
-      weeklyAmount = amount / 13;
+      weeklyAmount = amount * 4 / 52;
       monthlyAmount = amount / 3;
       annualAmount = amount * 4;
       break;
@@ -60,60 +49,38 @@ export const calculateBillingAmounts = (
   }
 
   return {
-    weeklyAmount: parseFloat(weeklyAmount.toFixed(2)),
-    monthlyAmount: parseFloat(monthlyAmount.toFixed(2)),
-    annualAmount: parseFloat(annualAmount.toFixed(2)),
+    weeklyAmount,
+    monthlyAmount,
+    annualAmount
   };
-};
+}
 
 /**
- * Calculates the total billing amounts across all lines
+ * Calculate total billing amounts across all billing lines
  */
-export const calculateTotalBillingAmounts = (
-  billingLines: BillingLine[]
-): BillingAmounts => {
-  return billingLines.reduce(
-    (totals, line) => {
-      // Skip non-recurring lines for totals
-      if (!line.isRecurring || line.onHold) {
-        return totals;
-      }
+export function calculateTotalBillingAmounts(billingLines: BillingLine[]) {
+  let totalWeeklyAmount = 0;
+  let totalMonthlyAmount = 0;
+  let totalAnnualAmount = 0;
 
-      const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
-        line.amount,
-        line.frequency as BillingFrequency
-      );
+  billingLines.forEach(line => {
+    if (!line.onHold) {
+      totalWeeklyAmount += line.weeklyAmount || 0;
+      totalMonthlyAmount += line.monthlyAmount || 0;
+      totalAnnualAmount += line.annualAmount || 0;
+    }
+  });
 
-      return {
-        weeklyAmount: totals.weeklyAmount + weeklyAmount,
-        monthlyAmount: totals.monthlyAmount + monthlyAmount,
-        annualAmount: totals.annualAmount + annualAmount,
-      };
-    },
-    { weeklyAmount: 0, monthlyAmount: 0, annualAmount: 0 }
-  );
-};
-
-/**
- * Creates a BillingLine object with default values
- */
-export const createBillingLine = (description: string = '', amount: number = 0): BillingLine => {
   return {
-    id: crypto.randomUUID(),
-    description,
-    amount,
-    frequency: 'monthly',
-    isRecurring: true,
-    onHold: false,
-    weeklyAmount: 0,
-    monthlyAmount: 0,
-    annualAmount: 0,
+    totalWeeklyAmount,
+    totalMonthlyAmount,
+    totalAnnualAmount
   };
-};
+}
 
 /**
- * Checks if a site's billing is on hold
+ * Check if site billing is on hold
  */
-export const isSiteBillingOnHold = (billingOnHold?: boolean): boolean => {
-  return !!billingOnHold;
-};
+export function isSiteBillingOnHold(billingOnHold?: boolean) {
+  return billingOnHold === true;
+}

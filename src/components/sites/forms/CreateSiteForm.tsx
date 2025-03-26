@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useSiteForm } from '@/hooks/useSiteForm';
@@ -17,7 +16,7 @@ export function CreateSiteForm() {
   const formMethods = useForm<SiteFormData>();
   
   // Use the custom hooks
-  const siteForm = useSiteForm() as SiteFormHandlers;
+  const siteForm = useSiteForm() as unknown as SiteFormHandlers;
   
   // Use the form submission hook
   const { handleSubmit, isSubmitting } = useCreateSiteFormSubmit(siteForm.formData);

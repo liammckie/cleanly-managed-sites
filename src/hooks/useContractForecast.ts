@@ -38,7 +38,7 @@ function calculateForecast(sites: SiteRecord[]) {
 
   // Process each site
   sites.forEach(site => {
-    const details = asJsonObject(site.contract_details, { startDate: '', endDate: '' });
+    const details = asJsonObject(site.contract_details, {});
     const contractStart = details.startDate ? new Date(details.startDate) : null;
     const contractEnd = details.endDate ? new Date(details.endDate) : null;
     

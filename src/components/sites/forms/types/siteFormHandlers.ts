@@ -1,40 +1,39 @@
 
-import { SiteFormData } from "./siteFormData";
-import { BillingContact } from "./billingTypes";
+import { SiteFormData } from './siteFormData';
 
 export interface SiteFormHandlers {
   formData: SiteFormData;
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
-  step: number;
-  setStep: React.Dispatch<React.SetStateAction<number>>;
-  isSubmitting: boolean;
-  handleSubmit: (siteId?: string) => Promise<any>; // Change to Promise<any> instead of Promise<{id: string}>
-  handleClientChange: (clientId: string) => void;
-  loadSiteData: (siteData: any) => void;
-  loadClientData: (clientId: string) => void;
+  step?: number;
+  setStep?: (step: number) => void;
+  errors?: Record<string, string>;
+  handleChange?: (field: keyof SiteFormData, value: any) => void;
+  handleNestedChange?: (section: keyof SiteFormData, field: string, value: any) => void;
+  handleDoubleNestedChange?: (section: keyof SiteFormData, subsection: string, field: string, value: any) => void;
+  handleClientChange?: (clientId: string) => void;
+  loadSiteData?: (siteId: string) => Promise<void>;
+  loadClientData?: (clientId: string) => Promise<void>;
+  validateStep?: (stepIndex: number) => boolean;
+  getCompletionPercentage?: () => number;
+  handleSubmit?: () => Promise<void>;
+  form?: any;
   
-  // Form field handlers
-  handleChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  handleNestedChange?: (section: string, field: string, value: any) => void;
-  handleDoubleNestedChange?: (section: string, subsection: string, field: string, value: any) => void;
-  
-  // Subcontractor handlers
-  updateSubcontractor?: (index: number, field: string, value: any) => void;
-  addSubcontractor?: () => void;
-  removeSubcontractor?: (index: number) => void;
-  
-  // Replenishable handlers
-  addReplenishable?: () => void;
-  updateReplenishable?: (index: number, field: string, value: any) => void;
-  removeReplenishable?: (index: number) => void;
-  
-  // Billing handlers
+  // Billing lines handlers
   addBillingLine?: () => void;
   updateBillingLine?: (id: string, field: string, value: any) => void;
   removeBillingLine?: (id: string) => void;
-  addBillingContact?: (contact: BillingContact) => void;
   
-  // Contract handlers
+  // Subcontractor handlers
+  addSubcontractor?: () => void;
+  updateSubcontractor?: (index: number, field: string, value: any) => void;
+  removeSubcontractor?: (index: number) => void;
+  
+  // Replenishable handlers
+  addReplenishable?: (type: 'stock' | 'supplies') => void;
+  updateReplenishable?: (type: 'stock' | 'supplies', index: number, field: string, value: any) => void;
+  removeReplenishable?: (type: 'stock' | 'supplies', index: number) => void;
+  
+  // Contract term handlers
   addContractTerm?: () => void;
   updateContractTerm?: (index: number, field: string, value: any) => void;
   removeContractTerm?: (index: number) => void;
@@ -43,12 +42,4 @@ export interface SiteFormHandlers {
   addAdditionalContract?: () => void;
   updateAdditionalContract?: (index: number, field: string, value: any) => void;
   removeAdditionalContract?: (index: number) => void;
-  
-  // Validation
-  validateStep?: (step: number) => boolean;
-  errors?: Record<string, string>;
-  getCompletionPercentage?: () => number;
-  
-  // React Hook Form integration
-  form?: any;
 }
