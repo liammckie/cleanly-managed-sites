@@ -47,6 +47,22 @@ export interface BillingDetails {
   serviceType?: string;
   deliveryMethod?: string;
   xeroContactId?: string;
+  // Additional fields used in BillingDetailsSummary
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  // Fields for ContractDetailsStep
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  // Field for ReviewStep
+  rate?: number;
 }
 
 export interface BillingAmounts {
@@ -61,4 +77,5 @@ export interface BillingContact {
   email: string;
   phone?: string;
   primary?: boolean;
+  role?: string;
 }

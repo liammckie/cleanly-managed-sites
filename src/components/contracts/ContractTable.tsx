@@ -14,7 +14,7 @@ export function ContractTable({ contracts, count }: ContractTableProps) {
       <DataTable 
         columns={contractColumns} 
         data={contracts} 
-        searchField="site.name" 
+        searchColumn="site.name" 
       />
       {count === 0 && (
         <div className="p-4 text-center text-muted-foreground">

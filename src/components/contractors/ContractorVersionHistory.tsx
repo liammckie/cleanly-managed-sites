@@ -1,132 +1,110 @@
 
 import React from 'react';
 import { useContractorVersionHistory } from '@/hooks/useContractorVersionHistory';
-import { format } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatDate } from '@/lib/utils/formatters';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Clock, FileText } from 'lucide-react';
-import { jsonToString } from '@/lib/utils/json';
-import { ContractorVersionHistoryEntry } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 interface ContractorVersionHistoryProps {
-  versionHistory: ContractorVersionHistoryEntry[];
-  isLoading: boolean;
-  currentContractor?: any;
+  contractorId: string;
 }
 
-export function ContractorVersionHistory({ versionHistory, isLoading, currentContractor }: ContractorVersionHistoryProps) {
-  const [selectedVersion, setSelectedVersion] = React.useState<string | null>(null);
-  
-  React.useEffect(() => {
-    if (versionHistory.length > 0 && !selectedVersion) {
-      setSelectedVersion(versionHistory[0].id);
-    }
-  }, [versionHistory, selectedVersion]);
-  
+export function ContractorVersionHistory({ contractorId }: ContractorVersionHistoryProps) {
+  const { versionHistory, isLoading, isError, error } = useContractorVersionHistory(contractorId);
+
   if (isLoading) {
+    return <div className="p-4 text-center">Loading version history...</div>;
+  }
+
+  if (isError) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="p-4 text-center text-destructive">
+        Error loading version history: {error?.message}
       </div>
     );
   }
-  
-  if (versionHistory.length === 0) {
-    return (
-      <div className="text-center p-6">
-        <p className="text-muted-foreground">No version history available for this contractor.</p>
-      </div>
-    );
+
+  if (!versionHistory || versionHistory.length === 0) {
+    return <div className="p-4 text-center">No version history available.</div>;
   }
-  
-  const selectedVersionData = versionHistory.find(v => v.id === selectedVersion);
-  const contractorData = selectedVersionData?.contractor_data || {};
-  
+
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue={selectedVersion || ''} onValueChange={setSelectedVersion}>
-        <TabsList className="mb-4 flex overflow-x-auto pb-2">
-          {versionHistory.map((version) => (
-            <TabsTrigger key={version.id} value={version.id} className="flex-shrink-0">
-              Version {version.version_number}
-              <span className="ml-2 text-xs opacity-70">
-                {format(new Date(version.created_at), 'MMM d, yyyy')}
-              </span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+    <div className="space-y-8">
+      {versionHistory.map((version) => {
+        const contractorData = asJsonObject(version.contractor_data, {});
         
-        {versionHistory.map((version) => (
-          <TabsContent key={version.id} value={version.id}>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
+        return (
+          <div key={version.id} className="bg-card rounded-lg p-6 border shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-medium">
                   Version {version.version_number}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {format(new Date(version.created_at), 'PPP')}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {version.notes && (
-                  <div className="mb-4 p-3 bg-muted rounded-md">
-                    <p className="text-sm font-medium mb-1">Notes</p>
-                    <p className="text-sm whitespace-pre-line">{jsonToString(version.notes)}</p>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                </h3>
+                <p className="text-muted-foreground">
+                  {formatDate(jsonToString(version.created_at))}
+                </p>
+              </div>
+              {version.notes && (
+                <Badge variant="outline" className="ml-auto">
+                  {version.notes}
+                </Badge>
+              )}
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Business Information</h4>
+                <dl className="space-y-2">
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Business Information</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Business Name</p>
-                        <p>{contractorData.business_name || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Contact Name</p>
-                        <p>{contractorData.contact_name || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Status</p>
-                        <Badge variant={
-                          contractorData.status === 'active' ? 'default' :
-                          contractorData.status === 'pending' ? 'outline' : 'secondary'
-                        }>
-                          {contractorData.status || 'Unknown'}
-                        </Badge>
-                      </div>
-                    </div>
+                    <dt className="text-xs text-muted-foreground">Business Name</dt>
+                    <dd>{contractorData.business_name || 'N/A'}</dd>
                   </div>
-                  
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Contact Information</h3>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Email</p>
-                        <p>{contractorData.email || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Phone</p>
-                        <p>{contractorData.phone || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Address</p>
-                        <p>{contractorData.address || 'N/A'}</p>
-                      </div>
-                    </div>
+                    <dt className="text-xs text-muted-foreground">Contact Name</dt>
+                    <dd>{contractorData.contact_name || 'N/A'}</dd>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Status</dt>
+                    <dd>
+                      {contractorData.status === 'active' && (
+                        <Badge variant="outline" className="bg-green-100 text-green-800">Active</Badge>
+                      )}
+                      {contractorData.status === 'inactive' && (
+                        <Badge variant="outline" className="bg-red-100 text-red-800">Inactive</Badge>
+                      )}
+                      {contractorData.status === 'pending' && (
+                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>
+                      )}
+                      {!contractorData.status && 'N/A'}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-2">Contact Information</h4>
+                <dl className="space-y-2">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Email</dt>
+                    <dd>{contractorData.email || 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Phone</dt>
+                    <dd>{contractorData.phone || 'N/A'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Address</dt>
+                    <dd>{contractorData.address || 'N/A'}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

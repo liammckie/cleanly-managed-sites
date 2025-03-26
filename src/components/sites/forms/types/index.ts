@@ -1,7 +1,7 @@
 
 // Re-export all form types for easier imports
 export * from './siteFormData';
-// Export BillingAmounts from contractTypes to avoid ambiguity
+// Export contract types
 export * from './contractTypes';
 export * from './subcontractorTypes';
 export * from './periodicalTypes';
@@ -14,5 +14,4 @@ export * from './initialFormData';
 export type { AdHocWorkAuthorization } from './adHocWorkTypes';
 export type { JobSpecifications } from './jobSpecificationTypes';
 export type { SecurityDetails } from './securityTypes';
-export type { BillingDetails, BillingLine, BillingFrequency, BillingContact } from './billingTypes';
-
+export type { BillingDetails, BillingLine, BillingFrequency, BillingContact, BillingAmounts } from './billingTypes';
