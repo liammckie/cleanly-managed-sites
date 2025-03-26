@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { SiteFormData } from '../siteFormTypes';
+import { getBusinessName, getContactName } from '../types/subcontractorTypes';
 
 interface ReviewStepProps {
   formData: SiteFormData;
@@ -80,17 +80,22 @@ export function ReviewStep({ formData }: ReviewStepProps) {
             </div>
           </div>
           
-          <div className="pt-4 border-t border-border">
-            <h4 className="font-medium text-sm text-muted-foreground">Subcontractors</h4>
-            <div className="mt-2 space-y-2">
-              {formData.subcontractors.map((sub, index) => (
-                <div key={index} className="p-2 bg-secondary rounded-md">
-                  <p className="font-medium">{sub.businessName}</p>
-                  <p className="text-sm">{sub.contactName} | {sub.email} | {sub.phone}</p>
-                </div>
-              ))}
+          {/* Subcontractors Section */}
+          {formData.subcontractors && formData.subcontractors.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Subcontractors</h3>
+              <ul className="list-disc ml-5 space-y-1">
+                {formData.subcontractors.map((sub, idx) => (
+                  <li key={idx}>
+                    <strong>{getBusinessName(sub)}</strong>
+                    {getContactName(sub) && <span> - Contact: {getContactName(sub)}</span>}
+                    {sub.email && <span>, Email: {sub.email}</span>}
+                    {sub.phone && <span>, Phone: {sub.phone}</span>}
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          )}
           
           <div className="pt-4 border-t border-border">
             <h4 className="font-medium text-sm text-muted-foreground">Job Specifications</h4>

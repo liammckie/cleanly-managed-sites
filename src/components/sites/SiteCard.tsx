@@ -1,57 +1,109 @@
 
 import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { MapPin, Building, Calendar } from 'lucide-react';
-import { SiteRecord } from '@/lib/types';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Building, Phone, Mail, User, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+
+export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on_hold';
 
 export interface SiteCardProps {
-  site: SiteRecord;
-  clientName: string;
-  statusBadge: React.ReactNode;
-  onClick: () => void;
+  site?: any; // Full site object if provided
+  name: string;
+  address?: string;
+  city?: string;
+  status?: SiteStatus;
+  representative?: string;
+  phone?: string;
+  annualBilling?: number | null;
+  onClick?: () => void;
+  clientName?: string;
+  statusBadge?: React.ReactNode;
 }
 
-export function SiteCard({ site, clientName, statusBadge, onClick }: SiteCardProps) {
+export function SiteCard({
+  site,
+  name,
+  address,
+  city,
+  status,
+  representative,
+  phone,
+  annualBilling,
+  onClick,
+  clientName,
+  statusBadge
+}: SiteCardProps) {
+  const getStatusColor = (status: SiteStatus) => {
+    switch (status) {
+      case 'active':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'inactive':
+        return 'secondary';
+      case 'lost':
+        return 'destructive';
+      case 'on_hold':
+        return 'outline';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col"
+      className="hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="text-lg font-semibold truncate">{site.name}</h3>
-          {statusBadge}
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start">
+          <h3 className="text-lg font-semibold">{name}</h3>
+          {statusBadge || (status && (
+            <Badge variant={getStatusColor(status) as any}>
+              {status.replace('_', ' ')}
+            </Badge>
+          ))}
         </div>
-        <p className="text-sm text-muted-foreground flex items-center gap-1">
-          <Building className="h-4 w-4" />
-          {clientName}
-        </p>
-      </CardHeader>
-      
-      <CardContent className="pb-2 flex-1">
-        {site.address && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
-            <MapPin className="h-4 w-4" />
-            {site.address}
-          </p>
+        
+        {clientName && (
+          <div className="mt-1 flex items-center text-sm text-muted-foreground">
+            <Building className="mr-1 h-3 w-3" />
+            <span>{clientName}</span>
+          </div>
         )}
         
-        {site.created_at && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            Added {new Date(site.created_at).toLocaleDateString()}
-          </p>
+        {address && (
+          <div className="mt-2 flex items-start">
+            <MapPin className="mr-1 h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <div>{address}</div>
+              {city && <div className="text-muted-foreground">{city}</div>}
+            </div>
+          </div>
+        )}
+        
+        {representative && (
+          <div className="mt-2 flex items-center">
+            <User className="mr-1 h-4 w-4 text-muted-foreground" />
+            <span>{representative}</span>
+          </div>
+        )}
+        
+        {phone && (
+          <div className="mt-2 flex items-center">
+            <Phone className="mr-1 h-4 w-4 text-muted-foreground" />
+            <span>{phone}</span>
+          </div>
+        )}
+        
+        {annualBilling !== undefined && annualBilling !== null && (
+          <div className="mt-2 flex items-center">
+            <DollarSign className="mr-1 h-4 w-4 text-muted-foreground" />
+            <span>{formatCurrency(annualBilling)} / year</span>
+          </div>
         )}
       </CardContent>
-      
-      <CardFooter className="pt-2 border-t border-border">
-        <div className="w-full flex justify-between text-xs">
-          <span className="text-muted-foreground">ID: {site.id.substring(0, 8)}...</span>
-          {site.contract_status && (
-            <span className="font-medium">{site.contract_status}</span>
-          )}
-        </div>
-      </CardFooter>
     </Card>
   );
 }

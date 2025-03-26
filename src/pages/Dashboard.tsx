@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { useSites } from '@/hooks/useSites';
@@ -9,7 +8,7 @@ import { BusinessOverview } from '@/components/dashboard/BusinessOverview';
 import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 
 const Dashboard = () => {
-  const { sites } = useSites();
+  const { data: sites, isLoading: sitesLoading } = useSites();
   
   return (
     <PageLayout>

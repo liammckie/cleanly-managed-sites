@@ -1,281 +1,332 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useUser } from '@/hooks/useUsers';
+import { useUserWithOperations } from '@/hooks/useUsers';
+import { SystemUser } from '@/lib/types';
+import { Loader2, ArrowLeft, Save, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Check } from 'lucide-react';
-import { PageLayout } from '@/components/ui/layout/PageLayout';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-export default function UserDetail() {
+const UserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { user, isLoading, error, updateUser, refetch } = useUser(userId || '');
+  const { user, isLoading, updateUser, isUpdating, deleteUser, isDeleting, refetch } = useUserWithOperations(userId || '');
+  const [formData, setFormData] = useState<Partial<SystemUser>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    role: ''
-  });
-  
-  React.useEffect(() => {
-    if (user) {
-      setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        role: user.role || ''
-      });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    if (user && !isEditing) {
+      setFormData(user);
     }
-  }, [user]);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  }, [user, isEditing]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSave = async () => {
-    if (!user) return;
-    
     try {
-      setIsUpdating(true);
-      await updateUser({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role
+      if (!userId) return;
+      
+      await updateUser({ 
+        userId, 
+        userData: formData 
       });
+      
+      toast.success('User updated successfully');
       setIsEditing(false);
       refetch();
     } catch (error) {
+      toast.error('Failed to update user');
       console.error('Error updating user:', error);
-    } finally {
-      setIsUpdating(false);
     }
   };
-  
+
+  const handleDelete = async () => {
+    try {
+      if (!userId) return;
+      
+      await deleteUser(userId);
+      toast.success('User deleted successfully');
+      navigate('/users');
+    } catch (error) {
+      toast.error('Failed to delete user');
+      console.error('Error deleting user:', error);
+    }
+  };
+
   if (isLoading) {
     return (
-      <PageLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-120px)]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </PageLayout>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
-  
-  if (error || !user) {
+
+  if (!user) {
     return (
-      <PageLayout>
-        <div className="container mx-auto py-6">
-          <div className="text-center">
-            <h1 className="text-xl font-semibold mb-4">User not found</h1>
-            <p className="text-muted-foreground mb-6">
-              The user you're looking for doesn't exist or you don't have permission to view it.
-            </p>
-            <Button onClick={() => navigate('/users')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Users
-            </Button>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-  
-  return (
-    <PageLayout>
-      <div className="container mx-auto py-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Button variant="ghost" onClick={() => navigate('/users')} className="mr-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <h1 className="text-2xl font-semibold">User Details</h1>
-          </div>
-          
-          {!isEditing && (
-            <Button onClick={() => setIsEditing(true)}>
-              Edit User
-            </Button>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1">
+      <div className="container py-10">
+        <div className="max-w-md mx-auto">
+          <Card>
             <CardHeader>
-              <CardTitle>Profile</CardTitle>
+              <CardTitle>User Not Found</CardTitle>
+              <CardDescription>The requested user could not be found.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={user.avatar_url} />
-                <AvatarFallback className="text-lg">
-                  {user.first_name?.[0]}{user.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              
-              <h2 className="text-xl font-semibold">{user.first_name} {user.last_name}</h2>
-              <p className="text-muted-foreground">{user.email}</p>
-              
-              <div className="mt-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  {user.role}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>{isEditing ? 'Edit User Information' : 'User Information'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="first_name">First Name</Label>
-                      <Input
-                        id="first_name"
-                        name="first_name"
-                        value={formData.first_name}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="last_name">Last Name</Label>
-                      <Input
-                        id="last_name"
-                        name="last_name"
-                        value={formData.last_name}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <select
-                      id="role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Administrator</option>
-                      <option value="manager">Manager</option>
-                    </select>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">First Name</h3>
-                      <p>{user.first_name}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Last Name</h3>
-                      <p>{user.last_name}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                    <p>{user.email}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Phone</h3>
-                    <p>{user.phone || 'Not provided'}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
-                    <p className="capitalize">{user.role}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                    <p className="capitalize">{user.status}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Created</h3>
-                    <p>{new Date(user.created_at).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-            
-            {isEditing && (
-              <CardFooter className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormData({
-                      first_name: user.first_name || '',
-                      last_name: user.last_name || '',
-                      email: user.email || '',
-                      phone: user.phone || '',
-                      role: user.role || ''
-                    });
-                  }}
-                  disabled={isUpdating}
-                >
-                  Cancel
-                </Button>
-                
-                <Button 
-                  onClick={handleSave}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Check className="h-4 w-4 mr-2" />
-                  )}
-                  Save Changes
-                </Button>
-              </CardFooter>
-            )}
+            <CardFooter>
+              <Button onClick={() => navigate('/users')}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Users
+              </Button>
+            </CardFooter>
           </Card>
         </div>
       </div>
-    </PageLayout>
+    );
+  }
+
+  return (
+    <div className="container py-10">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate('/users')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold">User Details</h1>
+        </div>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isUpdating}>
+                {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                Edit
+              </Button>
+              <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the user
+                      and remove their data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                      {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <Avatar className="h-24 w-24 mb-4">
+              <AvatarImage src={user.avatar_url} alt={user.full_name} />
+              <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
+            </Avatar>
+            <h2 className="text-xl font-semibold">{user.full_name}</h2>
+            <p className="text-muted-foreground">{user.title || 'No title'}</p>
+            <div className="mt-4 w-full">
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Status</span>
+                <span className={`font-medium ${
+                  user.status === 'active' ? 'text-green-600' : 
+                  user.status === 'pending' ? 'text-amber-600' : 'text-red-600'
+                }`}>
+                  {user.status?.charAt(0).toUpperCase() + user.status?.slice(1)}
+                </span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Role</span>
+                <span className="font-medium">{user.role || 'User'}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Last Login</span>
+                <span className="font-medium">
+                  {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
+                </span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Created</span>
+                <span className="font-medium">
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>User Information</CardTitle>
+            <CardDescription>
+              {isEditing ? 'Edit user details below' : 'View user details'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name</Label>
+                {isEditing ? (
+                  <Input
+                    id="first_name"
+                    name="first_name"
+                    value={formData.first_name || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md">{user.first_name}</div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name</Label>
+                {isEditing ? (
+                  <Input
+                    id="last_name"
+                    name="last_name"
+                    value={formData.last_name || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md">{user.last_name}</div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                {isEditing ? (
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md">{user.email}</div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                {isEditing ? (
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md">{user.phone || 'Not provided'}</div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                {isEditing ? (
+                  <Input
+                    id="title"
+                    name="title"
+                    value={formData.title || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md">{user.title || 'Not provided'}</div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                {isEditing ? (
+                  <Select
+                    value={formData.status || 'active'}
+                    onValueChange={(value) => handleSelectChange('status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="p-2 border rounded-md">
+                    {user.status?.charAt(0).toUpperCase() + user.status?.slice(1)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="notes">Notes</Label>
+                {isEditing ? (
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    rows={4}
+                    value={formData.notes || ''}
+                    onChange={handleInputChange}
+                  />
+                ) : (
+                  <div className="p-2 border rounded-md min-h-[100px]">
+                    {user.notes || 'No notes'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
-}
+};
+
+export default UserDetail;

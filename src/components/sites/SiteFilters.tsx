@@ -2,7 +2,13 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ClientRecord } from '@/lib/types';
 import { ArrowUpDown } from 'lucide-react';
@@ -38,51 +44,63 @@ export function SiteFilters({ filters, clients, onFilterChange, onSort }: SiteFi
         
         {/* Status filter */}
         <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
+          <Label>Status</Label>
           <Select
-            id="status"
             value={filters.status}
             onValueChange={(value) => onFilterChange('status', value)}
           >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="inactive">Inactive</option>
-            <option value="on_hold">On Hold</option>
-            <option value="lost">Lost</option>
+            <SelectTrigger>
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="on_hold">On Hold</SelectItem>
+              <SelectItem value="lost">Lost</SelectItem>
+            </SelectContent>
           </Select>
         </div>
         
         {/* Client filter */}
         <div className="space-y-2">
-          <Label htmlFor="client">Client</Label>
+          <Label>Client</Label>
           <Select
-            id="client"
             value={filters.client}
             onValueChange={(value) => onFilterChange('client', value)}
           >
-            <option value="">All Clients</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
+            <SelectTrigger>
+              <SelectValue placeholder="All Clients" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Clients</SelectItem>
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
         
         {/* Sort controls */}
         <div className="space-y-2">
-          <Label htmlFor="sort">Sort by</Label>
+          <Label>Sort by</Label>
           <div className="flex gap-2">
             <Select
-              id="sort"
               value={filters.sortBy}
               onValueChange={(value) => onFilterChange('sortBy', value)}
             >
-              <option value="name">Name</option>
-              <option value="status">Status</option>
-              <option value="client_name">Client</option>
-              <option value="address">Address</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="client_name">Client</SelectItem>
+                <SelectItem value="address">Address</SelectItem>
+              </SelectContent>
             </Select>
             <Button
               variant="outline"

@@ -213,7 +213,6 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
               {sites.map(site => (
                 <SiteCard
                   key={site.id}
-                  id={site.id}
                   name={site.name}
                   address={site.address}
                   city={site.city}
@@ -221,6 +220,7 @@ export function ClientSitesCard({ clientId, sites }: ClientSitesCardProps) {
                   representative={site.representative}
                   phone={site.phone}
                   annualBilling={getAnnualBilling(site)}
+                  onClick={() => window.location.href = `/sites/${site.id}`}
                 />
               ))}
             </div>

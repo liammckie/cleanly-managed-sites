@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { SiteStatus } from '@/components/sites/SiteCard';
+import { SiteStatus } from '@/lib/types/commonTypes';
 
 export const useSiteFormHandlers = (
   formData: SiteFormData,

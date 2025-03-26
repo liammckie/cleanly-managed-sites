@@ -15,7 +15,7 @@ import { SiteRecord } from '@/lib/types';
 export function SitesList() {
   const navigate = useNavigate();
   const { data: sites = [], isLoading: sitesLoading, error: sitesError } = useSites();
-  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { clients, isLoading: clientsLoading } = useClients();
   const [filteredSites, setFilteredSites] = useState<SiteRecord[]>([]);
   const [filters, setFilters] = useState({
     search: '',
@@ -163,6 +163,12 @@ export function SitesList() {
             <SiteCard 
               key={site.id}
               site={site}
+              name={site.name}
+              address={site.address}
+              city={site.city}
+              status={site.status as any}
+              representative={site.representative}
+              phone={site.phone}
               onClick={() => handleSiteSelect(site.id)}
               clientName={site.client_name || getClientName(site.client_id || '')}
               statusBadge={

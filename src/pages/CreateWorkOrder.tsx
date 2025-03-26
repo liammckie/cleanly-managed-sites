@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { NewWorkOrderDialog } from '@/components/workorders/NewWorkOrderDialog';
@@ -6,7 +5,7 @@ import { useSites } from '@/hooks/useSites';
 import { useNavigate } from 'react-router-dom';
 
 const CreateWorkOrder = () => {
-  const { sites } = useSites();
+  const { data: sites, isLoading: sitesLoading } = useSites();
   const navigate = useNavigate();
   
   const handleSuccess = () => {

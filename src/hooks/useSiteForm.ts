@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { SiteFormData, getInitialFormData } from '@/components/sites/forms/types';
-import { SiteStatus } from '@/components/sites/SiteCard';
+import { SiteStatus } from '@/lib/types/commonTypes';
 import { useSiteFormValidation } from './useSiteFormValidation';
 import { useSiteFormHandlers } from './useSiteFormHandlers';
 import { useSiteFormSubcontractors } from './useSiteFormSubcontractors';

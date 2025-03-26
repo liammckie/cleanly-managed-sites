@@ -1,91 +1,89 @@
+import { BillingLine, BillingFrequency } from '@/components/sites/forms/types/billingTypes';
+import { isLineOnHold } from './billingLineUtils';
 
-import { BillingLine } from '@/components/sites/forms/types/billingTypes';
-
-/**
- * Checks if a site's billing is currently on hold
- */
-export const isSiteBillingOnHold = (isOnHold?: boolean): boolean => {
-  return isOnHold === true;
-};
-
-/**
- * Calculates the billing amounts (weekly, monthly, annual) for a given billing line
- */
-export const calculateBillingAmounts = (
-  amount: number,
-  frequency: string
-): { weeklyAmount: number; monthlyAmount: number; annualAmount: number } => {
-  const weeklyAmount = calculateWeeklyAmount(amount, frequency);
-  const monthlyAmount = calculateMonthlyAmount(weeklyAmount);
-  const annualAmount = calculateAnnualAmount(weeklyAmount);
+// Calculate the monthly amount for a billing line
+export const calculateMonthlyAmount = (line: BillingLine): number => {
+  if (isLineOnHold(line) || !line.isRecurring) return 0;
   
-  return {
-    weeklyAmount,
-    monthlyAmount,
-    annualAmount
-  };
-};
-
-/**
- * Calculates the weekly amount from a given amount and frequency
- */
-export const calculateWeeklyAmount = (amount: number, frequency: string): number => {
-  switch (frequency) {
+  const amount = line.amount;
+  
+  switch (line.frequency) {
     case 'weekly':
-      return amount;
+      return (amount * 52) / 12;
     case 'fortnightly':
-      return amount / 2;
+      return (amount * 26) / 12;
     case 'monthly':
-      return amount / 4.33; // Average weeks in a month
+      return amount;
     case 'quarterly':
-      return amount / 13; // 52 weeks / 4 quarters = 13 weeks per quarter
-    case 'semi-annually':
-      return amount / 26; // 52 weeks / 2 = 26 weeks per half year
+      return amount / 3;
     case 'annually':
-      return amount / 52;
+      return amount / 12;
+    case 'one-time':
+      return 0; // One-time payments don't contribute to monthly amount
     default:
       return 0;
   }
 };
 
-/**
- * Calculates monthly amount from weekly amount
- */
-export const calculateMonthlyAmount = (weeklyAmount: number): number => {
-  return weeklyAmount * 4.33; // Average weeks in a month
+// Calculate the annual amount for a billing line
+export const calculateAnnualAmount = (line: BillingLine): number => {
+  if (isLineOnHold(line) || !line.isRecurring) return 0;
+  
+  const amount = line.amount;
+  
+  switch (line.frequency) {
+    case 'weekly':
+      return amount * 52;
+    case 'fortnightly':
+      return amount * 26;
+    case 'monthly':
+      return amount * 12;
+    case 'quarterly':
+      return amount * 4;
+    case 'annually':
+      return amount;
+    case 'one-time':
+      return 0; // One-time payments don't contribute to annual amount
+    default:
+      return 0;
+  }
 };
 
-/**
- * Calculates annual amount from weekly amount
- */
-export const calculateAnnualAmount = (weeklyAmount: number): number => {
-  return weeklyAmount * 52;
+// Calculate the weekly amount for a billing line
+export const calculateWeeklyAmount = (line: BillingLine): number => {
+  if (isLineOnHold(line) || !line.isRecurring) return 0;
+  
+  const amount = line.amount;
+  
+  switch (line.frequency) {
+    case 'weekly':
+      return amount;
+    case 'fortnightly':
+      return amount / 2;
+    case 'monthly':
+      return (amount * 12) / 52;
+    case 'quarterly':
+      return (amount * 4) / 52;
+    case 'annually':
+      return amount / 52;
+    case 'one-time':
+      return 0; // One-time payments don't contribute to weekly amount
+    default:
+      return 0;
+  }
 };
 
-/**
- * Calculates total billing amounts from an array of billing lines
- */
-export const calculateTotalBillingAmounts = (
-  billingLines: BillingLine[]
-): { totalWeeklyAmount: number; totalMonthlyAmount: number; totalAnnualAmount: number } => {
-  // Initialize totals
-  let totalWeeklyAmount = 0;
-  let totalMonthlyAmount = 0;
-  let totalAnnualAmount = 0;
-  
-  // Sum up all active billing lines
-  billingLines.forEach(line => {
-    if (!line.onHold) {
-      const lineAmounts = calculateBillingAmounts(line.amount || 0, line.frequency || 'monthly');
-      totalWeeklyAmount += lineAmounts.weeklyAmount;
-      totalMonthlyAmount += lineAmounts.monthlyAmount;
-      totalAnnualAmount += lineAmounts.annualAmount;
-    }
-  });
-  
-  return {
-    totalWeeklyAmount,
-    totalMonthlyAmount,
-    totalAnnualAmount
-  };
+// Calculate the total weekly amount for all billing lines
+export const calculateTotalWeeklyAmount = (lines: BillingLine[]): number => {
+  return lines.reduce((total, line) => total + calculateWeeklyAmount(line), 0);
+};
+
+// Calculate the total monthly amount for all billing lines
+export const calculateTotalMonthlyAmount = (lines: BillingLine[]): number => {
+  return lines.reduce((total, line) => total + calculateMonthlyAmount(line), 0);
+};
+
+// Calculate the total annual amount for all billing lines
+export const calculateTotalAnnualAmount = (lines: BillingLine[]): number => {
+  return lines.reduce((total, line) => total + calculateAnnualAmount(line), 0);
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const CreateContract = () => {
-  const { sites, isLoading } = useSites();
+  const { data: sites, isLoading: sitesLoading } = useSites();
   const navigate = useNavigate();
   
   const handleSiteSelect = (site: SiteRecord) => {
@@ -18,7 +17,7 @@ const CreateContract = () => {
     }
   };
   
-  if (isLoading) {
+  if (sitesLoading) {
     return (
       <PageLayout>
         <div className="flex justify-center items-center h-64">

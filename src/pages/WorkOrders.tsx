@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
@@ -34,7 +33,7 @@ import { DateRange } from 'react-day-picker';
 
 const WorkOrders = () => {
   const { workOrders, isLoadingWorkOrders, workOrdersError, refetchWorkOrders } = useWorkOrders();
-  const { sites } = useSites();
+  const { data: sites, isLoading: sitesLoading } = useSites();
   const { clients } = useClients();
   const { subcontractors = [] } = useSubcontractors(undefined);
   

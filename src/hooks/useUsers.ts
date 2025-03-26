@@ -82,3 +82,9 @@ export const useUserWithOperations = (userId: string) => {
     refetch
   };
 };
+
+// For backward compatibility
+export const useCreateUser = () => {
+  const { createUser, isCreating } = useUserOperations();
+  return { createUser, isCreating };
+};

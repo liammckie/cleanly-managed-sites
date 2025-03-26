@@ -108,7 +108,6 @@ export interface JobCostBreakdown {
 
 // For DatePicker props compatibility
 export interface DatePickerCustomProps {
-  id?: string;
   value: Date;
   onChange: (date: any) => void;
 }

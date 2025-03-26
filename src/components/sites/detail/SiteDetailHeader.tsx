@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SiteStatus } from '../SiteCard';
+import { SiteStatus } from '@/lib/types/commonTypes';
 import { SiteRecord } from '@/lib/api';
 import { 
   Edit, 

@@ -1,80 +1,152 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUsers } from '@/hooks/useUsers';
-import { PlusCircle, Search, ShieldCheck } from 'lucide-react';
+import { useUsers, useCreateUser } from '@/hooks/useUsers';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { UsersList } from '@/components/users/UsersList';
-import { UserRolesList } from '@/components/users/UserRolesList';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Plus, Search, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { NewUserDialog } from '@/components/users/NewUserDialog';
+import { formatDate } from '@/lib/utils';
 
 const Users = () => {
+  const { data: users = [], isLoading } = useUsers();
   const navigate = useNavigate();
-  const { users, isLoading, error } = useUsers();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showNewUserDialog, setShowNewUserDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState('users');
-
-  const filteredUsers = users?.filter(user => 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
+  
+  const filteredUsers = users.filter(user => 
+    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
+  const handleUserClick = (userId: string) => {
+    navigate(`/users/${userId}`);
+  };
+  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'inactive':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
   return (
-    <PageLayout>
-      <div className="container px-4 py-6 mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl font-bold mb-4 md:mb-0">Users & Permissions</h1>
-          <Button 
-            onClick={() => setShowNewUserDialog(true)}
-            className="flex items-center"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New User
+    <div className="container py-10">
+      <PageHeader
+        heading="Users"
+        subheading="Manage system users and permissions"
+        action={
+          <Button onClick={() => setIsNewUserDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add User
           </Button>
+        }
+      />
+      
+      <div className="flex items-center py-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="users">
-            <div className="flex justify-between items-center mb-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search users..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <UsersList 
-              users={filteredUsers || []} 
-              isLoading={isLoading} 
-              onUserClick={(userId) => navigate(`/users/${userId}`)}
-            />
-          </TabsContent>
-          
-          <TabsContent value="roles">
-            <UserRolesList />
-          </TabsContent>
-        </Tabs>
       </div>
       
-      <NewUserDialog
-        open={showNewUserDialog}
-        onOpenChange={setShowNewUserDialog}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Last Login</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <TableRow 
+                  key={user.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleUserClick(user.id)}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {user.avatar_url ? (
+                        <img 
+                          src={user.avatar_url} 
+                          alt={user.full_name} 
+                          className="h-8 w-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                          {user.first_name?.[0]}{user.last_name?.[0]}
+                        </div>
+                      )}
+                      <div>
+                        <div>{user.full_name}</div>
+                        {user.title && (
+                          <div className="text-xs text-muted-foreground">{user.title}</div>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusColor(user.status)}>
+                      {user.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {user.last_login ? formatDate(user.last_login) : 'Never'}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  No users found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      <NewUserDialog 
+        open={isNewUserDialogOpen} 
+        onOpenChange={setIsNewUserDialogOpen} 
       />
-    </PageLayout>
+    </div>
   );
 };
 

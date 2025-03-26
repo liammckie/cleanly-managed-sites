@@ -95,7 +95,7 @@ export const getColumns = (): ColumnDef<ContractData>[] => [
         <Badge 
           variant={
             status === "active" ? "success" : 
-            status === "pending" ? "warning" : 
+            status === "pending" ? "secondary" : 
             status === "expired" ? "destructive" : 
             "outline"
           }

@@ -1,270 +1,352 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FormSection } from '../FormSection';
+import { useContractors } from '@/hooks/useContractors';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, DollarSign, PlusCircle } from 'lucide-react';
-import { SiteFormData } from '../types/siteFormData';
-import { Subcontractor, serviceOptions } from '../types/subcontractorTypes';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue 
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle 
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Subcontractor, getBusinessName, getContactName } from '../types/subcontractorTypes';
+import { Trash2, PlusCircle, Edit, Building } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 
 interface SubcontractorsStepProps {
-  formData: SiteFormData;
-  errors: Record<string, string>;
-  handleSubcontractorChange: (index: number, field: string, value: any) => void;
-  addSubcontractor: () => void;
+  subcontractors: Subcontractor[];
+  addSubcontractor: (subcontractor: Subcontractor) => void;
+  updateSubcontractor: (index: number, subcontractor: Subcontractor) => void;
   removeSubcontractor: (index: number) => void;
 }
 
-export function SubcontractorsStep({ 
-  formData, 
-  errors,
-  handleSubcontractorChange, 
-  addSubcontractor, 
-  removeSubcontractor 
+export function SubcontractorsStep({
+  subcontractors,
+  addSubcontractor,
+  updateSubcontractor,
+  removeSubcontractor
 }: SubcontractorsStepProps) {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const { contractors, isLoading } = useContractors();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedContractorId, setSelectedContractorId] = useState<string>('');
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isCustom, setIsCustom] = useState(false);
+  const [subcontractorForm, setSubcontractorForm] = useState<Subcontractor>({
+    business_name: '',
+    contact_name: '',
+    email: '',
+    phone: '',
+    services: [],
+    notes: ''
+  });
 
-  const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+  const resetForm = () => {
+    setSubcontractorForm({
+      business_name: '',
+      contact_name: '',
+      email: '',
+      phone: '',
+      services: [],
+      notes: ''
+    });
+    setSelectedContractorId('');
+    setIsCustom(false);
+    setSelectedIndex(null);
   };
 
-  const handleServiceChange = (index: number, service: string, checked: boolean) => {
-    const currentServices = formData.subcontractors![index].services || [];
-    let newServices;
-    
-    if (checked) {
-      newServices = [...currentServices, service];
+  const handleOpenDialog = (index?: number) => {
+    if (index !== undefined) {
+      const subcontractor = subcontractors[index];
+      setSubcontractorForm({
+        ...subcontractor,
+        business_name: getBusinessName(subcontractor),
+        contact_name: getContactName(subcontractor)
+      });
+      setSelectedContractorId(subcontractor.contractor_id || '');
+      setIsCustom(!subcontractor.contractor_id);
+      setSelectedIndex(index);
     } else {
-      newServices = currentServices.filter(s => s !== service);
+      resetForm();
     }
-    
-    handleSubcontractorChange(index, 'services', newServices);
+    setIsDialogOpen(true);
+  };
+
+  const handleSelectContractor = (contractorId: string) => {
+    if (contractorId === 'custom') {
+      setIsCustom(true);
+      setSelectedContractorId('');
+      setSubcontractorForm({
+        business_name: '',
+        contact_name: '',
+        email: '',
+        phone: '',
+        services: [],
+        notes: ''
+      });
+    } else {
+      setIsCustom(false);
+      setSelectedContractorId(contractorId);
+      const contractor = contractors.find(c => c.id === contractorId);
+      if (contractor) {
+        setSubcontractorForm({
+          contractor_id: contractor.id,
+          business_name: contractor.business_name,
+          contact_name: contractor.contact_name,
+          email: contractor.email,
+          phone: contractor.phone,
+          services: [],
+          notes: ''
+        });
+      }
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setSubcontractorForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelectService = (value: string) => {
+    setSubcontractorForm(prev => ({
+      ...prev,
+      services: [...(prev.services || []), value]
+    }));
+  };
+
+  const handleSaveSubcontractor = () => {
+    const newSubcontractor = {
+      ...subcontractorForm,
+      contractor_id: isCustom ? undefined : selectedContractorId
+    };
+
+    if (selectedIndex !== null) {
+      updateSubcontractor(selectedIndex, newSubcontractor);
+    } else {
+      addSubcontractor(newSubcontractor);
+    }
+
+    setIsDialogOpen(false);
+    resetForm();
   };
 
   return (
-    <div className="space-y-6">
-      {formData.subcontractors && formData.subcontractors.map((subcontractor, index) => (
-        <Card key={index} className="shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                {subcontractor.businessName || `Subcontractor ${index + 1}`}
-              </CardTitle>
-              <div className="flex space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => toggleExpand(index)}
-                >
-                  {expandedIndex === index ? 'Collapse' : 'Expand'}
-                </Button>
-                {formData.subcontractors && formData.subcontractors.length > 1 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => removeSubcontractor(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className={`space-y-4 ${expandedIndex !== index ? 'hidden md:block' : ''}`}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`business-name-${index}`}>Business Name <span className="text-destructive">*</span></Label>
-                  <Input
-                    id={`business-name-${index}`}
-                    placeholder="Enter business name"
-                    value={subcontractor.businessName}
-                    onChange={(e) => handleSubcontractorChange(index, 'businessName', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].businessName`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].businessName`]}
-                  />
-                  {errors[`subcontractors[${index}].businessName`] && 
-                    <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].businessName`]}</p>
-                  }
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor={`contact-name-${index}`}>Contact Name <span className="text-destructive">*</span></Label>
-                  <Input
-                    id={`contact-name-${index}`}
-                    placeholder="Enter contact name"
-                    value={subcontractor.contactName}
-                    onChange={(e) => handleSubcontractorChange(index, 'contactName', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].contactName`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].contactName`]}
-                  />
-                  {errors[`subcontractors[${index}].contactName`] && 
-                    <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].contactName`]}</p>
-                  }
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor={`email-${index}`}>Email <span className="text-destructive">*</span></Label>
-                  <Input
-                    id={`email-${index}`}
-                    type="email"
-                    placeholder="Enter email"
-                    value={subcontractor.email}
-                    onChange={(e) => handleSubcontractorChange(index, 'email', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].email`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].email`]}
-                  />
-                  {errors[`subcontractors[${index}].email`] && 
-                    <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].email`]}</p>
-                  }
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor={`phone-${index}`}>Phone <span className="text-destructive">*</span></Label>
-                  <Input
-                    id={`phone-${index}`}
-                    placeholder="Enter phone number"
-                    value={subcontractor.phone}
-                    onChange={(e) => handleSubcontractorChange(index, 'phone', e.target.value)}
-                    className={`glass-input ${errors[`subcontractors[${index}].phone`] ? 'border-destructive' : ''}`}
-                    required
-                    aria-invalid={!!errors[`subcontractors[${index}].phone`]}
-                  />
-                  {errors[`subcontractors[${index}].phone`] && 
-                    <p className="text-sm font-medium text-destructive">{errors[`subcontractors[${index}].phone`]}</p>
-                  }
-                </div>
-              </div>
-              
-              {expandedIndex === index && (
-                <>
-                  <div className="space-y-2 mt-4">
-                    <Label>Services Provided</Label>
-                    <div className="border rounded-md p-4 bg-background/50">
-                      <ScrollArea className="h-48 pr-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {serviceOptions.map((service) => (
-                            <div key={service.value} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`service-${index}-${service.value}`}
-                                checked={(subcontractor.services || []).includes(service.value)}
-                                onCheckedChange={(checked) => handleServiceChange(index, service.value, !!checked)}
-                              />
-                              <label 
-                                htmlFor={`service-${index}-${service.value}`}
-                                className="text-sm"
-                              >
-                                {service.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <Label htmlFor={`custom-services-${index}`}>Additional Services</Label>
-                      <Textarea
-                        id={`custom-services-${index}`}
-                        placeholder="Enter any custom or additional services not listed above"
-                        value={subcontractor.customServices || ''}
-                        onChange={(e) => handleSubcontractorChange(index, 'customServices', e.target.value)}
-                        className="glass-input mt-1"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`monthly-cost-${index}`}>Monthly Cost</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <Input
-                          id={`monthly-cost-${index}`}
-                          type="number"
-                          placeholder="0.00"
-                          value={subcontractor.monthlyCost || ''}
-                          onChange={(e) => handleSubcontractorChange(index, 'monthlyCost', parseFloat(e.target.value) || '')}
-                          className="glass-input pl-9"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 mt-8">
-                      <Switch
-                        id={`flat-rate-${index}`}
-                        checked={!!subcontractor.isFlatRate}
-                        onCheckedChange={(checked) => handleSubcontractorChange(index, 'isFlatRate', checked)}
-                      />
-                      <Label htmlFor={`flat-rate-${index}`}>Flat Rate (vs. Hourly)</Label>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            
-            {/* Collapsed view - only show minimal info */}
-            {expandedIndex !== index && (
-              <div className="md:hidden">
-                <div className="grid grid-cols-2 gap-y-1 text-sm">
-                  <div><span className="text-muted-foreground">Contact:</span> {subcontractor.contactName}</div>
-                  <div><span className="text-muted-foreground">Phone:</span> {subcontractor.phone}</div>
-                  <div className="col-span-2"><span className="text-muted-foreground">Email:</span> {subcontractor.email}</div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-          
-          {expandedIndex === index && (
-            <CardFooter className="border-t pt-4 flex justify-between">
-              <div className="flex flex-wrap gap-2">
-                {(subcontractor.services || []).map(service => {
-                  const serviceOption = serviceOptions.find(s => s.value === service);
-                  return serviceOption ? (
-                    <Badge key={service} variant="secondary">
-                      {serviceOption.label}
-                    </Badge>
-                  ) : null;
-                })}
-              </div>
-            </CardFooter>
-          )}
-        </Card>
-      ))}
-      
-      <div className="flex justify-center">
+    <FormSection 
+      title="Subcontractors & Service Providers" 
+      description="Add subcontractors or other service providers for this site"
+    >
+      <div className="mb-4">
         <Button 
           type="button" 
           variant="outline" 
-          onClick={addSubcontractor}
-          className="mt-4"
+          onClick={() => handleOpenDialog()}
+          className="flex items-center gap-2"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4" />
           Add Subcontractor
         </Button>
       </div>
-    </div>
+
+      {subcontractors.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Contact Details</TableHead>
+                <TableHead>Services</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subcontractors.map((subcontractor, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{getBusinessName(subcontractor)}</TableCell>
+                  <TableCell>{getContactName(subcontractor)}</TableCell>
+                  <TableCell>
+                    {subcontractor.email && <div>{subcontractor.email}</div>}
+                    {subcontractor.phone && <div>{subcontractor.phone}</div>}
+                  </TableCell>
+                  <TableCell>
+                    {(subcontractor.services || []).length > 0 
+                      ? subcontractor.services?.join(", ")
+                      : <span className="text-muted-foreground italic">No services specified</span>
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleOpenDialog(index)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => removeSubcontractor(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Building className="mx-auto h-12 w-12 text-muted-foreground/40" />
+            <h3 className="mt-3 text-lg font-medium">No Subcontractors</h3>
+            <p className="text-sm text-muted-foreground">
+              There are no subcontractors or service providers for this site yet.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedIndex !== null ? "Edit Subcontractor" : "Add Subcontractor"}
+            </DialogTitle>
+            <DialogDescription>
+              Add a subcontractor or service provider for this site.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Subcontractor Type</Label>
+              <Select 
+                value={isCustom ? "custom" : selectedContractorId} 
+                onValueChange={handleSelectContractor}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a contractor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Custom / Manual Entry</SelectItem>
+                  {contractors.map(contractor => (
+                    <SelectItem key={contractor.id} value={contractor.id}>
+                      {contractor.business_name || contractor.contact_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isCustom && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="business_name">Business Name</Label>
+                    <Input
+                      id="business_name"
+                      name="business_name"
+                      value={subcontractorForm.business_name || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_name">Contact Name</Label>
+                    <Input
+                      id="contact_name"
+                      name="contact_name"
+                      value={subcontractorForm.contact_name || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={subcontractorForm.email || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={subcontractorForm.phone || ''}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                placeholder="Add any additional notes about this contractor"
+                value={subcontractorForm.notes || ''}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveSubcontractor}>
+              {selectedIndex !== null ? "Save Changes" : "Add Subcontractor"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </FormSection>
   );
 }
