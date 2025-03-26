@@ -1,7 +1,7 @@
-
 import React from 'react';
-import { SiteFormData } from '../types/siteFormData';
-import { getBusinessName, getContactName } from '../types/subcontractorTypes';
+import { FormSection } from '@/components/sites/forms/FormSection';
+import { SiteFormData } from '@/components/sites/forms/types';
+import { getBusinessName, getContactName } from '@/components/sites/forms/types/subcontractorTypes';
 
 interface ReviewStepProps {
   formData: SiteFormData;
