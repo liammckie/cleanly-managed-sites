@@ -31,14 +31,14 @@ export function ContractCharts({
   }
 
   // Prepare data for status distribution chart
-  const statusData = Object.entries(groupedContracts.byStatus).map(([status, contracts]) => ({
+  const statusData = Object.entries(groupedContracts.byStatus || {}).map(([status, contracts]) => ({
     name: status.charAt(0).toUpperCase() + status.slice(1),
     value: contracts.length,
     color: getStatusColor(status)
   }));
 
   // Prepare data for expiry forecast chart
-  const expiryData = Object.entries(groupedContracts.byMonth)
+  const expiryData = Object.entries(groupedContracts.byMonth || {})
     .map(([monthKey, contracts]) => {
       const [month, year] = monthKey.split('-');
       return {

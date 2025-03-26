@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { ContractData } from '@/lib/types/contracts';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { Json } from '@/lib/utils/json';
 
 export const contractsApi = {
   // Get all contracts
@@ -34,20 +35,28 @@ export const contractsApi = {
       client_name: item.client?.client_name || '',
       monthly_revenue: item.monthly_revenue,
       contract_details: item.contract_details,
-      status: item.status
+      status: item.status,
+      is_primary: true
     }));
   },
   
   // Get contracts expiring soon
   async getExpiringContracts(days: number = 30): Promise<ContractData[]> {
-    const { data, error } = await supabase.rpc('get_expiring_contracts', { days_threshold: days });
+    // Since we don't have a direct RPC function, we'll fetch all contracts and filter
+    const contracts = await this.getContracts();
     
-    if (error) {
-      console.error('Error fetching expiring contracts:', error);
-      throw error;
-    }
-    
-    return data || [];
+    const now = new Date();
+    return contracts.filter(contract => {
+      // Parse the contract details to find end date
+      const contractDetails = contract.contract_details as any;
+      if (!contractDetails || !contractDetails.endDate) return false;
+      
+      const endDate = new Date(contractDetails.endDate);
+      if (isNaN(endDate.getTime())) return false;
+      
+      const daysUntilExpiry = Math.floor((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntilExpiry >= 0 && daysUntilExpiry <= days;
+    });
   },
   
   // Update contract
@@ -55,7 +64,7 @@ export const contractsApi = {
     const { error } = await supabase
       .from('sites')
       .update({
-        contract_details: contractDetails
+        contract_details: contractDetails as Json
       })
       .eq('id', siteId);
     

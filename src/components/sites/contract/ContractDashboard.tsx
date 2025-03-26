@@ -5,7 +5,7 @@ import { ContractSummarySection } from './ContractSummarySection';
 import { ContractCharts } from './ContractCharts';
 import { ContractExpiryList } from './ContractExpiryList'; 
 import { useContractForecast } from '@/hooks/useContractForecast';
-import { useAsyncData } from '@/hooks/useAsyncData';
+import { useQuery } from '@tanstack/react-query';
 import { SiteRecord } from '@/lib/types';
 
 /**
@@ -13,31 +13,44 @@ import { SiteRecord } from '@/lib/types';
  * Displays summary metrics, charts, and upcoming expirations
  */
 export function ContractDashboard() {
-  const { contractData, groupedContracts, isLoading } = useContracts();
-  const { data: sitesData } = useSites();
-  const { data: sites } = useAsyncData<SiteRecord[]>(sitesData || []);
+  const { contractData, groupedContracts, isLoading, metrics } = useContracts();
   const { data: forecastData } = useContractForecast();
+  const { data: sitesData } = useSites();
+  
+  // Convert summary data to the expected format
+  const summaryData = forecastData?.summaryData || {
+    expiringThisMonth: 0,
+    expiringNext3Months: 0,
+    expiringNext6Months: 0,
+    expiringThisYear: 0,
+    valueExpiringThisMonth: 0,
+    valueExpiringNext3Months: 0,
+    valueExpiringNext6Months: 0,
+    valueExpiringThisYear: 0,
+    totalContracts: metrics?.totalContracts || 0,
+    totalValue: metrics?.totalValue || 0
+  };
   
   return (
     <div className="space-y-6">
       {/* Summary metrics section */}
       <ContractSummarySection 
-        contractData={contractData || []} 
+        contractData={contractData} 
         isLoading={isLoading} 
-        summaryData={forecastData?.summaryData || {}}
+        summaryData={summaryData}
       />
       
       {/* Charts for visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContractCharts 
-          contractData={contractData || []} 
+          contractData={contractData} 
           groupedContracts={groupedContracts}
           isLoading={isLoading}
         />
         
         {/* Contract expirations list */}
         <ContractExpiryList 
-          sites={sites || []} 
+          sites={sitesData || []} 
           isLoading={isLoading} 
         />
       </div>
@@ -45,10 +58,21 @@ export function ContractDashboard() {
   );
 }
 
-// Add the missing hook import
+// Add the missing hook implementation
 function useSites() {
   return useQuery({
     queryKey: ['sites'],
-    queryFn: () => fetch('/api/sites').then(res => res.json())
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/sites');
+        if (!response.ok) {
+          throw new Error('Failed to fetch sites');
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching sites:', error);
+        return [];
+      }
+    }
   });
 }

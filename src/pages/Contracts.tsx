@@ -1,6 +1,5 @@
+
 import React from 'react';
-import { ContractTable } from '@/components/contracts/ContractTable';
-import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -8,6 +7,9 @@ import { useContracts } from '@/hooks/useContracts';
 import { adaptContractDataArray } from '@/components/contracts/contractTypeAdapter';
 import { ContractData } from '@/lib/types/contracts';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
+import { DataTable } from '@/components/ui/data-table';
+import { contractColumns } from '@/components/contracts/ContractColumns';
 
 const Contracts = () => {
   const { contractData: data, isLoading, isError } = useContracts();
@@ -37,7 +39,13 @@ const Contracts = () => {
                 </p>
               </div>
             ) : (
-              <ContractTable contracts={adaptedContracts} count={totalContracts} />
+              <div className="rounded-md border mt-6">
+                <DataTable 
+                  columns={contractColumns} 
+                  data={adaptedContracts} 
+                  searchField="site.name" 
+                />
+              </div>
             )}
           </div>
         </div>
