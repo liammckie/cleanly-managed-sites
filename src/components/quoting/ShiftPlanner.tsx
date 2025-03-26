@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, CalendarDays, List, PlusCircle } from 'lucide-react';
-import { QuoteShift, Subcontractor } from '@/lib/award/types';
+import { QuoteShift, Subcontractor } from '@/lib/types/quotes';
 import { calculateTotalCosts, detectOvertimeHours } from '@/lib/award/utils';
 import useShiftManagement from '@/hooks/useShiftManagement';
 import { useAllowances } from '@/hooks/quotes/useAllowances';
@@ -13,6 +13,7 @@ import { ShiftSummary } from './shift-planner/ShiftSummary';
 import { ShiftWarnings } from './shift-planner/ShiftWarnings';
 import { ShiftTemplates } from './shift-planner/ShiftTemplates';
 import { WarningSection } from './shift-planner/WarningSection';
+import { Day } from '@/lib/award/types';
 
 // Custom function to detect broken shifts (multiple shifts in same day)
 const detectBrokenShifts = (shifts: QuoteShift[]): Record<string, number> => {
@@ -50,7 +51,7 @@ export function ShiftPlanner({ quoteId, shifts, onShiftsChange }: ShiftPlannerPr
   const initialShift: Partial<QuoteShift> = {
     id: uuidv4(),
     quoteId: quoteId || '',
-    day: 'monday',
+    day: 'monday' as Day,
     startTime: '09:00',
     endTime: '17:00',
     breakDuration: 30,

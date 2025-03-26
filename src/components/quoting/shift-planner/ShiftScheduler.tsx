@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { ShiftForm } from './ShiftForm';
 import { ShiftList } from './ShiftList';
 import { ShiftCalendar } from './ShiftCalendar';
-import { QuoteShift } from '@/lib/types/award/types';
+import { QuoteShift } from '@/lib/types/quotes';
 
 interface ShiftCalendarProps {
   shifts: QuoteShift[];

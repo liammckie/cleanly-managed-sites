@@ -1,5 +1,5 @@
 
-import { Quote, QuoteShift, QuoteSubcontractor } from '@/lib/types/quoteTypes';
+import { Quote, QuoteShift, Subcontractor } from '@/lib/types/quotes';
 
 // Database interface definitions
 export interface DbQuote {
@@ -72,7 +72,6 @@ export interface DbSubcontractor {
   updated_at: string;
   email?: string;
   phone?: string;
-  services?: string[];
   notes?: string;
   service?: string;
 }
@@ -90,67 +89,70 @@ export interface DbOverheadProfile {
 // Adapter functions to convert database objects to application objects
 export function dbToQuote(dbQuote: DbQuote): Quote {
   return {
+    // Use snake_case properties directly from DB
     id: dbQuote.id,
-    title: dbQuote.name,
     name: dbQuote.name,
-    clientName: dbQuote.client_name,
     client_name: dbQuote.client_name,
-    siteName: dbQuote.site_name,
     site_name: dbQuote.site_name,
-    description: dbQuote.description,
     status: dbQuote.status as any,
-    overheadPercentage: dbQuote.overhead_percentage,
     overhead_percentage: dbQuote.overhead_percentage,
-    marginPercentage: dbQuote.margin_percentage,
     margin_percentage: dbQuote.margin_percentage,
-    totalPrice: dbQuote.total_price,
     total_price: dbQuote.total_price,
-    laborCost: dbQuote.labor_cost,
     labor_cost: dbQuote.labor_cost,
-    suppliesCost: dbQuote.supplies_cost || 0,
     supplies_cost: dbQuote.supplies_cost || 0,
-    equipmentCost: dbQuote.equipment_cost || 0,
     equipment_cost: dbQuote.equipment_cost || 0,
-    subcontractorCost: dbQuote.subcontractor_cost,
     subcontractor_cost: dbQuote.subcontractor_cost,
-    createdAt: dbQuote.created_at,
     created_at: dbQuote.created_at,
-    updatedAt: dbQuote.updated_at,
     updated_at: dbQuote.updated_at,
-    quoteNumber: dbQuote.quote_number,
     quote_number: dbQuote.quote_number,
-    validUntil: dbQuote.valid_until,
     valid_until: dbQuote.valid_until,
-    clientId: dbQuote.client_id,
     client_id: dbQuote.client_id,
+    site_id: dbQuote.site_id,
+    notes: dbQuote.notes,
+    created_by: dbQuote.created_by,
+    overhead_cost: dbQuote.overhead_cost,
+    total_cost: dbQuote.total_cost,
+    margin_amount: dbQuote.margin_amount,
+    start_date: dbQuote.start_date,
+    end_date: dbQuote.end_date,
+    expiry_date: dbQuote.expiry_date,
+
+    // Add camelCase aliases for frontend
+    title: dbQuote.name,
+    clientName: dbQuote.client_name,
+    siteName: dbQuote.site_name,
+    description: dbQuote.description,
+    overheadPercentage: dbQuote.overhead_percentage,
+    marginPercentage: dbQuote.margin_percentage,
+    totalPrice: dbQuote.total_price,
+    laborCost: dbQuote.labor_cost,
+    suppliesCost: dbQuote.supplies_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost,
+    createdAt: dbQuote.created_at,
+    updatedAt: dbQuote.updated_at,
+    quoteNumber: dbQuote.quote_number,
+    validUntil: dbQuote.valid_until,
+    clientId: dbQuote.client_id,
     clientContact: dbQuote.client_contact,
     clientEmail: dbQuote.client_email,
     clientPhone: dbQuote.client_phone,
     siteAddress: dbQuote.site_address,
     siteId: dbQuote.site_id,
-    site_id: dbQuote.site_id,
     frequency: dbQuote.frequency,
     scope: dbQuote.scope,
     terms: dbQuote.terms,
-    notes: dbQuote.notes,
-    created_by: dbQuote.created_by,
-    createdBy: dbQuote.created_by,
     overheadCost: dbQuote.overhead_cost,
-    overhead_cost: dbQuote.overhead_cost,
     totalCost: dbQuote.total_cost,
-    total_cost: dbQuote.total_cost,
     marginAmount: dbQuote.margin_amount,
-    margin_amount: dbQuote.margin_amount,
-    start_date: dbQuote.start_date,
     startDate: dbQuote.start_date,
     endDate: dbQuote.end_date,
-    end_date: dbQuote.end_date,
     expiryDate: dbQuote.expiry_date,
-    expiry_date: dbQuote.expiry_date,
     contractLength: dbQuote.contract_length,
     contractLengthUnit: dbQuote.contract_length_unit as 'days' | 'weeks' | 'months' | 'years',
     overheadProfile: dbQuote.overhead_profile,
-    userId: dbQuote.user_id
+    userId: dbQuote.user_id,
+    createdBy: dbQuote.created_by
   };
 }
 
@@ -236,7 +238,7 @@ export function quoteShiftToDb(shift: QuoteShift): DbQuoteShift {
   };
 }
 
-export function dbToSubcontractor(dbSub: DbSubcontractor): QuoteSubcontractor {
+export function dbToSubcontractor(dbSub: DbSubcontractor): Subcontractor {
   return {
     id: dbSub.id,
     quoteId: dbSub.quote_id || '',
@@ -246,13 +248,12 @@ export function dbToSubcontractor(dbSub: DbSubcontractor): QuoteSubcontractor {
     frequency: dbSub.frequency as any,
     email: dbSub.email,
     phone: dbSub.phone,
-    services: dbSub.services,
     service: dbSub.service,
     notes: dbSub.notes
   };
 }
 
-export function subcontractorToDb(sub: QuoteSubcontractor): DbSubcontractor {
+export function subcontractorToDb(sub: Subcontractor): DbSubcontractor {
   return {
     id: sub.id,
     quote_id: sub.quoteId,
@@ -262,7 +263,6 @@ export function subcontractorToDb(sub: QuoteSubcontractor): DbSubcontractor {
     frequency: sub.frequency as string || 'monthly',
     email: sub.email,
     phone: sub.phone,
-    services: sub.services,
     service: sub.service,
     notes: sub.notes,
     created_at: new Date().toISOString(),

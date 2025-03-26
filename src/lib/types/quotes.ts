@@ -35,6 +35,12 @@ export interface Subcontractor {
   customServices?: string;
   monthlyCost?: number;
   isFlatRate?: boolean;
+  
+  // Adding snake_case properties for database compatibility
+  business_name?: string;
+  contact_name?: string;
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
 }
 
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
@@ -61,8 +67,36 @@ export interface Quote {
   shifts?: QuoteShift[];
   subcontractors?: Subcontractor[];
   
-  // Backward compatibility aliases
+  // Camelcase aliases for frontend compatibility
   clientName?: string; 
   siteName?: string;
   title?: string;
+  overheadPercentage?: number;
+  marginPercentage?: number;
+  totalPrice?: number;
+  laborCost?: number;
+  suppliesCost?: number;
+  equipmentCost?: number;
+  subcontractorCost?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  quoteNumber?: string;
+  validUntil?: string;
+  clientId?: string;
+  siteId?: string;
+  overheadCost?: number;
+  totalCost?: number;
+  marginAmount?: number;
+  startDate?: string;
+  start_date?: string;
+  endDate?: string;
+  end_date?: string;
+  expiryDate?: string;
+  expiry_date?: string;
+  contractLength?: number;
+  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
+  overheadProfile?: string;
+  userId?: string;
+  createdBy?: string;
+  created_by?: string;
 }

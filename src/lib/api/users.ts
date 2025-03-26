@@ -1,129 +1,208 @@
 
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { SystemUser } from '@/lib/types/users';
 
-// Define SystemUser type
-export interface SystemUser {
-  id: string;
+export interface SystemUserInsert {
   email: string;
   first_name: string;
   last_name: string;
-  role: string;
-  created_at?: string;
-  updated_at?: string;
-  avatar_url?: string;
-  phone?: string;
-  is_active?: boolean;
+  full_name: string;
+  avatar_url: string;
+  role_id: string;
+  title: string;
+  phone: string;
+  status: 'active' | 'pending' | 'inactive';
+  custom_id: string;
+  notes: string;
+  territories: string[];
 }
 
-// Get all users
-export const getUsers = async (): Promise<SystemUser[]> => {
-  try {
-    // Use auth.users table for system users
-    const { data, error } = await supabase
-      .from('users') // Use the proper table name
-      .select('*');
+export const usersApi = {
+  async getUsers(): Promise<SystemUser[]> {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
 
-    if (error) {
-      console.error('Error fetching users:', error);
+      return data.map(user => ({
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        full_name: user.full_name || '',
+        role: user.role_id || '',
+        status: (user.status as 'active' | 'pending' | 'inactive') || 'active',
+        avatar_url: user.avatar_url || '',
+        title: user.title || '',
+        phone: user.phone || '',
+        last_login: user.last_login || '',
+        custom_id: user.custom_id || '',
+        notes: user.notes || '',
+        territories: user.territories || []
+      }));
+    } catch (error) {
+      console.error('Error in getUsers:', error);
       throw error;
     }
+  },
 
-    return data as SystemUser[];
-  } catch (error) {
-    console.error('Error in getUsers:', error);
-    throw error;
+  async getUserById(userId: string): Promise<SystemUser> {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user by ID:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        full_name: data.full_name || '',
+        role: data.role_id || '',
+        status: (data.status as 'active' | 'pending' | 'inactive') || 'active',
+        avatar_url: data.avatar_url || '',
+        title: data.title || '',
+        phone: data.phone || '',
+        last_login: data.last_login || '',
+        custom_id: data.custom_id || '',
+        notes: data.notes || '',
+        territories: data.territories || []
+      };
+    } catch (error) {
+      console.error('Error in getUserById:', error);
+      throw error;
+    }
+  },
+
+  async updateUser(userId: string, userData: Partial<SystemUser>): Promise<SystemUser> {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          email: userData.email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          full_name: userData.full_name,
+          role_id: userData.role,
+          status: userData.status,
+          avatar_url: userData.avatar_url,
+          title: userData.title,
+          phone: userData.phone,
+          custom_id: userData.custom_id,
+          notes: userData.notes,
+          territories: userData.territories
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating user:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        full_name: data.full_name || '',
+        role: data.role_id || '',
+        status: (data.status as 'active' | 'pending' | 'inactive') || 'active',
+        avatar_url: data.avatar_url || '',
+        title: data.title || '',
+        phone: data.phone || '',
+        last_login: data.last_login || '',
+        custom_id: data.custom_id || '',
+        notes: data.notes || '',
+        territories: data.territories || []
+      };
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      throw error;
+    }
+  },
+
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      throw error;
+    }
+  },
+
+  async createUser(userData: SystemUserInsert): Promise<SystemUser> {
+    try {
+      // First create auth user with Supabase auth
+      // This would require additional setup with auth hooks and service role key
+      
+      // Then create user profile
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert([{
+          email: userData.email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          full_name: userData.full_name,
+          role_id: userData.role_id,
+          status: userData.status,
+          avatar_url: userData.avatar_url,
+          title: userData.title,
+          phone: userData.phone,
+          custom_id: userData.custom_id,
+          notes: userData.notes,
+          territories: userData.territories
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating user:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name || '',
+        last_name: data.last_name || '',
+        full_name: data.full_name || '',
+        role: data.role_id || '',
+        status: (data.status as 'active' | 'pending' | 'inactive') || 'active',
+        avatar_url: data.avatar_url || '',
+        title: data.title || '',
+        phone: data.phone || '',
+        last_login: data.last_login || '',
+        custom_id: data.custom_id || '',
+        notes: data.notes || '',
+        territories: data.territories || []
+      };
+    } catch (error) {
+      console.error('Error in createUser:', error);
+      throw error;
+    }
   }
 };
 
-// Get user by ID
-export const getUserById = async (id: string): Promise<SystemUser> => {
-  try {
-    const { data, error } = await supabase
-      .from('users') // Use the proper table name
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      console.error(`Error fetching user with ID ${id}:`, error);
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    
-    return data as SystemUser;
-  } catch (error) {
-    console.error('Error in getUserById:', error);
-    throw error;
-  }
-};
-
-// Create user
-export const createUser = async (userData: Partial<SystemUser>): Promise<SystemUser> => {
-  try {
-    const { data, error } = await supabase
-      .from('users') // Use the proper table name
-      .insert([userData])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error creating user:', error);
-      throw error;
-    }
-    
-    toast.success('User created successfully');
-    
-    return data as SystemUser;
-  } catch (error) {
-    console.error('Error in createUser:', error);
-    throw error;
-  }
-};
-
-// Update user
-export const updateUser = async (id: string, userData: Partial<SystemUser>): Promise<SystemUser> => {
-  try {
-    const { data, error } = await supabase
-      .from('users') // Use the proper table name
-      .update(userData)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error(`Error updating user with ID ${id}:`, error);
-      throw error;
-    }
-    
-    toast.success('User updated successfully');
-    
-    return data as SystemUser;
-  } catch (error) {
-    console.error('Error in updateUser:', error);
-    throw error;
-  }
-};
-
-// Delete user
-export const deleteUser = async (id: string): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('users') // Use the proper table name
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error(`Error deleting user with ID ${id}:`, error);
-      throw error;
-    }
-    
-    toast.success('User deleted successfully');
-  } catch (error) {
-    console.error('Error in deleteUser:', error);
-    throw error;
-  }
-};
+export default usersApi;

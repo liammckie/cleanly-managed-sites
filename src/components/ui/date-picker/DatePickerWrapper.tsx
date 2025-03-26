@@ -23,7 +23,7 @@ export function DatePickerWrapper({
   return (
     <DatePicker
       date={value}
-      setDate={onChange}
+      onSelect={onChange}
       disabled={disabled}
       placeholder={placeholder}
     />

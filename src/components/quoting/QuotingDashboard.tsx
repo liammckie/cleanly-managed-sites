@@ -12,7 +12,8 @@ import { QuoteList } from './QuoteList';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
-import { useQuotes } from '@/hooks/useQuotes';
+import { useQuotes } from '@/hooks/quotes/useQuotes';
+import { Quote } from '@/lib/types/quotes';
 
 export function QuotingDashboard() {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ export function QuotingDashboard() {
             </Button>
           </div>
           
-          <QuoteList quotes={quotes} searchTerm={searchTerm} isLoading={isLoading} />
+          <QuoteList quotes={quotes as Quote[]} searchTerm={searchTerm} isLoading={isLoading} />
         </div>
       </TabsContent>
     
