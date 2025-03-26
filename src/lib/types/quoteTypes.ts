@@ -6,7 +6,7 @@ export interface Quote {
   name: string;
   client_name: string;
   site_name?: string;
-  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
   overhead_percentage: number;
   margin_percentage: number;
   total_price: number;
@@ -36,6 +36,8 @@ export interface Quote {
   contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
   clientId?: string;
   siteId?: string;
+  shifts?: QuoteShift[];
+  subcontractors?: QuoteSubcontractor[];
 }
 
 export interface QuoteShift {

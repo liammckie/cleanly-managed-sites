@@ -50,4 +50,4 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 export type Json = JsonValue;
 
 // Quote status type
-export type QuoteStatus = "draft" | "pending" | "approved" | "rejected" | "expired";
+export type QuoteStatus = "draft" | "sent" | "approved" | "rejected" | "expired" | "pending" | "accepted";

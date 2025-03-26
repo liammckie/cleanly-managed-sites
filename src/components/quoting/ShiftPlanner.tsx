@@ -2,130 +2,148 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-import { ShiftScheduler } from './shift-planner/ShiftScheduler';
+import { Plus } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { ShiftForm } from './shift-planner/ShiftForm';
+import { ShiftList } from './shift-planner/ShiftList';
+import { useAllowances } from '@/hooks/quotes/useAllowances';
 import { QuoteShift } from '@/types/models';
-import { adaptDay, adaptQuoteShift } from '@/utils/typeAdapters';
-import { Day } from '@/types/common';
+import { ShiftPlannerProps } from './types';
 
-const dayNames: Record<string, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-  weekday: 'Weekday',
-  public_holiday: 'Public Holiday'
-};
-
-interface ShiftPlannerProps {
-  shifts: QuoteShift[];
-  onAddShift: (shift: Partial<QuoteShift>) => void;
-  onRemoveShift: (shiftId: string) => void;
-  onUpdateShift?: (shift: QuoteShift) => void;
-}
-
-export function ShiftPlanner({ shifts, onAddShift, onRemoveShift, onUpdateShift }: ShiftPlannerProps) {
-  const handleAddShift = (shiftData: Partial<QuoteShift>) => {
-    // Convert day type using adapter to ensure consistency
-    const adaptedShift = {
-      ...shiftData,
-      day: adaptDay(shiftData.day as string)
-    };
-    onAddShift(adaptedShift);
+export function ShiftPlanner({
+  shifts = [],
+  onAddShift,
+  onRemoveShift,
+  onShiftsChange,
+  quoteId
+}: ShiftPlannerProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [currentShift, setCurrentShift] = useState<Partial<QuoteShift>>({
+    id: uuidv4(),
+    quoteId: quoteId || '',
+    day: 'monday',
+    startTime: '09:00',
+    endTime: '17:00',
+    breakDuration: 30,
+    numberOfCleaners: 1,
+    employmentType: 'casual',
+    level: 1,
+    allowances: [],
+    location: '',
+    notes: '',
+    estimatedCost: 0
+  });
+  
+  const { data: allowances = [], isLoading: isLoadingAllowances } = useAllowances();
+  
+  // Open the form to add a new shift
+  const handleAddNewClick = () => {
+    setCurrentShift({
+      id: uuidv4(),
+      quoteId: quoteId || '',
+      day: 'monday',
+      startTime: '09:00',
+      endTime: '17:00',
+      breakDuration: 30,
+      numberOfCleaners: 1,
+      employmentType: 'casual',
+      level: 1,
+      allowances: [],
+      location: '',
+      notes: '',
+      estimatedCost: 0
+    });
+    setShowForm(true);
   };
-
-  // Format time string (e.g., "09:00" to "9:00 AM")
-  const formatTime = (timeString: string): string => {
-    try {
-      const [hours, minutes] = timeString.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours, 10));
-      date.setMinutes(parseInt(minutes, 10));
+  
+  // Close the shift form
+  const handleCancelForm = () => {
+    setShowForm(false);
+  };
+  
+  // Update a field in the current shift
+  const handleShiftChange = (field: string, value: any) => {
+    setCurrentShift(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Toggle an allowance in the current shift
+  const handleAllowanceToggle = (allowanceId: string) => {
+    setCurrentShift(prev => {
+      const allowances = prev.allowances || [];
+      const index = allowances.indexOf(allowanceId);
       
-      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    } catch (error) {
-      return timeString;
+      if (index >= 0) {
+        // Remove allowance
+        const newAllowances = [...allowances];
+        newAllowances.splice(index, 1);
+        return { ...prev, allowances: newAllowances };
+      } else {
+        // Add allowance
+        return { ...prev, allowances: [...allowances, allowanceId] };
+      }
+    });
+  };
+  
+  // Add the current shift to the list
+  const handleAddShift = () => {
+    if (typeof onAddShift === 'function') {
+      onAddShift(currentShift);
+    } else if (typeof onShiftsChange === 'function') {
+      // If no onAddShift but there's onShiftsChange, add it to the array directly
+      const newShift = {
+        ...currentShift,
+        id: currentShift.id || uuidv4()
+      } as QuoteShift;
+      
+      onShiftsChange([...shifts, newShift]);
+    }
+    
+    setShowForm(false);
+  };
+  
+  // Remove a shift from the list
+  const handleRemoveShift = (shiftId: string) => {
+    if (typeof onRemoveShift === 'function') {
+      onRemoveShift(shiftId);
+    } else if (typeof onShiftsChange === 'function') {
+      // If no onRemoveShift but there's onShiftsChange, remove it from the array directly
+      onShiftsChange(shifts.filter(shift => shift.id !== shiftId));
     }
   };
-
+  
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Labor Shifts</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Shifts</CardTitle>
+        <Button onClick={handleAddNewClick} disabled={showForm}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Shift
+        </Button>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {shifts.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Planned Shifts</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted/50">
-                      <th className="px-4 py-2 text-left">Day</th>
-                      <th className="px-4 py-2 text-left">Time</th>
-                      <th className="px-4 py-2 text-left">Hours</th>
-                      <th className="px-4 py-2 text-left">Cleaners</th>
-                      <th className="px-4 py-2 text-left">Type</th>
-                      <th className="px-4 py-2 text-left">Level</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shifts.map((shift) => {
-                      // Adapt shift to ensure consistent types
-                      const adaptedShift = adaptQuoteShift<QuoteShift, QuoteShift>(shift);
-                      
-                      // Calculate shift duration
-                      let durationHours = 0;
-                      try {
-                        const [startHour, startMin] = adaptedShift.startTime.split(':').map(Number);
-                        const [endHour, endMin] = adaptedShift.endTime.split(':').map(Number);
-                        const startDate = new Date(0, 0, 0, startHour, startMin);
-                        const endDate = new Date(0, 0, 0, endHour, endMin);
-                        const diffMs = endDate.getTime() - startDate.getTime();
-                        durationHours = (diffMs / 3600000) - (adaptedShift.breakDuration / 60);
-                      } catch (error) {
-                        console.error('Error calculating shift duration:', error);
-                      }
-                      
-                      return (
-                        <tr key={adaptedShift.id} className="border-b hover:bg-muted/20">
-                          <td className="px-4 py-2">{dayNames[adaptedShift.day] || adaptedShift.day}</td>
-                          <td className="px-4 py-2">
-                            {formatTime(adaptedShift.startTime)} - {formatTime(adaptedShift.endTime)}
-                          </td>
-                          <td className="px-4 py-2">{durationHours.toFixed(1)}</td>
-                          <td className="px-4 py-2">{adaptedShift.numberOfCleaners}</td>
-                          <td className="px-4 py-2">
-                            {adaptedShift.employmentType === 'casual' ? 'Casual' : 
-                             adaptedShift.employmentType === 'part_time' ? 'Part Time' : 'Full Time'}
-                          </td>
-                          <td className="px-4 py-2">Level {adaptedShift.level}</td>
-                          <td className="px-4 py-2">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => onRemoveShift(adaptedShift.id)}
-                              aria-label="Delete shift"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-          
-          <ShiftScheduler onAddShift={handleAddShift} existingShifts={shifts} />
-        </div>
+      
+      <CardContent className="space-y-6">
+        {showForm ? (
+          <ShiftForm
+            shift={currentShift}
+            onShiftChange={handleShiftChange}
+            onAllowanceToggle={handleAllowanceToggle}
+            onAddShift={handleAddShift}
+            onCancel={handleCancelForm}
+            allowances={allowances}
+            isLoadingAllowances={isLoadingAllowances}
+          />
+        ) : (
+          <ShiftList shifts={shifts} onRemoveShift={handleRemoveShift} />
+        )}
+        
+        {!showForm && shifts.length === 0 && (
+          <div className="text-center p-4 text-muted-foreground">
+            No shifts added yet. Click "Add Shift" to create your first shift.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

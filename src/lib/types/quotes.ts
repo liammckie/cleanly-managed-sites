@@ -40,7 +40,7 @@ export interface Subcontractor {
   contact_name?: string;
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'accepted';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
 
 export interface Quote {
   id: string;

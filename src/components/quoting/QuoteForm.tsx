@@ -157,6 +157,7 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
           title: "Quote Updated",
           description: "The quote has been successfully updated.",
         });
+        navigate(`/quotes/${quoteId}`);
       } else {
         // Create
         const result = await createQuote(quoteData as Quote);
@@ -166,12 +167,11 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
         });
         if (result && result.id) {
           navigate(`/quotes/${result.id}`);
-          return;
+        } else {
+          // If result doesn't have id, just navigate to quotes list
+          navigate('/quotes');
         }
       }
-      
-      // Return to quotes list
-      navigate('/quotes');
     } catch (error) {
       console.error('Error saving quote:', error);
       toast({

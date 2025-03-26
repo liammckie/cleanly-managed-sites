@@ -44,6 +44,7 @@ export interface DeleteUserModalProps {
 }
 
 export interface ContractTerm {
+  id?: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -53,6 +54,7 @@ export interface ContractTerm {
 }
 
 export interface ContractSummary {
+  id?: string;
   totalValue: number;
   expiringWithin30Days: number;
   renewalRate: number;
