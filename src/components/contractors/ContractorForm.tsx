@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,7 +40,6 @@ import { useContractorVersionHistory } from '@/hooks/useContractorVersionHistory
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trash2 } from 'lucide-react';
 
-// Define form validation schema
 const contractorFormSchema = z.object({
   business_name: z.string().min(1, 'Business name is required'),
   contact_name: z.string().min(1, 'Contact name is required'),
@@ -75,7 +73,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
     mode === 'edit' && contractor ? contractor.id : null
   );
 
-  // Define specialty options
   const specialtyOptions = [
     { id: 'cleaning', label: 'Cleaning' },
     { id: 'gardening', label: 'Gardening' },
@@ -87,7 +84,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
     { id: 'carpentry', label: 'Carpentry' },
   ];
 
-  // Form initialization
   const form = useForm<ContractorFormValues>({
     resolver: zodResolver(contractorFormSchema),
     defaultValues: {
@@ -110,40 +106,35 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
     },
   });
 
-  // Handle form submission
   const onSubmit = async (values: ContractorFormValues) => {
     try {
-      // Convert string rates to numbers or null
       const hourlyRate = values.hourly_rate ? parseFloat(values.hourly_rate) : null;
       const dayRate = values.day_rate ? parseFloat(values.day_rate) : null;
 
-      // Prepare contractor data
       const contractorData = {
-        business_name: values.business_name, // Required field
-        contact_name: values.contact_name, // Required field
+        business_name: values.business_name,
+        contact_name: values.contact_name,
         email: values.email || null,
         phone: values.phone || null,
         address: values.address || null,
         city: values.city || null,
         state: values.state || null,
         postcode: values.postcode || null,
-        status: values.status, // Required field
-        contractor_type: values.contractor_type, // Required field
+        status: values.status,
+        contractor_type: values.contractor_type,
         hourly_rate: hourlyRate,
         day_rate: dayRate,
         abn: values.abn || null,
         tax_id: values.tax_id || null,
         notes: values.notes || null,
         specialty: values.specialty || null,
-        rating: null, // Required field, default to null
+        rating: null,
       };
 
       if (mode === 'create') {
-        // Create new contractor
         await createContractor(contractorData);
         navigate('/contractors');
       } else if (mode === 'edit' && contractor) {
-        // Update existing contractor
         await updateContractor({
           id: contractor.id,
           data: contractorData,
@@ -155,7 +146,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
     }
   };
 
-  // Handle contractor deletion
   const handleDelete = async () => {
     if (contractor && contractor.id) {
       try {
@@ -180,7 +170,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Basic Information */}
                   <div className="space-y-4">
                     <h2 className="text-lg font-medium">Basic Information</h2>
                     
@@ -294,7 +283,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
                     />
                   </div>
                   
-                  {/* Address & Financial Details */}
                   <div className="space-y-4">
                     <h2 className="text-lg font-medium">Address & Financial Details</h2>
                     
@@ -418,7 +406,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
                   </div>
                 </div>
                 
-                {/* Specialties Section */}
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium">Specialties</h2>
                   
@@ -466,7 +453,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
                   />
                 </div>
                 
-                {/* Notes Section */}
                 <div className="space-y-4">
                   <h2 className="text-lg font-medium">Additional Information</h2>
                   
@@ -489,7 +475,6 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
                   />
                 </div>
                 
-                {/* Form Buttons */}
                 <div className="flex justify-between gap-4">
                   {mode === 'edit' && (
                     <AlertDialog>
@@ -547,7 +532,7 @@ export const ContractorForm = ({ mode = 'create', contractor }: ContractorFormPr
       {mode === 'edit' && (
         <TabsContent value="history">
           <ContractorVersionHistory 
-            history={history || []} 
+            versionHistory={history || []} 
             isLoading={isLoadingHistory}
             currentContractor={contractor}
           />

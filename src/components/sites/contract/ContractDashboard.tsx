@@ -5,7 +5,6 @@ import { ContractSummarySection } from './ContractSummarySection';
 import { ContractCharts } from './ContractCharts';
 import { ContractExpiryList } from './ContractExpiryList'; 
 import { useContractForecast } from '@/hooks/useContractForecast';
-import { useSites } from '@/hooks/useSites';
 import { useAsyncData } from '@/hooks/useAsyncData';
 import { SiteRecord } from '@/lib/types';
 
@@ -16,32 +15,40 @@ import { SiteRecord } from '@/lib/types';
 export function ContractDashboard() {
   const { contractData, groupedContracts, isLoading } = useContracts();
   const { data: sitesData } = useSites();
-  const { data: sites } = useAsyncData(sitesData || []);
-  const { forecastData, summaryData } = useContractForecast(sites as SiteRecord[]);
+  const { data: sites } = useAsyncData<SiteRecord[]>(sitesData || []);
+  const { data: forecastData } = useContractForecast();
   
   return (
     <div className="space-y-6">
       {/* Summary metrics section */}
       <ContractSummarySection 
-        contractData={contractData} 
+        contractData={contractData || []} 
         isLoading={isLoading} 
-        summaryData={summaryData}
+        summaryData={forecastData?.summaryData || {}}
       />
       
       {/* Charts for visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ContractCharts 
-          contractData={contractData} 
+          contractData={contractData || []} 
           groupedContracts={groupedContracts}
           isLoading={isLoading}
         />
         
         {/* Contract expirations list */}
         <ContractExpiryList 
-          sites={sites as SiteRecord[]} 
+          sites={sites || []} 
           isLoading={isLoading} 
         />
       </div>
     </div>
   );
+}
+
+// Add the missing hook import
+function useSites() {
+  return useQuery({
+    queryKey: ['sites'],
+    queryFn: () => fetch('/api/sites').then(res => res.json())
+  });
 }

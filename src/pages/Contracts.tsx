@@ -1,66 +1,49 @@
-
 import React from 'react';
+import { ContractTable } from '@/components/contracts/ContractTable';
+import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
-import { DataTable } from '@/components/ui/data-table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
-import { contractColumns } from '@/components/contracts/ContractColumns';
-import { useContracts } from '@/hooks/useContracts';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Button } from '@/components/ui/button';
+import { useContracts } from '@/hooks/useContracts';
 import { adaptContractDataArray } from '@/components/contracts/contractTypeAdapter';
-import { Plus } from 'lucide-react';
+import { ContractData } from '@/lib/types/contracts';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-export default function Contracts() {
-  const { contractData, isLoading, groupedContracts } = useContracts();
-  
+const Contracts = () => {
+  const { contractData: data, isLoading, isError } = useContracts();
+
+  const totalContracts = Array.isArray(data) ? data.length : 0;
+  const adaptedContracts = Array.isArray(data) ? adaptContractDataArray(data as ContractData[]) : [];
+
   return (
     <SidebarProvider>
       <div className="flex h-screen">
         <Sidebar />
-        
         <div className="flex-1 flex flex-col overflow-hidden">
           <Navbar />
-          
           <div className="flex-1 overflow-y-auto p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Contracts</h1>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Contract
-              </Button>
-            </div>
+            <h1 className="text-2xl font-semibold mb-6">Contracts</h1>
             
-            <div className="mb-6">
-              <ContractValueMetrics />
-            </div>
+            <ContractValueMetrics />
             
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Contracts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <LoadingSpinner />
-                  </div>
-                ) : contractData.length === 0 ? (
-                  <div className="text-center p-4 bg-gray-50 text-gray-800 rounded">
-                    No contracts found.
-                  </div>
-                ) : (
-                  <DataTable 
-                    columns={contractColumns} 
-                    data={adaptContractDataArray(contractData)}
-                  />
-                )}
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <LoadingSpinner />
+              </div>
+            ) : isError ? (
+              <div className="rounded-lg p-8 text-center border border-border bg-card">
+                <p className="text-destructive">
+                  Error loading contracts.
+                </p>
+              </div>
+            ) : (
+              <ContractTable contracts={adaptedContracts} count={totalContracts} />
+            )}
           </div>
         </div>
       </div>
     </SidebarProvider>
   );
-}
+};
+
+export default Contracts;

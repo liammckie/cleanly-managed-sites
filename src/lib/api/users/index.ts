@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { SystemUser, UserRole } from '@/lib/types';
 
@@ -23,7 +22,7 @@ export const usersApi = {
       status: user.status as "active" | "pending" | "inactive",
       last_login: user.last_login,
       custom_id: user.custom_id,
-      notes: user.notes,
+      note: user.note || '',
       territories: user.territories,
       created_at: user.created_at,
       updated_at: user.updated_at
@@ -53,7 +52,7 @@ export const usersApi = {
         status: data.status as "active" | "pending" | "inactive",
         last_login: data.last_login,
         custom_id: data.custom_id,
-        notes: data.notes,
+        note: data.note || '',
         territories: data.territories,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -76,7 +75,7 @@ export const usersApi = {
       title: user.title,
       phone: user.phone,
       custom_id: user.custom_id,
-      notes: user.notes,
+      note: user.note,
       territories: user.territories
     };
 
@@ -105,7 +104,7 @@ export const usersApi = {
       status: createdUser.status as "active" | "pending" | "inactive",
       last_login: createdUser.last_login,
       custom_id: createdUser.custom_id,
-      notes: createdUser.notes,
+      note: createdUser.note,
       territories: createdUser.territories,
       created_at: createdUser.created_at,
       updated_at: createdUser.updated_at
@@ -126,7 +125,7 @@ export const usersApi = {
         phone: updates.phone,
         status: updates.status,
         custom_id: updates.custom_id,
-        notes: updates.notes,
+        note: updates.note,
         territories: updates.territories
       })
       .eq('id', id)
@@ -148,7 +147,7 @@ export const usersApi = {
       status: data.status as "active" | "pending" | "inactive",
       last_login: data.last_login,
       custom_id: data.custom_id,
-      notes: data.notes,
+      note: data.note,
       territories: data.territories,
       created_at: data.created_at,
       updated_at: data.updated_at

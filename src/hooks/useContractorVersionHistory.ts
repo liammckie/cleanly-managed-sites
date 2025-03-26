@@ -18,7 +18,7 @@ export function useContractorVersionHistory(contractorId: string | null) {
   });
 
   return {
-    history: historyQuery.data as ContractorVersionHistoryEntry[] | undefined,
+    versionHistory: historyQuery.data as ContractorVersionHistoryEntry[] || [],
     isLoading: historyQuery.isLoading,
     isError: historyQuery.isError,
     error: historyQuery.error,

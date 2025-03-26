@@ -1,55 +1,107 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { SiteRecord } from '@/lib/api';
-import { asJsonObject, jsonToString } from '@/lib/utils/json';
+import { SiteRecord } from '@/lib/types';
 import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
-function generateForecast(site: SiteRecord): ContractForecast[] {
-  // Generate a 12-month forecast based on site revenue and cost
-  const forecast: ContractForecast[] = [];
-  const currentDate = new Date();
-  
-  const monthlyRevenue = site.monthly_revenue || 0;
-  const monthlyCost = site.monthly_cost || 0;
-  const profit = monthlyRevenue - monthlyCost;
-  
-  for (let i = 0; i < 12; i++) {
-    const forecastDate = new Date(currentDate);
-    forecastDate.setMonth(currentDate.getMonth() + i);
-    
-    const month = forecastDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    
-    forecast.push({
-      month,
-      revenue: monthlyRevenue,
-      cost: monthlyCost,
-      profit
-    });
-  }
-  
-  return forecast;
+/**
+ * Generate contract forecast data from site data
+ */
+export function useContractForecast() {
+  const query = useQuery({
+    queryKey: ['contract-forecast'],
+    queryFn: async () => {
+      try {
+        // Fetch sites data
+        const response = await fetch('/api/sites');
+        const sites = await response.json() as SiteRecord[];
+        
+        return calculateForecast(sites);
+      } catch (error) {
+        console.error('Error generating contract forecast:', error);
+        throw error;
+      }
+    }
+  });
+
+  return query;
 }
 
-export function useContractForecast(siteId: string) {
-  return useQuery({
-    queryKey: ['contractForecast', siteId],
-    queryFn: async () => {
-      // This would typically call an API, but for this example we'll generate the data
-      const response = await fetch(`/api/sites/${siteId}`);
-      const site: SiteRecord = await response.json();
+/**
+ * Calculate forecast data from sites
+ */
+function calculateForecast(sites: SiteRecord[]) {
+  const forecast: ContractForecast[] = [];
+  let totalRevenue = 0;
+  let totalCost = 0;
+  let totalProfit = 0;
+  let sitesWithValidContracts = 0;
+
+  // Process each site
+  sites.forEach(site => {
+    const contractDetails = asJsonObject(site.contract_details, {});
+    const startDate = jsonToString(contractDetails.startDate || '');
+    const endDate = jsonToString(contractDetails.endDate || '');
+    
+    // Skip sites without contract dates
+    if (!startDate || !endDate) return;
+    
+    sitesWithValidContracts++;
+    
+    // Calculate financial metrics
+    const monthlyRevenue = site.monthly_revenue || 0;
+    const monthlyCost = site.monthly_cost || 0;
+    const monthlyProfit = monthlyRevenue - monthlyCost;
+    
+    totalRevenue += monthlyRevenue;
+    totalCost += monthlyCost;
+    totalProfit += monthlyProfit;
+    
+    // Generate monthly forecast (simplified)
+    const startMonth = new Date(startDate).getMonth();
+    const endMonth = new Date(endDate).getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    for (let i = 0; i <= 11; i++) {
+      const monthDate = new Date(currentYear, i, 1);
+      const monthName = monthDate.toLocaleString('default', { month: 'short' });
       
-      // Check if the contract has a start and end date
-      const contractDetails = asJsonObject(site.contract_details, {});
-      const hasValidContract = jsonToString(contractDetails.startDate) && jsonToString(contractDetails.endDate);
-      
-      // Generate the forecast
-      const forecast = generateForecast(site);
-      
-      return {
-        forecast,
-        hasValidContract
-      };
-    },
-    enabled: !!siteId
+      // If this month is within the contract period
+      if (i >= startMonth && i <= endMonth) {
+        const existingEntry = forecast.find(entry => entry.month === monthName);
+        
+        if (existingEntry) {
+          existingEntry.revenue += monthlyRevenue;
+          existingEntry.cost += monthlyCost;
+          existingEntry.profit += monthlyProfit;
+        } else {
+          forecast.push({
+            month: monthName,
+            revenue: monthlyRevenue,
+            cost: monthlyCost,
+            profit: monthlyProfit
+          });
+        }
+      }
+    }
   });
+  
+  // Sort forecast by month
+  forecast.sort((a, b) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.indexOf(a.month) - months.indexOf(b.month);
+  });
+  
+  // Return forecast and summary data
+  return {
+    forecast,
+    summaryData: {
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      avgContractValue: sitesWithValidContracts > 0 ? totalRevenue / sitesWithValidContracts : 0,
+      profitMargin: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0
+    },
+    hasValidContract: sitesWithValidContracts.toString()
+  };
 }

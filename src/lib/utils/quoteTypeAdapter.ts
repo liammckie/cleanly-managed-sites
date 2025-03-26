@@ -1,4 +1,3 @@
-
 import { Day, Frequency } from '@/types/common';
 import { Quote as LibQuote, QuoteShift as LibQuoteShift, QuoteSubcontractor as LibQuoteSubcontractor } from '@/lib/types/quotes';
 import { Quote as ModelQuote, QuoteShift as ModelQuoteShift, QuoteSubcontractor as ModelQuoteSubcontractor } from '@/types/models';
@@ -38,7 +37,7 @@ export function adaptQuoteToModel(quote: LibQuote): ModelQuote {
     // Convert shifts with proper day type
     shifts: adaptShiftsToModel(quote.shifts || []),
     // Convert subcontractors with proper frequency type
-    subcontractors: adaptSubcontractorsToModel(quote.subcontractors || [])
+    subcontractors: quote.subcontractors ? adaptSubcontractorsToModel(quote.subcontractors) : []
   };
 }
 
@@ -83,7 +82,7 @@ export function adaptModelToQuote(quote: ModelQuote): LibQuote {
   return {
     ...quote,
     // Convert enum status to string
-    status: quote.status as string,
+    status: quote.status.toString(),
     // Convert shifts
     shifts: adaptModelShiftsToLib(quote.shifts || []),
     // Convert subcontractors
@@ -131,8 +130,12 @@ export function adaptModelSubcontractorsToLib(subcontractors: ModelQuoteSubcontr
 export function adaptQuote(quote: any): any {
   // Check if the quote is from lib or model and adapt accordingly
   if (quote && typeof quote === 'object') {
-    // Add any special handling as needed
-    return quote;
+    // For model to lib conversion
+    if (quote.day && typeof quote.day === 'string') {
+      return adaptModelToQuote(quote);
+    }
+    // For lib to model conversion
+    return adaptQuoteToModel(quote);
   }
   return quote;
 }

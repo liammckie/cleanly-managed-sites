@@ -7,13 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Clock, FileText } from 'lucide-react';
 import { jsonToString } from '@/lib/utils/json';
+import { ContractorVersionHistoryEntry } from '@/lib/types';
 
 interface ContractorVersionHistoryProps {
-  contractorId: string;
+  versionHistory: ContractorVersionHistoryEntry[];
+  isLoading: boolean;
+  currentContractor?: any;
 }
 
-export function ContractorVersionHistory({ contractorId }: ContractorVersionHistoryProps) {
-  const { versionHistory, isLoading } = useContractorVersionHistory(contractorId);
+export function ContractorVersionHistory({ versionHistory, isLoading, currentContractor }: ContractorVersionHistoryProps) {
   const [selectedVersion, setSelectedVersion] = React.useState<string | null>(null);
   
   React.useEffect(() => {

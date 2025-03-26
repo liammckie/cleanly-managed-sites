@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
 import { asJsonObject, jsonToString } from '@/lib/utils/json';
@@ -20,14 +19,26 @@ export function PeriodicalsTab({ site }: PeriodicalsTabProps) {
       lastCompleted: '',
       nextScheduled: '',
       charges: ''
-    }
+    },
+    services: []
   });
   
   return (
     <div className="glass-card p-6">
-      <h3 className="text-lg font-medium mb-4">Periodic Cleaning Schedule</h3>
+      <h3 className="text-lg font-medium mb-4">Periodical Services</h3>
       
-      <div className="grid grid-cols-1 gap-6">
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm text-muted-foreground mb-2">Service Items</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {periodicals.services.map((service, index) => (
+              <div key={index} className="bg-secondary p-2 rounded-md">
+                {jsonToString(service)}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="border p-4 rounded-md">
           <h4 className="text-md font-semibold mb-2">Window Cleaning</h4>
           

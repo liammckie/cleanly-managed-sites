@@ -1,7 +1,7 @@
 
 import { ContractData as ContractColumns } from '@/components/contracts/ContractColumns';
 import { ContractData as ContractTypes } from '@/lib/types/contracts';
-import { asJsonObject } from '@/lib/utils/json';
+import { asJsonObject, jsonToString } from '@/lib/utils/json';
 
 /**
  * Converts a ContractData from lib/types/contracts to the format expected by ContractColumns
@@ -18,8 +18,8 @@ export function adaptContractData(contractData: ContractTypes): ContractColumns 
     site: { id: contractData.site_id, name: contractData.site_name || '' },
     client: { id: contractData.client_id || '', name: contractData.client_name || '' },
     value: contractData.monthly_revenue || 0,
-    startDate: contractDetails.startDate || '',
-    endDate: contractDetails.endDate || '',
+    startDate: jsonToString(contractDetails.startDate) || '',
+    endDate: jsonToString(contractDetails.endDate) || '',
     status: contractData.status === 'active' ? 'active' : 
             contractData.status === 'pending' ? 'pending' : 'expired'
   };

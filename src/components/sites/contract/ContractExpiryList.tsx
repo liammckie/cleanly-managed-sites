@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +17,14 @@ interface ContractExpiryListProps {
 export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps) {
   const today = new Date();
   
+  const formatContractDates = (site: SiteRecord) => {
+    const contractDetails = asJsonObject(site.contract_details, { startDate: '', endDate: '' });
+    return {
+      startDate: jsonToString(contractDetails.startDate) || 'Not set',
+      endDate: jsonToString(contractDetails.endDate) || 'Not set'
+    };
+  };
+
   const contractsWithExpiry = useMemo(() => {
     if (!sites) return [];
     
@@ -99,7 +106,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
               return (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">{site.name}</TableCell>
-                  <TableCell>{site.contractNumber || 'N/A'}</TableCell>
+                  <TableCell>{jsonToString(contractDetails.contractNumber) || 'N/A'}</TableCell>
                   <TableCell>{format(parseISO(jsonToString(contractDetails.endDate)), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getExpiryStatusClass(site.daysUntilExpiry)}>

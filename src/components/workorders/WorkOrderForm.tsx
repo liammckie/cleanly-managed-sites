@@ -119,6 +119,19 @@ export const WorkOrderForm = ({ site, onSuccess, templateId, workOrder }: WorkOr
   // Get the initial attachments and purchaseOrderRequired values using asJsonObject
   const initialAttachments = workOrder ? asJsonObject(workOrder.attachments, []) : [];
 
+  const formatAddress = (site: SiteRecord) => {
+    let address = jsonToString(site.address) || '';
+    const city = site.city || '';
+    const state = site.state || '';
+    const postcode = site.postcode || '';
+    
+    if (city) address += (address ? ', ' : '') + city;
+    if (state) address += (address ? ', ' : '') + state;
+    if (postcode) address += (address ? ' ' : '') + postcode;
+    
+    return address || 'No address';
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
