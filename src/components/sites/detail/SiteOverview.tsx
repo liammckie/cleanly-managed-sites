@@ -5,12 +5,7 @@ import { SiteRecord } from '@/lib/types';
 import { formatDate } from '@/lib/utils/date';
 import { getContractStartDate, getContractEndDate, getContractType } from '@/lib/utils/contractDataUtils';
 
-interface SiteOverviewProps {
-  site: SiteRecord;
-  isLoading: boolean;
-}
-
-const SiteOverview: React.FC<SiteOverviewProps> = ({ site, isLoading }) => {
+export const SiteOverview: React.FC<SiteOverviewProps> = ({ site, isLoading }) => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -73,5 +68,10 @@ const SiteOverview: React.FC<SiteOverviewProps> = ({ site, isLoading }) => {
     </div>
   );
 };
+
+interface SiteOverviewProps {
+  site: SiteRecord;
+  isLoading: boolean;
+}
 
 export default SiteOverview;
