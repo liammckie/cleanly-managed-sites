@@ -4,7 +4,23 @@ export interface Periodicals {
   glazing?: boolean;
   upholstery?: boolean;
   sanitizing?: boolean;
+  pressureWashing?: boolean;
   notes?: string;
+  
+  // Frequency properties
+  glazingFrequency?: string;
+  ceilingsFrequency?: string;
+  upholsteryFrequency?: string;
+  sanitizingFrequency?: string;
+  pressureWashingFrequency?: string;
+  
+  // Date properties
+  nextGlazingDate?: string;
+  nextCeilingsDate?: string;
+  nextUpholsteryDate?: string;
+  nextSanitizingDate?: string;
+  nextPressureWashingDate?: string;
+  
   // Extended structure for component compatibility
   carpet?: {
     cleaning: boolean;
@@ -25,5 +41,6 @@ export interface Periodicals {
   additional?: {
     sanitizing: boolean;
     upholstery: boolean;
+    pressureWashing?: boolean;
   };
 }

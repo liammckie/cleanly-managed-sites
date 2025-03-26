@@ -1,11 +1,11 @@
 
-import { ContractDetails } from './contractTypes';
+import { ContractDetails } from '../types/contractTypes';
 import { BillingDetails } from './billingTypes';
-import { Subcontractor } from './subcontractorTypes';
+import { Subcontractor } from '@/types/models';
 import { SecurityDetails } from './securityTypes';
 import { Periodicals } from './periodicalTypes';
 import { AdHocWorkAuthorization } from './adHocWorkTypes';
-import { SiteStatus } from '@/lib/types/commonTypes';
+import { SiteStatus } from '@/types/common';
 
 export interface SiteFormData {
   name: string;
@@ -42,6 +42,7 @@ export interface SiteFormData {
   billingDetails?: BillingDetails;
   additionalContracts?: ContractDetails[];
   subcontractors?: Subcontractor[];
+  hasSubcontractors?: boolean;  // Added this property
   monthlyCost?: number;
   weeklyRevenue?: number;
   monthlyRevenue?: number;
@@ -78,5 +79,5 @@ export interface SiteFormData {
 }
 
 // Export alias names for backward compatibility
-import { SiteStatus as SiteStatusType } from '@/lib/types/commonTypes';
+import { SiteStatus as SiteStatusType } from '@/types/common';
 export const siteStatusOptions: SiteStatusType[] = ['active', 'pending', 'inactive', 'lost', 'on_hold'];

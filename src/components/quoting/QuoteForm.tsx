@@ -15,6 +15,12 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useOverheadProfiles } from '@/hooks/quotes/useOverheadProfiles';
 import { Quote } from '@/types/models';
 
+interface OverheadProfile {
+  id: string;
+  name: string;
+  laborPercentage: number;
+}
+
 // The component handles both creation and editing of quotes
 export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialData?: any }) {
   const navigate = useNavigate();
@@ -115,7 +121,8 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
     }
     
     // Find selected profile
-    const profile = overheadProfiles.find((p: any) => p.id === profileId);
+    const profileArray = overheadProfiles as OverheadProfile[];
+    const profile = profileArray.find(p => p.id === profileId);
     if (profile) {
       setFormData(prev => ({ 
         ...prev,
@@ -209,11 +216,10 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
   };
   
   // Formatted list of overhead profiles for select dropdown
-  const formattedProfiles = overheadProfiles.map((profile: unknown) => ({
-    value: typeof profile === 'object' && profile !== null && 'id' in profile ? String(profile.id) : '',
-    label: typeof profile === 'object' && profile !== null && 'name' in profile ? String(profile.name) : '',
-    laborPercentage: typeof profile === 'object' && profile !== null && 'laborPercentage' in profile ? 
-      Number(profile.laborPercentage) : 15
+  const formattedProfiles = (overheadProfiles as OverheadProfile[]).map((profile) => ({
+    value: profile.id,
+    label: profile.name,
+    laborPercentage: profile.laborPercentage
   }));
   
   const isSubmitting = isCreating || isUpdating;

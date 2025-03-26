@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { SiteFormData } from '../types/siteFormData';
 import { SiteRecord } from '@/lib/types';
@@ -56,8 +57,9 @@ export function useSiteFormData(
           ...updatedFormData.billingDetails,
           billingLines: formattedBillingLines,
           totalWeeklyAmount: site.weekly_revenue || 0,
+          // Calculate monthly amount from weekly
+          totalMonthlyAmount: site.monthly_revenue || ((site.weekly_revenue || 0) * 4.33),
           totalAnnualAmount: site.annual_revenue || 0,
-          totalMonthlyAmount: (site.weekly_revenue || 0) * 4.33, // Approximate monthly from weekly
         };
       }
       

@@ -8,7 +8,7 @@ export interface SiteFormHandlers {
   step: number;
   setStep: React.Dispatch<React.SetStateAction<number>>;
   isSubmitting: boolean;
-  handleSubmit: (siteId?: string) => Promise<{id: string}>;
+  handleSubmit: (siteId?: string) => Promise<any>; // Change to Promise<any> instead of Promise<{id: string}>
   handleClientChange: (clientId: string) => void;
   loadSiteData: (siteData: any) => void;
   loadClientData: (clientId: string) => void;

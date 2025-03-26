@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps';
@@ -7,7 +8,7 @@ import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { ReplenishablesStep } from './steps/ReplenishablesStep';
 import { SubcontractorsStep } from './steps/SubcontractorsStep';
 import { PeriodicalsStep } from './steps/PeriodicalsStep';
-import { SiteFormData } from './siteFormTypes';
+import { SiteFormData } from './types/siteFormData';
 
 export interface StepConfig {
   id: string;

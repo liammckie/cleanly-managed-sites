@@ -4,766 +4,608 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Calendar,
-  Check,
-  CircleHelp, 
-  Info
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { useForm } from 'react-hook-form';
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { SiteFormData } from '../types/siteFormTypes';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useForm, useFormContext } from "react-hook-form";
+import { Periodicals } from '../types/periodicalTypes';
+import { SiteFormData } from '../types/siteFormData';
 
-interface PeriodicalsStepProps {
+export interface PeriodicalsStepProps {
   formData: SiteFormData;
-  onUpdate: (data: Partial<SiteFormData>) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
 }
 
-interface PeriodicalsFormValues {
-  glazing: boolean;
-  ceilings: boolean;
-  upholstery: boolean;
-  sanitizing: boolean;
-  pressureWashing: boolean;
-  nextGlazingDate?: Date;
-  nextCeilingsDate?: Date;
-  nextUpholsteryDate?: Date;
-  nextSanitizingDate?: Date;
-  nextPressureWashingDate?: Date;
-  glazingFrequency?: string;
-  ceilingsFrequency?: string;
-  upholsteryFrequency?: string;
-  sanitizingFrequency?: string;
-  pressureWashingFrequency?: string;
-  notes?: string;
-}
-
-const DEFAULT_FORM_VALUES: PeriodicalsFormValues = {
-  glazing: false,
-  ceilings: false,
-  upholstery: false,
-  sanitizing: false,
-  pressureWashing: false,
-  glazingFrequency: 'quarterly',
-  ceilingsFrequency: 'annually',
-  upholsteryFrequency: 'biannually',
-  sanitizingFrequency: 'monthly',
-  pressureWashingFrequency: 'annually',
-  notes: '',
-};
-
-const frequencyOptions = [
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'biannually', label: 'Bi-annually' },
-  { value: 'annually', label: 'Annually' },
-  { value: 'custom', label: 'Custom' },
-];
-
-export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({ formData, onUpdate }) => {
-  const form = useForm<PeriodicalsFormValues>({
-    defaultValues: DEFAULT_FORM_VALUES,
-  });
+export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({
+  formData,
+  handleDoubleNestedChange
+}) => {
+  const [selectedTab, setSelectedTab] = useState("glazing");
+  const form = useFormContext();
   
+  // Initialize periodicals if not present
   useEffect(() => {
-    if (formData.periodicals) {
-      const periodicals = formData.periodicals;
-      form.reset({
-        glazing: periodicals.glazing || false,
-        ceilings: periodicals.ceilings || false,
-        upholstery: periodicals.upholstery || false,
-        sanitizing: periodicals.sanitizing || false,
-        pressureWashing: periodicals.pressureWashing || false,
-        nextGlazingDate: periodicals.nextGlazingDate ? new Date(periodicals.nextGlazingDate) : undefined,
-        nextCeilingsDate: periodicals.nextCeilingsDate ? new Date(periodicals.nextCeilingsDate) : undefined,
-        nextUpholsteryDate: periodicals.nextUpholsteryDate ? new Date(periodicals.nextUpholsteryDate) : undefined,
-        nextSanitizingDate: periodicals.nextSanitizingDate ? new Date(periodicals.nextSanitizingDate) : undefined,
-        nextPressureWashingDate: periodicals.nextPressureWashingDate ? new Date(periodicals.nextPressureWashingDate) : undefined,
-        glazingFrequency: periodicals.glazingFrequency || 'quarterly',
-        ceilingsFrequency: periodicals.ceilingsFrequency || 'annually',
-        upholsteryFrequency: periodicals.upholsteryFrequency || 'biannually',
-        sanitizingFrequency: periodicals.sanitizingFrequency || 'monthly',
-        pressureWashingFrequency: periodicals.pressureWashingFrequency || 'annually',
-        notes: periodicals.notes || '',
-      });
+    if (!formData.periodicals) {
+      handleDoubleNestedChange('periodicals', '', 'notes', '');
     }
-  }, [formData.periodicals, form]);
-
-  const watchValues = form.watch();
-  const [showForm, setShowForm] = useState(
-    watchValues.glazing || 
-    watchValues.ceilings || 
-    watchValues.upholstery || 
-    watchValues.sanitizing || 
-    watchValues.pressureWashing
-  );
+  }, [formData, handleDoubleNestedChange]);
   
-  useEffect(() => {
-    setShowForm(
-      watchValues.glazing || 
-      watchValues.ceilings || 
-      watchValues.upholstery || 
-      watchValues.sanitizing || 
-      watchValues.pressureWashing
+  // Frequency options
+  const frequencyOptions = [
+    { value: "weekly", label: "Weekly" },
+    { value: "fortnightly", label: "Fortnightly" },
+    { value: "monthly", label: "Monthly" },
+    { value: "quarterly", label: "Quarterly" },
+    { value: "biannual", label: "Bi-Annual" },
+    { value: "annual", label: "Annual" },
+    { value: "custom", label: "Custom" }
+  ];
+  
+  // Handle changes to periodical services
+  const handlePeriodicalChange = (field: string, value: boolean) => {
+    handleDoubleNestedChange('periodicals', '', field, value);
+  };
+  
+  // Handle changes to nested periodical fields
+  const handleNestedPeriodicalChange = (section: string, field: string, value: any) => {
+    handleDoubleNestedChange('periodicals', section, field, value);
+  };
+  
+  // Handle frequency selection
+  const handleFrequencyChange = (service: string, value: string) => {
+    handleDoubleNestedChange('periodicals', '', `${service}Frequency`, value);
+  };
+  
+  // Handle next date changes
+  const handleDateChange = (service: string, date: Date) => {
+    handleDoubleNestedChange(
+      'periodicals', 
+      '', 
+      `next${service.charAt(0).toUpperCase() + service.slice(1)}Date`, 
+      date ? format(date, "yyyy-MM-dd") : null
     );
-  }, [
-    watchValues.glazing, 
-    watchValues.ceilings, 
-    watchValues.upholstery, 
-    watchValues.sanitizing, 
-    watchValues.pressureWashing
-  ]);
+  };
   
-  useEffect(() => {
-    const { 
-      glazing, ceilings, upholstery, sanitizing, pressureWashing,
-      nextGlazingDate, nextCeilingsDate, nextUpholsteryDate, nextSanitizingDate, nextPressureWashingDate,
-      glazingFrequency, ceilingsFrequency, upholsteryFrequency, sanitizingFrequency, pressureWashingFrequency,
-      notes
-    } = form.getValues();
-    
-    onUpdate({
-      periodicals: {
-        glazing,
-        ceilings,
-        upholstery,
-        sanitizing,
-        ...(pressureWashing && { pressureWashing }),
-        
-        ...(nextGlazingDate && { nextGlazingDate: nextGlazingDate.toISOString().split('T')[0] }),
-        ...(nextCeilingsDate && { nextCeilingsDate: nextCeilingsDate.toISOString().split('T')[0] }),
-        ...(nextUpholsteryDate && { nextUpholsteryDate: nextUpholsteryDate.toISOString().split('T')[0] }),
-        ...(nextSanitizingDate && { nextSanitizingDate: nextSanitizingDate.toISOString().split('T')[0] }),
-        ...(nextPressureWashingDate && { nextPressureWashingDate: nextPressureWashingDate.toISOString().split('T')[0] }),
-        
-        glazingFrequency,
-        ceilingsFrequency,
-        upholsteryFrequency,
-        sanitizingFrequency,
-        pressureWashingFrequency,
-        
-        notes
-      }
-    });
-  }, [watchValues, onUpdate, form]);
+  // Get current values
+  const periodicals = formData.periodicals || {};
+  const glazing = periodicals.glazing || false;
+  const ceilings = periodicals.ceilings || false;
+  const upholstery = periodicals.upholstery || false;
+  const sanitizing = periodicals.sanitizing || false;
+  const pressureWashing = periodicals.pressureWashing || false;
+  const nextGlazingDate = periodicals.nextGlazingDate ? new Date(periodicals.nextGlazingDate) : undefined;
+  const nextCeilingsDate = periodicals.nextCeilingsDate ? new Date(periodicals.nextCeilingsDate) : undefined;
+  const nextUpholsteryDate = periodicals.nextUpholsteryDate ? new Date(periodicals.nextUpholsteryDate) : undefined;
+  const nextSanitizingDate = periodicals.nextSanitizingDate ? new Date(periodicals.nextSanitizingDate) : undefined;
+  const nextPressureWashingDate = periodicals.nextPressureWashingDate ? new Date(periodicals.nextPressureWashingDate) : undefined;
+  const glazingFrequency = periodicals.glazingFrequency || '';
+  const ceilingsFrequency = periodicals.ceilingsFrequency || '';
+  const upholsteryFrequency = periodicals.upholsteryFrequency || '';
+  const sanitizingFrequency = periodicals.sanitizingFrequency || '';
+  const pressureWashingFrequency = periodicals.pressureWashingFrequency || '';
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Periodic Tasks & Services</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Periodical Services</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name="glazing"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-2 space-y-0">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Glazing/Window Cleaning</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <CircleHelp className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Glazing/Window Cleaning</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Regular cleaning of windows, glass doors, partitions, and other glass surfaces.
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name="ceilings"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-2 space-y-0">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Ceiling/High Dusting</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <CircleHelp className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Ceiling/High Dusting</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Cleaning of ceiling fixtures, vents, high shelves, and other hard-to-reach areas.
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name="upholstery"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-2 space-y-0">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Carpet/Upholstery Cleaning</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <CircleHelp className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Carpet/Upholstery Cleaning</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Deep cleaning of carpets, rugs, chairs, sofas, and other upholstered furniture.
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name="sanitizing"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-2 space-y-0">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Sanitizing/Disinfection</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <CircleHelp className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Sanitizing/Disinfection</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Thorough disinfection of high-touch surfaces and spaces to reduce pathogens.
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <FormField
-                      control={form.control}
-                      name="pressureWashing"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-2 space-y-0">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Pressure Washing</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <CircleHelp className="h-4 w-4" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80">
-                        <div className="space-y-2">
-                          <h4 className="font-medium">Pressure Washing</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Cleaning of exterior surfaces, walkways, and building facades using high-pressure water.
-                          </p>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="glazing" 
+                  checked={glazing} 
+                  onCheckedChange={(checked) => handlePeriodicalChange('glazing', checked === true)}
+                />
+                <label htmlFor="glazing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Glazing
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="ceilings" 
+                  checked={ceilings} 
+                  onCheckedChange={(checked) => handlePeriodicalChange('ceilings', checked === true)}
+                />
+                <label htmlFor="ceilings" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Ceilings
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="upholstery" 
+                  checked={upholstery}
+                  onCheckedChange={(checked) => handlePeriodicalChange('upholstery', checked === true)}
+                />
+                <label htmlFor="upholstery" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Upholstery
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="sanitizing" 
+                  checked={sanitizing}
+                  onCheckedChange={(checked) => handlePeriodicalChange('sanitizing', checked === true)}
+                />
+                <label htmlFor="sanitizing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Sanitizing
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="pressureWashing" 
+                  checked={pressureWashing}
+                  onCheckedChange={(checked) => handlePeriodicalChange('pressureWashing', checked === true)}
+                />
+                <label htmlFor="pressureWashing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Pressure Washing
+                </label>
               </div>
             </div>
             
-            {showForm && (
-              <Accordion type="single" collapsible defaultValue="service-details">
-                <AccordionItem value="service-details">
-                  <AccordionTrigger>Service Details & Scheduling</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-6 mt-4">
-                      {watchValues.glazing && (
-                        <div className="rounded-md border p-4">
-                          <h3 className="font-medium mb-4">Glazing/Window Cleaning Details</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Frequency</Label>
-                              <Select
-                                value={form.watch('glazingFrequency')}
-                                onValueChange={val => form.setValue('glazingFrequency', val)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {frequencyOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Next Scheduled Date</Label>
-                              <FormField
-                                control={form.control}
-                                name="nextGlazingDate"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col">
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full pl-3 text-left font-normal",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value ? (
-                                              format(field.value, "PPP")
-                                            ) : (
-                                              <span>Pick a date</span>
-                                            )}
-                                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                          mode="single"
-                                          selected={field.value}
-                                          onSelect={field.onChange}
-                                          disabled={(date) =>
-                                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                                          }
-                                          initialFocus
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {watchValues.ceilings && (
-                        <div className="rounded-md border p-4">
-                          <h3 className="font-medium mb-4">Ceiling/High Dusting Details</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Frequency</Label>
-                              <Select
-                                value={form.watch('ceilingsFrequency')}
-                                onValueChange={val => form.setValue('ceilingsFrequency', val)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {frequencyOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Next Scheduled Date</Label>
-                              <FormField
-                                control={form.control}
-                                name="nextCeilingsDate"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col">
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full pl-3 text-left font-normal",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value ? (
-                                              format(field.value, "PPP")
-                                            ) : (
-                                              <span>Pick a date</span>
-                                            )}
-                                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                          mode="single"
-                                          selected={field.value}
-                                          onSelect={field.onChange}
-                                          disabled={(date) =>
-                                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                                          }
-                                          initialFocus
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {watchValues.upholstery && (
-                        <div className="rounded-md border p-4">
-                          <h3 className="font-medium mb-4">Carpet/Upholstery Cleaning Details</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Frequency</Label>
-                              <Select
-                                value={form.watch('upholsteryFrequency')}
-                                onValueChange={val => form.setValue('upholsteryFrequency', val)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {frequencyOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Next Scheduled Date</Label>
-                              <FormField
-                                control={form.control}
-                                name="nextUpholsteryDate"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col">
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full pl-3 text-left font-normal",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value ? (
-                                              format(field.value, "PPP")
-                                            ) : (
-                                              <span>Pick a date</span>
-                                            )}
-                                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                          mode="single"
-                                          selected={field.value}
-                                          onSelect={field.onChange}
-                                          disabled={(date) =>
-                                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                                          }
-                                          initialFocus
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {watchValues.sanitizing && (
-                        <div className="rounded-md border p-4">
-                          <h3 className="font-medium mb-4">Sanitizing/Disinfection Details</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Frequency</Label>
-                              <Select
-                                value={form.watch('sanitizingFrequency')}
-                                onValueChange={val => form.setValue('sanitizingFrequency', val)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {frequencyOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Next Scheduled Date</Label>
-                              <FormField
-                                control={form.control}
-                                name="nextSanitizingDate"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col">
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full pl-3 text-left font-normal",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value ? (
-                                              format(field.value, "PPP")
-                                            ) : (
-                                              <span>Pick a date</span>
-                                            )}
-                                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                          mode="single"
-                                          selected={field.value}
-                                          onSelect={field.onChange}
-                                          disabled={(date) =>
-                                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                                          }
-                                          initialFocus
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {watchValues.pressureWashing && (
-                        <div className="rounded-md border p-4">
-                          <h3 className="font-medium mb-4">Pressure Washing Details</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Frequency</Label>
-                              <Select
-                                value={form.watch('pressureWashingFrequency')}
-                                onValueChange={val => form.setValue('pressureWashingFrequency', val)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {frequencyOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label>Next Scheduled Date</Label>
-                              <FormField
-                                control={form.control}
-                                name="nextPressureWashingDate"
-                                render={({ field }) => (
-                                  <FormItem className="flex flex-col">
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <FormControl>
-                                          <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                              "w-full pl-3 text-left font-normal",
-                                              !field.value && "text-muted-foreground"
-                                            )}
-                                          >
-                                            {field.value ? (
-                                              format(field.value, "PPP")
-                                            ) : (
-                                              <span>Pick a date</span>
-                                            )}
-                                            <Calendar className="ml-auto h-4 w-4 opacity-50" />
-                                          </Button>
-                                        </FormControl>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0" align="start">
-                                        <CalendarComponent
-                                          mode="single"
-                                          selected={field.value}
-                                          onSelect={field.onChange}
-                                          disabled={(date) =>
-                                            date < new Date(new Date().setHours(0, 0, 0, 0))
-                                          }
-                                          initialFocus
-                                        />
-                                      </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Label>Notes</Label>
+            {(glazing || ceilings || upholstery || sanitizing || pressureWashing) && (
+              <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+                <TabsList className="grid grid-cols-3 md:grid-cols-5 w-full">
+                  {glazing && (
+                    <TabsTrigger value="glazing">Glazing</TabsTrigger>
+                  )}
+                  {ceilings && (
+                    <TabsTrigger value="ceilings">Ceilings</TabsTrigger>
+                  )}
+                  {upholstery && (
+                    <TabsTrigger value="upholstery">Upholstery</TabsTrigger>
+                  )}
+                  {sanitizing && (
+                    <TabsTrigger value="sanitizing">Sanitizing</TabsTrigger>
+                  )}
+                  {pressureWashing && (
+                    <TabsTrigger value="pressureWashing">Pressure Washing</TabsTrigger>
+                  )}
+                </TabsList>
+                
+                {glazing && (
+                  <TabsContent value="glazing" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
                         <FormField
                           control={form.control}
-                          name="notes"
+                          name="periodicals.glazingFrequency"
                           render={({ field }) => (
                             <FormItem>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Any additional information about periodic services..."
-                                  className="min-h-24"
-                                  {...field}
-                                />
-                              </FormControl>
+                              <FormLabel>Frequency</FormLabel>
+                              <Select
+                                value={glazingFrequency}
+                                onValueChange={(value) => handleFrequencyChange('glazing', value)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {frequencyOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.nextGlazingDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Next Scheduled Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {nextGlazingDate ? (
+                                        format(nextGlazingDate, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextGlazingDate}
+                                    onSelect={(date) => handleDateChange('glazing', date as Date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  </TabsContent>
+                )}
+                
+                {ceilings && (
+                  <TabsContent value="ceilings" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.ceilingsFrequency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Frequency</FormLabel>
+                              <Select
+                                value={ceilingsFrequency}
+                                onValueChange={(value) => handleFrequencyChange('ceilings', value)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {frequencyOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.nextCeilingsDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Next Scheduled Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {nextCeilingsDate ? (
+                                        format(nextCeilingsDate, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextCeilingsDate}
+                                    onSelect={(date) => handleDateChange('ceilings', date as Date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {upholstery && (
+                  <TabsContent value="upholstery" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.upholsteryFrequency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Frequency</FormLabel>
+                              <Select
+                                value={upholsteryFrequency}
+                                onValueChange={(value) => handleFrequencyChange('upholstery', value)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {frequencyOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.nextUpholsteryDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Next Scheduled Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {nextUpholsteryDate ? (
+                                        format(nextUpholsteryDate, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextUpholsteryDate}
+                                    onSelect={(date) => handleDateChange('upholstery', date as Date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {sanitizing && (
+                  <TabsContent value="sanitizing" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.sanitizingFrequency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Frequency</FormLabel>
+                              <Select
+                                value={sanitizingFrequency}
+                                onValueChange={(value) => handleFrequencyChange('sanitizing', value)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {frequencyOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.nextSanitizingDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Next Scheduled Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {nextSanitizingDate ? (
+                                        format(nextSanitizingDate, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextSanitizingDate}
+                                    onSelect={(date) => handleDateChange('sanitizing', date as Date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+                
+                {pressureWashing && (
+                  <TabsContent value="pressureWashing" className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.pressureWashingFrequency"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Frequency</FormLabel>
+                              <Select
+                                value={pressureWashingFrequency}
+                                onValueChange={(value) => handleFrequencyChange('pressureWashing', value)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select frequency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {frequencyOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <FormField
+                          control={form.control}
+                          name="periodicals.nextPressureWashingDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Next Scheduled Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {nextPressureWashingDate ? (
+                                        format(nextPressureWashingDate, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={nextPressureWashingDate}
+                                    onSelect={(date) => handleDateChange('pressureWashing', date as Date)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
+              </Tabs>
             )}
             
-            {!showForm && (
-              <div className="flex items-center justify-center p-8 border border-dashed rounded-md">
-                <div className="text-center space-y-2">
-                  <Info className="w-8 h-8 mx-auto text-muted-foreground" />
-                  <h3 className="font-medium">No Periodic Services Selected</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Toggle the switches above to add periodic cleaning services.
-                  </p>
-                </div>
-              </div>
-            )}
+            <div>
+              <FormField
+                control={form.control}
+                name="periodicals.notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter any notes about periodical services..." 
+                        className="min-h-[120px]"
+                        value={periodicals.notes || ''}
+                        onChange={(e) => handleDoubleNestedChange('periodicals', '', 'notes', e.target.value)}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Add any special instructions or additional information about periodical services.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
-        </Form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
