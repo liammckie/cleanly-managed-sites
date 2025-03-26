@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -86,7 +85,7 @@ export default function QuoteDetailsPage() {
       <QuoteDetailsComponent
         quote={{
           ...quote,
-          shifts: quote.shifts?.map(shift => adaptQuoteShift(shift, shift))
+          shifts: quote.shifts?.map(shift => adaptQuoteShift(shift))
         }}
       />
     </div>

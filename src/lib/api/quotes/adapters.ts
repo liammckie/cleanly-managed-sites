@@ -1,15 +1,12 @@
 
-import { Quote, QuoteShift, Subcontractor, QuoteSubcontractor } from '@/lib/types/quotes';
-import { Json } from '@/lib/types';
+import { Day, EmployeeLevel, EmploymentType, Frequency, QuoteStatus } from '@/types/common';
 
-// Database interface definitions
 export interface DbQuote {
   id: string;
   name: string;
   title?: string;
   client_name: string;
   site_name?: string;
-  description?: string;
   status: string;
   overhead_percentage: number;
   margin_percentage: number;
@@ -19,10 +16,14 @@ export interface DbQuote {
   equipment_cost?: number;
   subcontractor_cost: number;
   overhead_cost?: number;
-  total_cost?: number;
   margin_amount?: number;
+  total_cost?: number;
   created_at: string;
   updated_at: string;
+  quote_number?: string;
+  valid_until?: string;
+  client_id?: string;
+  site_id?: string;
   user_id?: string;
   created_by?: string;
   start_date?: string;
@@ -32,10 +33,9 @@ export interface DbQuote {
   contract_length_unit?: string;
   overhead_profile?: string;
   notes?: string;
-  quote_number?: string;
-  valid_until?: string;
-  client_id?: string;
-  site_id?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
 }
 
 export interface DbQuoteShift {
@@ -48,146 +48,209 @@ export interface DbQuoteShift {
   number_of_cleaners: number;
   employment_type: string;
   level: number;
-  allowances: string[];
+  allowances: any[];
   estimated_cost: number;
-  location: string;
-  notes: string;
-  created_at: string;
-  updated_at: string;
+  location?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface DbSubcontractor {
+export interface DbQuoteSubcontractor {
   id: string;
-  quote_id?: string;
+  quote_id: string;
   name: string;
   description?: string;
   cost: number;
   frequency: string;
-  created_at: string;
-  updated_at: string;
   email?: string;
   phone?: string;
   service?: string;
   notes?: string;
   services?: string[];
+  custom_services?: string;
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Convert database quote to application quote
-export const dbToQuote = (dbQuote: DbQuote): Quote => {
+export interface Quote {
+  id: string;
+  name: string;
+  title?: string;
+  clientName: string;
+  siteName: string;
+  status: QuoteStatus;
+  overheadPercentage: number;
+  marginPercentage: number;
+  totalPrice: number;
+  laborCost: number;
+  suppliesCost?: number;
+  equipmentCost?: number;
+  subcontractorCost: number;
+  overheadCost?: number;
+  marginAmount?: number;
+  totalCost?: number;
+  createdAt: string;
+  updatedAt: string;
+  quoteNumber?: string;
+  validUntil?: string;
+  clientId?: string;
+  siteId?: string;
+  userId?: string;
+  createdBy?: string;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  overheadProfile?: string;
+  notes?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  shifts?: QuoteShift[];
+  subcontractors?: QuoteSubcontractor[];
+}
+
+export interface QuoteShift {
+  id: string;
+  quoteId: string;
+  day: Day;
+  startTime: string;
+  endTime: string;
+  breakDuration: number;
+  numberOfCleaners: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  allowances: any[];
+  estimatedCost: number;
+  location?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface QuoteSubcontractor {
+  id: string;
+  quoteId: string;
+  name: string;
+  description?: string;
+  cost: number;
+  frequency: Frequency;
+  email?: string;
+  phone?: string;
+  service?: string;
+  notes?: string;
+  services?: string[];
+  customServices?: string;
+  monthlyCost?: number;
+  isFlatRate?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export function dbToQuote(dbQuote: DbQuote): Quote {
   return {
     id: dbQuote.id,
     name: dbQuote.name,
     title: dbQuote.title,
-    client_name: dbQuote.client_name,
     clientName: dbQuote.client_name,
-    site_name: dbQuote.site_name,
     siteName: dbQuote.site_name || '',
-    description: dbQuote.description,
-    status: dbQuote.status as any,
-    overhead_percentage: dbQuote.overhead_percentage,
+    status: dbQuote.status as QuoteStatus,
     overheadPercentage: dbQuote.overhead_percentage,
-    margin_percentage: dbQuote.margin_percentage,
     marginPercentage: dbQuote.margin_percentage,
-    total_price: dbQuote.total_price,
     totalPrice: dbQuote.total_price,
-    labor_cost: dbQuote.labor_cost,
     laborCost: dbQuote.labor_cost,
-    supplies_cost: dbQuote.supplies_cost,
-    equipment_cost: dbQuote.equipment_cost,
-    subcontractor_cost: dbQuote.subcontractor_cost,
+    suppliesCost: dbQuote.supplies_cost,
+    equipmentCost: dbQuote.equipment_cost,
     subcontractorCost: dbQuote.subcontractor_cost,
-    created_at: dbQuote.created_at,
+    overheadCost: dbQuote.overhead_cost,
+    marginAmount: dbQuote.margin_amount,
+    totalCost: dbQuote.total_cost,
     createdAt: dbQuote.created_at,
-    updated_at: dbQuote.updated_at,
     updatedAt: dbQuote.updated_at,
-    overheadCost: dbQuote.overhead_cost || 0,
-    totalCost: dbQuote.total_cost || 0,
-    marginAmount: dbQuote.margin_amount || 0,
-    start_date: dbQuote.start_date,
-    startDate: dbQuote.start_date,
-    end_date: dbQuote.end_date,
-    endDate: dbQuote.end_date,
-    expiry_date: dbQuote.expiry_date,
-    expiryDate: dbQuote.expiry_date,
-    contractLength: dbQuote.contract_length,
-    contractLengthUnit: dbQuote.contract_length_unit as any,
-    overheadProfile: dbQuote.overhead_profile,
+    quoteNumber: dbQuote.quote_number,
+    validUntil: dbQuote.valid_until,
+    clientId: dbQuote.client_id,
+    siteId: dbQuote.site_id,
     userId: dbQuote.user_id,
     createdBy: dbQuote.created_by,
-    notes: dbQuote.notes || '',
-    quote_number: dbQuote.quote_number,
-    quoteNumber: dbQuote.quote_number,
-    valid_until: dbQuote.valid_until,
-    validUntil: dbQuote.valid_until,
-    client_id: dbQuote.client_id,
-    clientId: dbQuote.client_id,
-    site_id: dbQuote.site_id,
-    siteId: dbQuote.site_id,
-    // Fields will be populated separately if needed
-    shifts: [],
-    subcontractors: []
+    startDate: dbQuote.start_date,
+    endDate: dbQuote.end_date,
+    expiryDate: dbQuote.expiry_date,
+    contractLength: dbQuote.contract_length,
+    contractLengthUnit: dbQuote.contract_length_unit,
+    overheadProfile: dbQuote.overhead_profile,
+    notes: dbQuote.notes,
+    frequency: dbQuote.frequency,
+    scope: dbQuote.scope,
+    terms: dbQuote.terms,
+    // shifts and subcontractors will be populated separately
   };
-};
+}
 
-// Convert application quote to database quote
-export const quoteToDb = (quote: Quote): DbQuote => {
+export function quoteToDb(quote: Quote): DbQuote {
   return {
     id: quote.id,
     name: quote.name,
     title: quote.title,
-    client_name: quote.client_name || quote.clientName,
-    site_name: quote.site_name || quote.siteName,
-    description: quote.description,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
     status: quote.status,
-    overhead_percentage: quote.overhead_percentage || quote.overheadPercentage,
-    margin_percentage: quote.margin_percentage || quote.marginPercentage,
-    total_price: quote.total_price || quote.totalPrice,
-    labor_cost: quote.labor_cost || quote.laborCost,
-    supplies_cost: quote.supplies_cost,
-    equipment_cost: quote.equipment_cost,
-    subcontractor_cost: quote.subcontractor_cost || quote.subcontractorCost,
+    overhead_percentage: quote.overheadPercentage,
+    margin_percentage: quote.marginPercentage,
+    total_price: quote.totalPrice,
+    labor_cost: quote.laborCost,
+    supplies_cost: quote.suppliesCost,
+    equipment_cost: quote.equipmentCost,
+    subcontractor_cost: quote.subcontractorCost,
     overhead_cost: quote.overheadCost,
-    total_cost: quote.totalCost,
     margin_amount: quote.marginAmount,
-    created_at: quote.created_at || quote.createdAt,
-    updated_at: quote.updated_at || quote.updatedAt,
+    total_cost: quote.totalCost,
+    created_at: quote.createdAt,
+    updated_at: quote.updatedAt,
+    quote_number: quote.quoteNumber,
+    valid_until: quote.validUntil,
+    client_id: quote.clientId,
+    site_id: quote.siteId,
     user_id: quote.userId,
     created_by: quote.createdBy,
-    start_date: quote.start_date || quote.startDate,
-    end_date: quote.end_date || quote.endDate,
-    expiry_date: quote.expiry_date || quote.expiryDate,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    expiry_date: quote.expiryDate,
     contract_length: quote.contractLength,
     contract_length_unit: quote.contractLengthUnit,
     overhead_profile: quote.overheadProfile,
     notes: quote.notes,
-    quote_number: quote.quote_number || quote.quoteNumber,
-    valid_until: quote.valid_until || quote.validUntil,
-    client_id: quote.client_id || quote.clientId,
-    site_id: quote.site_id || quote.siteId
+    frequency: quote.frequency,
+    scope: quote.scope,
+    terms: quote.terms
   };
-};
+}
 
-// Convert database shift to application shift
-export const dbToQuoteShift = (dbShift: any): QuoteShift => {
+export function dbToQuoteShift(dbShift: DbQuoteShift): QuoteShift {
   return {
     id: dbShift.id,
     quoteId: dbShift.quote_id,
-    day: dbShift.day,
+    day: dbShift.day as Day,
     startTime: dbShift.start_time,
     endTime: dbShift.end_time,
     breakDuration: dbShift.break_duration,
     numberOfCleaners: dbShift.number_of_cleaners,
-    employmentType: dbShift.employment_type,
-    level: dbShift.level,
-    allowances: Array.isArray(dbShift.allowances) ? dbShift.allowances : [],
+    employmentType: dbShift.employment_type as EmploymentType,
+    level: dbShift.level as EmployeeLevel,
+    allowances: dbShift.allowances || [],
     estimatedCost: dbShift.estimated_cost,
-    location: dbShift.location || '',
-    notes: dbShift.notes || ''
+    location: dbShift.location,
+    notes: dbShift.notes,
+    createdAt: dbShift.created_at,
+    updatedAt: dbShift.updated_at
   };
-};
+}
 
-// Convert application shift to database shift
-export const quoteShiftToDb = (shift: QuoteShift): any => {
+export function quoteShiftToDb(shift: QuoteShift): DbQuoteShift {
   return {
     id: shift.id,
     quote_id: shift.quoteId,
@@ -201,43 +264,50 @@ export const quoteShiftToDb = (shift: QuoteShift): any => {
     allowances: shift.allowances || [],
     estimated_cost: shift.estimatedCost,
     location: shift.location,
-    notes: shift.notes
+    notes: shift.notes,
+    created_at: shift.createdAt,
+    updated_at: shift.updatedAt
   };
-};
+}
 
-// Convert database subcontractor to application subcontractor
-export const dbToSubcontractor = (dbSub: any): QuoteSubcontractor => {
+export function dbToSubcontractor(dbSubcontractor: DbQuoteSubcontractor): QuoteSubcontractor {
   return {
-    id: dbSub.id,
-    quoteId: dbSub.quote_id,
-    name: dbSub.name,
-    description: dbSub.description,
-    cost: dbSub.cost,
-    frequency: dbSub.frequency,
-    email: dbSub.email || '',
-    phone: dbSub.phone || '',
-    service: dbSub.service || '',
-    notes: dbSub.notes || '',
-    services: dbSub.services || [],
-    customServices: '',
-    monthlyCost: 0,
-    isFlatRate: true
+    id: dbSubcontractor.id,
+    quoteId: dbSubcontractor.quote_id,
+    name: dbSubcontractor.name,
+    description: dbSubcontractor.description || '',
+    cost: dbSubcontractor.cost,
+    frequency: dbSubcontractor.frequency as Frequency,
+    email: dbSubcontractor.email,
+    phone: dbSubcontractor.phone,
+    service: dbSubcontractor.service,
+    notes: dbSubcontractor.notes,
+    services: dbSubcontractor.services || [],
+    customServices: dbSubcontractor.custom_services,
+    monthlyCost: dbSubcontractor.monthly_cost,
+    isFlatRate: dbSubcontractor.is_flat_rate,
+    createdAt: dbSubcontractor.created_at,
+    updatedAt: dbSubcontractor.updated_at
   };
-};
+}
 
-// Convert application subcontractor to database subcontractor
-export const subcontractorToDb = (sub: QuoteSubcontractor): any => {
+export function subcontractorToDb(subcontractor: QuoteSubcontractor): DbQuoteSubcontractor {
   return {
-    id: sub.id,
-    quote_id: sub.quoteId,
-    name: sub.name,
-    description: sub.description || '',
-    cost: sub.cost,
-    frequency: sub.frequency,
-    email: sub.email || '',
-    phone: sub.phone || '',
-    service: sub.service || '',
-    notes: sub.notes || '',
-    services: sub.services || []
+    id: subcontractor.id,
+    quote_id: subcontractor.quoteId,
+    name: subcontractor.name,
+    description: subcontractor.description,
+    cost: subcontractor.cost,
+    frequency: subcontractor.frequency,
+    email: subcontractor.email,
+    phone: subcontractor.phone,
+    service: subcontractor.service,
+    notes: subcontractor.notes,
+    services: subcontractor.services,
+    custom_services: subcontractor.customServices,
+    monthly_cost: subcontractor.monthlyCost,
+    is_flat_rate: subcontractor.isFlatRate,
+    created_at: subcontractor.createdAt,
+    updated_at: subcontractor.updatedAt
   };
-};
+}

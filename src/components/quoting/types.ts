@@ -7,6 +7,10 @@ export interface QuoteDetailsFormProps {
   onUpdate: (field: string, value: any) => void;
 }
 
+export interface QuoteDetailsProps {
+  quote: Quote;
+}
+
 export interface QuoteFormDetailsProps {
   formData: any;
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;

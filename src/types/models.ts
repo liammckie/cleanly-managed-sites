@@ -1,10 +1,13 @@
+
 import { 
   Day, 
   EmployeeLevel, 
   EmploymentType, 
   BillingFrequency, 
   SiteStatus, 
-  Frequency 
+  Frequency,
+  JsonValue,
+  QuoteStatus
 } from './common';
 
 // User related types
@@ -113,22 +116,22 @@ export interface SiteRecord {
   client_name?: string;
   site_manager_id?: string;
   site_manager_name?: string;
-  location_details?: Json;
+  location_details?: JsonValue;
   monthly_revenue?: number;
   monthly_cost?: number;
   annual_revenue?: number;
   weekly_revenue?: number;
-  contract_details?: Json;
-  job_specifications?: Json;
-  security_details?: Json;
-  billing_details?: Json;
+  contract_details?: JsonValue;
+  job_specifications?: JsonValue;
+  security_details?: JsonValue;
+  billing_details?: JsonValue;
   status: 'active' | 'pending' | 'inactive' | 'on-hold';
   created_at?: string;
   updated_at?: string;
-  replenishables?: Json;
-  periodicals?: Json;
+  replenishables?: JsonValue;
+  periodicals?: JsonValue;
   has_subcontractors?: boolean;
-  subcontractors?: Json;
+  subcontractors?: JsonValue;
 }
 
 // Quote related types
@@ -311,95 +314,20 @@ export interface SiteFormData {
   // Add backward compatibility properties
   clientId?: string;                  // Alias for client_id
   postcode?: string;                  // Alias for postalCode
+  // Property for has_subcontractors
+  hasSubcontractors?: boolean;
 }
 
-export interface ContractDetails {
-  startDate?: string;
-  endDate?: string;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  autoRenewal?: boolean;
-  renewalPeriod?: number;
-  renewalNotice?: number;
-  noticeUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  additionalContracts?: any[];
-}
+// Import these types from their respective files to avoid duplication
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { Subcontractor } from '@/components/sites/forms/types/subcontractorTypes';
+import { Periodicals } from '@/components/sites/forms/types/periodicalTypes';
+import { SecurityDetails } from '@/components/sites/forms/types/securityTypes';
+import { AdHocWorkAuthorization } from '@/components/sites/forms/types/adHocWorkTypes';
 
-export interface BillingDetails {
-  billingAddress?: string;
-  billingCity?: string;
-  billingState?: string;
-  billingPostcode?: string;
-  billingEmail?: string;
-  contacts?: BillingContact[];
-  rate?: number;
-  billingFrequency?: BillingFrequency;
-  billingDay?: string;
-  billingTerms?: string;
-  billingNotes?: string;
-  billingMethod?: string;
-  billingContact?: string;
-  billingContactEmail?: string;
-  billingContactPhone?: string;
-  billingLines?: any[];
-  totalWeeklyAmount?: number;
-}
-
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: string;
-  position?: string;
-}
-
-export interface Subcontractor {
-  id?: string;
-  name: string;
-  business_name?: string;
-  contact_name?: string;
-  email?: string;
-  phone?: string;
-  services?: string[];
-  service?: string;
-  notes?: string;
-  is_flat_rate?: boolean;
-  monthly_cost?: number;
-  isFlatRate?: boolean;
-  monthlyCost?: number;
-  customServices?: string;
-}
-
-export interface Periodicals {
-  ceilings?: boolean;
-  glazing?: boolean;
-  upholstery?: boolean;
-  sanitizing?: boolean;
-  notes?: string;
-}
-
-export interface SecurityDetails {
-  hasAlarm?: boolean;
-  alarmCode?: string;
-  keyRequired?: boolean;
-  keyLocation?: string;
-  swipeCard?: boolean;
-  parkingDetails?: string;
-  accessNotes?: string;
-}
-
-export interface AdHocWorkAuthorization {
-  authorizedAmount?: number;
-  requiresApproval?: boolean;
-  approvalThreshold?: number;
-  approvalContact?: string;
-  approvalEmail?: string;
-  approvalPhone?: string;
-  notes?: string;
-}
+// Export alias names for backward compatibility
+export const siteStatusOptions: SiteStatus[] = ['active', 'pending', 'inactive', 'lost', 'on-hold'];
 
 // OverheadProfile
 export interface OverheadProfile {

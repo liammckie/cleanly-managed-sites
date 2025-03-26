@@ -7,4 +7,7 @@ export interface AdHocWorkAuthorization {
   approvalEmail?: string;
   approvalPhone?: string;
   notes?: string;
+  // Additional fields needed by components
+  approvalLimit?: number;
+  requirePurchaseOrder?: boolean;
 }

@@ -45,3 +45,9 @@ export type JsonPrimitive = string | number | boolean | null;
 export type JsonArray = JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
+// Export Json as a type alias for backward compatibility
+export type Json = JsonValue;
+
+// Quote status type
+export type QuoteStatus = "draft" | "pending" | "approved" | "rejected" | "expired";

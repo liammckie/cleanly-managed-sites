@@ -1,14 +1,6 @@
 
-import { Day as AwardDay } from '@/lib/award/types';
-import { Day as QuoteDay } from '@/lib/types/award/types';
-import { Json } from '@/lib/types';
-import { QuoteShift as AwardQuoteShift } from '@/lib/award/types';
-import { QuoteShift as TypesQuoteShift } from '@/lib/types/award/types';
-import { QuoteShift as QuotesQuoteShift } from '@/lib/types/quotes';
-import { Quote as AwardQuote } from '@/lib/award/types';
-import { Quote as TypesQuote } from '@/lib/types/award/types';
-import { Quote as QuotesQuote } from '@/lib/types/quotes';
-import { Quote as QuoteTypesQuote } from '@/lib/types/quoteTypes';
+import { Day, JsonValue, JsonObject } from '@/types/common';
+import { QuoteShift, QuoteSubcontractor } from '@/types/models';
 
 /**
  * Unified Day type with all possible values to avoid TypeScript errors
@@ -28,7 +20,7 @@ export function adaptDay(day: string): UnifiedDay {
 /**
  * Type assertion helper to safely cast QuoteShift types between different modules
  */
-export function adaptQuoteShift<T, U>(shift: T): U {
+export function adaptQuoteShift<T>(shift: T): T {
   if (shift && typeof shift === 'object' && 'day' in shift) {
     // Make a copy to avoid modifying the original
     const newShift = { ...shift as any };
@@ -36,15 +28,15 @@ export function adaptQuoteShift<T, U>(shift: T): U {
     if (newShift.day) {
       newShift.day = adaptDay(newShift.day as any);
     }
-    return newShift as unknown as U;
+    return newShift as unknown as T;
   }
-  return shift as unknown as U;
+  return shift;
 }
 
 /**
  * Type assertion helper for Quote objects between different modules
  */
-export function adaptQuote<T, U>(quote: T): U {
+export function adaptQuote<T>(quote: T): T {
   if (quote && typeof quote === 'object') {
     const newQuote = { ...quote as any };
     
@@ -55,9 +47,9 @@ export function adaptQuote<T, U>(quote: T): U {
       );
     }
     
-    return newQuote as unknown as U;
+    return newQuote as unknown as T;
   }
-  return quote as unknown as U;
+  return quote;
 }
 
 /**
@@ -133,4 +125,47 @@ export interface UnifiedSubcontractor {
   contact_name?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+/**
+ * Functions to convert between DB and app model for QuoteSubcontractors
+ */
+export function dbToQuoteSubcontractor(dbSubcontractor: any): QuoteSubcontractor {
+  return {
+    id: dbSubcontractor.id,
+    quoteId: dbSubcontractor.quote_id,
+    name: dbSubcontractor.name,
+    description: dbSubcontractor.description || '',
+    cost: dbSubcontractor.cost || 0,
+    frequency: dbSubcontractor.frequency || 'monthly',
+    email: dbSubcontractor.email || '',
+    phone: dbSubcontractor.phone || '',
+    service: dbSubcontractor.service || '',
+    notes: dbSubcontractor.notes || '',
+    services: dbSubcontractor.services || [],
+    customServices: dbSubcontractor.custom_services || '',
+    monthlyCost: dbSubcontractor.monthly_cost || 0,
+    isFlatRate: dbSubcontractor.is_flat_rate || false
+  };
+}
+
+export function quoteSubcontractorToDb(subcontractor: QuoteSubcontractor): any {
+  return {
+    id: subcontractor.id,
+    quote_id: subcontractor.quoteId,
+    name: subcontractor.name,
+    description: subcontractor.description || '',
+    cost: subcontractor.cost || 0,
+    frequency: subcontractor.frequency || 'monthly',
+    email: subcontractor.email || '',
+    phone: subcontractor.phone || '',
+    service: subcontractor.service || '',
+    notes: subcontractor.notes || '',
+    services: subcontractor.services || [],
+    custom_services: subcontractor.customServices || '',
+    monthly_cost: subcontractor.monthlyCost || 0,
+    is_flat_rate: subcontractor.isFlatRate || false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
 }

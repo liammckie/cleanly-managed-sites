@@ -7,7 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { calculateBillingAmounts } from '@/lib/utils/billingCalculations';
-import { BillingLine, BillingFrequency } from './types/billingTypes';
+import { BillingLine } from './types/billingTypes';
+import { BillingFrequency } from '@/types/common';
 
 interface BillingLineItemProps {
   line: BillingLine;
@@ -27,19 +28,25 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
     if (line.amount !== undefined && line.frequency) {
       const { weeklyAmount, monthlyAmount, annualAmount } = calculateBillingAmounts(
         line.amount,
-        line.frequency
+        line.frequency as BillingFrequency
       );
       
       // Only update if values have changed
-      if (line.weeklyAmount !== weeklyAmount) {
+      if (line.weekly_amount !== weeklyAmount) {
+        updateLine(line.id, 'weekly_amount', weeklyAmount);
+        // Also update the camelCase alias
         updateLine(line.id, 'weeklyAmount', weeklyAmount);
       }
       
-      if (line.monthlyAmount !== monthlyAmount) {
+      if (line.monthly_amount !== monthlyAmount) {
+        updateLine(line.id, 'monthly_amount', monthlyAmount);
+        // Also update the camelCase alias
         updateLine(line.id, 'monthlyAmount', monthlyAmount);
       }
       
-      if (line.annualAmount !== annualAmount) {
+      if (line.annual_amount !== annualAmount) {
+        updateLine(line.id, 'annual_amount', annualAmount);
+        // Also update the camelCase alias
         updateLine(line.id, 'annualAmount', annualAmount);
       }
     }
@@ -97,8 +104,12 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
         <div className="flex items-center space-x-2 mt-6">
           <Switch
             id={`recurring-${line.id}`}
-            checked={line.isRecurring}
-            onCheckedChange={(checked) => updateLine(line.id, 'isRecurring', checked)}
+            checked={line.is_recurring}
+            onCheckedChange={(checked) => {
+              updateLine(line.id, 'is_recurring', checked);
+              // Also update the camelCase alias
+              updateLine(line.id, 'isRecurring', checked);
+            }}
           />
           <Label htmlFor={`recurring-${line.id}`} className="text-xs">
             Recurring

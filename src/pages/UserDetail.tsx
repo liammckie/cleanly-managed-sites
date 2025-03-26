@@ -6,7 +6,8 @@ import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { UserDetails } from '@/components/users/UserDetails';
 import { UserDetailSkeleton } from '@/components/users/UserDetailSkeleton';
-import { DeleteUserModal } from '@/components/users/DeleteUserModal';
+import { DeleteUserModal } from '@/components/data/DeleteUserModal';
+import { adaptSystemUser } from '@/utils/typeAdapters';
 import { SystemUser } from '@/lib/types';
 
 const UserDetail = () => {
@@ -104,11 +105,11 @@ const UserDetail = () => {
         
         {/* Delete confirmation modal */}
         {isDeleteModalOpen && (
-          <DeleteUserModal 
-            isOpen={isDeleteModalOpen} 
-            onClose={() => setIsDeleteModalOpen(false)}
+          <DeleteUserModal
+            isOpen={isDeleteModalOpen}
+            userName={user.full_name || user.email}
             onConfirm={handleConfirmDelete}
-            userName={user?.full_name || 'this user'}
+            onCancel={() => setIsDeleteModalOpen(false)}
           />
         )}
       </div>

@@ -13,8 +13,11 @@ export function useSiteFormBillingLines() {
       description: '',
       amount: 0,
       frequency: 'monthly',
+      is_recurring: true, // Use snake_case for DB compatibility
+      on_hold: false,
+      // Add camelCase aliases for convenience
       isRecurring: true,
-      on_hold: false  // Added this required field
+      onHold: false
     };
     setBillingLines((prev) => [...prev, newLine]);
   }, []);
@@ -22,9 +25,37 @@ export function useSiteFormBillingLines() {
   // Update an existing billing line
   const updateBillingLine = useCallback((id: string, field: string, value: any) => {
     setBillingLines((prev) =>
-      prev.map((line) =>
-        line.id === id ? { ...line, [field]: value } : line
-      )
+      prev.map((line) => {
+        if (line.id === id) {
+          const updatedLine = { ...line, [field]: value };
+          
+          // Sync snake_case and camelCase properties
+          if (field === 'is_recurring') {
+            updatedLine.isRecurring = value;
+          } else if (field === 'isRecurring') {
+            updatedLine.is_recurring = value;
+          } else if (field === 'on_hold') {
+            updatedLine.onHold = value;
+          } else if (field === 'onHold') {
+            updatedLine.on_hold = value;
+          } else if (field === 'weekly_amount') {
+            updatedLine.weeklyAmount = value;
+          } else if (field === 'weeklyAmount') {
+            updatedLine.weekly_amount = value;
+          } else if (field === 'monthly_amount') {
+            updatedLine.monthlyAmount = value;
+          } else if (field === 'monthlyAmount') {
+            updatedLine.monthly_amount = value;
+          } else if (field === 'annual_amount') {
+            updatedLine.annualAmount = value;
+          } else if (field === 'annualAmount') {
+            updatedLine.annual_amount = value;
+          }
+          
+          return updatedLine;
+        }
+        return line;
+      })
     );
   }, []);
 
