@@ -1,48 +1,94 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useQuote } from '@/hooks/quotes/useQuote';
-import { QuoteDetails } from '@/components/quoting/QuoteDetails';
-import { adaptQuote } from '@/lib/utils/typeAdapters';
-import { Quote } from '@/lib/types/award/types';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { fetchQuote } from '@/lib/api/quotes/quotesApi';
+import { QuoteDetails as QuoteDetailsComponent } from '@/components/quoting/QuoteDetails';
+import { adaptQuoteShift } from '@/utils/typeAdapters';
 
-const QuoteDetailsPage = () => {
-  const { quoteId } = useParams<{ quoteId: string }>();
-  const { data: quote, isLoading, error } = useQuote(quoteId!);
+export default function QuoteDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   
-  const handleQuoteSelect = (id: string) => {
-    // Since we're already on the quote details page, this is a no-op
-    console.log(`Quote selected: ${id}`);
+  const { data: quote, isLoading, error } = useQuery({
+    queryKey: ['quote', id],
+    queryFn: () => id ? fetchQuote(id) : Promise.reject('No quote ID provided'),
+    enabled: !!id
+  });
+  
+  const handleBack = () => navigate(-1);
+  
+  const handleQuoteSelect = (quoteId: string) => {
+    navigate(`/quotes/${quoteId}`);
   };
   
-  return (
-    <PageLayout>
-      <div className="flex-1 overflow-y-auto p-6 animate-fade-in">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <LoadingSpinner />
-          </div>
-        ) : error ? (
-          <div className="text-center text-destructive">
-            <h3 className="text-xl font-semibold mb-2">Error Loading Quote</h3>
-            <p>{(error as any)?.message || 'Unable to load quote details'}</p>
-          </div>
-        ) : quote ? (
-          <QuoteDetails 
-            quote={adaptQuote<typeof quote, Quote>(quote)} 
-            onQuoteSelect={handleQuoteSelect}
-          />
-        ) : (
-          <div className="text-center">
-            <h3 className="text-xl font-semibold mb-2">Quote Not Found</h3>
-            <p>The requested quote could not be found.</p>
-          </div>
-        )}
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 space-y-6">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Skeleton className="h-8 w-64" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-7 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </PageLayout>
+    );
+  }
+  
+  if (error || !quote) {
+    return (
+      <div className="container mx-auto py-8">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Failed to load quote details'}
+          </AlertDescription>
+        </Alert>
+        <Button onClick={handleBack} className="mt-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Go Back
+        </Button>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Quote Details</h1>
+        </div>
+        <Button onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+          Edit Quote
+        </Button>
+      </div>
+      
+      <QuoteDetailsComponent
+        quote={{
+          ...quote,
+          shifts: quote.shifts?.map(shift => adaptQuoteShift(shift, shift))
+        }}
+      />
+    </div>
   );
-};
-
-export default QuoteDetailsPage;
+}

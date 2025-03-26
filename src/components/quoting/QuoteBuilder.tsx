@@ -1,102 +1,154 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import React, { useState, useEffect } from 'react';
+import { QuoteShift, QuoteSubcontractor, Quote } from '@/types/models';
+import { v4 as uuidv4 } from 'uuid';
 import { ShiftPlanner } from './ShiftPlanner';
-import { QuoteSummary } from './QuoteSummary';
-import { QuoteDetails } from './QuoteDetails';
 import { SubcontractorSection } from './SubcontractorSection';
-import { Calendar, FileText, DollarSign, Users } from 'lucide-react';
-import { Quote } from '@/lib/types/award/types';
-import { QuoteShift, Subcontractor } from '@/lib/types/award/types';
-import { adaptQuote, adaptQuoteShift } from '@/lib/utils/typeAdapters';
+import { QuoteDetailsForm } from './QuoteDetailsForm';
+import { QuoteDetails } from './QuoteDetails';
+import { adaptQuoteShift } from '@/utils/typeAdapters';
 
-export function QuoteBuilder() {
-  const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null);
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [shifts, setShifts] = useState<QuoteShift[]>([]);
-  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
-  const [overheadPercentage, setOverheadPercentage] = useState(15);
-  const [marginPercentage, setMarginPercentage] = useState(20);
+interface QuoteBuilderProps {
+  initialQuote?: Partial<Quote>;
+  onSave: (quote: Quote) => void;
+  isEditing?: boolean;
+}
 
-  const handleShiftsChange = (newShifts: QuoteShift[]) => {
-    setShifts(newShifts.map(shift => adaptQuoteShift<typeof shift, QuoteShift>(shift)));
+export function QuoteBuilder({ initialQuote, onSave, isEditing = false }: QuoteBuilderProps) {
+  const [quote, setQuote] = useState<Quote>(() => {
+    const defaultQuote: Quote = {
+      id: uuidv4(),
+      name: '',
+      title: '',
+      client_name: '',
+      clientName: '',
+      site_name: '',
+      siteName: '',
+      description: '',
+      status: 'draft',
+      overhead_percentage: 15,
+      overheadPercentage: 15,
+      margin_percentage: 20,
+      marginPercentage: 20,
+      total_price: 0,
+      totalPrice: 0,
+      labor_cost: 0,
+      laborCost: 0,
+      subcontractor_cost: 0,
+      subcontractorCost: 0,
+      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      notes: '',
+      shifts: [],
+      subcontractors: []
+    };
+    
+    return { ...defaultQuote, ...initialQuote };
+  });
+  
+  // Function to update a field in the quote
+  const updateQuoteField = (field: string, value: any) => {
+    setQuote(prev => ({ ...prev, [field]: value }));
   };
   
-  const handleSubcontractorsChange = (newSubcontractors: Subcontractor[]) => {
-    setSubcontractors(newSubcontractors);
+  // Add a new shift to the quote
+  const handleAddShift = (shiftData: Partial<QuoteShift>) => {
+    const newShift: QuoteShift = {
+      id: uuidv4(),
+      quoteId: quote.id,
+      day: shiftData.day!,
+      startTime: shiftData.startTime || '09:00',
+      endTime: shiftData.endTime || '17:00',
+      breakDuration: shiftData.breakDuration || 30,
+      numberOfCleaners: shiftData.numberOfCleaners || 1,
+      employmentType: shiftData.employmentType || 'casual',
+      level: shiftData.level || 1,
+      allowances: shiftData.allowances || [],
+      estimatedCost: 0, // Will be calculated later
+      location: shiftData.location || '',
+      notes: shiftData.notes || ''
+    };
+    
+    // Add the new shift to the shifts array using adaptQuoteShift to ensure type compatibility
+    setQuote(prev => ({
+      ...prev,
+      shifts: [...(prev.shifts || []), adaptQuoteShift(newShift, newShift)]
+    }));
   };
-
-  const handleQuoteSelect = (quoteId: string) => {
-    setActiveQuoteId(quoteId);
+  
+  // Remove a shift from the quote
+  const handleRemoveShift = (shiftId: string) => {
+    setQuote(prev => ({
+      ...prev,
+      shifts: (prev.shifts || []).filter(shift => shift.id !== shiftId)
+    }));
   };
-
+  
+  // Add a new subcontractor to the quote
+  const handleAddSubcontractor = (subcontractor: Partial<QuoteSubcontractor>) => {
+    const newSubcontractor: QuoteSubcontractor = {
+      id: uuidv4(),
+      quoteId: quote.id,
+      name: subcontractor.name || '',
+      cost: subcontractor.cost || 0,
+      frequency: subcontractor.frequency || 'monthly',
+      description: subcontractor.description || '',
+      email: subcontractor.email || '',
+      phone: subcontractor.phone || '',
+      service: subcontractor.service || '',
+      notes: subcontractor.notes || '',
+      services: subcontractor.services || []
+    };
+    
+    setQuote(prev => ({
+      ...prev,
+      subcontractors: [...(prev.subcontractors || []), newSubcontractor]
+    }));
+  };
+  
+  // Remove a subcontractor from the quote
+  const handleRemoveSubcontractor = (subcontractorId: string) => {
+    setQuote(prev => ({
+      ...prev,
+      subcontractors: (prev.subcontractors || []).filter(s => s.id !== subcontractorId)
+    }));
+  };
+  
+  // Handle showing the quote details for viewing/confirmation
+  const handleShowDetails = () => {
+    onSave(quote);
+  };
+  
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Quote Builder</CardTitle>
-          <CardDescription>
-            Create and manage detailed cleaning service quotes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="details" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="details" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <span>Quote Details</span>
-              </TabsTrigger>
-              <TabsTrigger value="shifts" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>Shift Planner</span>
-              </TabsTrigger>
-              <TabsTrigger value="subcontractors" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>Subcontractors</span>
-              </TabsTrigger>
-              <TabsTrigger value="summary" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span>Cost Summary</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details">
-              {quote && (
-                <QuoteDetails
-                  quote={adaptQuote<typeof quote, Quote>(quote)}
-                  onQuoteSelect={handleQuoteSelect}
-                />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="shifts">
-              <ShiftPlanner 
-                quoteId={activeQuoteId} 
-                shifts={shifts}
-                onShiftsChange={handleShiftsChange}
-              />
-            </TabsContent>
-            
-            <TabsContent value="subcontractors">
-              <SubcontractorSection 
-                subcontractors={subcontractors}
-                onSubcontractorsChange={handleSubcontractorsChange}
-              />
-            </TabsContent>
-            
-            <TabsContent value="summary">
-              <QuoteSummary 
-                quoteId={activeQuoteId}
-                shifts={shifts}
-                subcontractors={subcontractors}
-                overheadPercentage={overheadPercentage}
-                marginPercentage={marginPercentage}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+    <div className="space-y-8">
+      {/* Quote Details Form */}
+      <QuoteDetailsForm quote={quote} onUpdate={updateQuoteField} />
+      
+      {/* Shift Planner */}
+      <ShiftPlanner 
+        shifts={quote.shifts || []} 
+        onAddShift={handleAddShift} 
+        onRemoveShift={handleRemoveShift} 
+      />
+      
+      {/* Subcontractor Section */}
+      <SubcontractorSection 
+        subcontractors={quote.subcontractors || []} 
+        onAddSubcontractor={handleAddSubcontractor} 
+        onRemoveSubcontractor={handleRemoveSubcontractor} 
+      />
+      
+      {/* Actions */}
+      <div className="flex justify-end gap-4">
+        <button 
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          onClick={handleShowDetails}
+        >
+          {isEditing ? 'Update Quote' : 'Create Quote'}
+        </button>
+      </div>
     </div>
   );
 }
