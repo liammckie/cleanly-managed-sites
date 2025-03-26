@@ -25,8 +25,7 @@ export function DatePickerWrapper({
       date={value}
       onSelect={onChange}
       disabled={disabled}
-      // We'll use the raw props to avoid passing undefined className
-      {...(placeholder ? { placeholder } : {})}
+      // We'll omit any potentially unsupported props
     />
   );
 }

@@ -48,9 +48,9 @@ export interface Quote {
   name: string;
   title?: string;
   client_name: string;
-  clientName?: string;
+  clientName: string;
   site_name?: string;
-  siteName?: string;
+  siteName: string;
   description?: string;
   status: QuoteStatus;
   overhead_percentage: number;
@@ -82,4 +82,19 @@ export interface Quote {
   overheadProfile?: string;
   userId?: string;
   createdBy?: string;
+  notes: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  clientContact?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  siteAddress?: string;
+  overheadPercentage: number;
+  marginPercentage: number;
+  totalPrice: number;
+  laborCost: number;
+  subcontractorCost: number;
+  createdAt: string;
+  updatedAt: string;
 }

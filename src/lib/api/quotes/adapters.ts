@@ -5,6 +5,7 @@ import { Quote, QuoteShift, Subcontractor, QuoteSubcontractor } from '@/lib/type
 export interface DbQuote {
   id: string;
   name: string;
+  title?: string;  // Add title
   client_name: string;
   site_name?: string;
   description?: string;
@@ -92,6 +93,7 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     // Use snake_case properties directly from DB
     id: dbQuote.id,
     name: dbQuote.name,
+    title: dbQuote.title || dbQuote.name, // Add title field
     client_name: dbQuote.client_name,
     site_name: dbQuote.site_name,
     status: dbQuote.status as any,
@@ -108,7 +110,7 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     valid_until: dbQuote.valid_until,
     client_id: dbQuote.client_id,
     site_id: dbQuote.site_id,
-    notes: dbQuote.notes,
+    notes: dbQuote.notes || '',
     created_by: dbQuote.created_by,
     overhead_cost: dbQuote.overhead_cost,
     total_cost: dbQuote.total_cost,
@@ -126,9 +128,8 @@ export function dbToQuote(dbQuote: DbQuote): Quote {
     terms: dbQuote.terms,
 
     // Add camelCase aliases for frontend
-    title: dbQuote.name,
     clientName: dbQuote.client_name,
-    siteName: dbQuote.site_name,
+    siteName: dbQuote.site_name || '',
     overheadPercentage: dbQuote.overhead_percentage,
     marginPercentage: dbQuote.margin_percentage,
     totalPrice: dbQuote.total_price,
@@ -161,8 +162,9 @@ export function quoteToDb(quote: Quote): DbQuote {
   return {
     id: quote.id,
     name: quote.name || quote.title || '',
+    title: quote.title || quote.name, // Add title field
     client_name: quote.client_name || quote.clientName || '',
-    site_name: quote.site_name || quote.siteName,
+    site_name: quote.site_name || quote.siteName || '',
     description: quote.description,
     status: quote.status,
     overhead_percentage: quote.overhead_percentage || quote.overheadPercentage || 0,
@@ -185,7 +187,7 @@ export function quoteToDb(quote: Quote): DbQuote {
     frequency: quote.frequency,
     scope: quote.scope,
     terms: quote.terms,
-    notes: quote.notes,
+    notes: quote.notes || '',
     created_by: quote.created_by || quote.createdBy,
     overhead_cost: quote.overhead_cost || quote.overheadCost,
     total_cost: quote.total_cost || quote.totalCost,
@@ -285,12 +287,13 @@ export function dbToOverheadProfile(dbProfile: DbOverheadProfile) {
 export const adaptQuoteToApi = (quote: Quote): any => {
   return {
     name: quote.name,
+    title: quote.title || quote.name, // Add title field
     client_name: quote.client_name || quote.clientName,
     site_name: quote.site_name || quote.siteName,
     status: quote.status,
     margin_percentage: quote.margin_percentage || quote.marginPercentage || 0,
     total_cost: quote.total_cost || quote.totalCost || 0,
-    notes: quote.notes,
+    notes: quote.notes || '',
     overhead_profile: quote.overheadProfile || 'standard', // Default
     labor_cost: quote.labor_cost || quote.laborCost || 0,
     overhead_cost: quote.overhead_cost || quote.overheadCost || 0,
@@ -304,7 +307,6 @@ export const adaptQuoteToApi = (quote: Quote): any => {
     contract_length_unit: quote.contractLengthUnit || 'months', // Use fixed value that matches allowed types
     overhead_percentage: quote.overhead_percentage || quote.overheadPercentage || 0,
     // Additional fields
-    title: quote.title,
     description: quote.description,
     supplies_cost: quote.supplies_cost || quote.suppliesCost || 0,
     equipment_cost: quote.equipment_cost || quote.equipmentCost || 0,

@@ -1,277 +1,145 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { FilePlus, FileEdit, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { Quote } from '@/lib/types/quotes';
+import { Edit, FileText, Printer, Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface QuoteDetailsProps {
-  quoteId: string | null;
-  onQuoteSelect: (id: string | null) => void;
+export interface QuoteDetailsProps {
+  quote: Quote;
 }
 
-interface QuoteItem {
-  id: string;
-  name: string;
-  client: string;
-  createdAt: string;
-}
-
-export function QuoteDetails({ quoteId, onQuoteSelect }: QuoteDetailsProps) {
-  const [quotes, setQuotes] = useState<QuoteItem[]>([
-    {
-      id: '1',
-      name: 'Office Complex Weekly Cleaning',
-      client: 'ABC Corporation',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Retail Store Daily Cleaning',
-      client: 'XYZ Retail',
-      createdAt: new Date().toISOString()
-    }
-  ]);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    client: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    address: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    quoteValidity: '30'
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+export function QuoteDetails({ quote }: QuoteDetailsProps) {
+  const navigate = useNavigate();
+  
+  // Handle missing properties by using either snake_case or camelCase versions
+  const clientName = quote.clientName || quote.client_name || 'N/A';
+  const siteName = quote.siteName || quote.site_name || 'N/A';
+  const totalPrice = quote.totalPrice || quote.total_price || 0;
+  const laborCost = quote.laborCost || quote.labor_cost || 0;
+  const overheadCost = quote.overheadCost || quote.overhead_cost || 0;
+  const subcontractorCost = quote.subcontractorCost || quote.subcontractor_cost || 0;
+  const createdAt = quote.createdAt || quote.created_at || '';
+  const startDate = quote.startDate || quote.start_date || '';
+  const endDate = quote.endDate || quote.end_date || '';
+  
+  const handleEdit = () => {
+    navigate(`/quotes/${quote.id}/edit`);
   };
-
-  const handleSelectChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const createNewQuote = () => {
-    // Reset form
-    setFormData({
-      name: '',
-      client: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      quoteValidity: '30'
-    });
-    
-    onQuoteSelect(null);
-  };
-
+  
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">
-          {quoteId ? 'Edit Quote' : 'Create New Quote'}
-        </h3>
-        <Button onClick={createNewQuote} variant="outline" size="sm">
-          <FilePlus className="h-4 w-4 mr-2" />
-          New Quote
-        </Button>
+    <div className="space-y-8">
+      <div className="flex flex-col lg:flex-row justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{quote.name}</h1>
+          <p className="text-muted-foreground">
+            Quote for {clientName} - {siteName}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm">
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
+          <Button variant="outline" size="sm">
+            <Send className="h-4 w-4 mr-2" />
+            Send
+          </Button>
+          <Button onClick={handleEdit} size="sm">
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        </div>
       </div>
-
-      {quotes.length > 0 && !quoteId && (
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Quotes</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Quote Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-sm text-muted-foreground">Quote #</div>
+              <div className="text-sm font-medium text-right">{quote.id.substring(0, 8)}</div>
+              
+              <div className="text-sm text-muted-foreground">Status</div>
+              <div className="text-right">
+                <Badge variant="outline" className="capitalize">{quote.status}</Badge>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">Created</div>
+              <div className="text-sm font-medium text-right">{formatDate(createdAt, 'MMM d, yyyy')}</div>
+              
+              <div className="text-sm text-muted-foreground">Valid Until</div>
+              <div className="text-sm font-medium text-right">
+                {quote.expiry_date ? formatDate(quote.expiry_date, 'MMM d, yyyy') : 'N/A'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Contract Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-sm text-muted-foreground">Start Date</div>
+              <div className="text-sm font-medium text-right">
+                {startDate ? formatDate(startDate, 'MMM d, yyyy') : 'N/A'}
+              </div>
+              
+              <div className="text-sm text-muted-foreground">End Date</div>
+              <div className="text-sm font-medium text-right">
+                {endDate ? formatDate(endDate, 'MMM d, yyyy') : 'N/A'}
+              </div>
+              
+              <div className="text-sm text-muted-foreground">Duration</div>
+              <div className="text-sm font-medium text-right">
+                {quote.contractLength ? `${quote.contractLength} ${quote.contractLengthUnit || 'months'}` : 'N/A'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Quote Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="text-sm text-muted-foreground">Labor Cost</div>
+              <div className="text-sm font-medium text-right">{formatCurrency(laborCost)}</div>
+              
+              <div className="text-sm text-muted-foreground">Overhead</div>
+              <div className="text-sm font-medium text-right">{formatCurrency(overheadCost)}</div>
+              
+              <div className="text-sm text-muted-foreground">Subcontractors</div>
+              <div className="text-sm font-medium text-right">{formatCurrency(subcontractorCost)}</div>
+              
+              <Separator className="col-span-2 my-1" />
+              
+              <div className="text-sm font-medium">Total</div>
+              <div className="text-lg font-bold text-right">{formatCurrency(totalPrice)}</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {quote.notes && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {quotes.map(quote => (
-                <div 
-                  key={quote.id} 
-                  className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/30 cursor-pointer"
-                  onClick={() => onQuoteSelect(quote.id)}
-                >
-                  <div>
-                    <div className="font-medium">{quote.name}</div>
-                    <div className="text-sm text-muted-foreground">{quote.client}</div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="icon">
-                      <FileEdit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm">{quote.notes}</p>
           </CardContent>
         </Card>
       )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quote Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Quote Name</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                placeholder="e.g., Office Weekly Cleaning"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-              <Input 
-                id="client" 
-                name="client" 
-                value={formData.client} 
-                onChange={handleChange}
-                placeholder="Client Name" 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                value={formData.description} 
-                onChange={handleChange}
-                placeholder="Describe the cleaning services to be provided"
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Client Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="contactName">Contact Name</Label>
-              <Input 
-                id="contactName" 
-                name="contactName" 
-                value={formData.contactName} 
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
-              <Input 
-                id="contactEmail" 
-                name="contactEmail" 
-                type="email" 
-                value={formData.contactEmail} 
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contactPhone">Contact Phone</Label>
-              <Input 
-                id="contactPhone" 
-                name="contactPhone" 
-                value={formData.contactPhone} 
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Service Address</Label>
-              <Input 
-                id="address" 
-                name="address" 
-                value={formData.address} 
-                onChange={handleChange}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Contract Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input 
-              id="startDate" 
-              name="startDate" 
-              type="date" 
-              value={formData.startDate} 
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="endDate">End Date</Label>
-            <Input 
-              id="endDate" 
-              name="endDate" 
-              type="date" 
-              value={formData.endDate} 
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="quoteValidity">Quote Validity (days)</Label>
-            <Select 
-              value={formData.quoteValidity} 
-              onValueChange={(value) => handleSelectChange('quoteValidity', value)}
-            >
-              <SelectTrigger id="quoteValidity">
-                <SelectValue placeholder="Select validity period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="14">14 days</SelectItem>
-                <SelectItem value="30">30 days</SelectItem>
-                <SelectItem value="60">60 days</SelectItem>
-                <SelectItem value="90">90 days</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button className="ml-auto">Save Quote Details</Button>
-        </CardFooter>
-      </Card>
     </div>
   );
 }

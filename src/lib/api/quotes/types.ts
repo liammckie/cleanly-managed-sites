@@ -30,4 +30,5 @@ export interface DbSubcontractor {
   phone?: string;
   service?: string;
   notes?: string;
+  services?: string[];
 }
