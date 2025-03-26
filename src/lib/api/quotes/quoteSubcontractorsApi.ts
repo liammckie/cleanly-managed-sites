@@ -17,7 +17,6 @@ export const fetchQuoteSubcontractors = async (quoteId: string): Promise<QuoteSu
   }
   
   return (data || []).map(subcontractor => {
-    // Create a valid DbQuoteSubcontractor with all required fields
     const dbSub: DbQuoteSubcontractor = {
       id: subcontractor.id,
       quote_id: subcontractor.quote_id,
@@ -31,7 +30,10 @@ export const fetchQuoteSubcontractors = async (quoteId: string): Promise<QuoteSu
       phone: subcontractor.phone || '',
       service: subcontractor.service || '',
       notes: subcontractor.notes || '',
-      services: subcontractor.services || []
+      services: subcontractor.services || [],
+      custom_services: subcontractor.custom_services || '',
+      monthly_cost: subcontractor.monthly_cost || 0,
+      is_flat_rate: subcontractor.is_flat_rate || false
     };
     
     return dbToQuoteSubcontractor(dbSub);
@@ -61,7 +63,10 @@ export const createQuoteSubcontractor = async (
     phone: subcontractor.phone || '',
     service: subcontractor.service || '',
     notes: subcontractor.notes || '',
-    services: subcontractor.services || []
+    services: subcontractor.services || [],
+    customServices: subcontractor.customServices || '',
+    monthlyCost: subcontractor.monthlyCost || 0,
+    isFlatRate: subcontractor.isFlatRate || false
   } as QuoteSubcontractor);
   
   const { data, error } = await supabase
@@ -77,7 +82,10 @@ export const createQuoteSubcontractor = async (
       email: dbSub.email || '',
       phone: dbSub.phone || '',
       service: dbSub.service || '',
-      notes: dbSub.notes || ''
+      notes: dbSub.notes || '',
+      custom_services: dbSub.custom_services || '',
+      monthly_cost: dbSub.monthly_cost || 0,
+      is_flat_rate: dbSub.is_flat_rate || false
     }])
     .select()
     .single();
@@ -101,7 +109,10 @@ export const createQuoteSubcontractor = async (
     phone: data.phone || '',
     service: data.service || '',
     notes: data.notes || '',
-    services: data.services || []
+    services: data.services || [],
+    custom_services: data.custom_services || '',
+    monthly_cost: data.monthly_cost || 0,
+    is_flat_rate: data.is_flat_rate || false
   };
   
   return dbToQuoteSubcontractor(newDbSub);
@@ -136,6 +147,9 @@ export const updateQuoteSubcontractor = async (
     service: subcontractor.service,
     notes: subcontractor.notes,
     services: subcontractor.services,
+    custom_services: subcontractor.customServices,
+    monthly_cost: subcontractor.monthlyCost,
+    is_flat_rate: subcontractor.isFlatRate,
     updated_at: new Date().toISOString()
   };
   
@@ -165,7 +179,10 @@ export const updateQuoteSubcontractor = async (
     phone: data.phone || '',
     service: data.service || '',
     notes: data.notes || '',
-    services: data.services || []
+    services: data.services || [],
+    custom_services: data.custom_services || '',
+    monthly_cost: data.monthly_cost || 0,
+    is_flat_rate: data.is_flat_rate || false
   };
   
   return dbToQuoteSubcontractor(updatedDbSub);

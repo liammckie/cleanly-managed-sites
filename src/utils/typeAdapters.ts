@@ -128,7 +128,29 @@ export interface UnifiedSubcontractor {
 }
 
 /**
- * Functions to convert between DB and app model for QuoteSubcontractors
+ * Database representation of a quote subcontractor
+ */
+export interface DbQuoteSubcontractor {
+  id: string;
+  quote_id: string;
+  name: string;
+  description?: string;
+  cost: number;
+  frequency: string;
+  email?: string;
+  phone?: string;
+  service?: string;
+  notes?: string;
+  services?: string[];
+  custom_services?: string;
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Convert DB quote subcontractor to application model
  */
 export function dbToQuoteSubcontractor(dbSubcontractor: any): QuoteSubcontractor {
   return {
@@ -149,7 +171,10 @@ export function dbToQuoteSubcontractor(dbSubcontractor: any): QuoteSubcontractor
   };
 }
 
-export function quoteSubcontractorToDb(subcontractor: QuoteSubcontractor): any {
+/**
+ * Convert application model to DB quote subcontractor
+ */
+export function quoteSubcontractorToDb(subcontractor: QuoteSubcontractor): DbQuoteSubcontractor {
   return {
     id: subcontractor.id,
     quote_id: subcontractor.quoteId,
@@ -169,3 +194,11 @@ export function quoteSubcontractorToDb(subcontractor: QuoteSubcontractor): any {
     updated_at: new Date().toISOString()
   };
 }
+
+/**
+ * Functions to convert between DB and app model for QuoteSubcontractors
+ */
+export function dbToQuoteSubcontractorArray(dbSubcontractors: any[]): QuoteSubcontractor[] {
+  return (dbSubcontractors || []).map(sub => dbToQuoteSubcontractor(sub));
+}
+
