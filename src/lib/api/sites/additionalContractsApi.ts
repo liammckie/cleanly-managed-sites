@@ -27,6 +27,14 @@ export const fetchAdditionalContracts = async (siteId: string): Promise<Contract
     renewalTerms: contract.renewal_terms,
     terminationPeriod: contract.termination_period,
     notes: contract.notes,
+    // Adding required properties from ContractDetails
+    contractLength: 0,
+    contractLengthUnit: 'months',
+    renewalPeriod: 0,
+    renewalNotice: 0,
+    noticeUnit: 'months',
+    serviceFrequency: '',
+    serviceDeliveryMethod: ''
   }));
 };
 
@@ -74,6 +82,14 @@ export const createAdditionalContract = async (
     renewalTerms: data.renewal_terms,
     terminationPeriod: data.termination_period,
     notes: data.notes,
+    // Adding required properties from ContractDetails
+    contractLength: 0,
+    contractLengthUnit: 'months',
+    renewalPeriod: 0,
+    renewalNotice: 0,
+    noticeUnit: 'months',
+    serviceFrequency: '',
+    serviceDeliveryMethod: ''
   };
 };
 
@@ -121,6 +137,14 @@ export const updateAdditionalContract = async (
     renewalTerms: data.renewal_terms,
     terminationPeriod: data.termination_period,
     notes: data.notes,
+    // Adding required properties from ContractDetails
+    contractLength: 0,
+    contractLengthUnit: 'months',
+    renewalPeriod: 0,
+    renewalNotice: 0,
+    noticeUnit: 'months',
+    serviceFrequency: '',
+    serviceDeliveryMethod: ''
   };
 };
 
@@ -134,5 +158,34 @@ export const deleteAdditionalContract = async (contractId: string): Promise<void
   if (error) {
     console.error('Error deleting additional contract:', error);
     throw new Error(`Failed to delete additional contract: ${error.message}`);
+  }
+};
+
+// Create a named export for the API functions
+export const additionalContractsApi = {
+  fetchAdditionalContracts,
+  createAdditionalContract,
+  updateAdditionalContract,
+  deleteAdditionalContract
+};
+
+// Function to handle additional contracts for a site
+export const handleSiteAdditionalContracts = async (
+  siteId: string,
+  additionalContracts: ContractDetails[]
+): Promise<void> => {
+  if (!additionalContracts || additionalContracts.length === 0) {
+    return;
+  }
+
+  // Process each additional contract
+  for (const contract of additionalContracts) {
+    if (contract.id) {
+      // Update existing contract
+      await updateAdditionalContract(contract.id, contract);
+    } else {
+      // Create new contract
+      await createAdditionalContract(siteId, contract);
+    }
   }
 };

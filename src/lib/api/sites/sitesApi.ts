@@ -1,6 +1,6 @@
 
 import { sitesCore } from './sitesCore';
-import { sitesCreate } from './sitesCreate';
+import { sitesCreate as sitesCreateAPI } from './sitesCreate';
 import { sitesUpdate } from './sitesUpdate';
 import { getSiteContacts } from './siteContactsApi';
 import { handleSiteAdditionalContracts, additionalContractsApi } from './additionalContractsApi';
@@ -35,7 +35,7 @@ export const sitesApi = {
   
   // Create operations
   createSite: withErrorHandling(
-    (siteData: any) => sitesCreate.createSite(siteData), 
+    (siteData: any) => sitesCreateAPI.createSite(siteData), 
     'Error creating site'
   ),
   

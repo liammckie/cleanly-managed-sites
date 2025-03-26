@@ -1,61 +1,66 @@
-import React, { useState, useMemo } from 'react';
-import { useContracts } from '@/hooks/useContracts';
+
+import React from 'react';
+import { Sidebar } from '@/components/ui/layout/Sidebar';
+import { Navbar } from '@/components/ui/layout/Navbar';
 import { DataTable } from '@/components/ui/data-table';
-import { ContractData, getColumns } from '@/components/contracts/ContractColumns';
-import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ContractValueMetrics } from '@/components/contracts/ContractValueMetrics';
+import { contractColumns } from '@/components/contracts/ContractColumns';
+import { useContracts } from '@/hooks/useContracts';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { adaptContractDataArray } from '@/components/contracts/contractTypeAdapter';
+import { Plus } from 'lucide-react';
 
 export default function Contracts() {
-  const navigate = useNavigate();
-  const { contractData, isLoading } = useContracts();
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const handleAddNewContract = () => {
-    navigate('/contracts/create');
-  };
-  
-  const contractsData = useMemo(() => {
-    if (contractData && contractData.length > 0) {
-      return adaptContractDataArray(contractData);
-    }
-    return [];
-  }, [contractData]);
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  // Convert the contract data to the format expected by the DataTable
-  const adaptedContracts = contractsData || [];
+  const { contracts, isLoading, error } = useContracts();
   
   return (
-    <div className="container py-10">
-      <PageHeader
-        title="Contracts"
-        description="Manage all your contracts"
-        action={
-          <Button onClick={handleAddNewContract}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Contract
-          </Button>
-        }
-      />
-      
-      <div className="mt-6">
-        <DataTable
-          columns={getColumns()}
-          data={adaptedContracts}
-          searchKey="client"
-          placeholder="Search contracts..."
-          onSearch={setSearchQuery}
-        />
+    <SidebarProvider>
+      <div className="flex h-screen">
+        <Sidebar />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Navbar />
+          
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">Contracts</h1>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Contract
+              </Button>
+            </div>
+            
+            <div className="mb-6">
+              <ContractValueMetrics />
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Contracts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <LoadingSpinner />
+                  </div>
+                ) : error ? (
+                  <div className="text-center p-4 bg-red-50 text-red-800 rounded">
+                    Error loading contracts: {error.message}
+                  </div>
+                ) : (
+                  <DataTable 
+                    columns={contractColumns} 
+                    data={adaptContractDataArray(contracts)}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

@@ -97,6 +97,26 @@ export function BillingDetailsStep({
     return format(new Date(dateString), 'dd/MM/yyyy');
   };
 
+  // Update the displayBillingTotals function to use the correct BillingAmounts properties
+  const displayBillingTotals = (amounts: BillingAmounts) => {
+    return (
+      <div className="grid grid-cols-3 gap-4 mt-4 p-4 bg-muted/40 rounded-md">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">Weekly</p>
+          <p className="text-lg font-semibold">${amounts.totalWeeklyAmount.toFixed(2)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">Monthly</p>
+          <p className="text-lg font-semibold">${amounts.totalMonthlyAmount.toFixed(2)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">Annual</p>
+          <p className="text-lg font-semibold">${amounts.totalAnnualAmount.toFixed(2)}</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Billing Summary */}

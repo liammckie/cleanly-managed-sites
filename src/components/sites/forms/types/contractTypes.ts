@@ -1,5 +1,4 @@
 
-
 export interface ContractTerm {
   id: string;
   name: string;
@@ -55,3 +54,9 @@ export interface ContractForecast {
   profit: number;
 }
 
+// Adding BillingAmounts interface
+export interface BillingAmounts {
+  totalWeeklyAmount: number;
+  totalMonthlyAmount: number;
+  totalAnnualAmount: number;
+}
