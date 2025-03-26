@@ -10,7 +10,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { site, isLoading, error } = useSiteDetails(id);
+  const { site, isLoading, isError, error } = useSiteDetails(id);
   
   return (
     <SidebarProvider>
@@ -25,7 +25,7 @@ const SiteDetail = () => {
               <div className="flex items-center justify-center h-full">
                 <LoadingSpinner />
               </div>
-            ) : error ? (
+            ) : isError ? (
               <div className="text-center text-destructive">
                 <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
                 <p>{(error as any)?.message || 'Unable to load site details'}</p>
