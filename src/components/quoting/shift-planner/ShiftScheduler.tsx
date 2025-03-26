@@ -1,9 +1,19 @@
-
 import React from 'react';
 import { ShiftForm } from './ShiftForm';
 import { ShiftList } from './ShiftList';
 import { ShiftCalendar } from './ShiftCalendar';
 import { QuoteShift } from '@/lib/types/award/types';
+
+interface ShiftCalendarProps {
+  shifts: QuoteShift[];
+  onDeleteShift: (shiftId: string) => void;
+  onDuplicateShift: (shift: QuoteShift) => void;
+  onUpdateShift: (shift: QuoteShift) => void;
+}
+
+interface ShiftListProps extends ShiftCalendarProps {
+  onAddClick: () => void;
+}
 
 interface ShiftSchedulerProps {
   activeView: 'calendar' | 'list' | 'add';
