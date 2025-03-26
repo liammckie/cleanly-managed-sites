@@ -4,7 +4,6 @@ import { SiteFormData } from '../types/siteFormData';
 import { SiteRecord } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { BillingLine } from '../types/billingTypes';
-import { asJsonObject } from '@/lib/utils/json';
 
 export function useSiteFormData(
   site: SiteRecord, 
@@ -24,7 +23,7 @@ export function useSiteFormData(
         city: site.city || '',
         state: site.state || '',
         postalCode: site.postcode || '', // Map postcode to postalCode
-        status: site.status === 'on-hold' ? 'on_hold' : site.status,
+        status: site.status === 'on-hold' ? 'on-hold' : site.status,
         // Set contract details if available
         contract_details: {
           ...formData.contract_details,
@@ -56,11 +55,15 @@ export function useSiteFormData(
         updatedFormData.billingDetails = {
           ...updatedFormData.billingDetails,
           billingLines: formattedBillingLines,
-          totalWeeklyAmount: site.weekly_revenue || 0,
-          // Calculate monthly amount from weekly
-          totalMonthlyAmount: site.monthly_revenue || ((site.weekly_revenue || 0) * 4.33),
-          totalAnnualAmount: site.annual_revenue || 0,
+          totalWeeklyAmount: site.weekly_revenue || 0
         };
+        
+        // Because we've defined totalMonthlyAmount in BillingDetails interface, we can use it now
+        if (updatedFormData.billingDetails) {
+          updatedFormData.billingDetails.totalMonthlyAmount = site.monthly_revenue || 
+            ((site.weekly_revenue || 0) * 4.33);
+          updatedFormData.billingDetails.totalAnnualAmount = site.annual_revenue || 0;
+        }
       }
       
       // Add additional contracts if available

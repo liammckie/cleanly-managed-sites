@@ -1,7 +1,6 @@
 
 import { ContractDetails } from '../types/contractTypes';
 import { BillingDetails } from './billingTypes';
-import { Subcontractor } from '@/types/models';
 import { SecurityDetails } from './securityTypes';
 import { Periodicals } from './periodicalTypes';
 import { AdHocWorkAuthorization } from './adHocWorkTypes';
@@ -41,7 +40,7 @@ export interface SiteFormData {
   useClientInfo?: boolean;
   billingDetails?: BillingDetails;
   additionalContracts?: ContractDetails[];
-  subcontractors?: Subcontractor[];
+  subcontractors?: any[];
   hasSubcontractors?: boolean;  // Added this property
   monthlyCost?: number;
   weeklyRevenue?: number;
@@ -79,5 +78,4 @@ export interface SiteFormData {
 }
 
 // Export alias names for backward compatibility
-import { SiteStatus as SiteStatusType } from '@/types/common';
-export const siteStatusOptions: SiteStatusType[] = ['active', 'pending', 'inactive', 'lost', 'on_hold'];
+export const siteStatusOptions: SiteStatus[] = ['active', 'pending', 'inactive', 'lost', 'on-hold'];

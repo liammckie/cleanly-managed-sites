@@ -1,35 +1,33 @@
-
-import { JsonValue } from '@/types/common';
+import { BillingFrequency } from '@/types/common';
 
 export interface ContractDetails {
   startDate?: string;
   endDate?: string;
+  contractType?: string;
+  contractNumber?: string;
   contractLength?: number;
-  contractLengthUnit?: string;
+  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
   autoRenewal?: boolean;
   renewalPeriod?: number;
   renewalNotice?: number;
   noticeUnit?: string;
-  serviceFrequency?: string;
+  serviceFrequency?: BillingFrequency;
   serviceDeliveryMethod?: string;
-  additionalContracts?: any[];
-  // Additional fields needed by components
-  contractNumber?: string;
-  contractType?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
+  contractTerms?: ContractTerm[];
+  additionalServices?: string[];
   notes?: string;
-  value?: number;
-  billingCycle?: string;
-  terms?: ContractTerm[];
-  id?: string; // Used in some components
 }
 
 export interface ContractTerm {
-  id: string;
-  description: string;
-  isActive: boolean;
-  required: boolean;
+  id?: string;
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  autoRenew?: boolean;
+  description?: string;
+  value?: number;
 }
 
 export interface ContractHistoryEntry {

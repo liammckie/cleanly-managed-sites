@@ -21,7 +21,7 @@ export interface BillingLine {
   annualAmount?: number;
   holdStartDate?: string;
   holdEndDate?: string;
-  creditAmount?: number;
+  creditAmount?: string;
   creditDate?: string;
   creditReason?: string;
 }
@@ -46,4 +46,47 @@ export interface BillingDetails {
   totalWeeklyAmount: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
+  
+  // Additional billing properties required by components
+  billingOnHold?: boolean;
+  billingHoldStartDate?: string;
+  billingHoldEndDate?: string;
+  billingHoldReason?: string;
+  paymentTerms?: string;
+  invoiceMethod?: string;
+  useSiteAddress?: boolean;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  accountNumber?: string;
+  taxId?: string;
+  notes?: string;
+  
+  // Invoice properties
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  
+  // Revenue properties
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  
+  // Service delivery properties
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  annualContractorCost?: number;
+  laborPlan?: any;
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  
+  // Xero integration
+  xeroContactId?: string;
 }

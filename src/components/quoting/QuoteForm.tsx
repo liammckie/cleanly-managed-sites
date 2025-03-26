@@ -14,6 +14,7 @@ import { QuoteSummary } from './QuoteSummary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useOverheadProfiles } from '@/hooks/quotes/useOverheadProfiles';
 import { Quote } from '@/types/models';
+import { dbToOverheadProfile } from '@/utils/typeAdapters';
 
 interface OverheadProfile {
   id: string;
@@ -27,7 +28,12 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
   const { toast } = useToast();
   const { createQuote, isCreating } = useQuoteCreate();
   const { updateQuote, isUpdating } = useQuoteUpdate();
-  const { data: overheadProfiles = [], isLoading: isLoadingProfiles } = useOverheadProfiles();
+  const { data: rawOverheadProfiles = [], isLoading: isLoadingProfiles } = useOverheadProfiles();
+  
+  // Convert raw overhead profiles to the expected format
+  const overheadProfiles = React.useMemo(() => {
+    return rawOverheadProfiles.map(profile => dbToOverheadProfile(profile));
+  }, [rawOverheadProfiles]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -121,8 +127,7 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
     }
     
     // Find selected profile
-    const profileArray = overheadProfiles as OverheadProfile[];
-    const profile = profileArray.find(p => p.id === profileId);
+    const profile = overheadProfiles.find(p => p.id === profileId);
     if (profile) {
       setFormData(prev => ({ 
         ...prev,
@@ -216,7 +221,7 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
   };
   
   // Formatted list of overhead profiles for select dropdown
-  const formattedProfiles = (overheadProfiles as OverheadProfile[]).map((profile) => ({
+  const formattedProfiles = overheadProfiles.map((profile) => ({
     value: profile.id,
     label: profile.name,
     laborPercentage: profile.laborPercentage

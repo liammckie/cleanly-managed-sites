@@ -3,8 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { QuoteShift, Subcontractor } from '@/lib/award/types';
-import { calculateTotalCosts } from '@/lib/award/utils';
+import { QuoteShift } from '@/lib/award/types';
 
 // Helper function to format currency
 const formatCurrency = (amount: number): string => {
@@ -16,10 +15,12 @@ const formatCurrency = (amount: number): string => {
 };
 
 // Helper function to calculate subcontractor monthly cost
-const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number => {
+const calculateSubcontractorMonthlyCost = (subcontractor: any): number => {
   if (!subcontractor.cost) return 0;
   
-  switch (subcontractor.frequency) {
+  const frequency = subcontractor.frequency?.toLowerCase() || 'monthly';
+  
+  switch (frequency) {
     case 'daily':
       return subcontractor.cost * 22; // Approx. working days in a month
     case 'weekly':
@@ -31,10 +32,14 @@ const calculateSubcontractorMonthlyCost = (subcontractor: Subcontractor): number
     case 'quarterly':
       return subcontractor.cost / 3;
     case 'annually':
+    case 'yearly':
       return subcontractor.cost / 12;
     case 'one_time':
+    case 'one-time':
+    case 'once':
       return subcontractor.cost;
     case 'per_event':
+    case 'per-event':
       return subcontractor.cost;
     default:
       return subcontractor.cost;
@@ -77,7 +82,7 @@ const calculateTotalCostWithOverheadAndMargin = (
 export interface QuoteSummaryProps {
   quoteId: string | null;
   shifts: QuoteShift[];
-  subcontractors: Subcontractor[];
+  subcontractors: any[];
   overheadPercentage: number;
   marginPercentage: number;
 }

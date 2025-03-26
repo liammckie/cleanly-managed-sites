@@ -1,180 +1,139 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SiteRecord } from '@/lib/api';
-import { OverviewTab } from './tabs/OverviewTab';
-import { SubcontractorsTab } from './tabs/SubcontractorsTab';
-import { PeriodicalsTab } from './tabs/PeriodicalsTab';
-import { JobSpecificationsTab } from './tabs/JobSpecificationsTab';
-import { SuppliesTab } from './tabs/SuppliesTab';
-import { SecurityTab } from './tabs/SecurityTab';
-import { ContractsTab } from './tabs/ContractsTab';
-import { Button } from '@/components/ui/button';
-import { ContactDialog } from '@/components/contacts/ContactDialog';
-import { contactsApi } from '@/lib/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Users, 
-  History,
-  PencilRuler,
-  FileText, 
-  Package, 
-  UserPlus,
-  FileCog,
-  Layers
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
-import { ContractHistoryTable } from '../contract/ContractHistoryTable';
-import { useContractHistory } from '@/hooks/useContractHistory';
-import { ContactRecord } from '@/lib/types';
+import ContractDetails from '../contract/ContractDetails';
+import ContactsPanel from '../contacts/ContactsPanel';
+import BillingPanel from '../billing/BillingPanel';
+import PeriodicalSchedule from '../periodicals/PeriodicalSchedule';
+import SubcontractorsList from '../subcontractors/SubcontractorsList';
+import SecurityDetailsPanel from '../security/SecurityDetailsPanel';
+import JobSpecificationsPanel from '../jobspec/JobSpecificationsPanel';
+import ReplenishablesList from '../replenishables/ReplenishablesList';
+import NotesPanel from '../notes/NotesPanel';
+import WorkOrdersList from '../workorders/WorkOrdersList';
+import ContractHistoryTable from '../contract/ContractHistoryTable';
+import { useSiteContractHistory } from '@/hooks/useSiteContractHistory';
 
 interface SiteDetailTabsProps {
-  site: SiteRecord;
+  site: any;
+  refetchSite: () => void;
 }
 
-export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [contractHistoryOpen, setContractHistoryOpen] = useState(false);
-  const navigate = useNavigate();
-  const { history, isLoading: isLoadingHistory } = useContractHistory(site.id);
-  
-  const handleContactSubmit = async (data: Partial<ContactRecord>): Promise<void> => {
-    try {
-      const contactData: Partial<ContactRecord> = {
-        ...data,
-        entity_id: data.entity_id || site.id,
-        entity_type: data.entity_type || 'site',
-      };
-      
-      if (data.id) {
-        await contactsApi.updateContact(data.id, contactData);
-      } else {
-        await contactsApi.createContact(contactData as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
-      }
-      
-      toast.success('Contact saved successfully');
-      refreshTabs();
-    } catch (error) {
-      console.error('Error saving contact:', error);
-      toast.error('Failed to save contact');
-      throw error;
-    }
+export default function SiteDetailTabs({ site, refetchSite }: SiteDetailTabsProps) {
+  const [activeTab, setActiveTab] = React.useState('overview');
+  const { 
+    history, 
+    isLoading: isLoadingContractHistory, 
+    currentContractDetails 
+  } = useSiteContractHistory(site?.id);
+
+  const getCompletionPercentage = () => {
+    // Simple function to calculate how complete the site record is
+    let completedSections = 0;
+    let totalSections = 8; // Total number of sections to check
+    
+    if (site?.contract_details && Object.keys(site.contract_details).length > 0) completedSections++;
+    if (site?.billing_details && Object.keys(site.billing_details).length > 0) completedSections++;
+    if (site?.security_details && Object.keys(site.security_details).length > 0) completedSections++;
+    if (site?.job_specifications && Object.keys(site.job_specifications).length > 0) completedSections++;
+    if (site?.periodicals && Object.keys(site.periodicals).length > 0) completedSections++;
+    if (site?.replenishables && Object.keys(site.replenishables).length > 0) completedSections++;
+    if (site?.contacts && site.contacts.length > 0) completedSections++;
+    if (site?.notes && site.notes.trim() !== '') completedSections++;
+    
+    return Math.floor((completedSections / totalSections) * 100);
   };
 
-  const refreshTabs = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
-  const navigateToEditSite = () => {
-    navigate(`/sites/${site.id}/edit`);
-  };
-  
-  const startContractVariation = () => {
-    navigate(`/sites/${site.id}/variations`);
-  };
-  
   return (
-    <div className="space-y-6" key={refreshKey}>
-      <div className="flex flex-wrap gap-2 mt-4">
-        <ContactDialog
-          entityType="site"
-          entityId={site.id}
-          onSubmit={handleContactSubmit}
-          onSuccess={refreshTabs}
-          trigger={
-            <Button variant="default" size="sm" className="gap-1">
-              <UserPlus size={16} />
-              <span>Add Contact</span>
-            </Button>
-          }
-        />
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="w-full"
+    >
+      <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 w-full h-auto">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="contract">Contract</TabsTrigger>
+        <TabsTrigger value="billing">Billing</TabsTrigger>
+        <TabsTrigger value="contacts">Contacts</TabsTrigger>
+        <TabsTrigger value="periodicals">Periodicals</TabsTrigger>
+        <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
+        <TabsTrigger value="security">Security</TabsTrigger>
+        <TabsTrigger value="replenishables">Supplies</TabsTrigger>
+        <TabsTrigger value="workorders">Work Orders</TabsTrigger>
+      </TabsList>
+      
+      <div className="mt-6">
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b">
+                  <h3 className="text-lg font-medium">Completion Status</h3>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center">
+                    <div className="flex-1 mr-4">
+                      <div className="h-3 bg-gray-200 rounded-full">
+                        <div 
+                          className="h-3 bg-green-500 rounded-full" 
+                          style={{ width: `${getCompletionPercentage()}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium">{getCompletionPercentage()}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <NotesPanel site={site} refetchSite={refetchSite} />
+            </div>
+            
+            <div className="space-y-6">
+              <ContractDetails site={site} refetchSite={refetchSite} />
+              <BillingPanel site={site} refetchSite={refetchSite} />
+            </div>
+          </div>
+        </TabsContent>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={() => setContractHistoryOpen(true)}
-        >
-          <History size={16} />
-          <span>Contract History</span>
-        </Button>
+        <TabsContent value="contract">
+          <div className="space-y-6">
+            <ContractDetails site={site} refetchSite={refetchSite} />
+            <ContractHistoryTable 
+              history={history} 
+              isLoading={isLoadingContractHistory} 
+              currentContractDetails={currentContractDetails} 
+            />
+          </div>
+        </TabsContent>
         
-        <Button 
-          variant="default" 
-          size="sm" 
-          className="gap-1" 
-          onClick={startContractVariation}
-        >
-          <Layers size={16} />
-          <span>Contract Variation</span>
-        </Button>
+        <TabsContent value="billing">
+          <BillingPanel site={site} refetchSite={refetchSite} />
+        </TabsContent>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="gap-1" 
-          onClick={navigateToEditSite}
-        >
-          <FileCog size={16} />
-          <span>Edit Site Details</span>
-        </Button>
+        <TabsContent value="contacts">
+          <ContactsPanel site={site} refetchSite={refetchSite} />
+        </TabsContent>
+        
+        <TabsContent value="periodicals">
+          <PeriodicalSchedule site={site} refetchSite={refetchSite} />
+        </TabsContent>
+        
+        <TabsContent value="subcontractors">
+          <SubcontractorsList site={site} refetchSite={refetchSite} />
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <SecurityDetailsPanel site={site} refetchSite={refetchSite} />
+        </TabsContent>
+        
+        <TabsContent value="replenishables">
+          <ReplenishablesList site={site} refetchSite={refetchSite} />
+        </TabsContent>
+        
+        <TabsContent value="workorders">
+          <WorkOrdersList siteId={site?.id} />
+        </TabsContent>
       </div>
-      
-      <Dialog open={contractHistoryOpen} onOpenChange={setContractHistoryOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Contract Version History</DialogTitle>
-          </DialogHeader>
-          <ContractHistoryTable 
-            history={history} 
-            isLoading={isLoadingHistory}
-            currentContractDetails={site.contract_details}
-          />
-        </DialogContent>
-      </Dialog>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="glass-card grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
-          <TabsTrigger value="periodicals">Periodicals</TabsTrigger>
-          <TabsTrigger value="job">Job Specs</TabsTrigger>
-          <TabsTrigger value="supplies">Supplies</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="contracts">Contracts</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="mt-0 animate-slide-in">
-          <OverviewTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="subcontractors" className="mt-0 animate-slide-in">
-          <SubcontractorsTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="periodicals" className="mt-0 animate-slide-in">
-          <PeriodicalsTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="job" className="mt-0 animate-slide-in">
-          <JobSpecificationsTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="supplies" className="mt-0 animate-slide-in">
-          <SuppliesTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="security" className="mt-0 animate-slide-in">
-          <SecurityTab site={site} />
-        </TabsContent>
-        
-        <TabsContent value="contracts" className="mt-0 animate-slide-in">
-          <ContractsTab site={site} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </Tabs>
   );
 }

@@ -32,21 +32,15 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
       );
       
       // Only update if values have changed
-      if (line.weekly_amount !== weeklyAmount) {
-        updateLine(line.id, 'weekly_amount', weeklyAmount);
-        // Also update the camelCase alias
+      if (line.weeklyAmount !== weeklyAmount) {
         updateLine(line.id, 'weeklyAmount', weeklyAmount);
       }
       
-      if (line.monthly_amount !== monthlyAmount) {
-        updateLine(line.id, 'monthly_amount', monthlyAmount);
-        // Also update the camelCase alias
+      if (line.monthlyAmount !== monthlyAmount) {
         updateLine(line.id, 'monthlyAmount', monthlyAmount);
       }
       
-      if (line.annual_amount !== annualAmount) {
-        updateLine(line.id, 'annual_amount', annualAmount);
-        // Also update the camelCase alias
+      if (line.annualAmount !== annualAmount) {
         updateLine(line.id, 'annualAmount', annualAmount);
       }
     }
@@ -104,10 +98,8 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
         <div className="flex items-center space-x-2 mt-6">
           <Switch
             id={`recurring-${line.id}`}
-            checked={line.is_recurring}
+            checked={line.isRecurring}
             onCheckedChange={(checked) => {
-              updateLine(line.id, 'is_recurring', checked);
-              // Also update the camelCase alias
               updateLine(line.id, 'isRecurring', checked);
             }}
           />

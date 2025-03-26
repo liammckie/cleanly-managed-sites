@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { 
   Table, 
   TableBody, 
@@ -10,83 +9,73 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatDate } from '@/lib/utils/formatters';
-import { useSiteContractHistory } from '@/hooks/useSiteContractHistory';
-import { ContractDetails, ContractTerm } from './types';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import { JsonValue } from '@/types/common';
+import { ContractHistoryEntry } from '@/hooks/useSiteContractHistory';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
-export const ContractHistoryTable = () => {
-  const { siteId } = useParams<{ siteId: string }>();
-  const { contractHistory, isLoading, error } = useSiteContractHistory(siteId);
+interface ContractHistoryTableProps {
+  history: ContractHistoryEntry[];
+  isLoading: boolean;
+  currentContractDetails: JsonValue;
+}
 
-  if (isLoading) {
-    return <div>Loading contract history...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading contract history: {error.message}</div>;
-  }
-
-  if (!contractHistory || contractHistory.length === 0) {
-    return <div>No contract history available</div>;
-  }
-
-  const formatContractSummary = (contractDetails: JsonValue) => {
-    if (typeof contractDetails === 'string') {
-      return 'Contract details not available in structured format';
+export function ContractHistoryTable({ 
+  history,
+  isLoading,
+  currentContractDetails
+}: ContractHistoryTableProps) {
+  const [selectedContract, setSelectedContract] = React.useState<JsonValue | null>(null);
+  
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch (e) {
+      return dateString;
     }
-    
-    if (!contractDetails || typeof contractDetails !== 'object') {
-      return 'No contract details';
-    }
-    
-    // Safe access
-    const details = contractDetails as Record<string, any>;
-    
-    return (
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-x-2">
-          <span className="text-muted-foreground">Contract Number:</span>
-          <span>{details.contractNumber || 'N/A'}</span>
-        </div>
-        <div className="grid grid-cols-2 gap-x-2">
-          <span className="text-muted-foreground">Start Date:</span>
-          <span>{details.startDate ? formatDate(details.startDate) : 'N/A'}</span>
-        </div>
-        <div className="grid grid-cols-2 gap-x-2">
-          <span className="text-muted-foreground">End Date:</span>
-          <span>{details.endDate ? formatDate(details.endDate) : 'N/A'}</span>
-        </div>
-        <div className="grid grid-cols-2 gap-x-2">
-          <span className="text-muted-foreground">Auto Renewal:</span>
-          <span>{details.autoRenewal === true ? 'Yes' : 'No'}</span>
-        </div>
-      </div>
-    );
   };
 
-  const renderContractDetails = (contractDetails: ContractDetails) => {
+  // Function to format the contract details for display
+  const formatContractDetails = (details: ContractDetails) => {
+    if (!details) return null;
+    
     return (
-      <div className="space-y-3">
-        <div>
-          <span className="font-medium">Start Date:</span>{' '}
-          {contractDetails.startDate ? formatDate(contractDetails.startDate) : 'Not specified'}
-        </div>
-        <div>
-          <span className="font-medium">End Date:</span>{' '}
-          {contractDetails.endDate ? formatDate(contractDetails.endDate) : 'Not specified'}
-        </div>
-        <div>
-          <span className="font-medium">Auto Renewal:</span>{' '}
-          {contractDetails.autoRenewal ? 'Yes' : 'No'}
-        </div>
-        {contractDetails.renewalPeriod && (
+      <div className="bg-slate-50 p-4 rounded-md">
+        <h3 className="font-medium text-lg mb-4">Contract Details</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <span className="font-medium">Renewal Period:</span> {contractDetails.renewalPeriod} {contractDetails.renewalNotice === 1 ? 'month' : 'months'}
+            <p className="text-sm text-gray-500">Contract Number</p>
+            <p className="font-medium">{details.contractNumber || 'N/A'}</p>
           </div>
-        )}
+          <div>
+            <p className="text-sm text-gray-500">Start Date</p>
+            <p className="font-medium">{details.startDate ? format(new Date(details.startDate), 'MMM d, yyyy') : 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">End Date</p>
+            <p className="font-medium">{details.endDate ? format(new Date(details.endDate), 'MMM d, yyyy') : 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Contract Type</p>
+            <p className="font-medium">{details.contractType || 'N/A'}</p>
+          </div>
+          
+          {/* Additional contract details */}
+          <div className="col-span-2">
+            <p className="text-sm text-gray-500">Auto Renewal</p>
+            <p className="font-medium">{details.autoRenewal ? 'Yes' : 'No'}</p>
+          </div>
+          
+          {details.renewalPeriod && (
+            <div>
+              <p className="text-sm text-gray-500">Renewal Period</p>
+              <p className="font-medium">{details.renewalPeriod} {details.renewalPeriod === 1 ? 'month' : 'months'}</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -97,33 +86,68 @@ export const ContractHistoryTable = () => {
         <CardTitle>Contract History</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Version</TableHead>
-              <TableHead>Contract Details</TableHead>
-              <TableHead>Notes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {contractHistory.map((entry) => (
-              <TableRow key={entry.id}>
-                <TableCell>{formatDate(entry.created_at)}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">v{entry.version_number}</Badge>
-                </TableCell>
-                <TableCell className="max-w-xs">
-                  {formatContractSummary(entry.contract_details)}
-                </TableCell>
-                <TableCell>{entry.notes || 'No notes'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        {isLoading ? (
+          <div className="py-10 text-center">Loading contract history...</div>
+        ) : history.length === 0 ? (
+          <div className="py-10 text-center">No contract history available.</div>
+        ) : (
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Version</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow key="current">
+                  <TableCell>Current</TableCell>
+                  <TableCell>N/A</TableCell>
+                  <TableCell>Current contract details</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedContract(currentContractDetails)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                
+                {history.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>v{entry.version_number}</TableCell>
+                    <TableCell>{formatDate(entry.created_at)}</TableCell>
+                    <TableCell>{entry.notes || 'No notes'}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedContract(entry.contract_details)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            
+            {selectedContract && (
+              <div className="mt-8">
+                {formatContractDetails(selectedContract as ContractDetails)}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-};
+}
 
 export default ContractHistoryTable;
