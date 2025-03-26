@@ -6,13 +6,13 @@ export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarte
 export interface QuoteShift {
   id: string;
   quoteId: string;
-  day: Day;
+  day: Day | string;
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
+  employmentType: EmploymentType | string;
+  level: EmployeeLevel | number;
   allowances: string[];
   estimatedCost: number;
   location: string;
@@ -21,17 +21,16 @@ export interface QuoteShift {
 
 export interface Subcontractor {
   id: string;
-  quoteId: string;
+  quoteId?: string;
   name: string;
   description?: string;
   cost: number;
-  frequency: Frequency;
+  frequency: Frequency | string;
   email?: string;
   phone?: string;
   services?: string[];
   service?: string;
   notes?: string;
-  rate?: number;
   customServices?: string;
   monthlyCost?: number;
   isFlatRate?: boolean;
@@ -99,4 +98,22 @@ export interface Quote {
   userId?: string;
   createdBy?: string;
   created_by?: string;
+  
+  // Additional fields to match award/types Quote
+  description?: string;
+  clientContact?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  siteAddress?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
+  notes?: string;
+  overhead_cost?: number;
+  total_cost?: number;
+  margin_amount?: number;
+}
+
+export interface QuoteSubcontractor extends Subcontractor {
+  quoteId: string;
 }

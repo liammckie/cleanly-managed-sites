@@ -1,19 +1,35 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { DatePickerWrapper } from '@/components/ui/date-picker/DatePickerWrapper';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { format } from 'date-fns';
+import { SiteFormData } from '../types';
 
-import React, { useState, useEffect } from 'react';
-import { SiteFormData } from '../siteFormTypes';
-import { PrimaryContractInformation } from './contract/PrimaryContractInformation';
-import { ServiceDeliveryMethod } from './contract/ServiceDeliveryMethod';
-import { ContractTermsSection } from './contract/ContractTermsSection';
-import { AdditionalContractsSection } from './contract/AdditionalContractsSection';
-import { ContractDetails } from '../types/contractTypes';
-
-interface ContractDetailsStepProps {
+interface ServiceDeliveryMethodProps {
   formData: SiteFormData;
   handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  addContractTerm?: () => void;
-  removeContractTerm?: (index: number) => void;
-  updateContractTerm?: (index: number, field: string, value: any) => void;
-  setFormData?: React.Dispatch<React.SetStateAction<SiteFormData>>;
+  annualDirectCost: number;
+  annualContractorCost: number;
+  profitMargin: number;
+  annualValue: number;
 }
 
 export function ContractDetailsStep({ 
@@ -29,7 +45,6 @@ export function ContractDetailsStep({
   const [annualContractorCost, setAnnualContractorCost] = useState<number>(0);
   const [profitMargin, setProfitMargin] = useState<number>(0);
 
-  // Calculate annual value based on billing cycle and contract value
   useEffect(() => {
     const value = formData.contractDetails.value || 0;
     const cycle = formData.contractDetails.billingCycle || 'monthly';
@@ -67,7 +82,6 @@ export function ContractDetailsStep({
     
     setAnnualValue(annual);
     
-    // Add a billing line automatically if a value is set
     if (value > 0 && formData.billingDetails.billingLines.length === 0) {
       handleNestedChange('billingDetails', 'billingLines', [{
         description: 'Contract payment',
@@ -77,7 +91,6 @@ export function ContractDetailsStep({
       }]);
     }
 
-    // Update revenue fields on the site record
     setFormData && setFormData(prev => ({
       ...prev,
       weeklyRevenue: weekly,
@@ -86,17 +99,14 @@ export function ContractDetailsStep({
     }));
   }, [formData.contractDetails.value, formData.contractDetails.billingCycle]);
 
-  // Calculate annual direct cost based on weekly budget
   useEffect(() => {
     if (formData.billingDetails.serviceDeliveryType === 'direct') {
       const weeklyBudget = formData.billingDetails.weeklyBudget || 0;
       const annualCost = weeklyBudget * 52;
       setAnnualDirectCost(annualCost);
       
-      // Update monthly cost on the site record
       handleNestedChange('monthlyCost', '', weeklyBudget * 4.33);
       
-      // Calculate profit margin
       if (annualValue > 0) {
         const profit = annualValue - annualCost;
         const margin = (profit / annualValue) * 100;
@@ -105,16 +115,13 @@ export function ContractDetailsStep({
     }
   }, [formData.billingDetails.weeklyBudget, annualValue, formData.billingDetails.serviceDeliveryType]);
 
-  // Calculate annual contractor cost
   useEffect(() => {
     if (formData.billingDetails.serviceDeliveryType === 'contractor') {
       const contractorCost = formData.billingDetails.annualContractorCost || 0;
       setAnnualContractorCost(contractorCost);
       
-      // Update monthly cost on the site record based on the annual cost
       handleNestedChange('monthlyCost', '', contractorCost / 12);
       
-      // Calculate profit margin
       if (annualValue > 0) {
         const profit = annualValue - contractorCost;
         const margin = (profit / annualValue) * 100;
@@ -148,7 +155,6 @@ export function ContractDetailsStep({
         updateContractTerm={updateContractTerm}
       />
 
-      {/* Additional Contracts Section */}
       {setFormData && (
         <AdditionalContractsSection
           formData={formData}

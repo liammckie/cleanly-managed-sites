@@ -25,6 +25,26 @@ export const getPayConditionForDay = (day: Day): PayCondition => {
   }
 };
 
+export const getShiftDurationHours = (startTime: string, endTime: string, breakDuration: number): number => {
+  // Convert the time strings to Date objects for comparison
+  const start = new Date(`2000-01-01T${startTime}`);
+  const end = new Date(`2000-01-01T${endTime}`);
+  
+  // If end time is before start time, assume it's the next day
+  if (end < start) {
+    end.setDate(end.getDate() + 1);
+  }
+  
+  // Calculate the difference in milliseconds
+  const diff = end.getTime() - start.getTime();
+  
+  // Convert to hours and subtract break
+  const hours = diff / (1000 * 60 * 60);
+  const workHours = hours - (breakDuration / 60);
+  
+  return workHours;
+};
+
 export const calculateShiftCost = (
   shift: QuoteShift,
   allowanceRates: Record<string, number>
@@ -43,17 +63,7 @@ export const calculateShiftCost = (
   const hourlyRate = employeeRates.hourlyRate;
   
   // Calculate the duration of the shift in hours (excluding breaks)
-  const startTime = new Date(`2000-01-01T${shift.startTime}`);
-  const endTime = new Date(`2000-01-01T${shift.endTime}`);
-  
-  if (endTime < startTime) {
-    // If the shift crosses midnight, add 24 hours to the end time
-    endTime.setDate(endTime.getDate() + 1);
-  }
-  
-  const durationMs = endTime.getTime() - startTime.getTime();
-  const durationHours = durationMs / (1000 * 60 * 60);
-  const workHours = durationHours - (shift.breakDuration / 60);
+  const workHours = getShiftDurationHours(shift.startTime, shift.endTime, shift.breakDuration);
   
   // Determine the rate multiplier based on the day of the week
   let condition = getPayConditionForDay(shift.day as Day);

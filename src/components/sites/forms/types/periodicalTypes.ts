@@ -14,7 +14,27 @@ export interface Periodicals {
   weekly?: PeriodicalTask[];
   monthly?: PeriodicalTask[];
   quarterly?: PeriodicalTask[];
-  biannual?: PeriodicalTask[]; // Added this property
+  biannual?: PeriodicalTask[];
   annual?: PeriodicalTask[];
   notes?: string;
+  carpet?: {
+    cleaning: boolean;
+    shampooing: boolean;
+  };
+  floor?: {
+    buffing: boolean;
+    stripping: boolean;
+  };
+  windows?: {
+    internal: boolean;
+    external: boolean;
+  };
+  highLevel?: {
+    dusting: boolean;
+    cleaning: boolean;
+  };
+  additional?: {
+    upholstery: boolean;
+    sanitizing: boolean;
+  };
 }

@@ -25,7 +25,8 @@ export function DatePickerWrapper({
       date={value}
       onSelect={onChange}
       disabled={disabled}
-      placeholder={placeholder}
+      // We'll use the className prop to style it according to the placeholder
+      className={!value ? "text-muted-foreground" : ""}
     />
   );
 }
