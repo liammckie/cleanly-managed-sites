@@ -1,246 +1,231 @@
 
+// Let's fix the DatePicker implementations
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, ChevronDown } from 'lucide-react';
-import { SiteFormData } from '../../types/siteFormData';
-import { ContractTerm } from '../../types/contractTypes';
+import { DatePickerWrapper } from '@/components/ui/date-picker/DatePickerWrapper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormSection } from '@/components/sites/forms/FormSection';
 
-interface PrimaryContractInformationProps {
-  formData: SiteFormData;
-  updateFormField: (field: string, value: any) => void;
-  errors: Record<string, string>;
+export interface PrimaryContractInformationProps {
+  formData: any;
+  handleNestedChange: (section: string, field: string, value: any) => void;
+  annualValue: number;
 }
 
-export function PrimaryContractInformation({ 
+export function PrimaryContractInformation({
   formData, 
-  updateFormField,
-  errors
+  handleNestedChange,
+  annualValue
 }: PrimaryContractInformationProps) {
-  // Initialize contract details if it doesn't exist
   const contractDetails = formData.contract_details || {};
-
-  // Initialize billingCycle if it doesn't exist
-  if (!contractDetails.billingCycle) {
-    updateFormField('contract_details.billingCycle', 'monthly');
-  }
-
+  
+  const handleContractChange = (field: string, value: any) => {
+    handleNestedChange('contract_details', field, value);
+  };
+  
+  const contractTypes = [
+    { value: 'fixed_term', label: 'Fixed Term' },
+    { value: 'rolling', label: 'Rolling / Auto-Renewal' },
+    { value: 'indefinite', label: 'Indefinite' },
+    { value: 'trial', label: 'Trial Period' }
+  ];
+  
+  const contractStatuses = [
+    { value: 'active', label: 'Active' },
+    { value: 'pending', label: 'Pending Activation' },
+    { value: 'expired', label: 'Expired' },
+    { value: 'terminated', label: 'Terminated' },
+    { value: 'on_hold', label: 'On Hold' }
+  ];
+  
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Primary Contract Information</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="contractNumber">Contract Number</Label>
-            <Input
-              id="contractNumber"
-              value={contractDetails.contractNumber || ''}
-              onChange={(e) => updateFormField('contract_details.contractNumber', e.target.value)}
-              placeholder="E.g., CTR-2023-001"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="contractType">Contract Type</Label>
-            <Select 
-              value={contractDetails.contractType || ''} 
-              onValueChange={(value) => updateFormField('contract_details.contractType', value)}
-            >
-              <SelectTrigger id="contractType">
-                <SelectValue placeholder="Select contract type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fixed_term">Fixed Term</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="project_based">Project Based</SelectItem>
-                <SelectItem value="retainer">Retainer</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="contractStartDate">Start Date</Label>
-            <DatePicker
-              id="contractStartDate"
-              value={contractDetails.startDate ? new Date(contractDetails.startDate) : undefined}
-              onChange={(date) => updateFormField('contract_details.startDate', date ? date.toISOString().split('T')[0] : '')}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="contractEndDate">End Date</Label>
-            <DatePicker
-              id="contractEndDate"
-              value={contractDetails.endDate ? new Date(contractDetails.endDate) : undefined}
-              onChange={(date) => updateFormField('contract_details.endDate', date ? date.toISOString().split('T')[0] : '')}
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="terminationPeriod">Notice Period (Days)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="terminationPeriod"
-                type="number"
-                min="0"
-                value={contractDetails.terminationPeriod || ''}
-                onChange={(e) => updateFormField('contract_details.terminationPeriod', e.target.value)}
-              />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <p className="text-sm">
-                    The number of days' notice required to terminate the contract. This applies to both parties.
-                  </p>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="nextReviewDate">Next Review Date</Label>
-            <DatePicker
-              id="nextReviewDate"
-              value={contractDetails.nextReviewDate ? new Date(contractDetails.nextReviewDate) : undefined}
-              onChange={(date) => updateFormField('contract_details.nextReviewDate', date ? date.toISOString().split('T')[0] : '')}
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="renewalType">Renewal Type</Label>
-            <Select 
-              value={contractDetails.renewalType || ''} 
-              onValueChange={(value) => updateFormField('contract_details.renewalType', value)}
-            >
-              <SelectTrigger id="renewalType">
-                <SelectValue placeholder="Select renewal type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fixed">Fixed Term</SelectItem>
-                <SelectItem value="evergreen">Evergreen</SelectItem>
-                <SelectItem value="extension">Extension Option</SelectItem>
-                <SelectItem value="renegotiation">Renegotiation</SelectItem>
-                <SelectItem value="non_renewable">Non-Renewable</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="billingCycle">Billing Cycle</Label>
-            <Select 
-              value={contractDetails.billingCycle || 'monthly'} 
-              onValueChange={(value) => updateFormField('contract_details.billingCycle', value)}
-            >
-              <SelectTrigger id="billingCycle">
-                <SelectValue placeholder="Select billing cycle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="annually">Annually</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Select 
-              value={contractDetails.status || 'active'} 
-              onValueChange={(value) => updateFormField('contract_details.status', value)}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="terminated">Terminated</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="value">Monthly Value</Label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
-              <Input
-                id="value"
-                type="number"
-                min="0"
-                step="0.01"
-                className="pl-8"
-                value={contractDetails.value || ''}
-                onChange={(e) => updateFormField('contract_details.value', parseFloat(e.target.value) || 0)}
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center border-t pt-4">
-          <div className="flex flex-col">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="autoRenewal"
-                checked={contractDetails.autoRenewal || false}
-                onCheckedChange={(checked) => updateFormField('contract_details.autoRenewal', checked)}
-              />
-              <Label htmlFor="autoRenewal">Auto Renewal</Label>
+    <FormSection
+      title="Primary Contract Information"
+      description="Enter the main contract details for this site."
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Contract Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Contract Type</label>
+              <Select
+                value={contractDetails.type || 'fixed_term'}
+                onValueChange={(value) => handleContractChange('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select contract type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contractTypes.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
-            <p className="text-xs text-muted-foreground mt-1 ml-7">
-              Contract will automatically renew at the end of the term
-            </p>
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <Select
+                value={contractDetails.status || 'active'}
+                onValueChange={(value) => handleContractChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contractStatuses.map(status => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
-          <div className="flex flex-col">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="cpiApplied"
-                checked={contractDetails.cpiApplied || false}
-                onCheckedChange={(checked) => updateFormField('contract_details.cpiApplied', checked)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Start Date</label>
+              <DatePickerWrapper
+                value={contractDetails.startDate ? new Date(contractDetails.startDate) : new Date()}
+                onChange={(date) => handleContractChange('startDate', date?.toISOString().split('T')[0])}
               />
-              <Label htmlFor="cpiApplied">CPI Adjustment</Label>
             </div>
             
-            {contractDetails.cpiApplied && (
-              <div className="mt-2 ml-7">
-                <Label htmlFor="cpiApplicationDate" className="text-xs">CPI Adjustment Date</Label>
-                <DatePicker
-                  id="cpiApplicationDate"
-                  value={contractDetails.cpiApplicationDate ? new Date(contractDetails.cpiApplicationDate) : undefined}
-                  onChange={(date) => updateFormField('contract_details.cpiApplicationDate', date ? date.toISOString().split('T')[0] : '')}
+            <div>
+              <label className="block text-sm font-medium mb-1">End Date</label>
+              <DatePickerWrapper
+                value={contractDetails.endDate ? new Date(contractDetails.endDate) : new Date()}
+                onChange={(date) => handleContractChange('endDate', date?.toISOString().split('T')[0])}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={contractDetails.autoRenewal || false}
+              onCheckedChange={(checked) => handleContractChange('autoRenewal', checked)}
+              id="auto-renewal"
+            />
+            <label htmlFor="auto-renewal" className="text-sm font-medium">
+              Auto-renewal
+            </label>
+          </div>
+          
+          {contractDetails.autoRenewal && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Renewal Notice Period (days)</label>
+                <Input
+                  type="number"
+                  value={contractDetails.renewalNoticeDays || 30}
+                  onChange={(e) => handleContractChange('renewalNoticeDays', parseInt(e.target.value))}
+                  min={0}
                 />
               </div>
-            )}
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Renewal Length (months)</label>
+                <Input
+                  type="number"
+                  value={contractDetails.renewalLengthMonths || 12}
+                  onChange={(e) => handleContractChange('renewalLengthMonths', parseInt(e.target.value))}
+                  min={1}
+                />
+              </div>
+            </div>
+          )}
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Next Review Date</label>
+            <DatePickerWrapper
+              value={contractDetails.reviewDate ? new Date(contractDetails.reviewDate) : new Date()}
+              onChange={(date) => handleContractChange('reviewDate', date?.toISOString().split('T')[0])}
+            />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Contract Number</label>
+            <Input
+              value={contractDetails.contractNumber || ''}
+              onChange={(e) => handleContractChange('contractNumber', e.target.value)}
+              placeholder="Enter contract number"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Contract Value (Annual)</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">$</span>
+              </div>
+              <Input
+                className="pl-7"
+                type="number"
+                value={contractDetails.annualValue || annualValue || 0}
+                onChange={(e) => handleContractChange('annualValue', parseFloat(e.target.value))}
+                min={0}
+                step={0.01}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="text-lg">Terms & Conditions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Termination Clause</label>
+            <Textarea
+              value={contractDetails.terminationClause || ''}
+              onChange={(e) => handleContractChange('terminationClause', e.target.value)}
+              placeholder="Describe termination terms"
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Notice Period (days)</label>
+              <Input
+                type="number"
+                value={contractDetails.noticePeriodDays || 30}
+                onChange={(e) => handleContractChange('noticePeriodDays', parseInt(e.target.value))}
+                min={0}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Next Increase Date</label>
+              <DatePickerWrapper
+                value={contractDetails.nextIncreaseDate ? new Date(contractDetails.nextIncreaseDate) : new Date()}
+                onChange={(date) => handleContractChange('nextIncreaseDate', date?.toISOString().split('T')[0])}
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Special Terms</label>
+            <Textarea
+              value={contractDetails.specialTerms || ''}
+              onChange={(e) => handleContractChange('specialTerms', e.target.value)}
+              placeholder="Enter any special terms or conditions"
+              className="min-h-[100px]"
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </FormSection>
   );
 }

@@ -1,10 +1,12 @@
-import React from 'react';
+
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
-import {
+import { format } from 'date-fns';
+import { ContractData } from '@/lib/types/contracts';
+import { MoreHorizontal, Edit, BarChart2 } from 'lucide-react';
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -12,26 +14,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatCurrency, formatDate } from '@/lib/utils';
 
-export interface ContractData {
-  id: string;
-  client: string;
-  site: string;
-  value: number;
-  startDate: string;
-  endDate: string;
-  status: 'active' | 'pending' | 'expired' | 'terminated';
-}
-
-export const getColumns = (): ColumnDef<ContractData>[] => [
+export const contractColumns: ColumnDef<ContractData>[] = [
   {
-    id: "select",
+    id: 'select',
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || 
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -48,67 +39,84 @@ export const getColumns = (): ColumnDef<ContractData>[] => [
     enableHiding: false,
   },
   {
-    accessorKey: "client",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Client
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("client")}</div>,
+    accessorKey: 'client',
+    header: 'Client',
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue('client')}</div>
+    ),
   },
   {
-    accessorKey: "site",
-    header: "Site",
-    cell: ({ row }) => <div>{row.getValue("site")}</div>,
+    accessorKey: 'site',
+    header: 'Site',
+    cell: ({ row }) => <div>{row.getValue('site')}</div>,
   },
   {
-    accessorKey: "value",
-    header: () => <div className="text-right">Value</div>,
+    accessorKey: 'value',
+    header: 'Value',
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("value"));
-      return <div className="text-right font-medium">{formatCurrency(amount)}</div>
+      const amount = parseFloat(row.getValue('value'));
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(amount);
+      return <div className="text-right font-medium">{formatted}</div>;
     },
   },
   {
-    accessorKey: "startDate",
-    header: "Start Date",
-    cell: ({ row }) => formatDate(row.getValue("startDate")),
-  },
-  {
-    accessorKey: "endDate",
-    header: "End Date",
-    cell: ({ row }) => formatDate(row.getValue("endDate")),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'startDate',
+    header: 'Start Date',
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
+      const date = row.getValue('startDate') as string;
+      if (!date) return <div className="text-muted-foreground">Not set</div>;
+      return <div>{format(new Date(date), 'PPP')}</div>;
+    },
+  },
+  {
+    accessorKey: 'endDate',
+    header: 'End Date',
+    cell: ({ row }) => {
+      const date = row.getValue('endDate') as string;
+      if (!date) return <div className="text-muted-foreground">Not set</div>;
+      return <div>{format(new Date(date), 'PPP')}</div>;
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as string;
+      
+      let variant: "default" | "destructive" | "outline" | "secondary" | "success" = "default";
+      
+      switch (status) {
+        case 'active':
+          variant = "success";
+          break;
+        case 'pending':
+          variant = "secondary";
+          break;
+        case 'expired':
+          variant = "destructive";
+          break;
+        case 'on_hold':
+          variant = "outline";
+          break;
+        default:
+          variant = "default";
+      }
+      
       return (
-        <Badge 
-          variant={
-            status === "active" ? "success" : 
-            status === "pending" ? "secondary" : 
-            status === "expired" ? "destructive" : 
-            "outline"
-          }
-        >
-          {status}
+        <Badge variant={variant} className="capitalize">
+          {status.replace('_', ' ')}
         </Badge>
-      )
+      );
     },
   },
   {
-    id: "actions",
+    id: 'actions',
     cell: ({ row }) => {
       const contract = row.original;
-
+      
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -119,18 +127,18 @@ export const getColumns = (): ColumnDef<ContractData>[] => [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(contract.id)}
-            >
-              Copy contract ID
+            <DropdownMenuItem onClick={() => window.location.href = `/contracts/${contract.id}`}>
+              <Edit className="mr-2 h-4 w-4" />
+              View details
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View contract</DropdownMenuItem>
-            <DropdownMenuItem>Edit contract</DropdownMenuItem>
-            <DropdownMenuItem>Renew contract</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => window.location.href = `/contracts/${contract.id}/analytics`}>
+              <BarChart2 className="mr-2 h-4 w-4" />
+              Analytics
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];

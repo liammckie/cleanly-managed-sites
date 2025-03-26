@@ -1,262 +1,201 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SiteFormData } from '../../types/siteFormData';
-import { ContractDetails, ContractTerm } from '../../types/contractTypes';
-import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { DatePickerWrapper } from '@/components/ui/date-picker/DatePickerWrapper';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { FormSection } from '@/components/sites/forms/FormSection';
 
-interface AdditionalContractsSectionProps {
-  formData: SiteFormData;
-  addAdditionalContract: () => void;
-  removeAdditionalContract: (index: number) => void;
-  updateAdditionalContract: (index: number, field: string, value: any) => void;
+export interface AdditionalContractsSectionProps {
+  formData: any;
+  handleNestedChange?: (section: string, field: string, value: any) => void;
+  setFormData?: React.Dispatch<React.SetStateAction<any>>;
 }
 
-export function AdditionalContractsSection({
-  formData,
-  addAdditionalContract,
-  removeAdditionalContract,
-  updateAdditionalContract
+export function AdditionalContractsSection({ 
+  formData, 
+  handleNestedChange, 
+  setFormData 
 }: AdditionalContractsSectionProps) {
-  const [expandedIndex, setExpandedIndex] = React.useState<number | null>(null);
+  const additionalContracts = formData.additionalContracts || [];
   
-  // Create a default contract object
-  const defaultContract: ContractDetails = {
-    contractNumber: '',
-    startDate: '',
-    endDate: '',
-    terminationPeriod: '',
-    renewalTerms: '',
-    autoRenewal: false,
-    contractType: '',
-    status: 'active',
-    value: 0,
-    billingCycle: 'monthly',
-    notes: ''
+  const addAdditionalContract = () => {
+    if (!setFormData) return;
+    
+    const newContract: ContractDetails = {
+      startDate: '',
+      endDate: '',
+      contractNumber: '',
+      renewalTerms: '',
+      terminationPeriod: '',
+      contractType: 'cleaning',
+      terms: []
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      additionalContracts: [...(prev.additionalContracts || []), newContract]
+    }));
   };
-
-  const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+  
+  const removeAdditionalContract = (index: number) => {
+    if (!setFormData) return;
+    
+    setFormData(prev => {
+      const updatedContracts = [...(prev.additionalContracts || [])];
+      updatedContracts.splice(index, 1);
+      return {
+        ...prev,
+        additionalContracts: updatedContracts
+      };
+    });
   };
+  
+  const updateAdditionalContract = (index: number, field: string, value: any) => {
+    if (!setFormData) return;
+    
+    setFormData(prev => {
+      const updatedContracts = [...(prev.additionalContracts || [])];
+      updatedContracts[index] = {
+        ...updatedContracts[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        additionalContracts: updatedContracts
+      };
+    });
+  };
+  
+  const contractTypes = [
+    { value: 'cleaning', label: 'Cleaning' },
+    { value: 'window', label: 'Window Cleaning' },
+    { value: 'carpet', label: 'Carpet Cleaning' },
+    { value: 'pest', label: 'Pest Control' },
+    { value: 'other', label: 'Other' }
+  ];
 
+  // Get the handler function based on what's available
+  const handleChange = setFormData ? updateAdditionalContract : 
+                       handleNestedChange ? 
+                       (index: number, field: string, value: any) => 
+                         handleNestedChange(`additionalContracts[${index}]`, field, value) : 
+                       () => {};
+  
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Additional Contracts</h3>
-        <Button 
-          onClick={addAdditionalContract}
-          variant="outline"
-          size="sm"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Contract
-        </Button>
-      </div>
-      
-      {formData.additionalContracts && formData.additionalContracts.length === 0 && (
-        <div className="text-center py-8 border rounded-md bg-muted/30">
-          <p className="text-muted-foreground">No additional contracts added</p>
-          <p className="text-sm text-muted-foreground">
-            Add additional contracts like service agreements, specialized cleaning, etc.
-          </p>
-          <Button 
-            onClick={addAdditionalContract}
-            variant="outline" 
-            className="mt-4"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Contract
-          </Button>
+    <FormSection
+      title="Additional Contracts"
+      description="Add any additional contracts or service agreements related to this site."
+    >
+      {additionalContracts.length === 0 ? (
+        <div className="text-center py-4 text-muted-foreground">
+          No additional contracts. Add one below.
         </div>
-      )}
-      
-      {formData.additionalContracts && formData.additionalContracts.map((contract, index) => (
-        <Card key={index} className="shadow-sm">
-          <CardHeader className="py-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {contract.contractNumber 
-                  ? `Contract ${contract.contractNumber}`
-                  : `Additional Contract ${index + 1}`
-                }
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => toggleExpand(index)}
+      ) : (
+        additionalContracts.map((contract: ContractDetails, index: number) => (
+          <div key={index} className="border rounded-md p-4 mb-4">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-md font-medium">Additional Contract #{index + 1}</h4>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => removeAdditionalContract(index)}
+              >
+                Remove
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Contract Type</label>
+                <Select
+                  value={contract.contractType || 'cleaning'}
+                  onValueChange={(value) => handleChange(index, 'contractType', value)}
                 >
-                  {expandedIndex === index ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeAdditionalContract(index)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select contract type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contractTypes.map(type => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Contract Number</label>
+                <Input
+                  value={contract.contractNumber || ''}
+                  onChange={(e) => handleChange(index, 'contractNumber', e.target.value)}
+                  placeholder="Enter contract number"
+                />
               </div>
             </div>
-          </CardHeader>
-          
-          {(expandedIndex === index) && (
-            <>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`contract-number-${index}`}>Contract Number</Label>
-                      <Input 
-                        id={`contract-number-${index}`}
-                        value={contract.contractNumber || ''}
-                        onChange={(e) => updateAdditionalContract(index, 'contractNumber', e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor={`contract-type-${index}`}>Contract Type</Label>
-                      <Select
-                        value={contract.contractType || ''}
-                        onValueChange={(value) => updateAdditionalContract(index, 'contractType', value)}
-                      >
-                        <SelectTrigger id={`contract-type-${index}`}>
-                          <SelectValue placeholder="Select contract type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="service_agreement">Service Agreement</SelectItem>
-                          <SelectItem value="maintenance">Maintenance Contract</SelectItem>
-                          <SelectItem value="special_cleaning">Special Cleaning</SelectItem>
-                          <SelectItem value="supplemental">Supplemental Contract</SelectItem>
-                          <SelectItem value="project">Project-Based</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`start-date-${index}`}>Start Date</Label>
-                      <DatePicker
-                        id={`start-date-${index}`}
-                        value={contract.startDate ? new Date(contract.startDate) : undefined}
-                        onChange={(date) => updateAdditionalContract(index, 'startDate', date ? date.toISOString().split('T')[0] : '')}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor={`end-date-${index}`}>End Date</Label>
-                      <DatePicker
-                        id={`end-date-${index}`}
-                        value={contract.endDate ? new Date(contract.endDate) : undefined}
-                        onChange={(date) => updateAdditionalContract(index, 'endDate', date ? date.toISOString().split('T')[0] : '')}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor={`monthly-value-${index}`}>Monthly Value</Label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
-                        <Input
-                          id={`monthly-value-${index}`}
-                          type="number"
-                          className="pl-8"
-                          value={contract.value || ''}
-                          onChange={(e) => updateAdditionalContract(index, 'value', parseFloat(e.target.value) || 0)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor={`billing-cycle-${index}`}>Billing Cycle</Label>
-                      <Select
-                        value={contract.billingCycle || 'monthly'}
-                        onValueChange={(value) => updateAdditionalContract(index, 'billingCycle', value)}
-                      >
-                        <SelectTrigger id={`billing-cycle-${index}`}>
-                          <SelectValue placeholder="Select billing cycle" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="quarterly">Quarterly</SelectItem>
-                          <SelectItem value="annually">Annually</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 mt-2">
-                    <Checkbox
-                      id={`auto-renewal-${index}`}
-                      checked={contract.autoRenewal || false}
-                      onCheckedChange={(checked) => updateAdditionalContract(index, 'autoRenewal', !!checked)}
-                    />
-                    <Label htmlFor={`auto-renewal-${index}`}>Auto Renewal</Label>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <Label htmlFor={`notes-${index}`}>Notes</Label>
-                    <Textarea
-                      id={`notes-${index}`}
-                      placeholder="Enter any additional notes about this contract"
-                      value={contract.notes || ''}
-                      onChange={(e) => updateAdditionalContract(index, 'notes', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="flex justify-end py-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleExpand(index)}
-                >
-                  Collapse
-                </Button>
-              </CardFooter>
-            </>
-          )}
-          
-          {/* Collapsed view */}
-          {expandedIndex !== index && (
-            <CardContent className="py-2">
-              <div className="grid grid-cols-2 gap-y-1 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Start:</span> {contract.startDate || 'Not set'}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">End:</span> {contract.endDate || 'Not set'}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Type:</span> {contract.contractType || 'Not specified'}
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Value:</span> ${contract.value?.toFixed(2) || '0.00'}/{contract.billingCycle || 'month'}
-                </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Start Date</label>
+                <DatePickerWrapper
+                  value={contract.startDate ? new Date(contract.startDate) : new Date()}
+                  onChange={(date) => handleChange(index, 'startDate', date?.toISOString().split('T')[0])}
+                />
               </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
-    </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">End Date</label>
+                <DatePickerWrapper
+                  value={contract.endDate ? new Date(contract.endDate) : new Date()}
+                  onChange={(date) => handleChange(index, 'endDate', date?.toISOString().split('T')[0])}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Renewal Terms</label>
+                <Textarea
+                  value={contract.renewalTerms || ''}
+                  onChange={(e) => handleChange(index, 'renewalTerms', e.target.value)}
+                  placeholder="Describe renewal terms"
+                  className="min-h-[80px]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Termination Period</label>
+                <Input
+                  value={contract.terminationPeriod || ''}
+                  onChange={(e) => handleChange(index, 'terminationPeriod', e.target.value)}
+                  placeholder="e.g., 30 days written notice"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Notes</label>
+              <Textarea
+                value={contract.notes || ''}
+                onChange={(e) => handleChange(index, 'notes', e.target.value)}
+                placeholder="Additional notes about this contract"
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+        ))
+      )}
+      
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={addAdditionalContract}
+      >
+        Add Another Contract
+      </Button>
+    </FormSection>
   );
 }

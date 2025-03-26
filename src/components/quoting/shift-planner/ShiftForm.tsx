@@ -1,22 +1,23 @@
+
 import React, { useState, useEffect } from 'react';
-import { Shift, Day, EmploymentType } from '@/lib/types/quoteTypes';
+import { QuoteShift, Day, EmploymentType, EmployeeLevel } from '@/lib/types/award/types';
 import { Button } from '@/components/ui/button';
 import { calculateShiftCost } from '@/lib/utils/calculationUtils';
 
-interface ShiftFormProps {
-  shift: Shift;
-  onUpdate: (shift: Shift) => void;
-  onDelete: (shift: Shift) => void;
+export interface ShiftFormProps {
+  shift: QuoteShift;
+  onUpdate: (shift: QuoteShift) => void;
+  onDelete: (shift: QuoteShift) => void;
 }
 
 export function ShiftForm({ shift, onUpdate, onDelete }: ShiftFormProps) {
-  const [localShift, setLocalShift] = useState<Shift>({ ...shift });
+  const [localShift, setLocalShift] = useState<QuoteShift>({ ...shift });
   
   useEffect(() => {
     setLocalShift({ ...shift });
   }, [shift]);
   
-  const handleInputChange = (field: keyof Shift, value: any) => {
+  const handleInputChange = (field: keyof QuoteShift, value: any) => {
     setLocalShift(prev => {
       const updated = { ...prev, [field]: value };
       
@@ -136,7 +137,7 @@ export function ShiftForm({ shift, onUpdate, onDelete }: ShiftFormProps) {
           <select
             className="w-full rounded-md border border-gray-300 p-2"
             value={localShift.level || 1}
-            onChange={(e) => handleInputChange('level', parseInt(e.target.value))}
+            onChange={(e) => handleInputChange('level', parseInt(e.target.value) as EmployeeLevel)}
           >
             <option value="1">Level 1</option>
             <option value="2">Level 2</option>

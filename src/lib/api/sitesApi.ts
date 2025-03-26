@@ -1,39 +1,178 @@
 import { supabase } from '@/integrations/supabase/client';
-import { SiteRecord, ContactRecord } from '../types';
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteRecord, ClientRecord } from '@/lib/types';
+import { toast } from 'sonner';
 
-// Site API functions
-export const sitesApi = {
-  // Get all sites for the current user
-  async getSites(): Promise<SiteRecord[]> {
-    const { data: sites, error } = await supabase
+// Keep existing functions but fix the property name in this section
+export const createSite = async (formData: SiteFormData): Promise<SiteRecord> => {
+  try {
+    console.log("Creating site with data:", formData);
+    
+    // Only include client_id if provided
+    const clientId = formData.client_id || null;
+    
+    // Format the data for database insert
+    const insertData: any = {
+      name: formData.name,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      postcode: formData.postalCode, // Field name mapping
+      country: formData.country,
+      status: formData.status || 'active',
+      email: formData.email,
+      phone: formData.phone,
+      representative: formData.representative,
+      custom_id: formData.customId, // Field name mapping
+      client_id: clientId
+    };
+    
+    // Process client name if client_id is provided
+    if (clientId) {
+      // Fetch client name
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('name')
+        .eq('id', clientId)
+        .single();
+      
+      if (clientError) {
+        console.warn('Error fetching client name:', clientError);
+      } else if (clientData) {
+        insertData.client_name = clientData.name;
+      }
+    }
+    
+    // Process JSON data
+    if (formData.contract_details) {
+      insertData.contract_details = formData.contract_details;
+    }
+    
+    if (formData.billingDetails) {
+      insertData.billing_details = {
+        ...formData.billingDetails,
+        // If there are billing lines, include them
+        billingLines: formData.billingDetails.billingLines || []
+      };
+    }
+    
+    if (formData.jobSpecifications) {
+      insertData.job_specifications = formData.jobSpecifications;
+    }
+    
+    if (formData.subcontractors && formData.subcontractors.length > 0) {
+      insertData.has_subcontractors = true;
+      // Convert field names to snake_case for database consistency
+      insertData.subcontractors = formData.subcontractors.map(sub => ({
+        id: sub.id,
+        business_name: sub.name, // Field name mapping
+        contact_name: sub.contact_name, // Field name mapping
+        email: sub.email,
+        phone: sub.phone,
+        services: sub.services,
+        is_flat_rate: sub.isFlatRate, // Field name mapping
+        monthly_cost: sub.monthlyCost, // Field name mapping
+        notes: sub.notes
+      }));
+    } else {
+      insertData.has_subcontractors = false;
+      insertData.subcontractors = [];
+    }
+    
+    if (formData.replenishables) {
+      insertData.replenishables = formData.replenishables;
+    }
+    
+    if (formData.periodicals) {
+      insertData.periodicals = formData.periodicals;
+    }
+    
+    if (formData.securityDetails) {
+      insertData.security_details = formData.securityDetails;
+    }
+    
+    // Add billing metrics if provided
+    if (formData.monthlyRevenue !== undefined) {
+      insertData.monthly_revenue = formData.monthlyRevenue;
+    }
+    
+    if (formData.weeklyRevenue !== undefined) {
+      insertData.weekly_revenue = formData.weeklyRevenue;
+    }
+    
+    if (formData.annualRevenue !== undefined) {
+      insertData.annual_revenue = formData.annualRevenue;
+    }
+    
+    // Insert the site into the database
+    const { data, error } = await supabase
       .from('sites')
-      .select('*, clients(name, contact_name)')
-      .order('created_at', { ascending: false });
+      .insert([insertData])
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Error creating site:', error);
+      throw error;
+    }
+    
+    const createdSite = data as SiteRecord;
+    
+    // Process contacts if provided
+    if (formData.contacts && formData.contacts.length > 0) {
+      // Create contacts in the contacts table
+      for (const contact of formData.contacts) {
+        await supabase
+          .from('contacts')
+          .insert([{
+            entity_id: createdSite.id,
+            entity_type: "site",
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            role: contact.role,
+            department: contact.department,
+            notes: contact.notes,
+            is_primary: contact.isPrimary // Fixed property name
+          }]);
+      }
+    }
+    
+    console.log("Site created successfully:", createdSite);
+    return createdSite;
+  } catch (error) {
+    console.error('Error in createSite:', error);
+    toast.error('Failed to create site');
+    throw error;
+  }
+};
+
+// Get all sites
+export const getSites = async (): Promise<SiteRecord[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('sites')
+      .select('*')
+      .order('name', { ascending: true });
     
     if (error) {
       console.error('Error fetching sites:', error);
       throw error;
     }
     
-    // Transform the result to include client_name
-    const transformedSites = sites.map(site => {
-      const clientData = site.clients as { name: string } | null;
-      return {
-        ...site,
-        client_name: clientData?.name || null,
-        clients: undefined // Remove the clients property
-      };
-    });
-    
-    return transformedSites as SiteRecord[];
-  },
-  
-  // Get a single site by ID
-  async getSiteById(id: string): Promise<SiteRecord | null> {
+    return data as SiteRecord[];
+  } catch (error) {
+    console.error('Error in getSites:', error);
+    throw error;
+  }
+};
+
+// Get site by ID
+export const getSiteById = async (id: string): Promise<SiteRecord> => {
+  try {
     const { data, error } = await supabase
       .from('sites')
-      .select('*, clients(name, contact_name)')
+      .select('*')
       .eq('id', id)
       .single();
     
@@ -42,299 +181,75 @@ export const sitesApi = {
       throw error;
     }
     
-    // Transform to include client_name
-    if (data) {
-      const clientData = data.clients as { name: string } | null;
-      const transformedData = {
-        ...data,
-        client_name: clientData?.name || null,
-        clients: undefined, // Remove the clients property
-        contacts: [] as ContactRecord[] // Initialize with empty array
-      };
-      
-      // Get contacts for the site separately
-      const { data: contactsData, error: contactsError } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('entity_id', id)
-        .eq('entity_type', 'site');
-      
-      if (contactsError) {
-        console.error(`Error fetching contacts for site ${id}:`, contactsError);
-      } else if (contactsData) {
-        // Add the contacts to the transformed data
-        transformedData.contacts = contactsData as ContactRecord[];
-      }
-      
-      return transformedData as SiteRecord;
+    if (!data) {
+      throw new Error(`Site with ID ${id} not found`);
     }
     
-    return null;
-  },
-  
-  // Get contacts for a site
-  async getSiteContacts(siteId: string): Promise<ContactRecord[]> {
-    const { data, error } = await supabase
+    return data as SiteRecord;
+  } catch (error) {
+    console.error('Error in getSiteById:', error);
+    throw error;
+  }
+};
+
+export const getSiteWithDetails = async (siteId: string): Promise<SiteRecord> => {
+  try {
+    // Fetch the site with all details
+    const { data: site, error: siteError } = await supabase
+      .from('sites')
+      .select('*')
+      .eq('id', siteId)
+      .single();
+    
+    if (siteError) {
+      console.error('Error fetching site:', siteError);
+      throw siteError;
+    }
+    
+    // Fetch client details if client_id exists
+    let client: ClientRecord | null = null;
+    if (site.client_id) {
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', site.client_id)
+        .single();
+      
+      if (!clientError) {
+        client = clientData;
+      } else {
+        console.warn('Error fetching client:', clientError);
+      }
+    }
+    
+    // Fetch contacts for the site
+    const { data: contacts, error: contactsError } = await supabase
       .from('contacts')
       .select('*')
       .eq('entity_id', siteId)
-      .eq('entity_type', 'site')
-      .order('created_at', { ascending: false });
+      .eq('entity_type', 'site');
     
-    if (error) {
-      console.error(`Error fetching contacts for site ${siteId}:`, error);
-      throw error;
+    if (contactsError) {
+      console.warn('Error fetching contacts:', contactsError);
     }
     
-    return data as ContactRecord[] || [];
-  },
-  
-  // Create a new site
-  async createSite(siteData: SiteFormData): Promise<SiteRecord> {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Prepare the site data for insertion
-    const siteRecord = {
-      name: siteData.name,
-      address: siteData.address,
-      city: siteData.city,
-      state: siteData.state,
-      postcode: siteData.postcode,
-      status: siteData.status,
-      representative: siteData.representative,
-      phone: siteData.phone,
-      email: siteData.email,
-      user_id: user.id,
-      client_id: siteData.clientId,
-      monthly_cost: siteData.monthlyCost,
-      monthly_revenue: siteData.monthlyRevenue,
-      // Store the detailed data as JSON
-      security_details: JSON.stringify(siteData.securityDetails) as any,
-      job_specifications: JSON.stringify(siteData.jobSpecifications) as any,
-      periodicals: JSON.stringify(siteData.periodicals) as any,
-      replenishables: JSON.stringify(siteData.replenishables) as any,
-      contract_details: JSON.stringify(siteData.contractDetails) as any,
-      billing_details: JSON.stringify(siteData.billingDetails) as any,
-      // If there are subcontractors, store them
-      has_subcontractors: siteData.subcontractors.length > 0,
+    // Combine all data
+    const siteWithDetails: SiteRecord = {
+      ...site,
+      client: client,
+      contacts: contacts || []
     };
     
-    const { data, error } = await supabase
-      .from('sites')
-      .insert(siteRecord)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error creating site:', error);
-      throw error;
-    }
-    
-    // If there are subcontractors, store them separately
-    if (siteData.subcontractors.length > 0) {
-      const subcontractorRecords = siteData.subcontractors.map(sub => ({
-        site_id: data.id,
-        business_name: sub.businessName,
-        contact_name: sub.contactName,
-        email: sub.email,
-        phone: sub.phone,
-        user_id: user.id,
-      }));
-      
-      const { error: subError } = await supabase
-        .from('subcontractors')
-        .insert(subcontractorRecords);
-      
-      if (subError) {
-        console.error('Error inserting subcontractors:', subError);
-        // We won't throw here to avoid rolling back the site creation
-      }
-    }
-    
-    // If there are contacts, store them
-    if (siteData.contacts && siteData.contacts.length > 0) {
-      const contactRecords = siteData.contacts.map(contact => ({
-        name: contact.name,
-        role: contact.role,
-        department: contact.department || null,
-        email: contact.email || null,
-        phone: contact.phone || null,
-        is_primary: contact.is_primary || false,
-        notes: contact.notes || null,
-        entity_id: data.id,
-        entity_type: 'site',
-        user_id: user.id
-      }));
-      
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .insert(contactRecords);
-      
-      if (contactError) {
-        console.error('Error inserting contacts:', contactError);
-        // We won't throw here to avoid rolling back the site creation
-      }
-    }
-    
-    // Create a result that includes the contacts
-    const result = {
-      ...data,
-      contacts: siteData.contacts || []
-    } as SiteRecord;
-    
-    return result;
-  },
-  
-  // Update an existing site
-  async updateSite(id: string, siteData: Partial<SiteFormData>): Promise<SiteRecord> {
-    const updateData: any = {
-      name: siteData.name,
-      address: siteData.address,
-      city: siteData.city,
-      state: siteData.state,
-      postcode: siteData.postcode,
-      status: siteData.status,
-      representative: siteData.representative,
-      phone: siteData.phone,
-      email: siteData.email,
-      client_id: siteData.clientId,
-      monthly_cost: siteData.monthlyCost,
-      monthly_revenue: siteData.monthlyRevenue,
-    };
+    return siteWithDetails;
+  } catch (error) {
+    console.error('Error in getSiteWithDetails:', error);
+    throw error;
+  }
+};
 
-    // Update the JSON fields if provided
-    if (siteData.securityDetails) {
-      updateData.security_details = JSON.stringify(siteData.securityDetails);
-    }
-    if (siteData.jobSpecifications) {
-      updateData.job_specifications = JSON.stringify(siteData.jobSpecifications);
-    }
-    if (siteData.periodicals) {
-      updateData.periodicals = JSON.stringify(siteData.periodicals);
-    }
-    if (siteData.replenishables) {
-      updateData.replenishables = JSON.stringify(siteData.replenishables);
-    }
-    if (siteData.contractDetails) {
-      updateData.contract_details = JSON.stringify(siteData.contractDetails);
-    }
-    if (siteData.billingDetails) {
-      updateData.billing_details = JSON.stringify(siteData.billingDetails);
-    }
-    if (siteData.subcontractors) {
-      updateData.has_subcontractors = siteData.subcontractors.length > 0;
-    }
-    
-    const { data, error } = await supabase
-      .from('sites')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error(`Error updating site with ID ${id}:`, error);
-      throw error;
-    }
-    
-    // If subcontractors were provided, update them as well
-    if (siteData.subcontractors) {
-      // First, delete existing subcontractors for this site
-      await supabase
-        .from('subcontractors')
-        .delete()
-        .eq('site_id', id);
-      
-      // Then insert the new ones if there are any
-      if (siteData.subcontractors.length > 0) {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        const subcontractorRecords = siteData.subcontractors.map(sub => ({
-          site_id: id,
-          business_name: sub.businessName,
-          contact_name: sub.contactName,
-          email: sub.email,
-          phone: sub.phone,
-          user_id: user?.id,
-        }));
-        
-        await supabase
-          .from('subcontractors')
-          .insert(subcontractorRecords);
-      }
-    }
-    
-    // If contacts were provided, update them as well
-    if (siteData.contacts) {
-      // First, delete existing contacts for this site
-      await supabase
-        .from('contacts')
-        .delete()
-        .eq('entity_id', id)
-        .eq('entity_type', 'site');
-      
-      // Then insert the new ones
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const contactRecords = siteData.contacts.map(contact => ({
-        name: contact.name,
-        role: contact.role,
-        department: contact.department || null,
-        email: contact.email || null,
-        phone: contact.phone || null,
-        is_primary: contact.is_primary || false,
-        notes: contact.notes || null,
-        entity_id: id,
-        entity_type: 'site',
-        user_id: user?.id
-      }));
-      
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .insert(contactRecords);
-      
-      if (contactError) {
-        console.error('Error updating contacts:', contactError);
-      }
-    }
-    
-    // Fetch the contacts to include in the result
-    const { data: contactsData } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('entity_id', id)
-      .eq('entity_type', 'site');
-    
-    // Create a result that includes the contacts
-    const result = {
-      ...data,
-      contacts: contactsData || []
-    } as SiteRecord;
-    
-    return result;
-  },
-  
-  // Delete a site
-  async deleteSite(id: string): Promise<void> {
-    // First delete related contacts
-    await supabase
-      .from('contacts')
-      .delete()
-      .eq('entity_id', id)
-      .eq('entity_type', 'site');
-    
-    // Then delete related subcontractors
-    await supabase
-      .from('subcontractors')
-      .delete()
-      .eq('site_id', id);
-    
-    // Finally delete the site
+// Delete site
+export const deleteSite = async (id: string): Promise<void> => {
+  try {
     const { error } = await supabase
       .from('sites')
       .delete()
@@ -344,5 +259,18 @@ export const sitesApi = {
       console.error(`Error deleting site with ID ${id}:`, error);
       throw error;
     }
+    
+    toast.success('Site deleted successfully');
+  } catch (error) {
+    console.error('Error in deleteSite:', error);
+    throw error;
   }
+};
+
+export const sitesApi = {
+  createSite,
+  getSites,
+  getSiteById,
+  deleteSite,
+  getSiteWithDetails
 };

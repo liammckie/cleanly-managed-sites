@@ -1,129 +1,148 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useUsers } from '@/hooks/useUsers';
+import { SystemUser } from '@/lib/types/userTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useCreateUser } from '@/hooks/useUsers';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-
-const userSchema = z.object({
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email'),
-  role: z.string().min(1, 'Role is required'),
-  phone: z.string().optional(),
-});
-
-type UserFormValues = z.infer<typeof userSchema>;
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface NewUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUserCreated?: () => void;
 }
 
-export function NewUserDialog({ open, onOpenChange, onUserCreated }: NewUserDialogProps) {
-  const { createUser, isCreating } = useCreateUser();
-  
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
+export function NewUserDialog({ open, onOpenChange }: NewUserDialogProps) {
+  const { createUser, isCreating } = useUsers();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       first_name: '',
       last_name: '',
       email: '',
-      role: 'user',
       phone: '',
-    },
+      title: '',
+    }
   });
   
-  const onSubmit = async (data: UserFormValues) => {
+  const onSubmit = async (data: any) => {
     try {
+      // Create the user with role set to default user role
       await createUser({
-        ...data,
         status: 'active',
-      });
+        ...data,
+        role: { 
+          id: '2', // Assuming '2' is the regular user role
+          name: 'User',
+          description: 'Regular user',
+          permissions: []
+        }
+      } as Partial<SystemUser>);
       
-      form.reset();
+      toast.success('User created successfully');
+      reset();
       onOpenChange(false);
-      if (onUserCreated) onUserCreated();
     } catch (error) {
       console.error('Error creating user:', error);
+      toast.error('Failed to create user');
     }
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new user account.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block" htmlFor="first_name">
+                  First Name
+                </label>
+                <Input
+                  id="first_name"
+                  {...register('first_name', { required: 'First name is required' })}
+                  placeholder="John"
+                  className={errors.first_name ? 'border-red-500' : ''}
+                />
+                {errors.first_name && (
+                  <p className="text-sm text-red-500 mt-1">{errors.first_name.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block" htmlFor="last_name">
+                  Last Name
+                </label>
+                <Input
+                  id="last_name"
+                  {...register('last_name', { required: 'Last name is required' })}
+                  placeholder="Doe"
+                  className={errors.last_name ? 'border-red-500' : ''}
+                />
+                {errors.last_name && (
+                  <p className="text-sm text-red-500 mt-1">{errors.last_name.message}</p>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block" htmlFor="email">
+                Email
+              </label>
               <Input
-                id="first_name"
-                {...form.register('first_name')}
-                className={form.formState.errors.first_name ? "border-destructive" : ""}
+                id="email"
+                type="email"
+                {...register('email', { 
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
+                placeholder="john.doe@example.com"
+                className={errors.email ? 'border-red-500' : ''}
               />
-              {form.formState.errors.first_name && (
-                <p className="text-sm font-medium text-destructive">{form.formState.errors.first_name.message}</p>
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
+            <div>
+              <label className="text-sm font-medium mb-1 block" htmlFor="phone">
+                Phone (optional)
+              </label>
               <Input
-                id="last_name"
-                {...form.register('last_name')}
-                className={form.formState.errors.last_name ? "border-destructive" : ""}
+                id="phone"
+                {...register('phone')}
+                placeholder="+1 (555) 123-4567"
               />
-              {form.formState.errors.last_name && (
-                <p className="text-sm font-medium text-destructive">{form.formState.errors.last_name.message}</p>
-              )}
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register('email')}
-              className={form.formState.errors.email ? "border-destructive" : ""}
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm font-medium text-destructive">{form.formState.errors.email.message}</p>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <select
-              id="role"
-              {...form.register('role')}
-              className="w-full p-2 border rounded-md"
-            >
-              <option value="user">User</option>
-              <option value="admin">Administrator</option>
-              <option value="manager">Manager</option>
-            </select>
-            {form.formState.errors.role && (
-              <p className="text-sm font-medium text-destructive">{form.formState.errors.role.message}</p>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone (Optional)</Label>
-            <Input
-              id="phone"
-              {...form.register('phone')}
-            />
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block" htmlFor="title">
+                Job Title (optional)
+              </label>
+              <Input
+                id="title"
+                {...register('title')}
+                placeholder="Manager"
+              />
+            </div>
           </div>
           
           <DialogFooter>

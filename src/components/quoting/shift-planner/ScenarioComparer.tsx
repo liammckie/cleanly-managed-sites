@@ -1,88 +1,86 @@
+
 import React, { useState } from 'react';
-import { Scenario } from '@/lib/types/quoteTypes';
+import { QuoteShift } from '@/lib/types/award/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateScenario } from '@/lib/utils/calculationUtils';
+import { calculateShiftCost } from '@/lib/utils/calculationUtils';
 
-interface ScenarioComparerProps {
-  scenarios: Scenario[];
-  onSelectScenario: (scenario: Scenario) => void;
+export interface ScenarioComparerProps {
+  shift: QuoteShift;
+  onApplyScenario: (updatedShift: QuoteShift) => void;
 }
 
-export function ScenarioComparer({ scenarios, onSelectScenario }: ScenarioComparerProps) {
-  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
-  
-  const handleScenarioSelect = (scenario: Scenario) => {
-    setSelectedScenario(scenario);
-    onSelectScenario(scenario);
+export function ScenarioComparer({ shift, onApplyScenario }: ScenarioComparerProps) {
+  const [scenarios, setScenarios] = useState([
+    {
+      id: '1',
+      name: 'Increase rate by 5%',
+      costModifier: 1.05,
+    },
+    {
+      id: '2',
+      name: 'Add additional cleaner',
+      cleanerModifier: 1,
+    },
+    {
+      id: '3',
+      name: 'Extend shift by 30 min',
+      timeModifier: 30,
+    },
+  ]);
+
+  const applyScenario = (scenarioId: string) => {
+    const scenario = scenarios.find(s => s.id === scenarioId);
+    if (!scenario) return;
+
+    const updatedShift = { ...shift };
+
+    if (scenario.costModifier) {
+      // Apply cost modifier (dummy calculation for now)
+      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {}) * scenario.costModifier;
+    }
+
+    if (scenario.cleanerModifier) {
+      // Add additional cleaners
+      updatedShift.numberOfCleaners += scenario.cleanerModifier;
+      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {});
+    }
+
+    if (scenario.timeModifier) {
+      // Extend shift time (dummy implementation)
+      // In a real app we would parse the time and add minutes
+      updatedShift.estimatedCost = calculateShiftCost(updatedShift, {}) * 1.1;
+    }
+
+    onApplyScenario(updatedShift);
   };
-  
-  // Add a dummy second parameter to calculateScenario call to match expected type
-  const calculateScenarioData = (scenario: Scenario) => {
-    return calculateScenario(scenario, {});
-  };
-  
-  
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Compare Scenarios</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {scenarios.map((scenario, index) => {
-          const calculations = calculateScenarioData(scenario);
-          
-          return (
-            <Card 
-              key={index} 
-              className={selectedScenario === scenario ? 'border-primary' : ''}
-              onClick={() => handleScenarioSelect(scenario)}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{scenario.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total Hours:</span>
-                    <span className="font-medium">{calculations.totalHours}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Labor Cost:</span>
-                    <span className="font-medium">${calculations.laborCost.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Total Cost:</span>
-                    <span className="font-medium">${calculations.totalCost.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Weekly Revenue:</span>
-                    <span className="font-medium">${calculations.weeklyRevenue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Monthly Revenue:</span>
-                    <span className="font-medium">${calculations.monthlyRevenue.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Profit Margin:</span>
-                    <span className="font-medium">{calculations.profitMargin.toFixed(1)}%</span>
-                  </div>
-                </div>
-                
-                <Button 
-                  className="w-full mt-4"
-                  variant={selectedScenario === scenario ? "default" : "outline"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleScenarioSelect(scenario);
-                  }}
-                >
-                  {selectedScenario === scenario ? "Selected" : "Select"}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="text-lg">Scenario Comparison</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {scenarios.map(scenario => (
+            <div key={scenario.id} className="flex justify-between items-center border-b pb-2">
+              <div>
+                <p className="font-medium">{scenario.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Estimated cost: ${calculateShiftCost(shift, {}) * (scenario.costModifier || 1.1).toFixed(2)}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => applyScenario(scenario.id)}
+              >
+                Apply
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

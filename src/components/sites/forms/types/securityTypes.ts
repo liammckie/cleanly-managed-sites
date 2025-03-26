@@ -2,9 +2,11 @@
 export interface SecurityDetails {
   alarmCode?: string;
   keyLocation?: string;
-  accessNotes?: string;
-  afterHoursContact?: string;
-  afterHoursPhone?: string;
-  accessCode?: string;
-  outOfHoursAccess?: boolean;
+  securityNotes?: string;
+  alarmInstructions?: string;
+  contactOnSite?: string;
+  contactPhone?: string;
+  hasCameras?: boolean;
+  needsSecurityCheck?: boolean;
+  accessType?: 'key' | 'card' | 'code' | 'other';
 }

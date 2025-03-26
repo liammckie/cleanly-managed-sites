@@ -1,29 +1,17 @@
 
-export interface PeriodicalService {
-  frequency?: string;
-  lastCompleted?: string;
-  nextScheduled?: string;
-  charges?: number;
-  cleaning?: boolean;
-  shampooing?: boolean;
-  buffing?: boolean;
-  stripping?: boolean;
-  internal?: boolean;
-  external?: boolean;
-  dusting?: boolean;
-  upholstery?: boolean;
-  pressureWashing?: boolean;
+export interface PeriodicalTask {
+  id?: string;
+  name: string;
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+  lastCompleted?: string; // ISO date
+  nextDue?: string; // ISO date
+  notes?: string;
+  responsible?: string;
+  status?: 'pending' | 'completed' | 'overdue';
 }
 
 export interface Periodicals {
-  carpets?: PeriodicalService;
-  floors?: PeriodicalService;
-  windows?: PeriodicalService;
-  highDusting?: PeriodicalService;
-  deepCleaning?: PeriodicalService;
-  carpet?: PeriodicalService;
-  floor?: PeriodicalService;
-  highLevel?: PeriodicalService;
-  additional?: PeriodicalService;
+  tasks?: PeriodicalTask[];
   notes?: string;
+  monthly?: PeriodicalTask[]; // Support for older format
 }

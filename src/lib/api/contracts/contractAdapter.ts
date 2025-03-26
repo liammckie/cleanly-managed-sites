@@ -7,7 +7,7 @@ export const adaptContractsToColumnFormat = (contracts: any[]): ContractData[] =
   return contracts.map(contract => {
     const contractDetails = typeof contract.contract_details === 'object' 
       ? contract.contract_details 
-      : asJsonObject(contract.contract_details);
+      : asJsonObject(contract.contract_details, {});
     
     return {
       id: contract.id || '',
