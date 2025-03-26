@@ -1,93 +1,76 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate } from '@/lib/utils/date';
-import { getContractField } from '@/lib/utils/contractUtils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SiteRecord } from '@/lib/types';
+import { formatDate } from '@/lib/utils/date';
+import { getContractStartDate, getContractEndDate, getContractType } from '@/lib/utils/contractDataUtils';
 
 interface SiteOverviewProps {
   site: SiteRecord;
+  isLoading: boolean;
 }
 
-const SiteOverview: React.FC<SiteOverviewProps> = ({ site }) => {
-  // Format revenue numbers for display
-  const formatCurrency = (value?: number) => {
-    if (value === undefined || value === null) return 'N/A';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-  };
+const SiteOverview: React.FC<SiteOverviewProps> = ({ site, isLoading }) => {
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  const weeklyRevenue = formatCurrency(site.weekly_revenue);
-  const monthlyRevenue = formatCurrency(site.monthly_revenue);
-  const annualRevenue = formatCurrency(site.annual_revenue);
-
-  // Get contract details
-  const startDate = getContractField(site.contract_details, 'startDate', '');
-  const endDate = getContractField(site.contract_details, 'endDate', '');
-  const contractType = getContractField(site.contract_details, 'contractType', 'Standard');
+  // Safely access contract details
+  const startDate = getContractStartDate(site.contract_details);
+  const endDate = getContractEndDate(site.contract_details);
+  const contractType = getContractType(site.contract_details);
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Site Overview</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-medium mb-2">Basic Information</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Status:</span>
-              <span className="font-medium">{site.status}</span>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Site Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Address</p>
+              <p className="text-sm">{site.address}</p>
+              <p className="text-sm">{site.city}, {site.state} {site.postcode}</p>
+              <p className="text-sm">{site.country}</p>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Address:</span>
-              <span className="font-medium text-right">{site.address}, {site.city}, {site.state} {site.postcode}</span>
-            </div>
-            {site.phone && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Phone:</span>
-                <span className="font-medium">{site.phone}</span>
-              </div>
-            )}
-            {site.email && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Email:</span>
-                <span className="font-medium">{site.email}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="font-medium mb-2">Contract & Billing</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Start Date:</span>
-              <span className="font-medium">{startDate ? formatDate(startDate) : 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">End Date:</span>
-              <span className="font-medium">{endDate ? formatDate(endDate) : 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Contract Type:</span>
-              <span className="font-medium">{contractType}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Weekly Revenue:</span>
-              <span className="font-medium">{weeklyRevenue}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Monthly Revenue:</span>
-              <span className="font-medium">{monthlyRevenue}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Annual Revenue:</span>
-              <span className="font-medium">{annualRevenue}</span>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Contact</p>
+              <p className="text-sm">{site.email}</p>
+              <p className="text-sm">{site.phone}</p>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Contract Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Contract Period</p>
+              <p className="text-sm">
+                {startDate ? formatDate(startDate) : 'Not set'} - {endDate ? formatDate(endDate) : 'Not set'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Contract Type</p>
+              <p className="text-sm">{contractType || 'Standard'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Revenue</p>
+              <p className="text-sm">
+                {site.weekly_revenue ? `$${site.weekly_revenue.toFixed(2)} weekly` : 'Not set'}
+                {site.monthly_revenue ? ` | $${site.monthly_revenue.toFixed(2)} monthly` : ''}
+                {site.annual_revenue ? ` | $${site.annual_revenue.toFixed(2)} annually` : ''}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

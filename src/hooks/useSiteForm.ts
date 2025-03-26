@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { useSiteCreate } from './useSiteCreate';
 import { useSiteUpdate } from './useSiteUpdate';
 import { useClientData } from './useClientData';
 import { toJsonValue } from '@/lib/utils/jsonUtils';
+import { SiteStatus } from '@/types/common';
 
 const initialState: SiteFormData = {
   name: '',
@@ -264,7 +265,7 @@ export const useSiteForm = () => {
         postal_code: formData.postalCode || formData.postcode,
         postcode: formData.postalCode || formData.postcode,
         country: formData.country,
-        status: formData.status,
+        status: formData.status === 'on_hold' ? 'on-hold' as SiteStatus : formData.status,
         email: formData.email,
         phone: formData.phone,
         client_id: formData.clientId,
@@ -298,11 +299,11 @@ export const useSiteForm = () => {
       if (siteId) {
         result = await updateSiteMutation.mutateAsync({
           id: siteId,
-          data: siteData
+          data: siteData as any
         });
         toast.success('Site updated successfully!');
       } else {
-        result = await createSiteMutation.mutateAsync(siteData);
+        result = await createSiteMutation.mutateAsync(siteData as any);
         toast.success('Site created successfully!');
       }
       

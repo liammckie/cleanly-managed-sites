@@ -1,68 +1,53 @@
 
-import { format, differenceInDays, parseISO, isValid } from 'date-fns';
-
 /**
- * Format a date string into a human-readable format
+ * Format a date string into a localized date string
  */
-export const formatDate = (date?: string | Date | null): string => {
-  if (!date) return 'N/A';
-  
+export function formatDate(dateString: string): string {
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    if (!isValid(dateObj)) return 'Invalid date';
-    return format(dateObj, 'dd MMM yyyy');
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   } catch (error) {
     console.error('Error formatting date:', error);
-    return 'Invalid date';
+    return dateString; // Return the original string if parsing fails
   }
-};
+}
 
 /**
- * Check if a date is in the past
+ * Check if a date string is in the past
  */
-export const isPastDate = (date?: string | Date | null): boolean => {
-  if (!date) return false;
+export function isPastDate(dateString: string): boolean {
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    if (!isValid(dateObj)) return false;
-    return dateObj < new Date();
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    return date < today;
   } catch (error) {
+    console.error('Error checking if date is in past:', error);
     return false;
   }
-};
+}
 
 /**
- * Check if a date is within a certain number of days from now
+ * Check if a date string is in the future
  */
-export const isWithinDays = (date?: string | Date | null, days: number = 30): boolean => {
-  if (!date) return false;
+export function isFutureDate(dateString: string): boolean {
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    if (!isValid(dateObj)) return false;
-    return differenceInDays(dateObj, new Date()) <= days;
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+    return date > today;
   } catch (error) {
+    console.error('Error checking if date is in future:', error);
     return false;
   }
-};
+}
 
 /**
- * Get time remaining until a date in a human readable format
+ * Format a date to YYYY-MM-DD string
  */
-export const getTimeRemaining = (date?: string | Date | null): string => {
-  if (!date) return 'N/A';
-  try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    if (!isValid(dateObj)) return 'Invalid date';
-    
-    const days = differenceInDays(dateObj, new Date());
-    if (days < 0) return 'Expired';
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Tomorrow';
-    if (days < 30) return `${days} days`;
-    
-    const months = Math.floor(days / 30);
-    return `${months} month${months > 1 ? 's' : ''}`;
-  } catch (error) {
-    return 'Invalid date';
-  }
-};
+export function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

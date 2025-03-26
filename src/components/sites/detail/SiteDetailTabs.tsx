@@ -2,7 +2,7 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteRecord } from '@/lib/types';
-import { SiteOverview } from './SiteOverview';
+import SiteOverview from './SiteOverview';
 import ContractDetails from '../contract/ContractDetails';
 
 interface SiteDetailTabsProps {

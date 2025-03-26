@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { ClientRecord } from '@/lib/types';
 import { clientsApi } from '@/lib/api';
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteContact } from '@/components/sites/forms/types/contactTypes';
 
 export const useClientData = (
   clientId: string,
@@ -43,37 +44,38 @@ export const useClientData = (
   const applyClientData = () => {
     if (!client) return;
 
-    setFormData(prev => ({
-      ...prev,
-      // Apply billing address
-      billingDetails: {
-        ...prev.billingDetails,
-        billingAddress: client.address || prev.billingDetails.billingAddress,
-        billingCity: client.city || prev.billingDetails.billingCity,
-        billingState: client.state || prev.billingDetails.billingState,
-        billingPostcode: client.postcode || prev.billingDetails.billingPostcode,
-        billingEmail: client.email || prev.billingDetails.billingEmail,
-        // If there are client contacts, add the primary contact to billing
-        contacts: client.contacts ? 
-          [...prev.billingDetails.contacts, ...client.contacts
-            .filter(contact => contact.is_primary)
-            .map(contact => ({
-              name: contact.name,
-              position: contact.role,
-              email: contact.email || '',
-              phone: contact.phone || ''
-            }))] : 
-          prev.billingDetails.contacts
-      },
-      // Apply client contacts to site contacts if they exist
-      contacts: client.contacts ? 
-        [...prev.contacts, ...client.contacts.map(contact => ({
-          ...contact,
-          entity_id: '', // This will be filled when the site is created
-          entity_type: 'site' as const
-        }))] : 
-        prev.contacts
-    }));
+    setFormData(prev => {
+      // Convert client contacts to site contacts with proper type
+      const newContacts: SiteContact[] = client.contacts 
+        ? client.contacts.map(contact => ({
+            id: contact.id,
+            name: contact.name,
+            email: contact.email,
+            phone: contact.phone,
+            role: contact.role,
+            department: contact.department,
+            notes: contact.notes,
+            is_primary: contact.is_primary
+          }))
+        : [];
+
+      return {
+        ...prev,
+        // Apply billing address
+        billingDetails: {
+          ...prev.billingDetails,
+          billingAddress: client.address || prev.billingDetails.billingAddress,
+          billingCity: client.city || prev.billingDetails.billingCity,
+          billingState: client.state || prev.billingDetails.billingState,
+          billingPostcode: client.postcode || prev.billingDetails.billingPostcode,
+          billingEmail: client.email || prev.billingDetails.billingEmail,
+          // Add client contacts to the billing contacts with proper type
+          contacts: [...prev.billingDetails.contacts]
+        },
+        // Add client contacts to site contacts with correct typing
+        contacts: [...prev.contacts, ...newContacts]
+      };
+    });
   };
 
   // Toggle useClientInfo and apply/remove client data

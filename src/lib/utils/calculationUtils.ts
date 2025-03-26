@@ -1,4 +1,3 @@
-import { QuoteShift } from '@/lib/types/award/types';
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 
 // Simple placeholder calculation function - in reality this would be more complex
@@ -120,7 +119,7 @@ export function calculateTotalBillingAmounts(billingLines: BillingLine[]): {
   let totalAnnual = 0;
   
   billingLines.forEach(line => {
-    if (!line.on_hold) {
+    if (!line.onHold) {
       const amounts = calculateBillingAmounts(line.amount, line.frequency);
       totalWeekly += amounts.weekly;
       totalMonthly += amounts.monthly;
@@ -144,3 +143,32 @@ export const isLineActive = (line: BillingLine): boolean => {
   // Replace on_hold with onHold
   return line.isRecurring && !line.onHold;
 };
+
+export const calculateTotals = (billingLines: BillingLine[] = []): { 
+  weekly: number, 
+  monthly: number, 
+  annual: number 
+} => {
+  if (!billingLines || billingLines.length === 0) {
+    return { weekly: 0, monthly: 0, annual: 0 };
+  }
+
+  const activeBillingLines = billingLines.filter(line => !line.onHold);
+
+  let totalWeekly = 0;
+  let totalMonthly = 0;
+  let totalAnnual = 0;
+  
+  activeBillingLines.forEach(line => {
+    const amounts = calculateBillingAmounts(line.amount, line.frequency);
+    totalWeekly += amounts.weekly;
+    totalMonthly += amounts.monthly;
+    totalAnnual += amounts.annual;
+  });
+  
+  return {
+    weekly: parseFloat(totalWeekly.toFixed(2)),
+    monthly: parseFloat(totalMonthly.toFixed(2)),
+    annual: parseFloat(totalAnnual.toFixed(2))
+  };
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { BillingLine } from '../types/billingTypes';
+import { BillingAmounts } from '../BillingAmountsType';
 
 interface BillingDetailsStepProps {
   formData: SiteFormData;
@@ -36,12 +37,24 @@ export function BillingDetailsStep({
   removeBillingLine,
   updateBillingLine
 }: BillingDetailsStepProps) {
+  const [amounts, setAmounts] = useState<BillingAmounts>({
+    totalWeeklyAmount: 0,
+    totalMonthlyAmount: 0,
+    totalAnnualAmount: 0
+  });
+
   // Calculate total amounts across all billing lines
   useEffect(() => {
     if (formData.billingDetails.billingLines && formData.billingDetails.billingLines.length > 0) {
       const { totalWeeklyAmount, totalMonthlyAmount, totalAnnualAmount } = calculateTotalBillingAmounts(
         formData.billingDetails.billingLines
       );
+      
+      setAmounts({
+        totalWeeklyAmount,
+        totalMonthlyAmount,
+        totalAnnualAmount
+      });
       
       handleNestedChange('billingDetails', 'totalWeeklyAmount', totalWeeklyAmount);
       handleNestedChange('billingDetails', 'totalMonthlyAmount', totalMonthlyAmount);

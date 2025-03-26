@@ -1,5 +1,6 @@
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { BillingContact } from '@/components/sites/forms/types/contactTypes';
+
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { BillingContact } from '@/components/sites/forms/types/billingTypes';
 
 export const useSiteFormBillingContacts = (
   formData: SiteFormData,
@@ -15,7 +16,7 @@ export const useSiteFormBillingContacts = (
       name: '',
       email: '',
       phone: '',
-      role: '' // Don't include position here since it's not in the interface
+      role: '' 
     };
     
     setFormData(prev => {
@@ -53,13 +54,13 @@ export const useSiteFormBillingContacts = (
     setErrors(updatedErrors);
   };
   
-  // Update billing contact field - fix the symbol-to-string conversion
+  // Update billing contact field
   const updateBillingContact = (index: number, field: keyof BillingContact, value: string) => {
     const updatedContacts = [...(formData.billingDetails.contacts || [])];
     
     updatedContacts[index] = {
       ...updatedContacts[index],
-      [field]: value // No need for explicit conversion as keyof BillingContact is already a string
+      [field]: value
     };
     
     setFormData(prev => ({
