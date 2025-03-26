@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Card,
@@ -504,8 +505,9 @@ export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({ formData, onUp
                                           initialFocus
                                         />
                                       </PopoverContent>
-                                    </FormItem>
-                                  )}
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
                                 )}
                               />
                             </div>
@@ -573,8 +575,9 @@ export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({ formData, onUp
                                           initialFocus
                                         />
                                       </PopoverContent>
-                                    </FormItem>
-                                  )}
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
                                 )}
                               />
                             </div>
@@ -642,8 +645,9 @@ export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({ formData, onUp
                                           initialFocus
                                         />
                                       </PopoverContent>
-                                    </FormItem>
-                                  )}
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
                                 )}
                               />
                             </div>
@@ -711,8 +715,9 @@ export const PeriodicalsStep: React.FC<PeriodicalsStepProps> = ({ formData, onUp
                                           initialFocus
                                         />
                                       </PopoverContent>
-                                    </FormItem>
-                                  )}
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
                                 )}
                               />
                             </div>
