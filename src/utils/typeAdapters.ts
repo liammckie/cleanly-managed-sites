@@ -247,3 +247,73 @@ export const adaptContractDetails = (details: ContractDetails): ContractDetails 
     terms: details.terms || []
   };
 };
+
+export function adaptQuoteFromApi(apiQuote: any): Quote {
+  return {
+    id: apiQuote.id,
+    name: apiQuote.name || '',
+    title: apiQuote.title,
+    client_name: apiQuote.client_name || apiQuote.clientName || '',
+    site_name: apiQuote.site_name || apiQuote.siteName,
+    description: apiQuote.description,
+    status: apiQuote.status,
+    overhead_percentage: apiQuote.overhead_percentage || apiQuote.overheadPercentage || 15,
+    margin_percentage: apiQuote.margin_percentage || apiQuote.marginPercentage || 20,
+    total_price: apiQuote.total_price || apiQuote.totalPrice || 0,
+    labor_cost: apiQuote.labor_cost || apiQuote.laborCost || 0,
+    subcontractor_cost: apiQuote.subcontractor_cost || apiQuote.subcontractorCost || 0,
+    created_at: apiQuote.created_at || apiQuote.createdAt || new Date().toISOString(),
+    updated_at: apiQuote.updated_at || apiQuote.updatedAt || new Date().toISOString(),
+    quote_number: apiQuote.quote_number || apiQuote.quoteNumber,
+    valid_until: apiQuote.valid_until || apiQuote.validUntil,
+    client_id: apiQuote.client_id || apiQuote.clientId,
+    site_id: apiQuote.site_id || apiQuote.siteId,
+    shifts: apiQuote.shifts || [],
+    subcontractors: apiQuote.subcontractors || [],
+    overhead_cost: apiQuote.overhead_cost || apiQuote.overheadCost || 0,
+    total_cost: apiQuote.total_cost || apiQuote.totalCost || 0,
+    margin_amount: apiQuote.margin_amount || apiQuote.marginAmount || 0,
+    start_date: apiQuote.start_date || apiQuote.startDate,
+    end_date: apiQuote.end_date || apiQuote.endDate,
+    expiry_date: apiQuote.expiry_date || apiQuote.expiryDate,
+    equipment_cost: apiQuote.equipment_cost || apiQuote.equipmentCost || 0,
+    // Use supplies_cost with fallback - but don't add it as a non-existent property
+    // Instead map it to a valid property that exists in the Quote type
+    overhead_profile: apiQuote.overhead_profile || apiQuote.overheadProfile,
+    
+    // Aliases for the frontend
+    clientName: apiQuote.client_name || apiQuote.clientName || '',
+    siteName: apiQuote.site_name || apiQuote.siteName,
+    overheadPercentage: apiQuote.overhead_percentage || apiQuote.overheadPercentage || 15,
+    marginPercentage: apiQuote.margin_percentage || apiQuote.marginPercentage || 20,
+    totalPrice: apiQuote.total_price || apiQuote.totalPrice || 0,
+    laborCost: apiQuote.labor_cost || apiQuote.laborCost || 0,
+    equipmentCost: apiQuote.equipment_cost || apiQuote.equipmentCost || 0,
+    subcontractorCost: apiQuote.subcontractor_cost || apiQuote.subcontractorCost || 0,
+    createdAt: apiQuote.created_at || apiQuote.createdAt || new Date().toISOString(),
+    updatedAt: apiQuote.updated_at || apiQuote.updatedAt || new Date().toISOString(),
+    quoteNumber: apiQuote.quote_number || apiQuote.quoteNumber,
+    validUntil: apiQuote.valid_until || apiQuote.validUntil,
+    clientId: apiQuote.client_id || apiQuote.clientId,
+    siteId: apiQuote.site_id || apiQuote.siteId,
+    overheadCost: apiQuote.overhead_cost || apiQuote.overheadCost || 0,
+    totalCost: apiQuote.total_cost || apiQuote.totalCost || 0,
+    marginAmount: apiQuote.margin_amount || apiQuote.marginAmount || 0,
+    startDate: apiQuote.start_date || apiQuote.startDate,
+    endDate: apiQuote.end_date || apiQuote.endDate,
+    expiryDate: apiQuote.expiry_date || apiQuote.expiryDate,
+    overheadProfile: apiQuote.overhead_profile || apiQuote.overheadProfile,
+  };
+}
+
+export function adaptOverheadProfile(dbProfile: any) {
+  return {
+    id: dbProfile.id,
+    name: dbProfile.name,
+    // Fix the property name from laborPercentage to labor_percentage
+    labor_percentage: dbProfile.labor_percentage,
+    description: dbProfile.description,
+    // Also provide a camelCase version for frontend usage
+    laborPercentage: dbProfile.labor_percentage 
+  };
+}

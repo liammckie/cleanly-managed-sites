@@ -1,6 +1,4 @@
 
-import { SiteStatus } from "./common";
-
 // Define UserStatus type since it's missing
 export type UserStatus = "active" | "pending" | "inactive";
 

@@ -1,5 +1,4 @@
 
-// Fix the data access in EditQuote.tsx
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuote } from '@/hooks/quotes/useQuote';

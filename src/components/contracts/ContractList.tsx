@@ -1,91 +1,108 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { SiteRecord } from '@/lib/types';
 import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { asJsonObject } from '@/lib/utils/json';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface ContractListProps {
   sites: SiteRecord[];
   isLoading: boolean;
-  filterType?: 'active' | 'pending' | 'expiring' | 'all';
 }
 
-export function ContractList({ sites, isLoading, filterType = 'all' }: ContractListProps) {
+export function ContractList({ sites, isLoading }: ContractListProps) {
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="text-center">Loading contracts...</div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
-  if (sites.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-6">
-          <div className="text-center">No contracts found</div>
-        </CardContent>
-      </Card>
-    );
+  if (!sites || sites.length === 0) {
+    return <div className="text-center p-4">No contracts found</div>;
   }
+
+  const getStatusVariant = (status: string): "default" | "success" | "destructive" | "outline" | "secondary" => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'success';
+      case 'pending':
+        return 'secondary';
+      case 'inactive':
+      case 'lost':
+        return 'destructive';
+      case 'on-hold':
+        return 'outline';
+      default:
+        return 'default';
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {filterType === 'active' && 'Active Contracts'}
-          {filterType === 'pending' && 'Pending Contracts'}
-          {filterType === 'expiring' && 'Expiring Contracts'}
-          {filterType === 'all' && 'All Contracts'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Site</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Monthly Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sites.map((site) => {
-              const contractDetails = asJsonObject(site.contract_details, {});
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Site</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead className="hidden md:table-cell">Contract #</TableHead>
+            <TableHead className="text-right">Value</TableHead>
+            <TableHead className="hidden md:table-cell">End Date</TableHead>
+            <TableHead>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sites.map((site) => {
+            // Safely extract contract details and handle when it's a string or object
+            const contractDetails = typeof site.contract_details === 'object' ? site.contract_details || {} : {};
+            
+            // Safely access contract dates
+            const startDateStr = contractDetails && 'startDate' in contractDetails 
+              ? contractDetails.startDate as string 
+              : undefined;
               
-              return (
-                <TableRow key={site.id}>
-                  <TableCell className="font-medium">{site.name}</TableCell>
-                  <TableCell>{site.client_name}</TableCell>
-                  <TableCell>
-                    {contractDetails.startDate ? 
-                      format(new Date(contractDetails.startDate as string), 'dd/MM/yyyy') : 
-                      '-'}
-                  </TableCell>
-                  <TableCell>
-                    {contractDetails.endDate ? 
-                      format(new Date(contractDetails.endDate as string), 'dd/MM/yyyy') : 
-                      '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={site.status === 'active' ? 'success' : 'secondary'}>
-                      {site.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>${site.monthly_revenue?.toFixed(2) || '0.00'}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            const endDateStr = contractDetails && 'endDate' in contractDetails 
+              ? contractDetails.endDate as string 
+              : undefined;
+              
+            const contractNumber = contractDetails && 'contractNumber' in contractDetails
+              ? contractDetails.contractNumber as string
+              : 'N/A';
+
+            return (
+              <TableRow key={site.id}>
+                <TableCell className="font-medium">{site.name}</TableCell>
+                <TableCell>{site.client_name}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {contractNumber}
+                </TableCell>
+                <TableCell className="text-right">
+                  ${site.monthly_revenue?.toLocaleString() || '0'}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {endDateStr ? 
+                    format(new Date(endDateStr), 'dd/MM/yyyy') : 
+                    'N/A'}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusVariant(site.status)}>
+                    {site.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
