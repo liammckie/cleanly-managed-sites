@@ -1,11 +1,8 @@
 
-import { toast } from 'sonner';
 import { useState } from 'react';
-import { 
-  parseCSV, 
-  convertCSVToSiteFormat, 
-  importSites 
-} from '@/lib/import-export/importOperations';
+import { toast } from 'sonner';
+import { parseCSV, importSites } from '@/lib/import-export';
+import { convertCSVToSiteFormat } from '@/lib/import-export/fileFormatConversion';
 
 export function useImportSites() {
   const [isImporting, setIsImporting] = useState(false);
@@ -40,13 +37,11 @@ export function useImportSites() {
       const sites = convertCSVToSiteFormat(csvData);
       await handleImportSites(sites);
     } catch (error: any) {
-      console.error(`Error importing sites from CSV:`, error);
-      toast.error(`Failed to import sites: ${error.message}`);
+      toast.error(`Failed to import sites from CSV: ${error.message}`);
       setImportResults({
         success: false,
         error: error.message
       });
-      throw error;
     } finally {
       setIsImporting(false);
     }
@@ -56,6 +51,6 @@ export function useImportSites() {
     isImporting,
     importResults,
     handleImportSites,
-    handleCSVImportSites,
+    handleCSVImportSites
   };
 }

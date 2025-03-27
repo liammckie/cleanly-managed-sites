@@ -69,13 +69,17 @@ export interface GroupedContracts {
 }
 
 export interface ContractForecast {
-  startDate: string;
-  endDate: string;
-  value: number;
-  id: string;
+  startDate?: string;
+  endDate?: string;
+  value?: number;
+  id?: string;
   // Required fields to match the type
   month: string;
   revenue: number;
   cost: number;
   profit: number;
+  contractCount?: number;
+  activeContracts?: number;
+  expiringContracts?: number;
+  renewingContracts?: number;
 }

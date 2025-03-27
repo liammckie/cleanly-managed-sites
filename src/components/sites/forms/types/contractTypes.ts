@@ -9,6 +9,7 @@ export interface ContractTerm {
   renewalTerms: string;
   terminationPeriod: string;
   autoRenew: boolean;
+  description?: string; // Added description property
 }
 
 export interface ContractDetails {
@@ -27,6 +28,22 @@ export interface ContractDetails {
   noticePeriodDays?: number;
   nextIncreaseDate?: string;
   specialTerms?: string;
+  
+  // Additional properties needed in different components
+  value?: number;
+  billingCycle?: string;
+  contractType?: string;
+  terminationPeriod?: string;
+  renewalTerms?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  renewalPeriod?: number;
+  renewalNotice?: number;
+  noticeUnit?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  notes?: string;
+  terms?: ContractTerm[];
 }
 
 export interface ContractHistoryEntry {
@@ -55,4 +72,12 @@ export interface ContractForecast {
   activeContracts?: number;
   expiringContracts?: number;
   renewingContracts?: number;
+  // Adding properties required by the ContractForecast type in other files
+  cost: number;
+  profit: number;
+  // Additional properties
+  id?: string;
+  startDate?: string;
+  endDate?: string;
+  value?: number;
 }

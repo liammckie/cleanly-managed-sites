@@ -1,11 +1,8 @@
 
-import { toast } from 'sonner';
 import { useState } from 'react';
-import { 
-  parseCSV, 
-  convertCSVToContractorFormat, 
-  importContractors 
-} from '@/lib/import-export/importOperations';
+import { toast } from 'sonner';
+import { parseCSV, importContractors } from '@/lib/import-export';
+import { convertCSVToContractorFormat } from '@/lib/import-export/fileFormatConversion';
 
 export function useImportContractors() {
   const [isImporting, setIsImporting] = useState(false);
@@ -40,13 +37,11 @@ export function useImportContractors() {
       const contractors = convertCSVToContractorFormat(csvData);
       await handleImportContractors(contractors);
     } catch (error: any) {
-      console.error(`Error importing contractors from CSV:`, error);
-      toast.error(`Failed to import contractors: ${error.message}`);
+      toast.error(`Failed to import contractors from CSV: ${error.message}`);
       setImportResults({
         success: false,
         error: error.message
       });
-      throw error;
     } finally {
       setIsImporting(false);
     }
@@ -56,6 +51,6 @@ export function useImportContractors() {
     isImporting,
     importResults,
     handleImportContractors,
-    handleCSVImportContractors,
+    handleCSVImportContractors
   };
 }

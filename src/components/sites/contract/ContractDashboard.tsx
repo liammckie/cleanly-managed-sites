@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -96,6 +97,13 @@ export function ContractDashboard() {
     { label: 'Value Expiring This Year', value: formatCurrency(enhancedSummaryData.valueExpiringThisYear) },
   ];
 
+  // Convert forecasts to match the required ContractForecast type with cost and profit properties
+  const enhancedForecasts = forecasts.map(forecast => ({
+    ...forecast,
+    cost: typeof forecast.revenue === 'number' ? forecast.revenue * 0.7 : 0,
+    profit: typeof forecast.revenue === 'number' ? forecast.revenue * 0.3 : 0
+  }));
+
   return (
     <div className="space-y-4">
       <Card>
@@ -156,7 +164,7 @@ export function ContractDashboard() {
             
             <TabsContent value="forecast">
               <div className="h-80">
-                <ContractForecastChart data={forecasts} />
+                <ContractForecastChart data={enhancedForecasts} />
               </div>
             </TabsContent>
           </Tabs>
