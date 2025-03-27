@@ -19,22 +19,23 @@ export function useUserRoles() {
         throw error;
       }
 
-      // Get user counts for each role - separate query
-      const { data: userCountsResult, error: countError } = await supabase
+      // Get user counts for each role - we need to do this as a separate query
+      const { data: userCounts, error: countError } = await supabase
         .from('user_profiles')
-        .select('role_id, count')
-        .select('role_id, count(*)', { count: 'exact' })
-        .then(result => {
-          // Group results manually
+        .select('role_id, count(*)', { count: 'exact', head: false })
+        .then(res => {
+          if (res.error) throw res.error;
+          
+          // Process the count data into a more usable format
           const roleCounts: Record<string, number> = {};
-          if (result.data) {
-            for (const row of result.data) {
+          if (res.data) {
+            for (const row of res.data) {
               if (row.role_id) {
                 roleCounts[row.role_id] = parseInt(row.count, 10) || 0;
               }
             }
           }
-          return { data: roleCounts, error: result.error };
+          return { data: roleCounts, error: null };
         });
 
       if (countError) {
@@ -44,14 +45,14 @@ export function useUserRoles() {
       // Convert permissions from Json to string[]
       return data.map(role => {
         // Find count for this role
-        const userCount = userCountsResult?.[role.id] || 0;
+        const userCount = userCounts?.[role.id] || 0;
         
         return {
           id: role.id,
           name: role.name,
           description: role.description || '',
           permissions: Array.isArray(role.permissions) 
-            ? role.permissions 
+            ? role.permissions.map(p => String(p)) 
             : typeof role.permissions === 'object' && role.permissions !== null
               ? Object.keys(role.permissions)
               : [],
@@ -89,7 +90,7 @@ export function useRole(roleId?: string) {
         name: data.name,
         description: data.description || '',
         permissions: Array.isArray(data.permissions) 
-          ? data.permissions 
+          ? data.permissions.map(p => String(p))
           : typeof data.permissions === 'object' && data.permissions !== null
             ? Object.keys(data.permissions)
             : [],
@@ -115,7 +116,7 @@ export function useCreateRole() {
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: { 
       name: string; 
-      permissions: any; 
+      permissions: string[]; 
       description?: string 
     }) => {
       // Create a new role
@@ -155,7 +156,7 @@ export function useUpdateRole() {
       roleId: string;
       data: { 
         name?: string; 
-        permissions?: any; 
+        permissions?: string[]; 
         description?: string 
       }
     }) => {

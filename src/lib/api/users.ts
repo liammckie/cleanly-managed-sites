@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { SystemUser, UserRole, UserStatus } from '@/lib/types/users';
+import { SystemUser, UserRole, UserStatus, SystemUserInsert } from '@/lib/types/users';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define a local type for user inserts
@@ -220,7 +220,7 @@ export const getUserRoles = async (): Promise<UserRole[]> => {
       name: role.name,
       description: role.description,
       permissions: Array.isArray(role.permissions) 
-        ? role.permissions 
+        ? role.permissions.map(p => String(p))
         : typeof role.permissions === 'object' && role.permissions !== null
           ? Object.keys(role.permissions).map(k => String(k))
           : [],
@@ -255,9 +255,9 @@ export const createUserRole = async (roleData: Omit<UserRole, 'id' | 'created_at
       name: data.name,
       description: data.description,
       permissions: Array.isArray(data.permissions) 
-        ? data.permissions 
+        ? data.permissions.map(p => String(p))
         : typeof data.permissions === 'object' && data.permissions !== null
-          ? Object.keys(data.permissions)
+          ? Object.keys(data.permissions).map(k => String(k))
           : [],
       created_at: data.created_at,
       updated_at: data.updated_at
