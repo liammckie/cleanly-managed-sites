@@ -192,6 +192,25 @@ export const usersApi = {
     }
   },
 
+  // Delete user
+  async deleteUser(userId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+
   // Get roles
   async getRoles(): Promise<UserRole[]> {
     try {
@@ -208,10 +227,11 @@ export const usersApi = {
         name: role.name,
         description: role.description || '',
         permissions: (typeof role.permissions === 'object' && role.permissions !== null)
-          ? Object.keys(role.permissions) 
-          : Array.isArray(role.permissions)
-          ? role.permissions.map(p => String(p))
-          : [],
+          ? Object.keys(role.permissions).reduce((acc, key) => {
+              acc[key] = Boolean(role.permissions[key]);
+              return acc;
+            }, {} as Record<string, boolean>)
+          : {},
         created_at: role.created_at,
         updated_at: role.updated_at
       }));
@@ -231,12 +251,12 @@ export const usersApi = {
       const insertData = {
         name: roleData.name,
         description: roleData.description || '',
-        permissions: roleData.permissions || []
+        permissions: roleData.permissions || {}
       };
 
       const { data, error } = await supabase
         .from('user_roles')
-        .insert(insertData)
+        .insert([insertData])
         .select()
         .single();
 
@@ -249,10 +269,11 @@ export const usersApi = {
         name: data.name,
         description: data.description || '',
         permissions: (typeof data.permissions === 'object' && data.permissions !== null)
-          ? Object.keys(data.permissions) 
-          : Array.isArray(data.permissions)
-          ? data.permissions.map(p => String(p))
-          : [],
+          ? Object.keys(data.permissions).reduce((acc, key) => {
+              acc[key] = Boolean(data.permissions[key]);
+              return acc;
+            }, {} as Record<string, boolean>)
+          : {},
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -287,15 +308,35 @@ export const usersApi = {
         name: data.name,
         description: data.description || '',
         permissions: (typeof data.permissions === 'object' && data.permissions !== null)
-          ? Object.keys(data.permissions) 
-          : Array.isArray(data.permissions)
-          ? data.permissions.map(p => String(p))
-          : [],
+          ? Object.keys(data.permissions).reduce((acc, key) => {
+              acc[key] = Boolean(data.permissions[key]);
+              return acc;
+            }, {} as Record<string, boolean>)
+          : {},
         created_at: data.created_at,
         updated_at: data.updated_at
       };
     } catch (error) {
       console.error('Error updating role:', error);
+      throw error;
+    }
+  },
+  
+  // Delete role
+  async deleteRole(roleId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('id', roleId);
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting role:', error);
       throw error;
     }
   }

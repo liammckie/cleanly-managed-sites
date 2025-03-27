@@ -34,7 +34,11 @@ const Users = () => {
             Add New User
           </Button>
         </div>
-        <UsersList users={users} isLoading={isLoading} refreshKey={refreshKey} />
+        <UsersList 
+          users={users || []} 
+          isLoading={isLoading} 
+          refreshKey={refreshKey} 
+        />
       </div>
       
       <NewUserDialog 

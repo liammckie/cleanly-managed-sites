@@ -10,7 +10,7 @@ export function useUsers() {
   const queryClient = useQueryClient();
   
   // Query for fetching all users
-  const { data: users, isLoading, error } = useQuery({
+  const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: usersApi.getUsers,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -66,12 +66,13 @@ export function useUsers() {
   });
   
   return {
-    users: users?.map(user => ({
+    users: users ? users.map(user => ({
       ...user,
       status: user.status as "active" | "pending" | "inactive"
-    })) as SystemUser[] | undefined,
+    })) as SystemUser[] : undefined,
     isLoading,
     error,
+    refetch,
     isCreating: createUserMutation.isPending,
     isUpdating: updateUserMutation.isPending,
     isDeleting: deleteUserMutation.isPending,
