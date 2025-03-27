@@ -10,6 +10,7 @@ export function useSiteFormState(mode: 'create' | 'edit', initialData?: SiteReco
     const defaultData = getInitialFormData();
     
     if (mode === 'edit' && initialData) {
+      // Convert the initialData to a SiteFormData object
       return {
         ...defaultData,
         name: initialData.name,
@@ -24,7 +25,9 @@ export function useSiteFormState(mode: 'create' | 'edit', initialData?: SiteReco
         representative: initialData.representative || '',
         customId: initialData.custom_id || '',
         client_id: initialData.client_id,
-        contract_details: initialData.contract_details || {},
+        // Ensure contract_details is properly typed or defaulted
+        contractDetails: initialData.contract_details || {},
+        // Ensure billing_details is properly typed or defaulted
         billingDetails: initialData.billing_details || defaultData.billingDetails,
         notes: initialData.notes || '',
       };

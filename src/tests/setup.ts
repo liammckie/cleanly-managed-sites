@@ -26,6 +26,14 @@ globalThis.ResizeObserver = class ResizeObserver {
 };
 
 // Enhanced error matching for Zod
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toHaveValidationError(expectedMessage: string): R;
+    }
+  }
+}
+
 expect.extend({
   toHaveValidationError(received: ZodIssue[], expectedMessage: string) {
     const pass = received.some(error => error.message === expectedMessage);

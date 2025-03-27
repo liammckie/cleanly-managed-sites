@@ -31,9 +31,7 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   const adaptedBillingDetails = formData.billingDetails ? {
     ...formData.billingDetails,
     billingAddress,
-    serviceDeliveryType: formData.billingDetails.serviceDeliveryType === 'direct' || 
-                         formData.billingDetails.serviceDeliveryType === 'contractor' ?
-                         formData.billingDetails.serviceDeliveryType : 'direct',
+    serviceDeliveryType: formData.billingDetails.serviceDeliveryType === 'contractor' ? 'contractor' : 'direct',
     billingLines: formData.billingDetails.billingLines || []
   } : undefined;
   
@@ -72,7 +70,7 @@ export function useSiteCreate() {
       }
       
       const adaptedData = adaptSiteFormToApiData(siteData);
-      return await sitesApi.createSite(adaptedData);
+      return await sitesApi.createSite(adaptedData as any);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });

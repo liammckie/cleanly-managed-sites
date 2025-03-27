@@ -20,7 +20,7 @@ import {
   BillingDetails, 
   BillingLine 
 } from '@/components/sites/forms/types/billingTypes';
-import { SiteRecord, UserRecord } from '@/lib/types';
+import { SiteRecord } from '@/lib/types';
 
 /**
  * Adapts a raw site object from the API to the SiteDTO format
@@ -163,8 +163,7 @@ export function adaptBillingDetailsToDTO(billingDetails: any): BillingDetailsDTO
     contractorInvoiceFrequency: billingDetails.contractorInvoiceFrequency,
     totalWeeklyAmount: billingDetails.totalWeeklyAmount,
     totalMonthlyAmount: billingDetails.totalMonthlyAmount,
-    totalAnnualAmount: billingDetails.totalAnnualAmount,
-    deliveryMethod: billingDetails.deliveryMethod
+    totalAnnualAmount: billingDetails.totalAnnualAmount
   };
 }
 
@@ -222,6 +221,175 @@ export function siteRecordToDTO(site: SiteRecord): SiteDTO {
 /**
  * Converts a UserRecord to a UserDTO
  */
-export function userRecordToDTO(user: UserRecord): UserDTO {
+export function userRecordToDTO(user: any): UserDTO {
   return adaptUserToDTO(user);
+}
+
+/**
+ * Adapts a database quote to a frontend quote
+ */
+export function adaptQuote(dbQuote: any): any {
+  return {
+    id: dbQuote.id,
+    name: dbQuote.name || '',
+    title: dbQuote.title || '',
+    client_name: dbQuote.client_name || '',
+    clientName: dbQuote.client_name || '',
+    site_name: dbQuote.site_name || '',
+    siteName: dbQuote.site_name || '',
+    status: dbQuote.status || 'draft',
+    overhead_percentage: dbQuote.overhead_percentage || 0,
+    margin_percentage: dbQuote.margin_percentage || 0,
+    total_price: dbQuote.total_price || 0,
+    labor_cost: dbQuote.labor_cost || 0,
+    supplies_cost: dbQuote.supplies_cost || 0,
+    equipment_cost: dbQuote.equipment_cost || 0,
+    subcontractor_cost: dbQuote.subcontractor_cost || 0,
+    created_at: dbQuote.created_at || new Date().toISOString(),
+    updated_at: dbQuote.updated_at || new Date().toISOString(),
+    
+    // Required duplicated properties
+    overheadPercentage: dbQuote.overhead_percentage || 0,
+    marginPercentage: dbQuote.margin_percentage || 0,
+    totalPrice: dbQuote.total_price || 0,
+    laborCost: dbQuote.labor_cost || 0,
+    suppliesCost: dbQuote.supplies_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost || 0,
+    createdAt: dbQuote.created_at || new Date().toISOString(),
+    updatedAt: dbQuote.updated_at || new Date().toISOString(),
+  };
+}
+
+/**
+ * Prepares a quote for API submission
+ */
+export function adaptQuoteToApi(quote: any): any {
+  return {
+    id: quote.id,
+    name: quote.name || '',
+    title: quote.title || '',
+    client_name: quote.clientName || quote.client_name || '',
+    site_name: quote.siteName || quote.site_name || '',
+    status: quote.status || 'draft',
+    overhead_percentage: quote.overheadPercentage || quote.overhead_percentage || 0,
+    margin_percentage: quote.marginPercentage || quote.margin_percentage || 0,
+    total_price: quote.totalPrice || quote.total_price || 0,
+    labor_cost: quote.laborCost || quote.labor_cost || 0,
+    supplies_cost: quote.suppliesCost || quote.supplies_cost || 0,
+    equipment_cost: quote.equipmentCost || quote.equipment_cost || 0,
+    subcontractor_cost: quote.subcontractorCost || quote.subcontractor_cost || 0,
+  };
+}
+
+/**
+ * Adapts a quote object for frontend from the database format
+ */
+export function adaptQuoteToFrontend(dbQuote: any): any {
+  return {
+    id: dbQuote.id,
+    name: dbQuote.name || '',
+    title: dbQuote.title || '',
+    client_name: dbQuote.client_name || '',
+    clientName: dbQuote.client_name || '',
+    site_name: dbQuote.site_name || '',
+    siteName: dbQuote.site_name || '',
+    status: dbQuote.status || 'draft',
+    overhead_percentage: dbQuote.overhead_percentage || 0,
+    margin_percentage: dbQuote.margin_percentage || 0,
+    total_price: dbQuote.total_price || 0,
+    labor_cost: dbQuote.labor_cost || 0,
+    supplies_cost: dbQuote.supplies_cost || 0,
+    equipment_cost: dbQuote.equipment_cost || 0,
+    subcontractor_cost: dbQuote.subcontractor_cost || 0,
+    created_at: dbQuote.created_at || new Date().toISOString(),
+    updated_at: dbQuote.updated_at || new Date().toISOString(),
+    
+    // Required duplicated properties
+    overheadPercentage: dbQuote.overhead_percentage || 0,
+    marginPercentage: dbQuote.margin_percentage || 0,
+    totalPrice: dbQuote.total_price || 0,
+    laborCost: dbQuote.labor_cost || 0,
+    suppliesCost: dbQuote.supplies_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost || 0,
+    createdAt: dbQuote.created_at || new Date().toISOString(),
+    updatedAt: dbQuote.updated_at || new Date().toISOString(),
+  };
+}
+
+/**
+ * Adapts an overhead profile from the database to the frontend format
+ */
+export function adaptOverheadProfile(profile: any): any {
+  return {
+    id: profile.id,
+    name: profile.name,
+    description: profile.description,
+    laborPercentage: profile.labor_percentage || 0,
+    createdAt: profile.created_at,
+    updatedAt: profile.updated_at
+  };
+}
+
+/**
+ * Adapts an address for use in the frontend
+ */
+export function adaptAddress(address: any): any {
+  return {
+    street: address?.street || '',
+    city: address?.city || '',
+    state: address?.state || '',
+    postcode: address?.postcode || '',
+    country: address?.country || 'Australia'
+  };
+}
+
+/**
+ * Adapts an employment type for use in the frontend
+ */
+export function adaptEmploymentType(type: string): string {
+  switch (type) {
+    case 'full-time':
+    case 'full_time':
+      return 'full-time';
+    case 'part-time':
+    case 'part_time':
+      return 'part-time';
+    case 'casual':
+      return 'casual';
+    default:
+      return 'casual';
+  }
+}
+
+/**
+ * Adapts a user role from database to frontend format
+ */
+export function adaptUserRole(role: any): any {
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: typeof role.permissions === 'string' 
+      ? JSON.parse(role.permissions) 
+      : role.permissions || {},
+    created_at: role.created_at,
+    updated_at: role.updated_at,
+    user_count: role.user_count || 0
+  };
+}
+
+/**
+ * Prepares a user role for API submission
+ */
+export function adaptUserRoleToApi(role: any): any {
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: typeof role.permissions === 'object' 
+      ? role.permissions 
+      : {},
+  };
 }
