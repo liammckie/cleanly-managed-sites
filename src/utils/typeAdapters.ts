@@ -38,7 +38,6 @@ export const adaptEmploymentType = (type: string): EmploymentType => {
   return 'casual';
 };
 
-// Quote adapters
 export const adaptQuote = (data: any): Quote => {
   if (!data) return {} as Quote;
   
@@ -58,7 +57,8 @@ export const adaptQuote = (data: any): Quote => {
     // Optional fields with their aliases
     title: data.title,
     description: data.description,
-    suppliesCost: data.supplies_cost || 0,
+    // Properties need to match the Quote type
+    suppliesCost: data.supplies_cost || 0, 
     equipmentCost: data.equipment_cost || 0,
     quoteNumber: data.quote_number || '',
     validUntil: data.valid_until || '',
@@ -161,7 +161,7 @@ export const dbToOverheadProfile = (data: any): DbOverheadProfile => {
     name: data.name || 'Default Profile',
     description: data.description || '',
     labor_percentage: data.labor_percentage || 15,
-    laborPercentage: data.labor_percentage || 15,
+    // Fixed: Use labor_percentage instead of laborPercentage to match DbOverheadProfile interface
     created_at: data.created_at || new Date().toISOString(),
     updated_at: data.updated_at || new Date().toISOString(),
     user_id: data.user_id

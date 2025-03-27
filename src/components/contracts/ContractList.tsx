@@ -5,6 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { SiteRecord } from '@/lib/types';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface ContractListProps {
   sites: SiteRecord[];
@@ -57,17 +58,21 @@ export function ContractList({ sites, isLoading, filterType = 'all' }: ContractL
           </TableHeader>
           <TableBody>
             {sites.map((site) => {
-              const contractDetails = site.contract_details || {};
+              const contractDetails = asJsonObject(site.contract_details, {});
               
               return (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">{site.name}</TableCell>
                   <TableCell>{site.client_name}</TableCell>
                   <TableCell>
-                    {contractDetails.startDate ? format(new Date(contractDetails.startDate), 'dd/MM/yyyy') : '-'}
+                    {contractDetails.startDate ? 
+                      format(new Date(contractDetails.startDate as string), 'dd/MM/yyyy') : 
+                      '-'}
                   </TableCell>
                   <TableCell>
-                    {contractDetails.endDate ? format(new Date(contractDetails.endDate), 'dd/MM/yyyy') : '-'}
+                    {contractDetails.endDate ? 
+                      format(new Date(contractDetails.endDate as string), 'dd/MM/yyyy') : 
+                      '-'}
                   </TableCell>
                   <TableCell>
                     <Badge variant={site.status === 'active' ? 'success' : 'secondary'}>

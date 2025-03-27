@@ -31,7 +31,7 @@ const Contracts = () => {
                 <p>Error loading contracts: {error}</p>
               </div>
             ) : (
-              <ContractList sites={sites} />
+              <ContractList sites={sites} isLoading={isLoading} />
             )}
           </CardContent>
         </Card>
