@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BillingDetailsStep } from './BillingDetailsStep';
-import { adaptBillingDetails } from '@/utils/typeAdapters';
+import { BillingDetails } from '../types/billingTypes';
 
 interface BillingDetailsStepWrapperProps {
   formData: any;
@@ -21,9 +21,20 @@ export function BillingDetailsStepWrapper({
   removeBillingLine
 }: BillingDetailsStepWrapperProps) {
   // Ensure billingDetails has all the required properties
-  const billingDetails = formData.billingDetails ? 
-    adaptBillingDetails(formData.billingDetails) : 
-    adaptBillingDetails({});
+  const billingDetails: BillingDetails = formData.billingDetails || {
+    billingLines: [],
+    useClientInfo: false,
+    billingMethod: '',
+    paymentTerms: '',
+    billingEmail: '',
+    billingAddress: {
+      street: '',
+      city: '',
+      state: '',
+      postcode: '',
+      country: 'Australia'
+    }
+  };
   
   const wrappedFormData = {
     ...formData,

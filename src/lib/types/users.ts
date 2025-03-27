@@ -23,4 +23,15 @@ export interface SystemUser {
   daily_summary?: boolean;
 }
 
+export interface SystemUserInsert {
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  status: "active" | "pending" | "inactive";
+  role_id?: string;
+}
+
 export type UserStatus = "active" | "pending" | "inactive";
+
+export { UserRole };

@@ -1,85 +1,75 @@
 
 import { useState } from 'react';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { BillingContact } from '@/components/sites/forms/types/billingTypes';
 import { v4 as uuidv4 } from 'uuid';
-import { BillingContact, BillingDetails } from '@/components/sites/forms/types/billingTypes';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData'; 
 import { adaptBillingDetails } from '@/utils/typeAdapters';
 
-export const useSiteFormBillingContacts = (
+export function useSiteFormBillingContacts(
   formData: SiteFormData,
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
-) => {
-  // Ensure we're working with a properly initialized form data object
-  const billingDetails = adaptBillingDetails(formData.billingDetails || {});
-  
-  // Add a billing contact
-  const addBillingContact = (contact: BillingContact) => {
-    // Generate ID if not provided
+) {
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+
+  const handleAddContact = (contact: BillingContact) => {
     const newContact = {
       ...contact,
-      id: contact.id || uuidv4()
+      id: uuidv4()
     };
     
-    // Update the form data with the new contact
-    setFormData((prev) => {
-      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
-      const contacts = [...(prevBillingDetails.contacts || []), newContact];
-      
-      return {
-        ...prev,
-        billingDetails: {
-          ...prevBillingDetails,
-          contacts
-        }
-      };
+    // Use adaptBillingDetails to ensure proper type compatibility
+    const updatedBillingDetails = adaptBillingDetails({
+      ...formData.billingDetails,
+      contacts: [...(formData.billingDetails?.contacts || []), newContact]
     });
+    
+    setFormData((prev) => ({
+      ...prev,
+      billingDetails: updatedBillingDetails
+    }));
+    
+    setIsAddingContact(false);
   };
-  
-  // Update a billing contact
-  const updateBillingContact = (index: number, field: string, value: any) => {
-    setFormData((prev) => {
-      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
-      const contacts = [...(prevBillingDetails.contacts || [])];
-      
-      if (contacts[index]) {
-        contacts[index] = {
-          ...contacts[index],
-          [field]: value
-        };
-      }
-      
-      return {
-        ...prev,
-        billingDetails: {
-          ...prevBillingDetails,
-          contacts
-        }
-      };
+
+  const handleUpdateContact = (contactId: string, updatedContact: BillingContact) => {
+    // Use adaptBillingDetails to ensure proper type compatibility
+    const updatedBillingDetails = adaptBillingDetails({
+      ...formData.billingDetails,
+      contacts: (formData.billingDetails?.contacts || []).map(contact => 
+        contact.id === contactId ? { ...contact, ...updatedContact } : contact
+      )
     });
+    
+    setFormData((prev) => ({
+      ...prev,
+      billingDetails: updatedBillingDetails
+    }));
+    
+    setEditingContactId(null);
   };
-  
-  // Remove a billing contact
-  const removeBillingContact = (index: number) => {
-    setFormData((prev) => {
-      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
-      const contacts = [...(prevBillingDetails.contacts || [])];
-      
-      contacts.splice(index, 1);
-      
-      return {
-        ...prev,
-        billingDetails: {
-          ...prevBillingDetails,
-          contacts
-        }
-      };
+
+  const handleDeleteContact = (contactId: string) => {
+    // Use adaptBillingDetails to ensure proper type compatibility
+    const updatedBillingDetails = adaptBillingDetails({
+      ...formData.billingDetails,
+      contacts: (formData.billingDetails?.contacts || []).filter(contact => contact.id !== contactId)
     });
+    
+    setFormData((prev) => ({
+      ...prev,
+      billingDetails: updatedBillingDetails
+    }));
   };
-  
+
   return {
-    contacts: billingDetails.contacts || [],
-    addBillingContact,
-    updateBillingContact,
-    removeBillingContact
+    contacts: formData.billingDetails?.contacts || [],
+    isAddingContact,
+    editingContactId,
+    setIsAddingContact,
+    setEditingContactId,
+    handleAddContact,
+    handleUpdateContact,
+    handleDeleteContact
   };
-};
+}

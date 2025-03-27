@@ -35,23 +35,33 @@ export interface BillingLine {
 
 export interface BillingDetails {
   // Base properties
+  billingLines: BillingLine[];
   useClientInfo?: boolean;
   billingMethod?: string;
   paymentTerms?: string;
   billingEmail?: string;
   billingAddress?: BillingAddress;
-  billingLines: BillingLine[];
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
+  
+  // Contract related fields
   serviceDeliveryType?: 'direct' | 'contractor';
   weeklyBudget?: number;
   annualDirectCost?: number;
   annualContractorCost?: number;
+  
+  // Contractor fields
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  
+  // Contact fields
   contactId?: string;
   contacts?: BillingContact[];
   
-  // Additional fields used in components
+  // Additional billing fields used in components
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
   billingCity?: string;
   billingState?: string;
   billingPostcode?: string;
@@ -75,10 +85,5 @@ export interface BillingDetails {
   // Service delivery details
   serviceType?: string;
   deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  annualContractorCost?: number;
-  contractorInvoiceFrequency?: string;
   xeroContactId?: string;
 }

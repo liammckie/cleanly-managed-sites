@@ -1,10 +1,11 @@
 
-// Define the DB and frontend types for OverheadProfile
+import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+
 export interface DbOverheadProfile {
   id: string;
   name: string;
-  description?: string;
   labor_percentage: number;
+  description?: string;
   created_at: string;
   updated_at: string;
   user_id?: string;
@@ -13,140 +14,131 @@ export interface DbOverheadProfile {
 export interface OverheadProfile {
   id: string;
   name: string;
-  description?: string;
   laborPercentage: number;
-  createdAt: string;
-  updatedAt: string;
-  userId?: string;
+  description?: string;
 }
 
-export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
+export function adaptOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
   return {
     id: dbProfile.id,
     name: dbProfile.name,
-    description: dbProfile.description,
     laborPercentage: dbProfile.labor_percentage,
-    createdAt: dbProfile.created_at,
-    updatedAt: dbProfile.updated_at,
-    userId: dbProfile.user_id
+    description: dbProfile.description
   };
 }
 
-export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile {
-  return {
-    id: profile.id,
-    name: profile.name,
-    description: profile.description,
-    labor_percentage: profile.laborPercentage,
-    created_at: profile.createdAt,
-    updated_at: profile.updatedAt,
-    user_id: profile.userId
-  };
+export function adaptEmploymentType(type: string): string {
+  switch (type) {
+    case 'casual':
+      return 'Casual';
+    case 'part_time':
+      return 'Part Time';
+    case 'full_time':
+      return 'Full Time';
+    default:
+      return type;
+  }
 }
 
-// Helper function to adapt billing details from API to frontend format
-export function adaptBillingDetails(billingDetailsFromApi: any) {
-  if (!billingDetailsFromApi) {
+export function adaptBillingDetails(details: any): BillingDetails {
+  if (!details) {
     return {
+      billingLines: [],
+      useClientInfo: false,
+      billingMethod: '',
+      paymentTerms: '',
+      billingEmail: '',
       billingAddress: {
         street: '',
         city: '',
         state: '',
         postcode: '',
-        country: ''
-      },
-      useClientInfo: false,
-      billingMethod: '',
-      paymentTerms: '',
-      billingEmail: '',
-      contacts: [],
-      billingLines: [],
-      serviceType: '',
-      deliveryMethod: '',
-      contractorCostFrequency: 'weekly',
-      weeklyContractorCost: 0,
-      monthlyContractorCost: 0,
-      contractorInvoiceFrequency: 'monthly',
-      serviceDeliveryType: 'direct'
+        country: 'Australia'
+      }
     };
   }
 
+  // Ensure all required fields exist
   return {
-    billingAddress: billingDetailsFromApi.billingAddress || {
+    billingLines: details.billingLines || [],
+    useClientInfo: details.useClientInfo || false,
+    billingMethod: details.billingMethod || '',
+    paymentTerms: details.paymentTerms || '',
+    billingEmail: details.billingEmail || '',
+    billingAddress: details.billingAddress || {
       street: '',
       city: '',
       state: '',
       postcode: '',
-      country: ''
+      country: 'Australia'
     },
-    useClientInfo: billingDetailsFromApi.useClientInfo || false,
-    billingMethod: billingDetailsFromApi.billingMethod || '',
-    paymentTerms: billingDetailsFromApi.paymentTerms || '',
-    billingEmail: billingDetailsFromApi.billingEmail || '',
-    contacts: billingDetailsFromApi.contacts || [],
-    billingCity: billingDetailsFromApi.billingCity || '',
-    billingState: billingDetailsFromApi.billingState || '',
-    billingPostcode: billingDetailsFromApi.billingPostcode || '',
-    billingFrequency: billingDetailsFromApi.billingFrequency || '',
-    invoiceFrequency: billingDetailsFromApi.invoiceFrequency || '',
-    invoiceDay: billingDetailsFromApi.invoiceDay || '',
-    invoiceMethod: billingDetailsFromApi.invoiceMethod || '',
-    invoiceEmail: billingDetailsFromApi.invoiceEmail || '',
-    invoiceAddressLine1: billingDetailsFromApi.invoiceAddressLine1 || '',
-    invoiceAddressLine2: billingDetailsFromApi.invoiceAddressLine2 || '',
-    invoiceCity: billingDetailsFromApi.invoiceCity || '',
-    invoiceState: billingDetailsFromApi.invoiceState || '',
-    invoicePostalCode: billingDetailsFromApi.invoicePostalCode || '',
-    weeklyRevenue: billingDetailsFromApi.weeklyRevenue || 0,
-    monthlyRevenue: billingDetailsFromApi.monthlyRevenue || 0,
-    accountNumber: billingDetailsFromApi.accountNumber || '',
-    purchaseOrderRequired: billingDetailsFromApi.purchaseOrderRequired || false,
-    purchaseOrderNumber: billingDetailsFromApi.purchaseOrderNumber || '',
-    billingLines: billingDetailsFromApi.billingLines || [],
-    serviceType: billingDetailsFromApi.serviceType || '',
-    deliveryMethod: billingDetailsFromApi.deliveryMethod || '',
-    contractorCostFrequency: billingDetailsFromApi.contractorCostFrequency || 'weekly',
-    weeklyContractorCost: billingDetailsFromApi.weeklyContractorCost || 0,
-    monthlyContractorCost: billingDetailsFromApi.monthlyContractorCost || 0,
-    annualContractorCost: billingDetailsFromApi.annualContractorCost || 0,
-    contractorInvoiceFrequency: billingDetailsFromApi.contractorInvoiceFrequency || 'monthly',
-    serviceDeliveryType: billingDetailsFromApi.serviceDeliveryType || 'direct',
-    weeklyBudget: billingDetailsFromApi.weeklyBudget || 0,
-    xeroContactId: billingDetailsFromApi.xeroContactId || null,
-    rate: billingDetailsFromApi.rate || ''
+    serviceDeliveryType: (details.serviceDeliveryType as 'direct' | 'contractor') || 'direct',
+    weeklyBudget: details.weeklyBudget,
+    annualDirectCost: details.annualDirectCost,
+    annualContractorCost: details.annualContractorCost,
+    weeklyContractorCost: details.weeklyContractorCost,
+    monthlyContractorCost: details.monthlyContractorCost,
+    contractorCostFrequency: details.contractorCostFrequency,
+    contractorInvoiceFrequency: details.contractorInvoiceFrequency,
+    serviceType: details.serviceType,
+    deliveryMethod: details.deliveryMethod,
+    rate: details.rate,
+    xeroContactId: details.xeroContactId,
+    // Include all other fields from the original object
+    ...details
   };
 }
 
-// Add missing function to adapt address (needed by useClientData)
-export function adaptAddress(address: any): any {
+export function adaptQuote(dbQuote: any): any {
+  if (!dbQuote) return null;
+  
   return {
-    street: address?.street || address?.address_line1 || '',
-    city: address?.city || '',
-    state: address?.state || '',
-    postalCode: address?.postal_code || address?.postalCode || '',
-    country: address?.country || 'Australia',
+    id: dbQuote.id,
+    name: dbQuote.name,
+    clientName: dbQuote.client_name || dbQuote.clientName,
+    siteName: dbQuote.site_name || dbQuote.siteName,
+    status: dbQuote.status,
+    laborCost: dbQuote.labor_cost || dbQuote.laborCost || 0,
+    overheadCost: dbQuote.overhead_cost || dbQuote.overheadCost || 0,
+    subcontractorCost: dbQuote.subcontractor_cost || dbQuote.subcontractorCost || 0,
+    totalCost: dbQuote.total_cost || dbQuote.totalCost || 0,
+    marginAmount: dbQuote.margin_amount || dbQuote.marginAmount || 0,
+    totalPrice: dbQuote.total_price || dbQuote.totalPrice || 0,
+    marginPercentage: dbQuote.margin_percentage || dbQuote.marginPercentage || 20,
+    overheadPercentage: dbQuote.overhead_percentage || dbQuote.overheadPercentage || 15,
+    startDate: dbQuote.start_date || dbQuote.startDate,
+    endDate: dbQuote.end_date || dbQuote.endDate,
+    expiryDate: dbQuote.expiry_date || dbQuote.expiryDate,
+    createdAt: dbQuote.created_at || dbQuote.createdAt,
+    updatedAt: dbQuote.updated_at || dbQuote.updatedAt,
+    ...dbQuote
   };
 }
 
-// Alias dbToOverheadProfile to adaptOverheadProfile for backwards compatibility
-export const adaptOverheadProfile = dbToOverheadProfile;
-
-// Add the missing adaptEmploymentType function
-export function adaptEmploymentType(type: string) {
-  const validTypes = ['fullTime', 'partTime', 'casual', 'contractor'];
-  return validTypes.includes(type) ? type : 'casual';
+export function adaptQuoteToFrontend(dbQuote: any): any {
+  return adaptQuote(dbQuote);
 }
 
-// Add adaptQuote function for backward compatibility with existing code
-export function adaptQuote(quote: any) {
-  return quote;
-}
-
-// Add adaptQuoteToFrontend and adaptQuoteToApi functions
-export function adaptQuoteToFrontend(quote: any) {
-  return quote;
-}
-
-export function adaptQuoteToApi(quote: any) {
-  return quote;
+export function adaptQuoteToApi(frontendQuote: any): any {
+  if (!frontendQuote) return null;
+  
+  return {
+    id: frontendQuote.id,
+    name: frontendQuote.name,
+    client_name: frontendQuote.clientName,
+    site_name: frontendQuote.siteName,
+    status: frontendQuote.status,
+    labor_cost: frontendQuote.laborCost,
+    overhead_cost: frontendQuote.overheadCost,
+    subcontractor_cost: frontendQuote.subcontractorCost,
+    total_cost: frontendQuote.totalCost,
+    margin_amount: frontendQuote.marginAmount,
+    total_price: frontendQuote.totalPrice,
+    margin_percentage: frontendQuote.marginPercentage,
+    overhead_percentage: frontendQuote.overheadPercentage,
+    start_date: frontendQuote.startDate,
+    end_date: frontendQuote.endDate,
+    expiry_date: frontendQuote.expiryDate,
+    ...frontendQuote
+  };
 }
