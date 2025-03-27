@@ -1,6 +1,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { expect, vi } from 'vitest';
+import { ZodIssue } from 'zod';
 
 // Mock browser APIs
 Object.defineProperty(window, 'matchMedia', {
@@ -26,7 +27,7 @@ globalThis.ResizeObserver = class ResizeObserver {
 
 // Enhanced error matching for Zod
 expect.extend({
-  toHaveValidationError(received, expectedMessage) {
+  toHaveValidationError(received: ZodIssue[], expectedMessage: string) {
     const pass = received.some(error => error.message === expectedMessage);
     return {
       pass,

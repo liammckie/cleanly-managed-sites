@@ -1,22 +1,19 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
 import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
-import { ContractDetailsDTO } from '@/components/sites/contract/types';
-import { BillingDetailsDTO } from '@/components/sites/forms/types/billingTypes';
 
 // Adapt site data for API submission
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
-  // Convert numerical values to make sure they're consistent with expected types
+  // Convert contractDetails to the appropriate format
   const contractDetails = formData.contractDetails || formData.contract_details;
   
   // Create a compatible contract details object if it exists
-  const adaptedContractDetails: ContractDetailsDTO | undefined = contractDetails ? {
+  const adaptedContractDetails = contractDetails ? {
     ...contractDetails,
     renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
   } : undefined;
@@ -31,9 +28,12 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   } : undefined;
   
   // Create a compatible billing details object
-  const adaptedBillingDetails: BillingDetailsDTO | undefined = formData.billingDetails ? {
+  const adaptedBillingDetails = formData.billingDetails ? {
     ...formData.billingDetails,
     billingAddress,
+    serviceDeliveryType: formData.billingDetails.serviceDeliveryType === 'direct' || 
+                         formData.billingDetails.serviceDeliveryType === 'contractor' ?
+                         formData.billingDetails.serviceDeliveryType : 'direct',
     billingLines: formData.billingDetails.billingLines || []
   } : undefined;
   
@@ -62,7 +62,6 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
 
 export function useSiteCreate() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const createSiteMutation = useMutation({
     mutationFn: async (siteData: SiteFormData) => {
@@ -73,16 +72,11 @@ export function useSiteCreate() {
       }
       
       const adaptedData = adaptSiteFormToApiData(siteData);
-      return await sitesApi.createSite(adaptedData as any); // Use type assertion temporarily
+      return await sitesApi.createSite(adaptedData);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
-      toast.success('Site created successfully!');
-      navigate(`/sites/${data.id}`);
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create site: ${error.message}`);
-    },
+    }
   });
 
   return {
