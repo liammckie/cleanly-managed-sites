@@ -10,7 +10,7 @@ import { BillingLine as ModelBillingLine } from '@/types/models';
 export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
   // Ensure modelLine has the required properties or set defaults
   const formattedLine: UIBillingLine = {
-    id: modelLine.id,
+    id: modelLine.id || crypto.randomUUID(),
     description: modelLine.description,
     amount: modelLine.amount,
     frequency: modelLine.frequency || 'monthly',
@@ -19,7 +19,12 @@ export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
     // Add any other properties needed for UIBillingLine
     weeklyAmount: modelLine.weeklyAmount,
     monthlyAmount: modelLine.monthlyAmount,
-    annualAmount: modelLine.annualAmount
+    annualAmount: modelLine.annualAmount,
+    holdStartDate: modelLine.holdStartDate,
+    holdEndDate: modelLine.holdEndDate,
+    creditAmount: modelLine.creditAmount,
+    creditDate: modelLine.creditDate,
+    creditReason: modelLine.creditReason
   };
   
   return formattedLine;
@@ -44,18 +49,33 @@ export function adaptSiteFormData(modelData: ModelSiteFormData): UISiteFormData 
  * Converts a SiteFormData from UI format to model format
  */
 export function convertToModelSiteFormData(uiData: UISiteFormData): ModelSiteFormData {
-  const modelData: Partial<ModelSiteFormData> = {
+  const modelData: any = {
     ...uiData,
     postal_code: uiData.postalCode,
     // Copy additional properties that need conversion
     contract_details: uiData.contractDetails || uiData.contract_details,
-    // Ensure billingDetails is properly formatted if it exists
-    billingDetails: uiData.billingDetails ? {
-      ...uiData.billingDetails,
-      // Add any conversion specific to billingDetails if needed
-    } : undefined
   };
   
-  // If there are more conversions needed, add them here
+  // Remove UI-specific fields not needed in the model
+  delete modelData.postalCode;
+  delete modelData.contractDetails;
+  
+  // Ensure billingDetails is properly formatted if it exists
+  if (uiData.billingDetails) {
+    modelData.billingDetails = {
+      ...uiData.billingDetails,
+      // Add any conversion specific to billingDetails if needed
+    };
+    
+    // Convert billingAddress if it exists
+    if (uiData.billingDetails.billingAddress) {
+      modelData.billingDetails.billingAddress = {
+        ...uiData.billingDetails.billingAddress,
+        postal_code: uiData.billingDetails.billingAddress.postcode
+      };
+      delete modelData.billingDetails.billingAddress.postcode;
+    }
+  }
+  
   return modelData as ModelSiteFormData;
 }

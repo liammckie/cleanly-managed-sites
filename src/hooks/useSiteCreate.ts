@@ -1,9 +1,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { SiteFormData } from '@/types/models';
 import { sitesApi } from '@/lib/api/sites';
 import { convertToModelSiteFormData } from '@/utils/siteFormAdapters';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
 export const useSiteCreate = () => {
   const queryClient = useQueryClient();

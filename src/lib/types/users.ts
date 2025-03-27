@@ -1,37 +1,29 @@
 
-// Define UserStatus type since it's missing
-export type UserStatus = "active" | "pending" | "inactive";
+export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended' | 'deleted';
 
-export interface SystemUser {
-  id: string;
+export interface SystemUserInsert {
+  id?: string;
   email: string;
+  password?: string;
   full_name: string;
   first_name?: string;
   last_name?: string;
-  avatar_url?: string;
-  title?: string;
   phone?: string;
+  role_id?: string;
+  title?: string;
   custom_id?: string;
   notes?: string;
+  status?: UserStatus;
+  avatar_url?: string;
   territories?: string[];
-  status: UserStatus;
-  role_id?: string;
-  role?: UserRole;
-  created_at?: string;
-  updated_at?: string;
-  last_login?: string;
-  daily_summary?: boolean;
 }
 
 export interface UserRole {
   id: string;
   name: string;
   description?: string;
-  permissions: string[];
+  permissions: Record<string, boolean>;
   created_at?: string;
   updated_at?: string;
-}
-
-export interface UserRoleWithCount extends UserRole {
-  user_count: number;
+  user_count?: number;
 }

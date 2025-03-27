@@ -1,213 +1,228 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { Check, X } from 'lucide-react';
 import { UserRole } from '@/lib/types/users';
-import { useUpdateRole, useRole } from '@/hooks/useUserRoles';
-import { PERMISSIONS, PERMISSION_GROUPS } from '@/lib/permissions';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { permissionCategories, permissionDescriptions } from '@/lib/permissions';
 
 interface EditRoleDialogProps {
-  roleId: string | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  role: UserRole | null;
+  onRoleUpdated?: () => void;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const EditRoleDialog = ({ roleId, open, onOpenChange }: EditRoleDialogProps) => {
-  const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
-  const { role, isLoading: isRoleLoading } = useRole(roleId || undefined);
-  const { updateRole, isLoading: isUpdating } = useUpdateRole();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
-  });
-
+function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialogProps) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { updateRole, deleteRole } = useRoles();
+  
+  // Load role data when the dialog opens
   useEffect(() => {
     if (role) {
-      form.reset({
-        name: role.name,
-        description: role.description || '',
-      });
-
-      // Convert permissions array to a map for easier checkbox handling
-      const permissionsMap: Record<string, boolean> = {};
-      role.permissions.forEach(permission => {
-        permissionsMap[permission] = true;
-      });
-      setSelectedPermissions(permissionsMap);
+      setName(role.name || '');
+      setDescription(role.description || '');
+      setPermissions(role.permissions || {});
     }
-  }, [role, form]);
-
-  const handlePermissionChange = (permission: string, checked: boolean) => {
-    setSelectedPermissions(prev => {
-      const newPermissions = { ...prev };
-      if (checked) {
-        newPermissions[permission] = true;
-      } else {
-        delete newPermissions[permission];
-      }
-      return newPermissions;
-    });
+  }, [role]);
+  
+  const handlePermissionChange = (permissionKey: string, value: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [permissionKey]: value
+    }));
   };
-
-  const handleSubmit = async (data: FormValues) => {
-    if (!roleId) return;
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!role?.id) {
+      toast({
+        title: "Error",
+        description: "No role selected",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!name) {
+      toast({
+        title: "Error",
+        description: "Role name is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
-      // Convert the permissions map to an array of strings
-      const permissionsArray = Object.keys(selectedPermissions);
-      
       await updateRole({
-        roleId,
-        data: {
-          name: data.name,
-          description: data.description,
-          permissions: permissionsArray
-        }
+        id: role.id,
+        name,
+        description,
+        permissions
       });
       
-      toast("Role updated successfully", {
-        description: `${data.name} role has been updated.`,
+      toast({
+        title: "Success",
+        description: "Role updated successfully"
       });
       
-      onOpenChange(false);
+      // Close dialog
+      onClose();
+      
+      // Notify parent
+      if (onRoleUpdated) {
+        onRoleUpdated();
+      }
     } catch (error) {
       console.error('Error updating role:', error);
-      toast("Failed to update role", {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to update role',
+        variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  if (isRoleLoading) {
-    return (
-      <Dialog open={open} onOpenChange={open => !open && onOpenChange(false)}>
-        <DialogContent>
-          <div className="flex justify-center p-4">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
+  
+  const handleDelete = async () => {
+    if (!role?.id) return;
+    
+    if (!window.confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await deleteRole(role.id);
+      
+      toast({
+        title: "Success",
+        description: "Role deleted successfully"
+      });
+      
+      // Close dialog
+      onClose();
+      
+      // Notify parent
+      if (onRoleUpdated) {
+        onRoleUpdated();
+      }
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to delete role',
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   return (
-    <Dialog open={open} onOpenChange={open => !open && onOpenChange(false)}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Role: {role?.name}</DialogTitle>
+          <DialogTitle>Edit Role</DialogTitle>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter role name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Enter role description"
-                      className="resize-none"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-4">
-              <FormLabel>Permissions</FormLabel>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Role Name</Label>
+                <Input 
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Operations Manager"
+                  required
+                />
+              </div>
               
-              <ScrollArea className="h-72 rounded-md border p-4">
-                {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => (
-                  <div key={groupKey} className="mb-4">
-                    <h3 className="font-medium mb-2">{group.label}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {group.permissions.map((permKey) => {
-                        const permission = PERMISSIONS[permKey as keyof typeof PERMISSIONS];
-                        return (
-                          <div key={permKey} className="flex items-start space-x-2">
-                            <Checkbox
-                              id={`permission-${permKey}`}
-                              checked={!!selectedPermissions[permKey]}
-                              onCheckedChange={(checked) => 
-                                handlePermissionChange(permKey, checked === true)
-                              }
-                            />
-                            <div className="grid gap-1.5 leading-none">
-                              <label
-                                htmlFor={`permission-${permKey}`}
-                                className="text-sm font-medium leading-none"
-                              >
-                                {permission.label}
-                              </label>
-                              {permission.description && (
-                                <p className="text-xs text-muted-foreground">
-                                  {permission.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Role description and responsibilities"
+                  rows={3}
+                />
+              </div>
             </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Permissions</h3>
+              
+              {permissionCategories.map((category) => (
+                <Card key={category.name}>
+                  <CardContent className="pt-6">
+                    <h4 className="text-md font-medium mb-4">{category.name}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {category.permissions.map((permission) => (
+                        <div key={permission} className="flex items-start space-x-3">
+                          <Button
+                            type="button"
+                            variant={permissions[permission] ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 w-7 p-0 rounded-full"
+                            onClick={() => handlePermissionChange(permission, !permissions[permission])}
+                          >
+                            {permissions[permission] ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{permission}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {permissionDescriptions[permission] || ''}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex justify-between mt-6">
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
+              Delete Role
+            </Button>
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            </div>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default EditRoleDialog;

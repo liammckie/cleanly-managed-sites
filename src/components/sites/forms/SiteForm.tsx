@@ -5,8 +5,8 @@ import { SiteFormData } from './types/siteFormData';
 interface SiteFormProps {
   formData: SiteFormData;
   handleChange: (field: keyof SiteFormData, value: any) => void;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-  handleDoubleNestedChange: (section: keyof SiteFormData, subsection: string, field: string, value: any) => void;
+  handleNestedChange: (section: string, field: string, value: any) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
   handleSubmit: () => void;
   isSubmitting: boolean;
   error?: string | null;
@@ -156,7 +156,7 @@ export function SiteForm(props: SiteFormProps) {
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Creating...' : 'Create Site'}
+          {isSubmitting ? 'Saving...' : 'Save Site'}
         </button>
       </div>
     </div>

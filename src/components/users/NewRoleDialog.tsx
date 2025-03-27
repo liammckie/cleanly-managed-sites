@@ -1,179 +1,170 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { useForm } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCreateRole } from '@/hooks/useUserRoles';
-import { PERMISSIONS, PERMISSION_GROUPS } from '@/lib/permissions';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useRoles } from '@/hooks/useRoles';
+import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { Check, X } from 'lucide-react';
+import { permissionCategories, permissionDescriptions } from '@/lib/permissions';
 
 interface NewRoleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onRoleCreated?: () => void;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Role name must be at least 2 characters.",
-  }),
-  description: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const NewRoleDialog = ({ open, onOpenChange }: NewRoleDialogProps) => {
-  const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
-  const { createRole, isLoading } = useCreateRole();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-    },
-  });
-
-  const handlePermissionChange = (permission: string, checked: boolean) => {
-    setSelectedPermissions(prev => {
-      const newPermissions = { ...prev };
-      if (checked) {
-        newPermissions[permission] = true;
-      } else {
-        delete newPermissions[permission];
-      }
-      return newPermissions;
-    });
+function NewRoleDialog({ isOpen, onClose, onRoleCreated }: NewRoleDialogProps) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { createRole } = useRoles();
+  
+  const handlePermissionChange = (permissionKey: string, value: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [permissionKey]: value
+    }));
   };
-
-  const handleSubmit = async (data: FormValues) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name) {
+      toast({
+        title: "Error",
+        description: "Role name is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
-      // Convert the permissions map to an array of strings
-      const permissionsArray = Object.keys(selectedPermissions);
-      
       await createRole({
-        name: data.name,
-        description: data.description,
-        permissions: permissionsArray
+        name,
+        description,
+        permissions
       });
       
-      toast("Role created successfully", {
-        description: `${data.name} role has been created.`,
+      toast({
+        title: "Success",
+        description: "Role created successfully"
       });
       
-      onOpenChange(false);
+      // Reset form
+      setName('');
+      setDescription('');
+      setPermissions({});
+      
+      // Close dialog
+      onClose();
+      
+      // Notify parent
+      if (onRoleCreated) {
+        onRoleCreated();
+      }
     } catch (error) {
       console.error('Error creating role:', error);
-      toast("Failed to create role", {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to create role',
+        variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Role</DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Admin" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Role Name</Label>
+                <Input 
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Operations Manager"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Role description and responsibilities"
+                  rows={3}
+                />
+              </div>
+            </div>
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Role description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div>
-              <FormLabel>Permissions</FormLabel>
-              <FormDescription>
-                Select permissions for this role.
-              </FormDescription>
-              <ScrollArea className="h-72 rounded-md border p-4">
-                {Object.entries(PERMISSION_GROUPS).map(([key, group]) => (
-                  <div key={key} className="mb-4">
-                    <h3 className="font-medium mb-2">{group.label}</h3>
-                    <div className="grid gap-2">
-                      {group.permissions.map((permKey) => (
-                        <div key={permKey} className="flex items-start space-x-2">
-                          <Checkbox
-                            id={`perm-${permKey}`}
-                            checked={!!selectedPermissions[permKey]}
-                            onCheckedChange={(checked) => handlePermissionChange(permKey, !!checked)}
-                          />
-                          <div className="grid gap-0.5">
-                            <label htmlFor={`perm-${permKey}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                              {PERMISSIONS[permKey as keyof typeof PERMISSIONS].label}
-                            </label>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Permissions</h3>
+              
+              {permissionCategories.map((category) => (
+                <Card key={category.name}>
+                  <CardContent className="pt-6">
+                    <h4 className="text-md font-medium mb-4">{category.name}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {category.permissions.map((permission) => (
+                        <div key={permission} className="flex items-start space-x-3">
+                          <Button
+                            type="button"
+                            variant={permissions[permission] ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 w-7 p-0 rounded-full"
+                            onClick={() => handlePermissionChange(permission, !permissions[permission])}
+                          >
+                            {permissions[permission] ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{permission}</p>
                             <p className="text-xs text-muted-foreground">
-                              {PERMISSIONS[permKey as keyof typeof PERMISSIONS].description}
+                              {permissionDescriptions[permission] || ''}
                             </p>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                ))}
-              </ScrollArea>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Role"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Role'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default NewRoleDialog;

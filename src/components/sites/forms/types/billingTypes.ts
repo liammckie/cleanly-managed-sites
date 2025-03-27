@@ -7,23 +7,6 @@ export interface BillingAddress {
   country?: string;
 }
 
-export interface BillingLine {
-  id: string;
-  description: string;
-  amount: number;
-  frequency: string;
-  isRecurring: boolean;
-  onHold: boolean;
-  weeklyAmount?: number;
-  monthlyAmount?: number;
-  annualAmount?: number;
-  holdStartDate?: string;
-  holdEndDate?: string;
-  creditAmount?: number;
-  creditDate?: string;
-  creditReason?: string;
-}
-
 export interface BillingContact {
   id?: string;
   name: string;
@@ -33,54 +16,37 @@ export interface BillingContact {
   isPrimary?: boolean;
 }
 
+export interface BillingLine {
+  id: string;
+  description: string;
+  amount: number;
+  frequency?: 'weekly' | 'monthly' | 'quarterly' | 'annually';
+  isRecurring: boolean;
+  onHold: boolean;
+  holdStartDate?: string;
+  holdEndDate?: string;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
+  creditAmount?: number;
+  creditDate?: string;
+  creditReason?: string;
+}
+
 export interface BillingDetails {
-  // Base properties
-  billingAddress?: BillingAddress;
   useClientInfo?: boolean;
   billingMethod?: string;
   paymentTerms?: string;
   billingEmail?: string;
-  contacts?: BillingContact[];
-  notes?: string;
-  
-  // Revenue properties
-  billingLines?: BillingLine[];
+  billingAddress?: BillingAddress;
+  billingLines: BillingLine[];
   totalWeeklyAmount?: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  
-  // Invoice and address properties
-  billingCity?: string;
-  billingState?: string;
-  billingPostcode?: string;
-  billingFrequency?: string;
-  invoiceFrequency?: string;
-  invoiceDay?: string;
-  invoiceMethod?: string;
-  invoiceEmail?: string;
-  invoiceAddressLine1?: string;
-  invoiceAddressLine2?: string;
-  invoiceCity?: string;
-  invoiceState?: string;
-  invoicePostalCode?: string;
-  
-  // Payment properties
-  accountNumber?: string;
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  rate?: string;
-  xeroContactId?: string;
-  
-  // Service delivery properties
-  serviceType?: string;
-  deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  annualContractorCost?: number;
-  contractorInvoiceFrequency?: string;
-  serviceDeliveryType?: string;
+  serviceDeliveryType?: 'direct' | 'contractor';
   weeklyBudget?: number;
+  annualDirectCost?: number;
+  annualContractorCost?: number;
+  contactId?: string;
+  contacts?: BillingContact[];
 }

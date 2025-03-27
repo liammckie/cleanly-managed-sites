@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { SiteStatus } from '@/lib/types';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
-import { adaptSiteFormData } from '@/utils/siteFormAdapters';
+import { convertToModelSiteFormData } from '@/utils/siteFormAdapters';
 
 export function useSiteForm(siteId?: string) {
   const [formData, setFormData] = useState<SiteFormData>(getInitialFormData());
@@ -27,11 +27,10 @@ export function useSiteForm(siteId?: string) {
   //   }
   // }, [siteId]);
 
-  const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = event.target;
+  const handleChange = useCallback((field: keyof SiteFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   }, []);
 
@@ -97,11 +96,25 @@ export function useSiteForm(siteId?: string) {
   const handleBillingLineChange = useCallback((index: number, field: string, value: any) => {
     setFormData(prev => {
       if (!prev.billingDetails) return prev;
+      
       const newBillingLines = [...prev.billingDetails.billingLines];
+      
+      // Ensure each billing line has required properties
+      if (!newBillingLines[index].id) {
+        newBillingLines[index] = {
+          ...newBillingLines[index],
+          id: crypto.randomUUID(),
+          frequency: newBillingLines[index].frequency || 'monthly',
+          isRecurring: newBillingLines[index].isRecurring !== undefined ? newBillingLines[index].isRecurring : true,
+          onHold: newBillingLines[index].onHold !== undefined ? newBillingLines[index].onHold : false
+        };
+      }
+      
       newBillingLines[index] = {
         ...newBillingLines[index],
         [field]: value
       };
+      
       return {
         ...prev,
         billingDetails: {
@@ -119,7 +132,17 @@ export function useSiteForm(siteId?: string) {
         ...prev,
         billingDetails: {
           ...prev.billingDetails,
-          billingLines: [...prev.billingDetails.billingLines, { description: '', amount: 0 }]
+          billingLines: [
+            ...prev.billingDetails.billingLines, 
+            { 
+              id: crypto.randomUUID(),
+              description: '', 
+              amount: 0,
+              frequency: 'monthly',
+              isRecurring: true,
+              onHold: false
+            }
+          ]
         }
       };
     });
@@ -154,11 +177,13 @@ export function useSiteForm(siteId?: string) {
       setError(null);
 
       if (mode === 'create') {
-        const result = await createSite(formData);
+        const modelData = convertToModelSiteFormData(formData);
+        const result = await createSite(modelData);
         toast.success('Site created successfully');
         navigate(`/sites/${result.id}`);
       } else if (mode === 'update' && siteId) {
-        await updateSite(siteId, adaptSiteFormData(formData));
+        const modelData = convertToModelSiteFormData(formData);
+        await updateSite(siteId, modelData);
         toast.success('Site updated successfully');
         navigate(`/sites/${siteId}`);
       }

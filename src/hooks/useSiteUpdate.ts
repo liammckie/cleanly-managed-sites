@@ -1,56 +1,40 @@
 
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { sitesApi } from '@/lib/api/sites';
 import { SiteRecord } from '@/lib/types';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { convertToModelSiteFormData } from '@/utils/siteFormAdapters';
 
-// API function to update a site
-const updateSite = async ({ id, data }: { id: string; data: Partial<SiteRecord> }) => {
-  try {
-    // In a real implementation, this would call your actual API
-    const response = await fetch(`/api/sites/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update site');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error updating site:', error);
-    throw error;
-  }
-};
-
-export function useSiteUpdate() {
+export const useSiteUpdate = () => {
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
-  
+
   const updateSiteMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<SiteRecord> }) => {
-      setIsLoading(true);
-      return updateSite({ id, data });
+    mutationFn: async ({ id, data }: { id: string; data: Partial<SiteRecord> }) => {
+      try {
+        console.log('Updating site:', id, data);
+        return await sitesApi.updateSite(id, data);
+      } catch (error: any) {
+        console.error('Error updating site:', error);
+        throw new Error(error.message || 'Failed to update site');
+      }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
-      queryClient.invalidateQueries({ queryKey: ['site', variables.id] });
-      toast.success('Site updated successfully');
-      setIsLoading(false);
     },
-    onError: (error) => {
-      console.error('Error in site update mutation:', error);
-      toast.error('Failed to update site');
-      setIsLoading(false);
-    },
+    onError: (error: Error) => {
+      toast.error(`Error updating site: ${error.message}`);
+    }
   });
-  
-  return {
-    updateSiteMutation,
-    isLoading,
+
+  const updateSite = async (siteId: string, formData: SiteFormData) => {
+    const modelData = convertToModelSiteFormData(formData);
+    return await updateSiteMutation.mutateAsync({ id: siteId, data: modelData });
   };
-}
+
+  return {
+    updateSite,
+    updateSiteMutation,
+    isLoading: updateSiteMutation.isPending
+  };
+};

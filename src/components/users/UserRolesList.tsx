@@ -1,106 +1,130 @@
 
 import React, { useState } from 'react';
-import { useUserRoles } from '@/hooks/useUserRoles';
-import { Button } from '@/components/ui/button';
 import { 
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Edit, UsersRound, ShieldCheck } from 'lucide-react';
+import { 
+  Table, 
+  TableHeader, 
+  TableRow, 
+  TableHead, 
+  TableBody, 
+  TableCell 
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useRoles } from '@/hooks/useRoles';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { UserRole } from '@/lib/types/users';
 import NewRoleDialog from './NewRoleDialog';
 import EditRoleDialog from './EditRoleDialog';
 
 export function UserRolesList() {
-  const { roles, isLoading } = useUserRoles();
-  const [showNewRoleDialog, setShowNewRoleDialog] = useState(false);
-  const [editingRole, setEditingRole] = useState<string | null>(null);
-
+  const { roles, isLoading, error, refetchRoles } = useRoles();
+  const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
+  const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  
+  const handleEditRole = (role: UserRole) => {
+    setSelectedRole(role);
+    setIsEditRoleDialogOpen(true);
+  };
+  
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-48 bg-muted rounded-md w-full"></div>
-          </div>
-        ))}
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
-
-  const handleEditRole = (roleId: string) => {
-    setEditingRole(roleId);
-  };
-
+  
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-4 text-red-500">
+            <p>Error loading roles: {error.message}</p>
+            <Button onClick={refetchRoles} className="mt-2">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">System Roles</h2>
-        <Button onClick={() => setShowNewRoleDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Role
-        </Button>
-      </div>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>User Roles</CardTitle>
+            <CardDescription>
+              Manage user roles and permissions
+            </CardDescription>
+          </div>
+          <Button onClick={() => setIsNewRoleDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Role
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Role Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Users</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {roles && roles.length > 0 ? (
+                roles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell>{role.description || '-'}</TableCell>
+                    <TableCell>{role.user_count || 0}</TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditRole(role)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                    No roles found. Create your first role to get started.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {roles?.map((role) => (
-          <Card key={role.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center">
-                    <ShieldCheck className="mr-2 h-5 w-5" />
-                    {role.name}
-                  </CardTitle>
-                  <CardDescription>{role.description || 'No description available'}</CardDescription>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => handleEditRole(role.id)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <h3 className="text-sm font-medium mb-2">Permissions:</h3>
-              <div className="flex flex-wrap gap-2">
-                {role.permissions.map((permission, index) => (
-                  <Badge key={index} variant="secondary">
-                    {permission}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-            <Separator />
-            <CardFooter className="pt-4">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <UsersRound className="mr-2 h-4 w-4" />
-                <span>Users with this role: {role.user_count || 0}</span>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      <NewRoleDialog
-        open={showNewRoleDialog}
-        onOpenChange={setShowNewRoleDialog}
+      {/* Role Dialogs */}
+      <NewRoleDialog 
+        isOpen={isNewRoleDialogOpen}
+        onClose={() => setIsNewRoleDialogOpen(false)}
+        onRoleCreated={refetchRoles}
       />
       
-      <EditRoleDialog
-        roleId={editingRole}
-        open={!!editingRole}
-        onOpenChange={(open) => {
-          if (!open) setEditingRole(null);
-        }}
+      <EditRoleDialog 
+        isOpen={isEditRoleDialogOpen}
+        onClose={() => setIsEditRoleDialogOpen(false)}
+        role={selectedRole}
+        onRoleUpdated={refetchRoles}
       />
-    </div>
+    </>
   );
 }
