@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { QuoteShift } from '@/lib/types/quotes';
+import { QuoteShift } from '@/types/models';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -12,9 +12,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { format, getHours, getMinutes } from 'date-fns';
 import { Calculator, Clock, Copy, Edit, Plus, Trash2, User } from 'lucide-react';
-import { getShiftDurationHours } from '@/lib/award/shiftCalculations';
 
 interface ShiftListProps {
   shifts: QuoteShift[];
@@ -124,28 +122,32 @@ export function ShiftList({
               <TableCell>
                 <div className="flex items-center">
                   <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                  <span>{formatTime(shift.startTime)} - {formatTime(shift.endTime)}</span>
+                  <span>{formatTime(shift.start_time || shift.startTime || '')} - {formatTime(shift.end_time || shift.endTime || '')}</span>
                 </div>
               </TableCell>
               <TableCell>
-                {calculateHours(shift.startTime, shift.endTime, shift.breakDuration)}
+                {calculateHours(
+                  shift.start_time || shift.startTime || '', 
+                  shift.end_time || shift.endTime || '', 
+                  shift.break_duration || shift.breakDuration || 0
+                )}
               </TableCell>
               <TableCell>
                 <Badge variant="secondary">Level {shift.level}</Badge>
               </TableCell>
               <TableCell>
-                {getEmploymentTypeLabel(shift.employmentType)}
+                {getEmploymentTypeLabel(shift.employment_type || shift.employmentType || '')}
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
                   <User className="h-3 w-3 mr-1 text-muted-foreground" />
-                  <span>×{shift.numberOfCleaners}</span>
+                  <span>×{shift.number_of_cleaners || shift.numberOfCleaners}</span>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
                   <Calculator className="h-3 w-3 mr-1 text-muted-foreground" />
-                  <span>${shift.estimatedCost.toFixed(2)}</span>
+                  <span>${(shift.estimated_cost || shift.estimatedCost || 0).toFixed(2)}</span>
                 </div>
               </TableCell>
               <TableCell className="text-right">

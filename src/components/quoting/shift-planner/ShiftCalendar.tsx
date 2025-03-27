@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { QuoteShift } from '@/lib/types/quotes';
+import { QuoteShift } from '@/types/models';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -79,12 +79,12 @@ export function ShiftCalendar({
                       <div className="flex items-center mb-1">
                         <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
                         <span className="text-sm">
-                          {formatTime(shift.startTime)} - {formatTime(shift.endTime)}
+                          {formatTime(shift.start_time || shift.startTime || '')} - {formatTime(shift.end_time || shift.endTime || '')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary">Level {shift.level}</Badge>
-                        <Badge variant="outline">{shift.employmentType}</Badge>
+                        <Badge variant="outline">{shift.employment_type || shift.employmentType}</Badge>
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -116,11 +116,11 @@ export function ShiftCalendar({
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <div className="flex items-center">
                       <User className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <span className="text-sm">×{shift.numberOfCleaners} staff</span>
+                      <span className="text-sm">×{shift.number_of_cleaners || shift.numberOfCleaners} staff</span>
                     </div>
                     <div className="flex items-center">
                       <DollarSign className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <span className="text-sm">${shift.estimatedCost.toFixed(2)}</span>
+                      <span className="text-sm">${(shift.estimated_cost || shift.estimatedCost || 0).toFixed(2)}</span>
                     </div>
                   </div>
                   

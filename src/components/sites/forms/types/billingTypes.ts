@@ -1,6 +1,7 @@
 
 export interface BillingAddress {
-  street?: string;
+  line1?: string;
+  line2?: string;
   city?: string;
   state?: string;
   postalCode?: string;
@@ -8,12 +9,11 @@ export interface BillingAddress {
 }
 
 export interface BillingContact {
-  id: string;
+  id?: string;
   name: string;
-  email: string;
-  phone: string;
-  position: string;
-  isPrimary: boolean;
+  email?: string;
+  phone?: string;
+  isPrimary?: boolean;
   role?: string;
 }
 
@@ -24,9 +24,14 @@ export interface BillingLine {
   frequency: string;
   isRecurring: boolean;
   onHold: boolean;
-  weeklyAmount: number;
-  monthlyAmount: number;
-  annualAmount: number;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
+  holdStartDate?: string;
+  holdEndDate?: string;
+  creditAmount?: number;
+  creditDate?: string;
+  creditReason?: string;
 }
 
 export interface BillingDetails {
@@ -34,9 +39,60 @@ export interface BillingDetails {
   useClientInfo: boolean;
   billingMethod: string;
   paymentTerms: string;
-  billingEmail: string;
-  billingFrequency: string;
-  billingInstructions: string;
+  rate?: number;
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  accountNumber?: string;
+  notes?: string;
+  billingEmail?: string;
+  billingContactName?: string;
   billingLines?: BillingLine[];
+  
+  // Invoice address fields
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  invoiceEmail?: string;
+  
+  // Billing cities
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  
+  // Revenue fields
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  
+  // Purchase order fields
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  
+  // Billing amount totals
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  
+  // Contractor cost fields
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  
+  // Service delivery fields
+  serviceDeliveryType?: string;
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorCostFrequency?: string;
+  contractorInvoiceFrequency?: string;
+  
+  // Budget fields
+  weeklyBudget?: number;
+  
+  // Xero integration
+  xeroContactId?: string;
+  invoiceMethod?: string;
+  
+  // Additional fields
   contacts?: BillingContact[];
 }

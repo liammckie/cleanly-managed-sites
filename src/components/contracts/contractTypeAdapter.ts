@@ -8,15 +8,20 @@ import { asJsonObject, jsonToString } from '@/lib/utils/json';
  */
 export function adaptContractData(contractData: ContractTypes): ContractColumns {
   // Make sure we have default values if contract_details is null or undefined
-  const contractDetails = asJsonObject(contractData.contract_details, {
-    startDate: '',
-    endDate: ''
-  });
+  const contractDetails = contractData.contract_details ? 
+    asJsonObject(contractData.contract_details, { startDate: '', endDate: '' }) : 
+    { startDate: '', endDate: '' };
   
   return {
     id: contractData.id,
-    site: { id: contractData.site_id, name: contractData.site_name || '' },
-    client: { id: contractData.client_id || '', name: contractData.client_name || '' },
+    site: { 
+      id: contractData.site_id || '', 
+      name: contractData.site_name || '' 
+    },
+    client: { 
+      id: contractData.client_id || '', 
+      name: contractData.client_name || '' 
+    },
     value: contractData.monthly_revenue || 0,
     startDate: jsonToString(contractDetails.startDate) || '',
     endDate: jsonToString(contractDetails.endDate) || '',

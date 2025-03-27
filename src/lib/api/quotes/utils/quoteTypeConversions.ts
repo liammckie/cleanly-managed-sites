@@ -1,46 +1,47 @@
 
-import { Day, EmployeeLevel, EmploymentType } from '@/lib/award/types';
+import { v4 as uuidv4 } from 'uuid';
 import { QuoteShift } from '@/lib/types/quotes';
 
-/**
- * Converts API response data to strongly typed QuoteShift objects
- */
-export function convertToQuoteShift(apiData: any): QuoteShift {
+export function dbToQuoteShift(dbShift: any): QuoteShift {
   return {
-    id: apiData.id,
-    quoteId: apiData.quote_id,
-    day: apiData.day as Day,
-    startTime: apiData.start_time,
-    endTime: apiData.end_time,
-    breakDuration: apiData.break_duration,
-    numberOfCleaners: apiData.number_of_cleaners || 1,
-    employmentType: apiData.employment_type as EmploymentType,
-    level: apiData.level as EmployeeLevel,
-    allowances: Array.isArray(apiData.allowances) 
-      ? apiData.allowances.map((a: any) => a.toString())
-      : [],
-    estimatedCost: apiData.estimated_cost || 0,
-    location: apiData.location || '',
-    notes: apiData.notes || ''
+    id: dbShift.id || uuidv4(),
+    quote_id: dbShift.quote_id || '',
+    day: dbShift.day || 'monday',
+    start_time: dbShift.start_time || '08:00',
+    end_time: dbShift.end_time || '16:00', 
+    break_duration: dbShift.break_duration || 30,
+    number_of_cleaners: dbShift.number_of_cleaners || 1,
+    employment_type: dbShift.employment_type || 'casual',
+    level: dbShift.level || 1,
+    allowances: dbShift.allowances || [],
+    estimated_cost: dbShift.estimated_cost || 0,
+    location: dbShift.location || '',
+    notes: dbShift.notes || '',
+    
+    // Add camelCase aliases for component compatibility
+    quoteId: dbShift.quote_id || '',
+    startTime: dbShift.start_time || '08:00',
+    endTime: dbShift.end_time || '16:00',
+    breakDuration: dbShift.break_duration || 30,
+    numberOfCleaners: dbShift.number_of_cleaners || 1,
+    employmentType: dbShift.employment_type || 'casual',
+    estimatedCost: dbShift.estimated_cost || 0
   };
 }
 
-/**
- * Prepares QuoteShift data for API submission
- */
-export function prepareQuoteShiftForApi(shift: QuoteShift): any {
+export function quoteShiftToDb(shift: QuoteShift): any {
   return {
     id: shift.id,
-    quote_id: shift.quoteId,
+    quote_id: shift.quote_id || shift.quoteId,
     day: shift.day,
-    start_time: shift.startTime,
-    end_time: shift.endTime,
-    break_duration: shift.breakDuration,
-    number_of_cleaners: shift.numberOfCleaners,
-    employment_type: shift.employmentType,
+    start_time: shift.start_time || shift.startTime,
+    end_time: shift.end_time || shift.endTime,
+    break_duration: shift.break_duration || shift.breakDuration,
+    number_of_cleaners: shift.number_of_cleaners || shift.numberOfCleaners,
+    employment_type: shift.employment_type || shift.employmentType,
     level: shift.level,
     allowances: shift.allowances,
-    estimated_cost: shift.estimatedCost,
+    estimated_cost: shift.estimated_cost || shift.estimatedCost,
     location: shift.location,
     notes: shift.notes
   };

@@ -7,8 +7,11 @@ export function useDeleteQuote() {
   const queryClient = useQueryClient();
   
   const mutation = useMutation({
-    mutationFn: (quoteId: string) => deleteQuote(quoteId),
-    onSuccess: () => {
+    mutationFn: async (quoteId: string) => {
+      await deleteQuote(quoteId);
+      return quoteId; // Return the ID for easier access in onSuccess
+    },
+    onSuccess: (quoteId) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote deleted successfully');
     },
@@ -19,7 +22,9 @@ export function useDeleteQuote() {
   
   return {
     deleteQuote: mutation.mutate,
+    deleteQuoteAsync: mutation.mutateAsync,
     isDeleting: mutation.isPending,
+    isPending: mutation.isPending,
     error: mutation.error
   };
 }

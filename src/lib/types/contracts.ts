@@ -1,12 +1,31 @@
 
+import { SiteStatus } from '@/types/common';
+
+// Adding Json type since it's missing
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 export interface ContractData {
   id: string;
-  client: string;
-  site: string;
+  client: {
+    id: string;
+    name: string;
+  };
+  site: {
+    id: string;
+    name: string;
+  };
   value: number;
   startDate: string;
   endDate: string;
   status: string;
+  
+  // Additional fields needed by components
+  site_id?: string;
+  site_name?: string;
+  client_id?: string;
+  client_name?: string;
+  monthly_revenue?: number;
+  contract_details?: any;
 }
 
 export interface ContractSummaryData {
@@ -14,15 +33,21 @@ export interface ContractSummaryData {
   activeCount: number;
   pendingCount: number;
   totalValue: number;
+  
+  // Add missing fields for expiry metrics
   expiringWithin30Days: number;
   expiringThisMonth: number;
   expiringNext3Months: number;
   expiringNext6Months: number;
   expiringThisYear: number;
+  
+  // Add missing fields for value metrics
   valueExpiringThisMonth: number;
   valueExpiringNext3Months: number;
   valueExpiringNext6Months: number;
   valueExpiringThisYear: number;
+  
+  // Add missing fields for totals
   totalRevenue: number;
   totalCost: number;
   totalProfit: number;
@@ -32,4 +57,11 @@ export interface ContractSummaryData {
 
 export interface GroupedContracts {
   [key: string]: ContractData[];
+}
+
+export interface ContractForecast {
+  startDate: string;
+  endDate: string;
+  value: number;
+  id: string;
 }
