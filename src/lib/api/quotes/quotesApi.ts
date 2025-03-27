@@ -88,7 +88,7 @@ export const updateQuote = async (quoteId: string, quoteData: Partial<Quote>): P
 };
 
 // Delete a quote
-export const deleteQuoteMutation = async (quoteId: string): Promise<void> => {
+export const deleteQuote = async (quoteId: string): Promise<void> => {
   try {
     const { error } = await supabase
       .from('quotes')

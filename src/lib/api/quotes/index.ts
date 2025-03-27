@@ -12,3 +12,6 @@ export { createQuote as createQuoteMutation, createQuote } from './quotesApi';
 
 // Export updateQuote as both updateQuoteMutation and updateQuote for compatibility
 export { updateQuote as updateQuoteMutation, updateQuote } from './quotesApi';
+
+// Export deleteQuote as both deleteQuoteMutation and deleteQuote for compatibility
+export { deleteQuote as deleteQuoteMutation, deleteQuote } from './quotesApi';
