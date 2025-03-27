@@ -1,5 +1,12 @@
 
 import { useState, ReactNode } from 'react';
+import { BasicInformationStep } from '@/components/sites/forms/steps/BasicInformationStep';
+import { ContactsStep } from '@/components/sites/forms/steps/contacts';
+import { ContractDetailsStep } from '@/components/sites/forms/steps/ContractDetailsStep';
+import { BillingDetailsStep } from '@/components/sites/forms/steps/BillingDetailsStep';
+import { SubcontractorsStep } from '@/components/sites/forms/steps/SubcontractorsStep';
+import { JobSpecificationsStep } from '@/components/sites/forms/steps/JobSpecificationsStep';
+import { ReplenishablesStep } from '@/components/sites/forms/steps/ReplenishablesStep';
 
 export interface StepDefinition {
   title: string;
@@ -27,27 +34,37 @@ export function useSiteFormStepper(): StepperState {
     {
       title: 'Basic Information',
       description: 'Enter site basic details',
-      component: <div>Basic Information Step</div>
+      component: <BasicInformationStep />
     },
     {
       title: 'Contact Information',
       description: 'Add site contacts',
-      component: <div>Contact Information Step</div>
+      component: <ContactsStep />
     },
     {
       title: 'Contract Details',
       description: 'Define contract terms',
-      component: <div>Contract Details Step</div>
+      component: <ContractDetailsStep />
     },
     {
       title: 'Billing Information',
       description: 'Setup billing details',
-      component: <div>Billing Information Step</div>
+      component: <BillingDetailsStep />
     },
     {
-      title: 'Additional Details',
-      description: 'Add any additional information',
-      component: <div>Additional Details Step</div>
+      title: 'Subcontractors',
+      description: 'Add subcontractors if needed',
+      component: <SubcontractorsStep />
+    },
+    {
+      title: 'Job Specifications',
+      description: 'Define job requirements',
+      component: <JobSpecificationsStep />
+    },
+    {
+      title: 'Supplies & Replenishables',
+      description: 'Add supply requirements',
+      component: <ReplenishablesStep />
     }
   ];
   
