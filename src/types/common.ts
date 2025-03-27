@@ -29,6 +29,7 @@ export interface ValidationMessage {
   field: string;
   message: string;
   type: 'error' | 'warning' | 'info';
+  row?: number; // Added row property to fix validation errors
 }
 
 export interface ValidationResult {

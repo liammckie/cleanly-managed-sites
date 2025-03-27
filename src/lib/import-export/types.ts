@@ -1,5 +1,4 @@
 
-// Re-export the types from common that have been newly defined
 import { ValidationMessage, ValidationResult, EnhancedValidationResult } from '@/types/common';
 
 // Re-export the types
