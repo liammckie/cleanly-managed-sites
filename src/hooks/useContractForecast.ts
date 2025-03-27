@@ -3,16 +3,16 @@ import { useQuery } from '@tanstack/react-query';
 import { ContractSummaryData, ContractData } from '@/types/contracts';
 import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
 import { formatCurrency } from '@/lib/utils/format';
-import { getContracts, getContractSummary } from '@/lib/api/contracts';
+import { fetchContracts } from '@/lib/api/contracts';
 import { addMonths, addDays, format, parseISO, differenceInMonths } from 'date-fns';
 
 export function useContractForecast() {
   const { data: contracts = [], isLoading: isLoadingContracts } = useQuery({
     queryKey: ['contracts'],
-    queryFn: getContracts,
+    queryFn: fetchContracts,
   });
 
-  const { data: summaryData = { 
+  const summaryData: ContractSummaryData = { 
     totalCount: 0,
     activeCount: 0,
     pendingCount: 0,
@@ -31,14 +31,13 @@ export function useContractForecast() {
     totalCost: 0,
     totalProfit: 0,
     profitMargin: 0
-  }, isLoading: isLoadingSummary } = useQuery({
-    queryKey: ['contracts', 'summary'],
-    queryFn: getContractSummary,
-  });
+  };
+  
+  const isLoadingSummary = false;
 
   // Generate forecast data
   const generateForecastData = (): ContractForecast[] => {
-    if (!contracts || !contracts.length) return [];
+    if (!contracts || contracts.length === 0) return [];
 
     const today = new Date();
     const forecastMonths = 12; // Forecast for 12 months
@@ -108,13 +107,12 @@ export function useContractForecast() {
   
   // Calculate summary metrics
   const calculateSummary = () => {
-    if (!contracts || !contracts.length) {
-      return summaryData;
-    }
-    
+    // Use the provided summary data as a base
     const summary = { ...summaryData };
     
-    // Additional calculations can be done here if needed
+    // Calculate additional metrics if needed
+    summary.totalCount = contracts.length;
+    summary.activeCount = contracts.filter(c => c.status === 'active').length;
     
     return summary;
   };

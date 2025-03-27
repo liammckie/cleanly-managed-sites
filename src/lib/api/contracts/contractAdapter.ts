@@ -1,3 +1,4 @@
+
 import { ContractData } from '@/types/contracts';
 
 export const adaptContractData = (data: any): ContractData => {
@@ -11,7 +12,7 @@ export const adaptContractData = (data: any): ContractData => {
       id: data.site_id || '',
       name: data.site_name || '',
     },
-    value: data.value || 0,
+    value: data.value || data.monthly_revenue || 0,
     startDate: data.start_date || data.startDate || '',
     endDate: data.end_date || data.endDate || '',
     status: data.status || 'active',
@@ -26,6 +27,21 @@ export const adaptContractData = (data: any): ContractData => {
     
     // Ensure backward compatibility
     start_date: data.start_date || data.startDate,
-    end_date: data.end_date || data.endDate
+    end_date: data.end_date || data.endDate,
+    
+    // Add the is_primary field that was being referenced elsewhere
+    is_primary: data.is_primary || false
   };
 };
+
+/**
+ * Adapts an array of contract data
+ */
+export const adaptContracts = (dataArray: any[]): ContractData[] => {
+  return dataArray.map(adaptContractData);
+};
+
+/**
+ * Alias for adaptContractData for backward compatibility
+ */
+export const adaptContract = adaptContractData;

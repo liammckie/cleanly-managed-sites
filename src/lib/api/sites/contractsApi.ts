@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { ContractData, ContractSummaryData } from '@/types/contracts';
 import { asJsonObject } from '@/lib/utils/json';
