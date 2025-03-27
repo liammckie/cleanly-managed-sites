@@ -5,7 +5,7 @@ import {
   parseCSV, 
   convertCSVToClientFormat, 
   importClients 
-} from '@/lib/import-export/parseImportedFile';
+} from '@/lib/import-export/importOperations';
 
 export function useImportClients() {
   const [isImporting, setIsImporting] = useState(false);

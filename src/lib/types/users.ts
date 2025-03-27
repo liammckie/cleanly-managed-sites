@@ -1,30 +1,36 @@
 
-export type UserStatus = 'active' | 'pending' | 'inactive';
+export type UserStatus = "active" | "pending" | "inactive";
+
+export interface SystemUser {
+  id: string;
+  email: string;
+  full_name: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;
+  territories?: string[];
+  status: UserStatus;
+  role_id?: string;
+  role?: UserRole;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  daily_summary?: boolean;
+}
 
 export interface UserRole {
   id: string;
   name: string;
   description?: string;
   permissions: string[];
-}
-
-export interface SystemUser {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  role: string; // Using string for better database compatibility
-  role_id?: string;
-  status: UserStatus;
-  avatar_url?: string;
-  title?: string;
-  phone?: string;
-  last_login?: string;
-  custom_id?: string;
-  notes?: string;
-  territories?: string[];
   created_at?: string;
   updated_at?: string;
-  permissions?: string[];
+}
+
+export interface UserRoleWithCount extends UserRole {
+  user_count: number;
 }

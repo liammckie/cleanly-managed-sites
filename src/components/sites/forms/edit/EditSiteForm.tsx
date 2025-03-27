@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -36,7 +35,7 @@ const siteFormSchema = z.object({
   country: z.string().min(2, {
     message: "Country must be at least 2 characters.",
   }),
-  status: z.enum(['active', 'pending', 'inactive', 'on-hold', 'lost']),
+  status: z.enum(['active', 'pending', 'inactive', 'on-hold', 'lost'] as const),
 });
 
 type SiteFormValues = z.infer<typeof siteFormSchema>;
@@ -83,10 +82,8 @@ export function EditSiteForm() {
     setIsSubmitting(true);
     
     try {
-      // Create a properly typed siteFormData
       const formValues = form.getValues();
 
-      // Map form data to SiteFormData structure
       const updatedFormData: SiteFormData = {
         name: formValues.name,
         address: formValues.address,
@@ -104,7 +101,6 @@ export function EditSiteForm() {
         jobSpecifications: site?.job_specifications || {},
       };
       
-      // Map to SiteRecord structure for the API
       const siteUpdateData: Partial<SiteRecord> = {
         name: formValues.name,
         address: formValues.address,

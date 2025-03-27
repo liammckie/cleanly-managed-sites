@@ -1,3 +1,4 @@
+
 export interface ContractTerm {
   id?: string;
   name: string;
@@ -15,15 +16,25 @@ export interface ContractHistoryEntry {
   contractDetails: any;
   timestamp: string;
   notes?: string;
+  site_id?: string; // For backward compatibility
+  contract_details?: any; // For backward compatibility
+  version_number?: number;
+  created_by?: string;
+  created_at?: string;
+  contractor_id?: string;
+  date?: string; // For display
+  user?: string; // For display
+  changes?: any; // For display
 }
 
-// Add the ContractForecast type definition
+// Add the ContractForecast type definition with both old and new property sets
 export interface ContractForecast {
   id?: string;
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
+  month?: string;
+  revenue?: number;
+  cost?: number;
+  profit?: number;
+  // Add the properties used in useContractForecast
   startDate?: string;
   endDate?: string;
   value?: number;
@@ -47,4 +58,19 @@ export interface ContractDetails {
   customFields?: Record<string, any>;
   terms?: ContractTerm[];
   id?: string;
+  // Add missing properties used across the codebase
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  renewalPeriod?: number;
+  renewalNotice?: number;
+  noticeUnit?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  // Additional properties for backward compatibility
+  noticePeriodDays?: number;
+  nextIncreaseDate?: string;
+  specialTerms?: string;
+  terminationClause?: string;
 }

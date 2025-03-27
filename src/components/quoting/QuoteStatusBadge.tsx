@@ -13,6 +13,8 @@ export function QuoteStatusBadge({ status }: QuoteStatusBadgeProps) {
       return <Badge variant="outline">Draft</Badge>;
     case 'sent':
       return <Badge variant="secondary">Sent</Badge>;
+    case 'pending':
+      return <Badge variant="warning">Pending</Badge>;
     case 'approved':
       return <Badge variant="success">Approved</Badge>;
     case 'accepted':
@@ -21,8 +23,6 @@ export function QuoteStatusBadge({ status }: QuoteStatusBadgeProps) {
       return <Badge variant="destructive">Rejected</Badge>;
     case 'expired':
       return <Badge variant="outline" className="text-muted-foreground">Expired</Badge>;
-    case 'pending':
-      return <Badge variant="warning">Pending</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }

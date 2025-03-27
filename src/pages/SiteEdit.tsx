@@ -1,63 +1,75 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSite } from '@/hooks/useSite';
-import { DashboardLayout } from '@/components/ui/layout/DashboardLayout';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { useSiteUpdate } from '@/hooks/useSiteUpdate';
+import { toast } from 'sonner';
 import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const SiteEdit = () => {
-  const { id } = useParams<{ id: string }>();
+export default function SiteEdit() {
+  const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { site, isLoading, error } = useSite(id);
+  const { site, isLoading, refetch } = useSite(siteId);
+  const { updateSiteMutation } = useSiteUpdate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Edit Site</h1>
-          
-          <div className="flex space-x-3">
-            <Button variant="outline" asChild>
-              <Link to={`/sites/${id}`}>
-                Cancel
-              </Link>
-            </Button>
-          </div>
-        </div>
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : error ? (
-          <div className="text-center text-destructive">
-            <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
-            <p>{error.message || 'Unable to load site details'}</p>
-            
-            <Button className="mt-4" asChild>
-              <Link to="/sites">Return to Sites</Link>
-            </Button>
-          </div>
-        ) : site ? (
-          <div className="max-w-5xl mx-auto">
-            <EditSiteForm />
-          </div>
-        ) : (
-          <div className="text-center">
-            <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>
-            <p>The requested site could not be found.</p>
-            
-            <Button className="mt-4" asChild>
-              <Link to="/sites">Return to Sites</Link>
-            </Button>
-          </div>
-        )}
+  const handleSubmit = async (data: any) => {
+    if (!siteId) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const result = await updateSiteMutation.mutateAsync({
+        id: siteId,
+        data: {
+          ...data,
+          postal_code: data.postalCode || data.postal_code,
+        }
+      });
+      
+      toast.success("Site updated successfully");
+      await refetch();
+      navigate(`/sites/${siteId}`);
+    } catch (error: any) {
+      console.error("Error updating site:", error);
+      toast.error(`Failed to update site: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
-    </DashboardLayout>
+    );
+  }
+  
+  if (!site) {
+    return (
+      <div className="text-center py-8">
+        <p>Site not found</p>
+        <Button onClick={() => navigate('/sites')} className="mt-4">
+          Return to Sites
+        </Button>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container mx-auto py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Site: {site.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EditSiteForm />
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default SiteEdit;
+}

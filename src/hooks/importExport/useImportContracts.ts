@@ -5,7 +5,7 @@ import {
   parseCSV, 
   convertCSVToContractFormat, 
   importContracts 
-} from '@/lib/import-export/parseImportedFile';
+} from '@/lib/import-export/importOperations';
 
 export function useImportContracts() {
   const [isImporting, setIsImporting] = useState(false);

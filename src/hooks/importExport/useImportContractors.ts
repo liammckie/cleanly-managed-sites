@@ -2,10 +2,10 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { 
-  parseCSV,
-  convertCSVToContractorFormat,
-  importContractors
-} from '@/lib/import-export/parseImportedFile';
+  parseCSV, 
+  convertCSVToContractorFormat, 
+  importContractors 
+} from '@/lib/import-export/importOperations';
 
 export function useImportContractors() {
   const [isImporting, setIsImporting] = useState(false);

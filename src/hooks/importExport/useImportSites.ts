@@ -5,7 +5,7 @@ import {
   parseCSV, 
   convertCSVToSiteFormat, 
   importSites 
-} from '@/lib/import-export/parseImportedFile';
+} from '@/lib/import-export/importOperations';
 
 export function useImportSites() {
   const [isImporting, setIsImporting] = useState(false);

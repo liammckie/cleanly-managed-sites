@@ -1,13 +1,9 @@
 
 import Papa from 'papaparse';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { validateClientData } from './validation/clientValidation';
-import { validateSiteData } from './validation/siteValidation';
-import { validateContractorData } from './validation/contractorValidation';
-import { validateContractData } from './validation/contractValidation';
+import { supabase } from '@/lib/supabase';
+import { get } from 'lodash';
 
-// Parse a CSV file into JSON data
+// Function to parse CSV files
 export const parseCSV = async (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -26,149 +22,207 @@ export const parseCSV = async (file: File): Promise<any[]> => {
 // Convert CSV data to client format
 export const convertCSVToClientFormat = (csvData: any[]): any[] => {
   return csvData.map(row => ({
-    name: row.name || row.Name || '',
-    contact_name: row.contact_name || row.ContactName || row.contact || '',
-    email: row.email || row.Email || '',
-    phone: row.phone || row.Phone || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.postal_code || row.PostalCode || '',
-    country: row.country || row.Country || 'Australia',
-    status: row.status || 'active'
+    name: row.name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    country: row.country || 'Australia',
+    status: row.status || 'active',
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
+};
+
+// Import clients to the database
+export const importClients = async (clientsData: any[]): Promise<any> => {
+  try {
+    // Add user_id to each client if not present
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const clientsWithUserId = clientsData.map(client => ({
+      ...client,
+      user_id: client.user_id || userId,
+    }));
+    
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(clientsWithUserId);
+
+    if (error) {
+      console.error('Error inserting clients:', error);
+      return { 
+        success: false, 
+        message: error.message,
+        errorDetails: error 
+      };
+    }
+
+    return { success: true, count: clientsData.length };
+  } catch (error: any) {
+    console.error('Error importing clients:', error);
+    return { 
+      success: false, 
+      message: error.message,
+      errorDetails: error 
+    };
+  }
 };
 
 // Convert CSV data to site format
 export const convertCSVToSiteFormat = (csvData: any[]): any[] => {
   return csvData.map(row => ({
-    name: row.name || row.Name || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.postal_code || row.PostalCode || '',
-    country: row.country || row.Country || 'Australia',
-    client_id: row.client_id || row.ClientId || null,
-    client_name: row.client_name || row.ClientName || '',
-    status: row.status || 'active'
+    name: row.name || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    country: row.country || 'Australia',
+    client_id: row.client_id || '',
+    status: row.status || 'active',
+    email: row.email || '',
+    phone: row.phone || '',
+    representative: row.representative || 'Site Manager',
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
 
-// Convert CSV data to contractor format
+// Import sites to the database
+export const importSites = async (sitesData: any[]): Promise<any> => {
+  try {
+    // Add user_id and representative to each site if not present
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const sitesWithUserId = sitesData.map(site => ({
+      ...site,
+      user_id: site.user_id || userId,
+      representative: site.representative || 'Site Manager',
+    }));
+
+    const { data, error } = await supabase
+      .from('sites')
+      .insert(sitesWithUserId);
+
+    if (error) {
+      console.error('Error inserting sites:', error);
+      return { 
+        success: false, 
+        message: error.message,
+        errorDetails: error 
+      };
+    }
+
+    return { success: true, count: sitesData.length };
+  } catch (error: any) {
+    console.error('Error importing sites:', error);
+    return { 
+      success: false, 
+      message: error.message,
+      errorDetails: error 
+    };
+  }
+};
+
+// Function to convert CSV to contractor format
 export const convertCSVToContractorFormat = (csvData: any[]): any[] => {
   return csvData.map(row => ({
-    business_name: row.business_name || row.BusinessName || row.name || row.Name || '',
-    contact_name: row.contact_name || row.ContactName || '',
-    email: row.email || row.Email || '',
-    phone: row.phone || row.Phone || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.postal_code || row.PostalCode || '',
-    abn: row.abn || row.ABN || '',
-    tax_id: row.tax_id || row.TaxId || '',
-    contractor_type: row.contractor_type || row.ContractorType || 'cleaning',
-    status: row.status || 'active'
+    business_name: row.business_name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    tax_id: row.tax_id || '',
+    abn: row.abn || '',
+    contractor_type: row.contractor_type || 'cleaning',
+    status: row.status || 'active',
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
+};
+
+// Function to import contractors
+export const importContractors = async (contractorsData: any[]): Promise<any> => {
+  try {
+    // Add user_id to each contractor if not present
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const contractorsWithUserId = contractorsData.map(contractor => ({
+      ...contractor,
+      user_id: contractor.user_id || userId,
+    }));
+
+    const { data, error } = await supabase
+      .from('contractors')
+      .insert(contractorsWithUserId);
+
+    if (error) {
+      console.error('Error inserting contractors:', error);
+      return { 
+        success: false, 
+        message: error.message,
+        errorDetails: error 
+      };
+    }
+
+    return { success: true, count: contractorsData.length };
+  } catch (error: any) {
+    console.error('Error importing contractors:', error);
+    return { 
+      success: false, 
+      message: error.message,
+      errorDetails: error 
+    };
+  }
 };
 
 // Convert CSV data to contract format
 export const convertCSVToContractFormat = (csvData: any[]): any[] => {
   return csvData.map(row => ({
-    site_id: row.site_id || row.SiteId || '',
-    start_date: row.start_date || row.StartDate || '',
-    end_date: row.end_date || row.EndDate || '',
-    contract_number: row.contract_number || row.ContractNumber || '',
-    contract_type: row.contract_type || row.ContractType || 'cleaning',
+    site_id: row.site_id || '',
+    contract_number: row.contract_number || '',
+    start_date: row.start_date || '',
+    end_date: row.end_date || '',
+    auto_renew: row.auto_renew === 'true',
+    termination_period: row.termination_period || '',
+    renewal_terms: row.renewal_terms || '',
+    billing_cycle: row.billing_cycle || 'monthly',
     value: parseFloat(row.value) || 0,
-    billing_cycle: row.billing_cycle || row.BillingCycle || 'monthly',
+    notes: row.notes || '',
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
 
-// Import clients into the database
-export const importClients = async (clients: any[]): Promise<void> => {
-  // Validate client data
-  const validationResult = validateClientData(clients);
-  
-  if (!validationResult.isValid) {
-    console.error('Invalid client data:', validationResult.errors);
-    throw new Error(`Invalid client data: ${validationResult.errors.map(e => e.message).join(', ')}`);
-  }
-  
-  const { data, errors } = await supabase
-    .from('clients')
-    .insert(validationResult.data);
-    
-  if (errors) {
-    console.error('Error importing clients:', errors);
-    throw new Error(`Failed to import clients: ${errors[0].message}`);
-  }
-  
-  return;
-};
+// Function to import contracts
+export const importContracts = async (contractsData: any[]): Promise<any> => {
+  try {
+    // Add user_id to each contract if not present
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const contractsWithUserId = contractsData.map(contract => ({
+      ...contract,
+      user_id: contract.user_id || userId,
+    }));
 
-// Import sites into the database
-export const importSites = async (sites: any[]): Promise<void> => {
-  // Validate site data
-  const validationResult = validateSiteData(sites);
-  
-  if (!validationResult.isValid) {
-    console.error('Invalid site data:', validationResult.errors);
-    throw new Error(`Invalid site data: ${validationResult.errors.map(e => e.message).join(', ')}`);
-  }
-  
-  const { data, errors } = await supabase
-    .from('sites')
-    .insert(validationResult.data);
-    
-  if (errors) {
-    console.error('Error importing sites:', errors);
-    throw new Error(`Failed to import sites: ${errors[0].message}`);
-  }
-  
-  return;
-};
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .insert(contractsWithUserId);
 
-// Import contractors into the database
-export const importContractors = async (contractors: any[]): Promise<void> => {
-  // Validate contractor data
-  const validationResult = validateContractorData(contractors);
-  
-  if (!validationResult.isValid) {
-    console.error('Invalid contractor data:', validationResult.errors);
-    throw new Error(`Invalid contractor data: ${validationResult.errors.map(e => e.message).join(', ')}`);
-  }
-  
-  const { data, errors } = await supabase
-    .from('contractors')
-    .insert(validationResult.data);
-    
-  if (errors) {
-    console.error('Error importing contractors:', errors);
-    throw new Error(`Failed to import contractors: ${errors[0].message}`);
-  }
-  
-  return;
-};
+    if (error) {
+      console.error('Error inserting contracts:', error);
+      return { 
+        success: false, 
+        message: error.message,
+        errorDetails: error 
+      };
+    }
 
-// Import contracts into the database
-export const importContracts = async (contracts: any[]): Promise<void> => {
-  // Validate contract data
-  const validationResult = validateContractData(contracts);
-  
-  if (!validationResult.isValid) {
-    console.error('Invalid contract data:', validationResult.errors);
-    throw new Error(`Invalid contract data: ${validationResult.errors.map(e => e.message).join(', ')}`);
+    return { success: true, count: contractsData.length };
+  } catch (error: any) {
+    console.error('Error importing contracts:', error);
+    return { 
+      success: false, 
+      message: error.message,
+      errorDetails: error 
+    };
   }
-  
-  const { data, errors } = await supabase
-    .from('site_additional_contracts')
-    .insert(validationResult.data);
-    
-  if (errors) {
-    console.error('Error importing contracts:', errors);
-    throw new Error(`Failed to import contracts: ${errors[0].message}`);
-  }
-  
-  return;
 };

@@ -1,61 +1,72 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { QuoteShift } from '@/lib/types/quotes';
-import { EmploymentType, EmployeeLevel } from '@/types/common';
+import { Day, EmploymentType, EmployeeLevel } from '@/types/common';
 
-type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday' | 'weekday';
+// Interface for shift data
+interface ShiftData {
+  id: string;
+  day: Day;
+  startTime: string;
+  endTime: string;
+  breakDuration: number;
+  numberOfCleaners: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  allowances: string[];
+  estimatedCost: number;
+  location?: string;
+  notes?: string;
+}
 
-const useShiftManagement = (initialShifts: QuoteShift[] = [], quoteId?: string) => {
-  const [shifts, setShifts] = useState<QuoteShift[]>(initialShifts);
-
-  // Function to generate a new shift
-  const generateNewShift = (quoteId?: string): QuoteShift => {
-    const defaultShift: QuoteShift = {
-      id: uuidv4(),
-      quote_id: quoteId || '',
-      day: 'monday' as Day,
-      start_time: '09:00',
-      end_time: '17:00',
-      break_duration: 30,
-      number_of_cleaners: 1,
-      employment_type: 'full_time' as EmploymentType,
-      level: 1 as EmployeeLevel,
-      allowances: [],
-      estimated_cost: 0,
-      location: '',
-      notes: ''
-    };
-
-    return defaultShift;
-  };
+export const useShiftManagement = (initialShifts: ShiftData[] = []) => {
+  const [shifts, setShifts] = useState<ShiftData[]>(initialShifts);
 
   // Add a new shift
-  const addShift = useCallback(() => {
-    setShifts(prevShifts => [...prevShifts, generateNewShift(quoteId)]);
-  }, [quoteId]);
+  const addShift = (shiftData: Partial<ShiftData> = {}) => {
+    const newShift: ShiftData = {
+      id: uuidv4(),
+      day: shiftData.day || 'monday',
+      startTime: shiftData.startTime || '09:00',
+      endTime: shiftData.endTime || '17:00',
+      breakDuration: shiftData.breakDuration || 30,
+      numberOfCleaners: shiftData.numberOfCleaners || 1,
+      employmentType: shiftData.employmentType || 'casual',
+      level: shiftData.level || 1,
+      allowances: shiftData.allowances || [],
+      estimatedCost: shiftData.estimatedCost || 0,
+      location: shiftData.location || '',
+      notes: shiftData.notes || '',
+    };
+
+    setShifts(prevShifts => [...prevShifts, newShift]);
+    return newShift;
+  };
 
   // Update an existing shift
-  const updateShift = useCallback((id: string, updatedShift: Partial<QuoteShift>) => {
-    setShifts(prevShifts =>
-      prevShifts.map(shift =>
-        shift.id === id ? { ...shift, ...updatedShift } : shift
+  const updateShift = (shiftId: string, updatedData: Partial<ShiftData>) => {
+    setShifts(prevShifts => 
+      prevShifts.map(shift => 
+        shift.id === shiftId ? { ...shift, ...updatedData } : shift
       )
     );
-  }, []);
+  };
 
-  // Delete a shift
-  const deleteShift = useCallback((id: string) => {
-    setShifts(prevShifts => prevShifts.filter(shift => shift.id !== id));
-  }, []);
+  // Remove a shift
+  const removeShift = (shiftId: string) => {
+    setShifts(prevShifts => prevShifts.filter(shift => shift.id !== shiftId));
+  };
+
+  // Set all shifts
+  const setAllShifts = (newShifts: ShiftData[]) => {
+    setShifts(newShifts);
+  };
 
   return {
     shifts,
     addShift,
     updateShift,
-    deleteShift,
-    setShifts,
+    removeShift,
+    setAllShifts
   };
 };
-
-export default useShiftManagement;

@@ -11,19 +11,18 @@ export const useSiteFormAdditionalContracts = (
     const newContract: ContractDetails = {
       startDate: '',
       endDate: '',
-      contractLength: 0,
-      contractLengthUnit: 'months',
       autoRenewal: false,
       renewalPeriod: 0,
       renewalNotice: 0,
       noticeUnit: 'months',
       serviceFrequency: '',
       serviceDeliveryMethod: '',
-      // Add contractNumber field
       contractNumber: '',
       renewalTerms: '',
       terminationPeriod: '',
       contractType: 'cleaning',
+      contractLength: 0,
+      contractLengthUnit: 'months',
       terms: []
     };
     

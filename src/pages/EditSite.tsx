@@ -1,51 +1,75 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sidebar } from '@/components/ui/layout/Sidebar';
-import { Navbar } from '@/components/ui/layout/Navbar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSite } from '@/hooks/useSite';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
 import { useSiteUpdate } from '@/hooks/useSiteUpdate';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
 
-const EditSite = () => {
-  const { id } = useParams<{ id: string }>();
+export default function EditSite() {
+  const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { site, isLoading, error } = useSite(id);
+  const { site, isLoading, refetch } = useSite(siteId);
+  const { updateSiteMutation } = useSiteUpdate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (data: any) => {
+    if (!siteId) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const result = await updateSiteMutation.mutateAsync({
+        id: siteId,
+        data: {
+          ...data,
+          postal_code: data.postalCode || data.postal_code,
+        }
+      });
+      
+      toast.success("Site updated successfully");
+      await refetch();
+      navigate(`/sites/${siteId}`);
+    } catch (error: any) {
+      console.error("Error updating site:", error);
+      toast.error(`Failed to update site: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!site) {
+    return (
+      <div className="text-center py-8">
+        <p>Site not found</p>
+        <Button onClick={() => navigate('/sites')} className="mt-4">
+          Return to Sites
+        </Button>
+      </div>
+    );
+  }
   
   return (
-    <SidebarProvider>
-      <div className="flex h-screen">
-        <Sidebar />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Navbar />
-          
-          <div className="flex-1 overflow-y-auto p-6 animate-fade-in">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <LoadingSpinner />
-              </div>
-            ) : error ? (
-              <div className="text-center text-destructive">
-                <h3 className="text-xl font-semibold mb-2">Error Loading Site</h3>
-                <p>{error.message || 'Unable to load site details'}</p>
-              </div>
-            ) : site ? (
-              <EditSiteForm />
-            ) : (
-              <div className="text-center">
-                <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>
-                <p>The requested site could not be found.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </SidebarProvider>
+    <div className="container mx-auto py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Site: {site.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EditSiteForm />
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default EditSite;
+}

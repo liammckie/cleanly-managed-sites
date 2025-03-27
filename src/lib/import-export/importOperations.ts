@@ -1,200 +1,217 @@
 
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import Papa from 'papaparse';
+import { supabase } from '@/lib/supabase';
+import { validateClientData } from './validation/clientValidation';
+import { validateSiteData } from './validation/siteValidation';
+import { validateContractData } from './validation/contractValidation';
+import { get } from 'lodash';
 
-export const setupTestData = () => {
-  const createTestClients = async () => {
-    try {
-      const testClients = [
-        {
-          name: 'Test Client 1',
-          contact_name: 'John Doe',
-          email: 'john@example.com',
-          phone: '0400123456',
-          address: '123 Test Street',
-          city: 'Sydney',
-          state: 'NSW',
-          postcode: '2000',
-          country: 'Australia',
-          status: 'active'
-        },
-        {
-          name: 'Test Client 2',
-          contact_name: 'Jane Smith',
-          email: 'jane@example.com',
-          phone: '0400654321',
-          address: '456 Test Avenue',
-          city: 'Melbourne',
-          state: 'VIC',
-          postcode: '3000',
-          country: 'Australia',
-          status: 'active'
-        }
-      ];
-
-      const { data, error } = await supabase
-        .from('clients')
-        .insert(testClients)
-        .select();
-
-      if (error) {
-        console.error('Error creating test clients:', error);
-        throw error;
+// Function to parse CSV files
+export const parseCSV = async (file: File): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        resolve(results.data);
+      },
+      error: (error) => {
+        reject(error);
       }
+    });
+  });
+};
 
-      console.log('Created test clients:', data);
-      toast.success('Test clients created successfully');
-      return data;
-    } catch (error) {
-      console.error('Error in createTestClients:', error);
-      toast.error('Failed to create test clients');
-      return [];
+// Convert CSV data to client format
+export const convertCSVToClientFormat = (csvData: any[]): any[] => {
+  return csvData.map(row => ({
+    name: row.name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    country: row.country || 'Australia',
+    status: row.status || 'active',
+    // Add user_id for database requirements
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
+  }));
+};
+
+// Import clients to the database
+export const importClients = async (clientsData: any[]): Promise<any> => {
+  // Validate the clients data
+  const validationResult = validateClientData(clientsData);
+  if (!validationResult.isValid) {
+    return validationResult;
+  }
+
+  try {
+    // Add user_id to each client
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const clientsWithUserId = clientsData.map(client => ({
+      ...client,
+      user_id: userId,
+    }));
+    
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(clientsWithUserId);
+
+    if (error) {
+      throw error;
     }
-  };
 
-  const createTestSites = async () => {
-    try {
-      // First, get the client IDs
-      const { data: clients, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .limit(2);
+    return { success: true, count: clientsData.length };
+  } catch (error: any) {
+    console.error('Error importing clients:', error);
+    throw new Error(`Failed to import clients: ${error.message}`);
+  }
+};
 
-      if (clientError) {
-        console.error('Error fetching clients:', clientError);
-        throw clientError;
-      }
+// Convert CSV data to site format
+export const convertCSVToSiteFormat = (csvData: any[]): any[] => {
+  return csvData.map(row => ({
+    name: row.name || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    country: row.country || 'Australia',
+    client_id: row.client_id || '',
+    status: row.status || 'active',
+    email: row.email || '',
+    phone: row.phone || '',
+    representative: row.representative || 'Site Manager',
+    // Add user_id for database requirements
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
+  }));
+};
 
-      if (!clients || clients.length === 0) {
-        console.error('No clients found. Creating test clients first...');
-        const newClients = await createTestClients();
-        if (!newClients || newClients.length === 0) {
-          throw new Error('Failed to create test clients');
-        }
-      }
+// Import sites to the database
+export const importSites = async (sitesData: any[]): Promise<any> => {
+  // Validate the sites data
+  const validationResult = validateSiteData(sitesData);
+  if (!validationResult.isValid) {
+    return validationResult;
+  }
 
-      const clientIds = clients.map(client => client.id);
+  try {
+    // Add user_id to each site
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const sitesWithUserId = sitesData.map(site => ({
+      ...site,
+      user_id: userId,
+      representative: site.representative || 'Site Manager',
+    }));
 
-      const testSites = [
-        {
-          name: 'Test Site 1',
-          address: '123 Test Street',
-          city: 'Sydney',
-          state: 'NSW',
-          postcode: '2000',
-          country: 'Australia',
-          client_id: clientIds[0],
-          status: 'active',
-          email: 'site1@example.com',
-          phone: '0400111222'
-        },
-        {
-          name: 'Test Site 2',
-          address: '456 Test Avenue',
-          city: 'Melbourne',
-          state: 'VIC',
-          postcode: '3000',
-          country: 'Australia',
-          client_id: clientIds[1],
-          status: 'active',
-          email: 'site2@example.com',
-          phone: '0400333444'
-        }
-      ];
+    const { data, error } = await supabase
+      .from('sites')
+      .insert(sitesWithUserId);
 
-      const { data, error } = await supabase
-        .from('sites')
-        .insert(testSites)
-        .select();
-
-      if (error) {
-        console.error('Error creating test sites:', error);
-        throw error;
-      }
-
-      console.log('Created test sites:', data);
-      toast.success('Test sites created successfully');
-      return data;
-    } catch (error) {
-      console.error('Error in createTestSites:', error);
-      toast.error('Failed to create test sites');
-      return [];
+    if (error) {
+      throw error;
     }
-  };
 
-  const createTestContracts = async () => {
-    try {
-      // First, get the site IDs
-      const { data: sites, error: siteError } = await supabase
-        .from('sites')
-        .select('id')
-        .limit(2);
+    return { success: true, count: sitesData.length };
+  } catch (error: any) {
+    console.error('Error importing sites:', error);
+    throw new Error(`Failed to import sites: ${error.message}`);
+  }
+};
 
-      if (siteError) {
-        console.error('Error fetching sites:', siteError);
-        throw siteError;
-      }
+// Convert CSV data to contract format
+export const convertCSVToContractFormat = (csvData: any[]): any[] => {
+  return csvData.map(row => ({
+    site_id: row.site_id || '',
+    contract_number: row.contract_number || '',
+    start_date: row.start_date || '',
+    end_date: row.end_date || '',
+    auto_renew: row.auto_renew === 'true',
+    termination_period: row.termination_period || '',
+    renewal_terms: row.renewal_terms || '',
+    billing_cycle: row.billing_cycle || 'monthly',
+    value: parseFloat(row.value) || 0,
+    notes: row.notes || '',
+    // Add user_id for database requirements
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
+  }));
+};
 
-      if (!sites || sites.length === 0) {
-        console.error('No sites found. Creating test sites first...');
-        const newSites = await createTestSites();
-        if (!newSites || newSites.length === 0) {
-          throw new Error('Failed to create test sites');
-        }
-      }
+// Function to import contracts
+export const importContracts = async (contractsData: any[]): Promise<any> => {
+  // Validate the contracts data
+  const validationResult = validateContractData(contractsData);
+  if (!validationResult.isValid) {
+    return validationResult;
+  }
 
-      const siteIds = sites.map(site => site.id);
+  try {
+    // Add user_id to each contract
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const contractsWithUserId = contractsData.map(contract => ({
+      ...contract,
+      user_id: userId,
+    }));
 
-      const today = new Date();
-      const oneYearLater = new Date();
-      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .insert(contractsWithUserId);
 
-      const testContracts = [
-        {
-          site_id: siteIds[0],
-          contract_number: 'CONT-001',
-          contract_type: 'cleaning',
-          start_date: today.toISOString().split('T')[0],
-          end_date: oneYearLater.toISOString().split('T')[0],
-          value: 12000,
-          billing_cycle: 'monthly',
-          auto_renew: true
-        },
-        {
-          site_id: siteIds[1],
-          contract_number: 'CONT-002',
-          contract_type: 'maintenance',
-          start_date: today.toISOString().split('T')[0],
-          end_date: oneYearLater.toISOString().split('T')[0],
-          value: 24000,
-          billing_cycle: 'monthly',
-          auto_renew: false
-        }
-      ];
-
-      const { data, error } = await supabase
-        .from('site_additional_contracts')
-        .insert(testContracts)
-        .select();
-
-      if (error) {
-        console.error('Error creating test contracts:', error);
-        throw error;
-      }
-
-      console.log('Created test contracts:', data);
-      toast.success('Test contracts created successfully');
-      return data;
-    } catch (error) {
-      console.error('Error in createTestContracts:', error);
-      toast.error('Failed to create test contracts');
-      return [];
+    if (error) {
+      throw error;
     }
-  };
 
-  return {
-    createTestClients,
-    createTestSites,
-    createTestContracts
-  };
+    return { success: true, count: contractsData.length };
+  } catch (error: any) {
+    console.error('Error importing contracts:', error);
+    throw new Error(`Failed to import contracts: ${error.message}`);
+  }
+};
+
+// Function to convert CSV to contractor format (placeholder)
+export const convertCSVToContractorFormat = (csvData: any[]): any[] => {
+  return csvData.map(row => ({
+    business_name: row.business_name || '',
+    contact_name: row.contact_name || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || '',
+    tax_id: row.tax_id || '',
+    abn: row.abn || '',
+    contractor_type: row.contractor_type || 'cleaning',
+    status: row.status || 'active',
+    // Add user_id for database requirements
+    user_id: get(supabase.auth.getUser(), 'data.user.id'),
+  }));
+};
+
+// Function to import contractors
+export const importContractors = async (contractorsData: any[]): Promise<any> => {
+  try {
+    // Add user_id to each contractor
+    const userId = get(supabase.auth.getUser(), 'data.user.id');
+    const contractorsWithUserId = contractorsData.map(contractor => ({
+      ...contractor,
+      user_id: userId,
+    }));
+
+    const { data, error } = await supabase
+      .from('contractors')
+      .insert(contractorsWithUserId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, count: contractorsData.length };
+  } catch (error: any) {
+    console.error('Error importing contractors:', error);
+    throw new Error(`Failed to import contractors: ${error.message}`);
+  }
 };

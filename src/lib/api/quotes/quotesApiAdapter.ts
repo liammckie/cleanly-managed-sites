@@ -1,67 +1,105 @@
-import { Quote } from '@/lib/types/quotes';
-import { mapToDbQuote } from './utils/quoteDbTypeAdapter';
 
-// Convert frontend quote model to database model
-export const adaptQuoteForDatabase = (quote: Partial<Quote>) => {
-  // Handle property name differences between frontend and database
+import { supabase } from '@/lib/supabase';
+import { Quote } from '@/types/models';
+import { convertToDbQuote } from './utils/quoteDbTypeAdapter';
+import { get } from 'lodash';
+
+/**
+ * Converts a frontend quote to the database format
+ */
+export const adaptQuoteToApi = (quoteData: Partial<Quote>) => {
+  // Map camelCase properties to snake_case for the API
   return {
-    name: quote.name,
-    user_id: quote.user_id, // Use snake_case for API
-    site_name: quote.siteName,
-    client_name: quote.clientName,
-    start_date: quote.startDate,
-    end_date: quote.endDate,
-    contract_length: quote.contractLength,
-    contract_length_unit: quote.contractLengthUnit,
-    expiry_date: quote.expiryDate,
-    status: quote.status,
-    total_price: quote.totalPrice,
-    total_cost: quote.totalCost,
-    labor_cost: quote.laborCost,
-    supplies_cost: quote.suppliesCost,
-    equipment_cost: quote.equipmentCost,
-    subcontractor_cost: quote.subcontractorCost,
-    overhead_cost: quote.overheadCost,
-    margin_amount: quote.marginAmount,
-    margin_percentage: quote.marginPercentage,
-    overhead_percentage: quote.overheadPercentage,
-    overhead_profile: quote.overhead_profile, // Match database field
-    notes: quote.notes,
-    created_by: quote.createdBy
+    name: quoteData.name,
+    client_name: quoteData.clientName,
+    site_name: quoteData.siteName,
+    status: quoteData.status,
+    total_price: quoteData.totalPrice,
+    labor_cost: quoteData.laborCost,
+    overhead_percentage: quoteData.overheadPercentage,
+    margin_percentage: quoteData.marginPercentage,
+    subcontractor_cost: quoteData.subcontractorCost,
+    overhead_cost: quoteData.overheadCost,
+    margin_amount: quoteData.marginAmount,
+    total_cost: quoteData.totalCost,
+    start_date: quoteData.startDate,
+    end_date: quoteData.endDate,
+    expiry_date: quoteData.expiryDate,
+    notes: quoteData.notes,
+    created_by: quoteData.created_by || get(supabase.auth.getUser(), 'data.user.id'),
+    user_id: quoteData.user_id,
+    overhead_profile: quoteData.overhead_profile,
+    contract_length: quoteData.contractLength,
+    contract_length_unit: quoteData.contractLengthUnit,
   };
 };
 
-// Convert database Quote model to frontend model
-export const adaptQuoteFromDatabase = (dbQuote: any): Quote => {
-  return {
+/**
+ * Converts a database quote to the frontend format
+ */
+export const adaptQuoteToFrontend = (dbQuote: any): Quote => {
+  if (!dbQuote) return {} as Quote;
+  
+  // Create base quote with DB properties directly mapped
+  const quote = {
     id: dbQuote.id,
     name: dbQuote.name,
-    user_id: dbQuote.user_id,
-    siteName: dbQuote.site_name,
     clientName: dbQuote.client_name,
-    startDate: dbQuote.start_date,
-    endDate: dbQuote.end_date,
-    contractLength: dbQuote.contract_length,
-    contractLengthUnit: dbQuote.contract_length_unit,
-    expiryDate: dbQuote.expiry_date,
+    siteName: dbQuote.site_name,
     status: dbQuote.status,
-    totalPrice: dbQuote.total_price,
-    totalCost: dbQuote.total_cost,
-    laborCost: dbQuote.labor_cost,
-    suppliesCost: dbQuote.supplies_cost,
-    equipmentCost: dbQuote.equipment_cost,
-    subcontractorCost: dbQuote.subcontractor_cost,
-    overheadCost: dbQuote.overhead_cost,
-    marginAmount: dbQuote.margin_amount,
-    marginPercentage: dbQuote.margin_percentage,
-    overheadPercentage: dbQuote.overhead_percentage,
-    overhead_profile: dbQuote.overhead_profile,
-    notes: dbQuote.notes,
-    createdBy: dbQuote.created_by,
+    totalPrice: dbQuote.total_price || 0,
+    laborCost: dbQuote.labor_cost || 0,
+    overheadPercentage: dbQuote.overhead_percentage || 15,
+    marginPercentage: dbQuote.margin_percentage || 20,
+    subcontractorCost: dbQuote.subcontractor_cost || 0,
+    overheadCost: dbQuote.overhead_cost || 0,
+    marginAmount: dbQuote.margin_amount || 0,
+    totalCost: dbQuote.total_cost || 0,
+    created_by: dbQuote.created_by,
     createdAt: dbQuote.created_at,
     updatedAt: dbQuote.updated_at,
-    // Other fields with default values
-    shifts: [],
-    subcontractors: []
-  };
+    startDate: dbQuote.start_date,
+    endDate: dbQuote.end_date,
+    expiryDate: dbQuote.expiry_date,
+    notes: dbQuote.notes,
+    overhead_profile: dbQuote.overhead_profile,
+    contractLength: dbQuote.contract_length,
+    contractLengthUnit: dbQuote.contract_length_unit,
+  } as Quote;
+  
+  // Add shifts if they exist
+  if (dbQuote.shifts) {
+    quote.shifts = dbQuote.shifts.map((shift: any) => ({
+      id: shift.id,
+      quoteId: shift.quote_id,
+      day: shift.day,
+      startTime: shift.start_time,
+      endTime: shift.end_time,
+      breakDuration: shift.break_duration,
+      numberOfCleaners: shift.number_of_cleaners,
+      employmentType: shift.employment_type,
+      level: shift.level,
+      allowances: shift.allowances || [],
+      estimatedCost: shift.estimated_cost || 0,
+      location: shift.location,
+      notes: shift.notes,
+    }));
+  }
+  
+  // Add subcontractors if they exist
+  if (dbQuote.subcontractors) {
+    quote.subcontractors = dbQuote.subcontractors.map((sub: any) => ({
+      id: sub.id,
+      quoteId: sub.quote_id,
+      name: sub.name,
+      description: sub.description,
+      cost: sub.cost || 0,
+      frequency: sub.frequency,
+      email: sub.email,
+      phone: sub.phone,
+      notes: sub.notes,
+    }));
+  }
+  
+  return quote;
 };
