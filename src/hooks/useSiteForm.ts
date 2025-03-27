@@ -1,10 +1,12 @@
+
 import { useState, useCallback } from 'react';
 import { useSiteCreate } from './useSiteCreate';
 import { useSiteUpdate } from './useSiteUpdate';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { SiteStatus } from '@/lib/types';
-import { SiteFormData, getInitialFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { adaptSiteFormData } from '@/utils/siteFormAdapters';
 
 export function useSiteForm(siteId?: string) {
@@ -146,28 +148,28 @@ export function useSiteForm(siteId?: string) {
   }, []);
 
   // When sending data to the API, ensure we adapt the form data correctly
-const handleSubmit = async (mode: 'create' | 'update') => {
-  try {
-    setIsSubmitting(true);
-    setError(null);
+  const handleSubmit = async (mode: 'create' | 'update') => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
 
-    if (mode === 'create') {
-      const result = await createSite(formData);
-      toast.success('Site created successfully');
-      navigate(`/sites/${result.id}`);
-    } else if (mode === 'update' && siteId) {
-      await updateSite(siteId, adaptSiteFormData(formData));
-      toast.success('Site updated successfully');
-      navigate(`/sites/${siteId}`);
+      if (mode === 'create') {
+        const result = await createSite(formData);
+        toast.success('Site created successfully');
+        navigate(`/sites/${result.id}`);
+      } else if (mode === 'update' && siteId) {
+        await updateSite(siteId, adaptSiteFormData(formData));
+        toast.success('Site updated successfully');
+        navigate(`/sites/${siteId}`);
+      }
+    } catch (error) {
+      console.error('Error submitting site:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error('Error submitting site:', error);
-    setError(error instanceof Error ? error.message : 'Unknown error occurred');
-    toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return {
     formData,

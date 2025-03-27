@@ -12,5 +12,16 @@ export function getInitialFormData(): SiteFormData {
     status: 'active',
     contacts: [],
     notes: '',
+    locationDetails: {
+      floor: '',
+      building: '',
+      suite: '',
+      propertyType: '',
+      accessHours: '',
+      keyLocation: '',
+      parkingDetails: '',
+      siteSize: '',
+      siteSizeUnit: 'sqm',
+    }
   };
 }

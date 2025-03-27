@@ -1,4 +1,3 @@
-
 import { Day, EmploymentType, EmployeeLevel, Frequency, BillingFrequency, QuoteStatus } from './common';
 
 export interface Quote {
@@ -184,6 +183,16 @@ export interface BillingLine {
   description: string;
   amount: number;
   frequency: string;
+  isRecurring?: boolean;
+  onHold?: boolean;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
+  holdStartDate?: string;
+  holdEndDate?: string;
+  creditAmount?: number;
+  creditDate?: string;
+  creditReason?: string;
 }
 
 // Add SiteFormData definition
@@ -192,7 +201,8 @@ export interface SiteFormData {
   address: string;
   city: string;
   state: string;
-  postalCode: string;
+  postal_code: string;  // Keep this as postal_code to match backend
+  postalCode?: string;  // Add this for UI compatibility
   country: string;
   client_id?: string;
   client_name?: string;
@@ -203,7 +213,7 @@ export interface SiteFormData {
   customId?: string;
   contract_details: any;
   periodicals?: any;
-  billingDetails: BillingDetails;
+  billingDetails?: BillingDetails;
   security_details?: any;
   job_specifications?: any;
   subcontractors?: any;
@@ -215,7 +225,6 @@ export interface SiteFormData {
   billing_hold_start_date?: string;
   billing_hold_end_date?: string;
   notes?: string;
-  postcode?: string;
   contacts: any[];
   contractDetails?: any;
 }

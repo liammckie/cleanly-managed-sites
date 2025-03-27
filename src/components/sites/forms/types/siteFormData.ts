@@ -71,6 +71,17 @@ export interface SiteFormData {
     monthlyContractorCost?: number;
     annualContractorCost?: number;
   };
+  locationDetails?: {
+    floor?: string;
+    building?: string;
+    suite?: string;
+    propertyType?: string;
+    accessHours?: string;
+    keyLocation?: string;
+    parkingDetails?: string;
+    siteSize?: string;
+    siteSizeUnit?: 'sqft' | 'sqm';
+  };
   notes?: string;
   clientId?: string;                  // Alias for client_id
   postcode?: string;                  // Alias for postalCode
