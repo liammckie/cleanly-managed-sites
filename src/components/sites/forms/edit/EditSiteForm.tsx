@@ -1,323 +1,247 @@
-
 import React, { useEffect, useState } from 'react';
-import { SiteFormData } from '../types/siteFormData';
-import { useSiteFormData } from './useSiteFormData';
 import { useForm } from 'react-hook-form';
-import { Card } from '@/components/ui/card';
+import { SiteFormData } from '../types/siteFormData';
+import { SiteRecord } from '@/lib/types';
+import { useSiteFormData } from './useSiteFormData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SiteFormStepper } from '../SiteFormStepper';
+import { BasicInformationStep } from '../steps/BasicInformationStep';
+import { ContactsStep } from '../steps/contacts';
+import { BillingDetailsStepWrapper } from '../steps/BillingDetailsStepWrapper';
+import { ContractDetailsStep } from '../steps/ContractDetailsStep';
+import { JobSpecificationsStepWrapper } from '../steps/JobSpecificationsStepWrapper';
+import { PeriodicalsStepWrapper } from '../steps/PeriodicalsStepWrapper';
+import { SubcontractorsStep } from '../steps/SubcontractorsStep';
+import { ReplenishablesStep } from '../steps/ReplenishablesStep';
+import { SecurityStep } from '../steps/SecurityStep';
+import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
+import { useSiteFormContractTerms } from '@/hooks/useSiteFormContractTerms';
+import { useSiteFormAdditionalContracts } from '@/hooks/useSiteFormAdditionalContracts';
+import { Loader2 } from 'lucide-react';
 
-// Updated interface to include site prop
+// Define the props interface for EditSiteForm
 export interface EditSiteFormProps {
-  initialData: Partial<SiteFormData>;
+  initialData: any;
   siteId: string;
-  onSubmit: (data: SiteFormData) => void;
   isLoading: boolean;
-  site?: any; // Add the site property since it's being used
+  onSubmit: (data: any) => void;
+  site?: SiteRecord;
 }
 
-// Changed from default export to named export
-export const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubmit, isLoading, site }) => {
-  const [formData, setFormData] = useState<SiteFormData>({
-    name: '',
-    address: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'Australia',
-    status: 'active',
-    contacts: [],
-    ...initialData
-  });
-  
+export function EditSiteForm({ 
+  initialData, 
+  siteId, 
+  isLoading, 
+  onSubmit 
+}: EditSiteFormProps) {
+  const [formData, setFormData] = useState<SiteFormData>(initialData as SiteFormData);
+  const [activeTab, setActiveTab] = useState('basic-info');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<SiteFormData>({
-    defaultValues: formData
+    defaultValues: initialData
   });
   
-  // Update form when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({ ...prev, ...initialData }));
-      Object.entries(initialData).forEach(([key, value]) => {
-        form.setValue(key as any, value);
-      });
-    }
-  }, [initialData, form]);
+  // Use the site form data hook to prepare data
+  useSiteFormData(initialData, formData, setFormData, form);
   
-  const { formData: processedFormData } = useSiteFormData(initialData as any, formData, setFormData, form);
+  // Use billing lines hook
+  const { 
+    billingLines, 
+    addBillingLine, 
+    updateBillingLine, 
+    removeBillingLine 
+  } = useSiteFormBillingLines();
+  
+  // Use contract terms hook
+  const {
+    addContractTerm,
+    updateContractTerm,
+    removeContractTerm
+  } = useSiteFormContractTerms(formData, setFormData);
+  
+  // Use additional contracts hook
+  const {
+    addAdditionalContract,
+    updateAdditionalContract,
+    removeAdditionalContract
+  } = useSiteFormAdditionalContracts(formData, setFormData);
+  
+  // Handle form submission
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      await onSubmit(formData);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Handle field changes
+  const handleChange = (field: keyof SiteFormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Handle nested field changes
+  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
+    setFormData(prev => {
+      const currentSection = prev[section] || {};
+      return {
+        ...prev,
+        [section]: {
+          ...currentSection,
+          [field]: value
+        }
+      };
+    });
+  };
+  
+  // Handle doubly nested field changes
+  const handleDoubleNestedChange = (
+    section: keyof SiteFormData, 
+    subsection: string, 
+    field: string, 
+    value: any
+  ) => {
+    setFormData(prev => {
+      const currentSection = prev[section] || {};
+      const currentSubsection = currentSection[subsection] || {};
+      
+      return {
+        ...prev,
+        [section]: {
+          ...currentSection,
+          [subsection]: {
+            ...currentSubsection,
+            [field]: value
+          }
+        }
+      };
+    });
+  };
+  
+  // Handle client selection
+  const handleClientChange = (clientId: string) => {
+    handleChange('client_id', clientId);
+    // Additional logic to fetch client data could go here
+  };
   
   return (
-    <Card>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="p-6 space-y-6">
-          <h2 className="text-xl font-semibold">Edit Site</h2>
-          
-          <Tabs defaultValue="basic">
-            <TabsList className="grid grid-cols-4 mb-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="contract">Contract</TabsTrigger>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Site: {formData.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 mb-6">
+              <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+              <TabsTrigger value="contacts">Contacts</TabsTrigger>
               <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="additional">Additional</TabsTrigger>
+              <TabsTrigger value="contract">Contract</TabsTrigger>
+              <TabsTrigger value="job-specs">Job Specs</TabsTrigger>
+              <TabsTrigger value="periodicals">Periodicals</TabsTrigger>
+              <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
+              <TabsTrigger value="replenishables">Replenishables</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="basic">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Site Name</label>
-                    <input
-                      type="text"
-                      {...form.register('name')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
-                    <select
-                      {...form.register('status')}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="active">Active</option>
-                      <option value="pending">Pending</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="lost">Lost</option>
-                      <option value="on-hold">On Hold</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Address</label>
-                  <input
-                    type="text"
-                    {...form.register('address')}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">City</label>
-                    <input
-                      type="text"
-                      {...form.register('city')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">State</label>
-                    <input
-                      type="text"
-                      {...form.register('state')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Postal Code</label>
-                    <input
-                      type="text"
-                      {...form.register('postalCode')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Country</label>
-                    <input
-                      type="text"
-                      {...form.register('country')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-              </div>
+            <TabsContent value="basic-info">
+              <BasicInformationStep 
+                formData={formData} 
+                handleChange={handleChange} 
+                handleNestedChange={handleNestedChange}
+                handleClientChange={handleClientChange}
+              />
             </TabsContent>
             
-            <TabsContent value="contract">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Contract Start Date</label>
-                    <input
-                      type="date"
-                      {...form.register('contract_details.startDate')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Contract End Date</label>
-                    <input
-                      type="date"
-                      {...form.register('contract_details.endDate')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Contract Type</label>
-                    <select
-                      {...form.register('contract_details.contractType')}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="cleaning">Cleaning</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="security">Security</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Contract Number</label>
-                    <input
-                      type="text"
-                      {...form.register('contract_details.contractNumber')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Contract Notes</label>
-                  <textarea
-                    {...form.register('contract_details.notes')}
-                    className="w-full p-2 border rounded"
-                    rows={4}
-                  ></textarea>
-                </div>
-              </div>
+            <TabsContent value="contacts">
+              <ContactsStep 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
             </TabsContent>
             
             <TabsContent value="billing">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Billing Method</label>
-                    <select
-                      {...form.register('billingDetails.billingMethod')}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="invoice">Invoice</option>
-                      <option value="direct_debit">Direct Debit</option>
-                      <option value="credit_card">Credit Card</option>
-                      <option value="bank_transfer">Bank Transfer</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Payment Terms</label>
-                    <select
-                      {...form.register('billingDetails.paymentTerms')}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="7">7 days</option>
-                      <option value="14">14 days</option>
-                      <option value="30">30 days</option>
-                      <option value="45">45 days</option>
-                      <option value="60">60 days</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Weekly Revenue</label>
-                    <input
-                      type="number"
-                      {...form.register('weeklyRevenue')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Monthly Revenue</label>
-                    <input
-                      type="number"
-                      {...form.register('monthlyRevenue')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Annual Revenue</label>
-                    <input
-                      type="number"
-                      {...form.register('annualRevenue')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">Billing Notes</label>
-                  <textarea
-                    {...form.register('billingDetails.notes')} // Changed from "billingDetails.notes" to match BillingDetails interface
-                    className="w-full p-2 border rounded"
-                    rows={4}
-                  ></textarea>
-                </div>
-              </div>
+              <BillingDetailsStepWrapper 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+                handleDoubleNestedChange={handleDoubleNestedChange}
+              />
             </TabsContent>
             
-            <TabsContent value="additional">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Notes</label>
-                  <textarea
-                    {...form.register('notes')}
-                    className="w-full p-2 border rounded"
-                    rows={6}
-                  ></textarea>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Phone</label>
-                    <input
-                      type="text"
-                      {...form.register('phone')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Email</label>
-                    <input
-                      type="email"
-                      {...form.register('email')}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-                </div>
-              </div>
+            <TabsContent value="contract">
+              <ContractDetailsStep 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+                addContractTerm={addContractTerm}
+                updateContractTerm={updateContractTerm}
+                removeContractTerm={removeContractTerm}
+                addAdditionalContract={addAdditionalContract}
+                updateAdditionalContract={updateAdditionalContract}
+                removeAdditionalContract={removeAdditionalContract}
+              />
+            </TabsContent>
+            
+            <TabsContent value="job-specs">
+              <JobSpecificationsStepWrapper 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="periodicals">
+              <PeriodicalsStepWrapper 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="subcontractors">
+              <SubcontractorsStep 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="replenishables">
+              <ReplenishablesStep 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="security">
+              <SecurityStep 
+                formData={formData} 
+                handleNestedChange={handleNestedChange}
+              />
             </TabsContent>
           </Tabs>
           
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
-              disabled={isLoading}
+          <div className="flex justify-end mt-6 space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 border rounded bg-blue-600 text-white hover:bg-blue-700"
-              disabled={isLoading}
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </button>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
           </div>
-        </div>
-      </form>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-// Also export as default for backward compatibility
-export default EditSiteForm;
+}

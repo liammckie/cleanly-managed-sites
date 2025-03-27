@@ -1,232 +1,176 @@
 
-import { Day } from '@/types/common';
-import { Quote, QuoteShift, QuoteSubcontractor } from '@/types/models';
+import { BillingDetails, BillingAddress, BillingLine } from '@/components/sites/forms/types/billingTypes';
+import { Quote } from '@/types/models';
 
-/**
- * Converts any day string to the Day type
- * This helps bridge the gap between different parts of the application
- * that might use different day formats
- */
-export function adaptDay(day: string): Day {
-  return day as Day;
+// Default BillingAddress for when it's missing or incomplete
+const defaultBillingAddress: BillingAddress = {
+  street: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'Australia'
+};
+
+// Adapter for BillingDetails to ensure it has all required properties
+export function adaptBillingDetails(data: any = {}): BillingDetails {
+  return {
+    billingAddress: data.billingAddress || defaultBillingAddress,
+    useClientInfo: !!data.useClientInfo,
+    billingMethod: data.billingMethod || 'fixed',
+    paymentTerms: data.paymentTerms || '30days',
+    billingEmail: data.billingEmail || '',
+    contacts: Array.isArray(data.contacts) ? data.contacts : [],
+    billingLines: Array.isArray(data.billingLines) ? data.billingLines : [],
+    // Copy any other properties that might exist
+    ...data,
+  };
 }
 
-/**
- * Adapts a database quote to the application Quote type
- */
-export function adaptQuote(dbQuote: any): Quote {
-  // Convert snake_case to camelCase and ensure all properties exist
-  const quote: Quote = {
-    id: dbQuote.id,
-    name: dbQuote.name || '',
-    clientName: dbQuote.client_name || dbQuote.clientName || '',
-    siteName: dbQuote.site_name || dbQuote.siteName || '',
-    status: dbQuote.status || 'draft',
-    overheadPercentage: dbQuote.overhead_percentage || dbQuote.overheadPercentage || 15,
-    marginPercentage: dbQuote.margin_percentage || dbQuote.marginPercentage || 20,
-    totalPrice: dbQuote.total_price || dbQuote.totalPrice || 0,
-    laborCost: dbQuote.labor_cost || dbQuote.laborCost || 0,
-    subcontractorCost: dbQuote.subcontractor_cost || dbQuote.subcontractorCost || 0,
-    createdAt: dbQuote.created_at || dbQuote.createdAt || new Date().toISOString(),
-    updatedAt: dbQuote.updated_at || dbQuote.updatedAt || new Date().toISOString(),
-    notes: dbQuote.notes || '',
+// Adapter for JobSpecifications
+export function adaptJobSpecifications(data: any = {}): any {
+  return {
+    daysPerWeek: data.daysPerWeek || 5,
+    hoursPerDay: data.hoursPerDay || 8,
+    directEmployees: data.directEmployees || 0,
+    notes: data.notes || '',
+    cleaningFrequency: data.cleaningFrequency || 'daily',
+    customFrequency: data.customFrequency || '',
+    serviceDays: data.serviceDays || '',
+    serviceTime: data.serviceTime || '',
+    estimatedHours: data.estimatedHours || '',
+    equipmentRequired: data.equipmentRequired || '',
+    scopeNotes: data.scopeNotes || '',
+    weeklyContractorCost: data.weeklyContractorCost || 0,
+    monthlyContractorCost: data.monthlyContractorCost || 0,
+    annualContractorCost: data.annualContractorCost || 0,
+    // Copy any other properties
+    ...data
+  };
+}
+
+// Adapter for Periodicals
+export function adaptPeriodicals(data: any = {}): any {
+  return {
+    items: Array.isArray(data.items) ? data.items : [],
+    notes: data.notes || '',
+    // Copy any other properties
+    ...data
+  };
+}
+
+// Adapter for Quote to handle camelCase/snake_case conversion
+export function adaptQuote(quote: any = {}): Quote {
+  const result: Partial<Quote> = {
+    id: quote.id || '',
+    name: quote.name || '',
+    clientName: quote.clientName || quote.client_name || '',
+    siteName: quote.siteName || quote.site_name || '',
+    status: quote.status || 'draft',
+    totalPrice: quote.totalPrice || quote.total_price || 0,
+    laborCost: quote.laborCost || quote.labor_cost || 0,
+    overheadPercentage: quote.overheadPercentage || quote.overhead_percentage || 15,
+    marginPercentage: quote.marginPercentage || quote.margin_percentage || 20,
+    subcontractorCost: quote.subcontractorCost || quote.subcontractor_cost || 0,
+    createdAt: quote.createdAt || quote.created_at || new Date().toISOString(),
+    updatedAt: quote.updatedAt || quote.updated_at || new Date().toISOString(),
     
-    // Add snake_case versions for backend compatibility
-    client_name: dbQuote.client_name || dbQuote.clientName || '',
-    site_name: dbQuote.site_name || dbQuote.siteName || '',
-    overhead_percentage: dbQuote.overhead_percentage || dbQuote.overheadPercentage || 15,
-    margin_percentage: dbQuote.margin_percentage || dbQuote.marginPercentage || 20,
-    total_price: dbQuote.total_price || dbQuote.totalPrice || 0,
-    labor_cost: dbQuote.labor_cost || dbQuote.laborCost || 0,
-    subcontractor_cost: dbQuote.subcontractor_cost || dbQuote.subcontractorCost || 0,
-    created_at: dbQuote.created_at || dbQuote.createdAt || new Date().toISOString(),
-    updated_at: dbQuote.updated_at || dbQuote.updatedAt || new Date().toISOString(),
-  };
-  
-  // Add optional properties if they exist
-  if (dbQuote.title) quote.title = dbQuote.title;
-  if (dbQuote.description) quote.description = dbQuote.description;
-  if (dbQuote.supplies_cost) {
-    quote.supplies_cost = dbQuote.supplies_cost;
-    quote.suppliesCost = dbQuote.supplies_cost;
-  }
-  if (dbQuote.equipment_cost) {
-    quote.equipment_cost = dbQuote.equipment_cost;
-    quote.equipmentCost = dbQuote.equipment_cost;
-  }
-  if (dbQuote.quote_number) {
-    quote.quote_number = dbQuote.quote_number;
-    quote.quoteNumber = dbQuote.quote_number;
-  }
-  if (dbQuote.valid_until) {
-    quote.valid_until = dbQuote.valid_until;
-    quote.validUntil = dbQuote.valid_until;
-  }
-  if (dbQuote.client_id) {
-    quote.client_id = dbQuote.client_id;
-    quote.clientId = dbQuote.client_id;
-  }
-  if (dbQuote.site_id) {
-    quote.site_id = dbQuote.site_id;
-    quote.siteId = dbQuote.site_id;
-  }
-  if (dbQuote.overhead_cost) {
-    quote.overhead_cost = dbQuote.overhead_cost;
-    quote.overheadCost = dbQuote.overhead_cost;
-  }
-  if (dbQuote.total_cost) {
-    quote.total_cost = dbQuote.total_cost;
-    quote.totalCost = dbQuote.total_cost;
-  }
-  if (dbQuote.margin_amount) {
-    quote.margin_amount = dbQuote.margin_amount;
-    quote.marginAmount = dbQuote.margin_amount;
-  }
-  if (dbQuote.start_date) {
-    quote.start_date = dbQuote.start_date;
-    quote.startDate = dbQuote.start_date;
-  }
-  if (dbQuote.end_date) {
-    quote.end_date = dbQuote.end_date;
-    quote.endDate = dbQuote.end_date;
-  }
-  if (dbQuote.expiry_date) {
-    quote.expiry_date = dbQuote.expiry_date;
-    quote.expiryDate = dbQuote.expiry_date;
-  }
-  
-  // Handle shifts and subcontractors if they exist
-  if (dbQuote.shifts && Array.isArray(dbQuote.shifts)) {
-    quote.shifts = dbQuote.shifts.map((shift: any) => adaptQuoteShift(shift));
-  }
-  
-  if (dbQuote.subcontractors && Array.isArray(dbQuote.subcontractors)) {
-    quote.subcontractors = dbQuote.subcontractors.map((sub: any) => adaptQuoteSubcontractor(sub));
-  }
-  
-  return quote;
-}
-
-/**
- * Convert DbOverheadProfile to an OverheadProfile
- */
-export function dbToOverheadProfile(dbProfile: any) {
-  return {
-    id: dbProfile.id,
-    name: dbProfile.name,
-    description: dbProfile.description,
-    laborPercentage: dbProfile.labor_percentage
-  };
-}
-
-/**
- * Adapts a quote shift from database format to application format
- */
-export function adaptQuoteShift(dbShift: any): QuoteShift {
-  return {
-    id: dbShift.id,
-    quote_id: dbShift.quote_id || dbShift.quoteId || '',
-    day: adaptDay(dbShift.day),
-    start_time: dbShift.start_time || dbShift.startTime || '',
-    end_time: dbShift.end_time || dbShift.endTime || '',
-    break_duration: dbShift.break_duration || dbShift.breakDuration || 0,
-    number_of_cleaners: dbShift.number_of_cleaners || dbShift.numberOfCleaners || 1,
-    employment_type: dbShift.employment_type || dbShift.employmentType || 'casual',
-    level: dbShift.level || 1,
-    allowances: dbShift.allowances || [],
-    estimated_cost: dbShift.estimated_cost || dbShift.estimatedCost || 0,
-    location: dbShift.location || '',
-    notes: dbShift.notes || '',
+    // Additional properties
+    title: quote.title || '',
+    description: quote.description || '',
     
-    // Add camelCase aliases for frontend compatibility
-    quoteId: dbShift.quote_id || dbShift.quoteId || '',
-    startTime: dbShift.start_time || dbShift.startTime || '',
-    endTime: dbShift.end_time || dbShift.endTime || '',
-    breakDuration: dbShift.break_duration || dbShift.breakDuration || 0,
-    numberOfCleaners: dbShift.number_of_cleaners || dbShift.numberOfCleaners || 1,
-    employmentType: dbShift.employment_type || dbShift.employmentType || 'casual',
-    estimatedCost: dbShift.estimated_cost || dbShift.estimatedCost || 0
-  };
-}
-
-/**
- * Adapts a quote subcontractor from database format to application format
- */
-export function adaptQuoteSubcontractor(dbSub: any): QuoteSubcontractor {
-  return {
-    id: dbSub.id,
-    quote_id: dbSub.quote_id || dbSub.quoteId || '',
-    name: dbSub.name || '',
-    description: dbSub.description || '',
-    cost: dbSub.cost || 0,
-    frequency: dbSub.frequency || 'monthly',
-    email: dbSub.email || '',
-    phone: dbSub.phone || '',
-    services: dbSub.services || [],
-    service: dbSub.service || '',
-    notes: dbSub.notes || '',
+    // Handle costs with various naming patterns
+    suppliesCost: quote.suppliesCost || quote.supplies_cost || 0,
+    equipmentCost: quote.equipmentCost || quote.equipment_cost || 0,
     
-    // Add camelCase alias for frontend compatibility
-    quoteId: dbSub.quote_id || dbSub.quoteId || '',
+    // Handle other properties
+    quoteNumber: quote.quoteNumber || quote.quote_number || '',
+    validUntil: quote.validUntil || quote.valid_until || '',
+    
+    // Client and site IDs
+    clientId: quote.clientId || quote.client_id || '',
+    siteId: quote.siteId || quote.site_id || '',
+    
+    // Cost calculations
+    overheadCost: quote.overheadCost || quote.overhead_cost || 0,
+    totalCost: quote.totalCost || quote.total_cost || 0,
+    marginAmount: quote.marginAmount || quote.margin_amount || 0,
+    
+    // Dates
+    startDate: quote.startDate || quote.start_date || '',
+    endDate: quote.endDate || quote.end_date || '',
+    expiryDate: quote.expiryDate || quote.expiry_date || '',
+    
+    // Notes and contract details
+    notes: quote.notes || '',
+    contractLength: quote.contractLength || quote.contract_length || 0,
+    contractLengthUnit: quote.contractLengthUnit || quote.contract_length_unit || 'months',
   };
+  
+  return result as Quote;
 }
 
-/**
- * Adapts BillingDetails to ensure all required fields are present
- */
-export function adaptBillingDetails(details: any = {}) {
+// Function to adapt day values between different formats 
+// (needed for ShiftScheduler component)
+export function adaptDay(day: string): string {
+  const dayMap: Record<string, string> = {
+    // Map various day formats to a common format
+    'weekday': 'monday', // Default mapping for "weekday"
+    'monday': 'monday',
+    'tuesday': 'tuesday',
+    'wednesday': 'wednesday',
+    'thursday': 'thursday',
+    'friday': 'friday',
+    'saturday': 'saturday',
+    'sunday': 'sunday',
+    'mon': 'monday',
+    'tue': 'tuesday',
+    'wed': 'wednesday',
+    'thu': 'thursday',
+    'fri': 'friday',
+    'sat': 'saturday',
+    'sun': 'sunday',
+  };
+  
+  return dayMap[day.toLowerCase()] || day;
+}
+
+// Create default billing details
+export function getDefaultBillingDetails(): BillingDetails {
   return {
-    billingAddress: details.billingAddress || {},
-    useClientInfo: details.useClientInfo || false,
-    billingMethod: details.billingMethod || 'invoice',
-    paymentTerms: details.paymentTerms || '30days',
-    billingEmail: details.billingEmail || '',
-    billingLines: details.billingLines || [],
-    contacts: details.contacts || [],
-    // Additional fields that might be needed
-    billingCity: details.billingCity || '',
-    billingState: details.billingState || '',
-    billingPostcode: details.billingPostcode || '',
-    notes: details.notes || ''
+    billingAddress: defaultBillingAddress,
+    useClientInfo: false,
+    billingMethod: 'fixed',
+    paymentTerms: '30days',
+    billingEmail: '',
+    contacts: [],
+    billingLines: []
   };
 }
 
-/**
- * Creates a complete BillingAddress object from partial data
- */
-export function createBillingAddress(partialAddress: any) {
+// Ensure that billing details exist on an object
+export function ensureBillingDetails(data: any): any {
+  if (!data.billingDetails) {
+    return {
+      ...data,
+      billingDetails: getDefaultBillingDetails()
+    };
+  }
+  return data;
+}
+
+// Create a contract term adapter to handle different shapes
+export function adaptContractTerm(term: any): any {
+  // Return a contract term with all required fields
   return {
-    line1: partialAddress.line1 || '',
-    line2: partialAddress.line2 || '',
-    city: partialAddress.city || '',
-    state: partialAddress.state || '',
-    postcode: partialAddress.postcode || '',
-    country: partialAddress.country || ''
+    id: term.id || crypto.randomUUID(),
+    title: term.title || term.name || '',
+    content: term.content || term.description || '',
+    startDate: term.startDate || '',
+    endDate: term.endDate || '',
+    renewalTerms: term.renewalTerms || '',
+    terminationPeriod: term.terminationPeriod || '',
+    autoRenew: term.autoRenew || false,
+    // Include any additional fields
+    ...term
   };
-}
-
-/**
- * Adapt contract data to the expected format
- */
-export function adaptContract(contractData: any) {
-  return {
-    id: contractData.id || '',
-    name: contractData.name || '',
-    client_id: contractData.client_id || '',
-    site_id: contractData.site_id || '',
-    start_date: contractData.start_date || '',
-    end_date: contractData.end_date || '',
-    value: contractData.value || 0,
-    status: contractData.status || 'active',
-    created_at: contractData.created_at || new Date().toISOString(),
-    updated_at: contractData.updated_at || new Date().toISOString(),
-    // Add any other fields needed
-  };
-}
-
-/**
- * Adapt contracts array
- */
-export function adaptContracts(contractsData: any[]) {
-  return contractsData.map(adaptContract);
 }

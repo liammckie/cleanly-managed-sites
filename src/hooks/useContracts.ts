@@ -1,223 +1,177 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contractsApi } from '@/lib/api/sites/contractsApi';
-import { ContractData, ContractSummaryData, GroupedContracts } from '@/types/contracts';
-import { addMonths, isAfter, isBefore } from 'date-fns';
+import { SiteRecord } from '@/lib/types';
+import { sitesApi } from '@/lib/api/sites';
+import { addMonths, addDays, isAfter, isBefore, isWithinInterval } from 'date-fns';
 
-export function useContracts() {
-  const [contractData, setContractData] = useState<ContractData[]>([]);
+// Define the contract summary data interface
+export interface ContractSummaryData {
+  totalCount: number;
+  activeCount: number;
+  pendingCount: number;
+  expiredCount?: number; // Make this optional to fix the error
+  totalValue: number;
+  avgContractValue: number;
+  totalContracts: number;
+  expiringWithin30Days: number;
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  contractsByMonth: Record<string, number>;
+  contractValueByMonth: Record<string, number>;
+  profitMargin: number;
+}
+
+export const useContracts = () => {
+  const [sites, setSites] = useState<SiteRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [metrics, setMetrics] = useState<ContractSummaryData>({
-    totalValue: 0,
-    expiringWithin30Days: 0,
-    renewalRate: 0,
+  const [error, setError] = useState<string | null>(null);
+  const [contractSummary, setContractSummary] = useState<ContractSummaryData>({
     totalCount: 0,
-    expiringCount: 0,
-    expiredCount: 0,
     activeCount: 0,
+    pendingCount: 0,
+    totalValue: 0,
     avgContractValue: 0,
-    totalRevenue: 0,
-    totalCost: 0,
-    totalProfit: 0
-  });
-  
-  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({
-    activeContracts: [],
-    expiringContracts: [],
-    expiredContracts: []
-  });
-
-  const queryClient = useQueryClient();
-
-  // Use React Query to fetch contracts
-  const contractsQuery = useQuery({
-    queryKey: ['contracts'],
-    queryFn: contractsApi.getContracts,
+    totalContracts: 0,
+    expiringWithin30Days: 0,
+    expiringThisMonth: 0,
+    expiringNext3Months: 0,
+    expiringNext6Months: 0,
+    expiringThisYear: 0,
+    valueExpiringThisMonth: 0,
+    valueExpiringNext3Months: 0,
+    valueExpiringNext6Months: 0,
+    valueExpiringThisYear: 0,
+    contractsByMonth: {},
+    contractValueByMonth: {},
+    profitMargin: 0,
   });
 
-  const createContractMutation = useMutation({
-    mutationFn: contractsApi.createContract,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
-    }
-  });
-
-  const updateContractMutation = useMutation({
-    mutationFn: (params: { id: string, data: Partial<ContractData> }) => 
-      contractsApi.updateContract(params.id, params.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
-    }
-  });
-
-  const deleteContractMutation = useMutation({
-    mutationFn: contractsApi.deleteContract,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] });
-    }
-  });
-
-  // Process contracts when they are loaded
   useEffect(() => {
-    if (contractsQuery.data) {
-      setContractData(contractsQuery.data);
-      
-      const active: ContractData[] = [];
-      const expiring: ContractData[] = [];
-      const expired: ContractData[] = [];
-      const today = new Date();
-      const threeMonthsLater = addMonths(today, 3);
-      
-      contractsQuery.data.forEach(contract => {
-        let endDate: Date | null = null;
-        
-        // Safely extract contract details
-        if (contract.contract_details && typeof contract.contract_details === 'object') {
-          const details = contract.contract_details as any;
-          if (details.endDate) {
-            endDate = new Date(details.endDate);
-          }
-        }
-        
-        if (!endDate) {
-          // If no end date, consider it as active
-          active.push(contract);
-        } else if (isBefore(endDate, today)) {
-          // If end date is in the past, consider it as expired
-          expired.push(contract);
-        } else if (isBefore(endDate, threeMonthsLater)) {
-          // If end date is within 3 months, consider it as expiring
-          expiring.push(contract);
-        } else {
-          // Otherwise, consider it as active
-          active.push(contract);
-        }
-      });
-      
-      setGroupedContracts({
-        activeContracts: active,
-        expiringContracts: expiring,
-        expiredContracts: expired
-      });
-      
-      // Update metrics
-      calculateMetrics(contractsQuery.data);
-    }
-    
-    if (contractsQuery.isError) {
-      setError(contractsQuery.error as Error);
-    }
-    
-    setIsLoading(contractsQuery.isLoading);
-  }, [contractsQuery.data, contractsQuery.isError, contractsQuery.error, contractsQuery.isLoading]);
-
-  const calculateMetrics = (contracts: ContractData[]) => {
-    if (!contracts || !Array.isArray(contracts)) {
-      return;
-    }
-    
-    // Default metrics
-    const newMetrics: ContractSummaryData = {
-      expiringThisMonth: 0,
-      expiringNext3Months: 0,
-      expiringNext6Months: 0,
-      expiringThisYear: 0,
-      valueExpiringThisMonth: 0,
-      valueExpiringNext3Months: 0,
-      valueExpiringNext6Months: 0,
-      valueExpiringThisYear: 0,
-      totalContracts: contracts.length,
-      totalValue: 0,
-      totalRevenue: 0,
-      totalCost: 0,
-      totalProfit: 0,
-      avgContractValue: 0,
-      profitMargin: 0,
-      activeCount: 0
+    const fetchSites = async () => {
+      setIsLoading(true);
+      try {
+        const sitesData = await sitesApi.getSites();
+        setSites(sitesData);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch sites');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    
-    const now = new Date();
-    const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const next3Months = new Date(now.getFullYear(), now.getMonth() + 3, 0);
-    const next6Months = new Date(now.getFullYear(), now.getMonth() + 6, 0);
-    const thisYearEnd = new Date(now.getFullYear(), 11, 31);
-    
-    // Calculate metrics
-    contracts.forEach(contract => {
-      // Add to total revenue
-      const monthlyRevenue = Number(contract.monthly_revenue) || 0;
-      newMetrics.totalValue += monthlyRevenue;
-      
-      // Count active contracts
-      if (contract.status === 'active') {
-        newMetrics.activeCount++;
-      }
-      
-      // Check expiration dates
-      if (contract.contract_details && typeof contract.contract_details === 'object' && contract.contract_details.endDate) {
-        try {
-          const endDate = new Date(contract.contract_details.endDate as string);
-          
-          // This month
-          if (endDate <= thisMonthEnd) {
-            newMetrics.expiringThisMonth++;
-            newMetrics.valueExpiringThisMonth += monthlyRevenue;
-          }
-          
-          // Next 3 months
-          if (endDate <= next3Months) {
-            newMetrics.expiringNext3Months++;
-            newMetrics.valueExpiringNext3Months += monthlyRevenue;
-          }
-          
-          // Next 6 months
-          if (endDate <= next6Months) {
-            newMetrics.expiringNext6Months++;
-            newMetrics.valueExpiringNext6Months += monthlyRevenue;
-          }
-          
-          // This year
-          if (endDate <= thisYearEnd) {
-            newMetrics.expiringThisYear++;
-            newMetrics.valueExpiringThisYear += monthlyRevenue;
-          }
-        } catch (e) {
-          // Skip invalid dates
+
+    fetchSites();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && sites.length > 0) {
+      const today = new Date();
+      const thirtyDays = addDays(today, 30);
+      const next3Months = addMonths(today, 3);
+      const next6Months = addMonths(today, 6);
+      const endOfYear = new Date(today.getFullYear(), 11, 31);
+
+      let activeCount = 0;
+      let pendingCount = 0;
+      let totalValue = 0;
+      let expiringWithin30Days = 0;
+      let expiringThisMonth = 0;
+      let expiringNext3Months = 0;
+      let expiringNext6Months = 0;
+      let expiringThisYear = 0;
+      let valueExpiringThisMonth = 0;
+      let valueExpiringNext3Months = 0;
+      let valueExpiringNext6Months = 0;
+      let valueExpiringThisYear = 0;
+      const contractsByMonth: Record<string, number> = {};
+      const contractValueByMonth: Record<string, number> = {};
+
+      sites.forEach(site => {
+        if (site.status === 'active') {
+          activeCount++;
+        } else if (site.status === 'pending') {
+          pendingCount++;
         }
-      }
-    });
-    
-    // Calculate averages and other derived metrics
-    if (newMetrics.totalContracts > 0) {
-      newMetrics.avgContractValue = newMetrics.totalValue / newMetrics.totalContracts;
+
+        if (site.monthly_revenue) {
+          totalValue += site.monthly_revenue;
+        }
+
+        if (site.contract_details?.endDate) {
+          const endDate = new Date(site.contract_details.endDate);
+          const endMonth = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+
+          if (isWithinInterval(endDate, { start: today, end: thirtyDays })) {
+            expiringWithin30Days++;
+          }
+
+          if (endDate.getFullYear() === today.getFullYear() && endDate.getMonth() === today.getMonth()) {
+            expiringThisMonth++;
+            if (site.monthly_revenue) {
+              valueExpiringThisMonth += site.monthly_revenue;
+            }
+          }
+
+          if (isWithinInterval(endDate, { start: today, end: next3Months })) {
+            expiringNext3Months++;
+            if (site.monthly_revenue) {
+              valueExpiringNext3Months += site.monthly_revenue;
+            }
+          }
+
+          if (isWithinInterval(endDate, { start: today, end: next6Months })) {
+            expiringNext6Months++;
+            if (site.monthly_revenue) {
+              valueExpiringNext6Months += site.monthly_revenue;
+            }
+          }
+
+          if (isWithinInterval(endDate, { start: today, end: endOfYear })) {
+            expiringThisYear++;
+             if (site.monthly_revenue) {
+              valueExpiringThisYear += site.monthly_revenue;
+            }
+          }
+
+          contractsByMonth[endMonth] = (contractsByMonth[endMonth] || 0) + 1;
+          contractValueByMonth[endMonth] = (contractValueByMonth[endMonth] || 0) + (site.monthly_revenue || 0);
+        }
+      });
+
+      const avgContractValue = sites.length > 0 ? totalValue / sites.length : 0;
+
+      setContractSummary({
+        totalCount: sites.length,
+        activeCount,
+        pendingCount,
+        totalValue,
+        avgContractValue,
+        totalContracts: sites.length,
+        expiringWithin30Days,
+        expiringThisMonth,
+        expiringNext3Months,
+        expiringNext6Months,
+        expiringThisYear,
+        valueExpiringThisMonth,
+        valueExpiringNext3Months,
+        valueExpiringNext6Months,
+        valueExpiringThisYear,
+        contractsByMonth,
+        contractValueByMonth,
+        profitMargin: 0, // Replace with actual calculation if available
+      });
     }
-    
-    // Estimate profit (this is a simplified calculation, adapt as needed)
-    newMetrics.totalRevenue = newMetrics.totalValue * 12; // Annualized revenue
-    newMetrics.totalCost = newMetrics.totalRevenue * 0.7; // Assuming 70% cost
-    newMetrics.totalProfit = newMetrics.totalRevenue - newMetrics.totalCost;
-    
-    if (newMetrics.totalRevenue > 0) {
-      newMetrics.profitMargin = (newMetrics.totalProfit / newMetrics.totalRevenue) * 100;
-    }
-    
-    setMetrics(newMetrics);
-  };
+  }, [sites, isLoading]);
 
   return {
-    contractData,
+    sites,
     isLoading,
     error,
-    metrics,
-    groupedContracts,
-    refetch: contractsQuery.refetch,
-    createContract: createContractMutation.mutateAsync,
-    updateContract: (id: string, data: Partial<ContractData>) => 
-      updateContractMutation.mutateAsync({ id, data }),
-    deleteContract: deleteContractMutation.mutateAsync,
-    isCreating: createContractMutation.isPending,
-    isUpdating: updateContractMutation.isPending,
-    isDeleting: deleteContractMutation.isPending
+    contractSummary,
   };
-}
+};

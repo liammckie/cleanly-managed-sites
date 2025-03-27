@@ -1,16 +1,35 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
 import { useSite } from '@/hooks/useSite';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
+import { useSiteUpdate } from '@/hooks/useSiteUpdate';
+import { toast } from 'sonner';
 
 const EditSite = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { site, isLoading, error } = useSite(id);
+  const { updateSiteMutation } = useSiteUpdate();
+  
+  // Handle form submission
+  const handleSubmit = async (data: any) => {
+    try {
+      await updateSiteMutation.mutateAsync({
+        id: id!,
+        data
+      });
+      toast.success("Site updated successfully");
+      navigate(`/sites/${id}`);
+    } catch (error) {
+      console.error("Error updating site:", error);
+      toast.error("Failed to update site");
+    }
+  };
   
   return (
     <SidebarProvider>
@@ -32,11 +51,10 @@ const EditSite = () => {
               </div>
             ) : site ? (
               <EditSiteForm 
-                site={site}
                 initialData={site}
-                siteId={id} 
+                siteId={id!} 
                 isLoading={false}
-                onSubmit={() => {}}
+                onSubmit={handleSubmit}
               />
             ) : (
               <div className="text-center">

@@ -23,7 +23,7 @@ export interface BillingLine {
   description: string;
   amount: number;
   frequency: string;
-  // Add missing properties
+  // Required properties
   isRecurring?: boolean;
   onHold?: boolean;
   weeklyAmount?: number;
@@ -82,6 +82,6 @@ export interface BillingDetails {
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
   
-  // For notes referenced in EditSiteForm.tsx
+  // For notes referenced in multiple files
   notes?: string;
 }

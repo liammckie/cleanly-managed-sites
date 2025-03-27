@@ -1,16 +1,35 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSite } from '@/hooks/useSite';
 import { DashboardLayout } from '@/components/ui/layout/DashboardLayout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
+import { useSiteUpdate } from '@/hooks/useSiteUpdate';
+import { toast } from 'sonner';
 
 const SiteEdit = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { site, isLoading, error } = useSite(id);
+  const { updateSiteMutation } = useSiteUpdate();
+
+  // Handle form submission
+  const handleSubmit = async (data: any) => {
+    try {
+      await updateSiteMutation.mutateAsync({
+        id: id!,
+        data
+      });
+      toast.success("Site updated successfully");
+      navigate(`/sites/${id}`);
+    } catch (error) {
+      console.error("Error updating site:", error);
+      toast.error("Failed to update site");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -43,11 +62,10 @@ const SiteEdit = () => {
         ) : site ? (
           <div className="max-w-5xl mx-auto">
             <EditSiteForm 
-              site={site}
               initialData={site}
-              siteId={id} 
+              siteId={id!} 
               isLoading={false}
-              onSubmit={() => {}}
+              onSubmit={handleSubmit}
             />
           </div>
         ) : (

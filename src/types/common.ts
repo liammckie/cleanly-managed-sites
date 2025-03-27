@@ -1,26 +1,26 @@
 
-// Common status types
-export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
-export type ContractStatus = 'active' | 'pending' | 'expired' | 'cancelled' | 'renewal';
-export type UserStatus = 'active' | 'pending' | 'inactive';
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
+// Common type definitions used across the application
 
-// Common day and time types
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'weekend' | 'public_holiday';
-export type TimeFormat = '12h' | '24h';
+// Day of the week
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-// Employee types
-export type EmploymentType = 'casual' | 'part_time' | 'full_time' | 'contractor';
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 9;
+// UnifiedDay type to handle both specific days and general categories
+export type UnifiedDay = Day | 'weekday' | 'weekend';
 
-// Frequency types
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+// Employment types
+export type EmploymentType = 'full-time' | 'part-time' | 'casual';
+
+// Employee levels
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+
+// Frequency of payments, services, etc.
+export type Frequency = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+
+// Billing frequency
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
-// JSON related types
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
-export type JsonObject = { [key: string]: Json };
-export type JsonValue = Json;
+// Quote status
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 
-// Add UnifiedDay to align with the types in shift-planner
-export type UnifiedDay = Day | 'weekday' | 'weekend';
+// Site status
+export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';

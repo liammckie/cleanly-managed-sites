@@ -1,3 +1,4 @@
+
 // This is a partial update to fix type issues in the file
 // We're adding wrappers that handle the props properly
 
@@ -15,8 +16,16 @@ import {
 } from './steps';
 import { SiteFormStep } from './SiteFormStep';
 
+// Define and export the StepConfig type
+export interface StepConfig {
+  id: string;
+  title: string;
+  description: string;
+  component: React.ComponentType<any>;
+}
+
 // Replace the relevant part of the component where the steps are defined
-export const siteFormSteps = [
+export const siteFormSteps: StepConfig[] = [
   {
     id: 'basic-information',
     title: 'Basic Information',
