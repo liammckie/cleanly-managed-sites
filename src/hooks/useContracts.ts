@@ -1,7 +1,8 @@
-
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { contractsApi } from '@/lib/api/sites/contractsApi';
 import { ContractData, ContractSummaryData, GroupedContracts } from '@/lib/types/contracts';
+import { addMonths, isAfter, isBefore } from 'date-fns';
 
 export function useContracts() {
   const [contractData, setContractData] = useState<ContractData[]>([]);
@@ -34,32 +35,67 @@ export function useContracts() {
     // Additional metrics
     activeCount: 0
   });
-  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({});
+  const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({
+    activeContracts: [],
+    expiringContracts: [],
+    expiredContracts: []
+  });
 
-  useEffect(() => {
-    const fetchContracts = async () => {
-      setIsLoading(true);
-      try {
-        const contracts = await contractsApi.getContracts();
+  const { data: contracts, refetch, createContract, updateContract, deleteContract, isCreating, isUpdating, isDeleting } = useQuery({
+    queryKey: ['contracts'],
+    queryFn: contractsApi.getContracts,
+    onSuccess: (contracts) => {
+      setContractData(contracts);
+      
+      const active: ContractData[] = [];
+      const expiring: ContractData[] = [];
+      const expired: ContractData[] = [];
+      const today = new Date();
+      const threeMonthsLater = addMonths(today, 3);
+      
+      contracts.forEach(contract => {
+        let endDate: Date | null = null;
         
-        // Set contract data
-        setContractData(contracts);
+        // Safely extract contract details
+        if (contract.contract_details && typeof contract.contract_details === 'object') {
+          const details = contract.contract_details as any;
+          if (details.endDate) {
+            endDate = new Date(details.endDate);
+          }
+        }
         
-        // Process contracts for metrics
-        calculateMetrics(contracts);
-        
-        // Group contracts for charts
-        groupContractsByKey(contracts);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch contracts'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchContracts();
-  }, []);
-  
+        if (!endDate) {
+          // If no end date, consider it as active
+          active.push(contract);
+        } else if (isBefore(endDate, today)) {
+          // If end date is in the past, consider it as expired
+          expired.push(contract);
+        } else if (isBefore(endDate, threeMonthsLater)) {
+          // If end date is within 3 months, consider it as expiring
+          expiring.push(contract);
+        } else {
+          // Otherwise, consider it as active
+          active.push(contract);
+        }
+      });
+      
+      setGroupedContracts({
+        activeContracts: active,
+        expiringContracts: expiring,
+        expiredContracts: expired
+      });
+      
+      // Update metrics
+      calculateMetrics(contracts);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err : new Error('Failed to fetch contracts'));
+    },
+    onSettled: () => {
+      setIsLoading(false);
+    }
+  });
+
   const calculateMetrics = (contracts: ContractData[]) => {
     if (!contracts || !Array.isArray(contracts)) {
       return;
@@ -152,33 +188,19 @@ export function useContracts() {
     
     setMetrics(newMetrics);
   };
-  
-  const groupContractsByKey = (contracts: ContractData[]) => {
-    if (!contracts || !Array.isArray(contracts)) {
-      return;
-    }
-    
-    // Group by status
-    const byStatus: Record<string, ContractData[]> = {};
-    
-    contracts.forEach(contract => {
-      const status = contract.status || 'unknown';
-      if (!byStatus[status]) {
-        byStatus[status] = [];
-      }
-      byStatus[status].push(contract);
-    });
-    
-    setGroupedContracts({
-      ...byStatus
-    });
-  };
 
   return {
     contractData,
     isLoading,
     error,
     metrics,
-    groupedContracts
+    groupedContracts,
+    refetch,
+    createContract,
+    updateContract,
+    deleteContract,
+    isCreating,
+    isUpdating,
+    isDeleting
   };
 }

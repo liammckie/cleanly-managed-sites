@@ -1,35 +1,46 @@
 
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { parseCSV, importContracts, convertCSVToContractFormat } from '@/lib/import-export';
+import { parseCSV, convertCSVToContractFormat, importContractors } from '@/lib/import-export';
 
 export function useImportContracts() {
-  const handleImportContracts = async (data: any[], fileType: 'json' | 'csv' = 'json') => {
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResults, setImportResults] = useState<any>(null);
+  
+  const handleImportCSV = async (file: File) => {
     try {
-      if (fileType === 'csv') {
-        data = convertCSVToContractFormat(data);
+      setIsImporting(true);
+      
+      // Parse the CSV file into a JSON array
+      const parsedData = await parseCSV(file);
+      
+      if (!parsedData || parsedData.length === 0) {
+        toast.error('No valid data found in CSV file');
+        return;
       }
       
-      await importContracts(data);
-      toast.success(`${data.length} contracts imported successfully`);
-    } catch (error: any) {
-      toast.error(`Failed to import contracts: ${error.message}`);
-      throw error;
+      // Convert the parsed data to the contract format
+      const contractData = convertCSVToContractFormat(parsedData);
+      
+      // Import the contracts
+      const results = await importContractors(contractData, 'incremental');
+      
+      setImportResults(results);
+      
+      // Show a success message
+      toast.success(`Successfully imported ${results.imported} contracts`);
+      
+    } catch (error) {
+      console.error('Error importing contracts:', error);
+      toast.error('Failed to import contracts');
+    } finally {
+      setIsImporting(false);
     }
   };
-
-  const handleCSVImportContracts = async (file: File) => {
-    try {
-      const parsedData = await parseCSV(file);
-      await handleImportContracts(parsedData, 'csv');
-    } catch (error: any) {
-      console.error(`Error importing contracts from CSV:`, error);
-      toast.error(`Failed to import contracts: ${error.message}`);
-      throw error;
-    }
-  };
-
+  
   return {
-    handleImportContracts,
-    handleCSVImportContracts,
+    isImporting,
+    importResults,
+    handleImportCSV
   };
 }

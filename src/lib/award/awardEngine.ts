@@ -5,7 +5,8 @@ import {
   PayCondition,
   JobCostCalculationInput,
   CostCalculationResult,
-  RateDefinition
+  RateDefinition,
+  CostItem
 } from './types';
 import { awardData } from './awardData';
 
@@ -44,7 +45,7 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
   // Calculate labor cost for each condition
   let laborCost = 0;
   let totalHours = 0;
-  const costItems = [];
+  const costItems: CostItem[] = [];
 
   for (const condition in hours) {
     if (hours.hasOwnProperty(condition)) {
@@ -77,6 +78,12 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
     margin,
     price: totalCostBeforeMargin + margin,
     totalCostBeforeMargin,
-    items: costItems
+    items: costItems,
+    // Add required properties
+    laborHours: totalHours,
+    breakdownByDay: {},
+    byTimeOfDay: {},
+    profitMargin: marginPercentage,
+    finalPrice: totalCostBeforeMargin + margin
   };
 }

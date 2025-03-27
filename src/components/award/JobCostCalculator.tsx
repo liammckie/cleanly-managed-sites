@@ -1,222 +1,144 @@
-
 import React, { useState } from 'react';
-import { EmploymentType, PayCondition, EmployeeLevel } from '@/lib/award/types';
 import { calculateJobCost } from '@/lib/award/awardEngine';
-import { useAwardSettings } from '@/hooks/useAwardSettings';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PayCondition, EmploymentType, EmployeeLevel } from '@/lib/award/types';
+import { awardData } from '@/lib/award/awardData';
 
-// Display names for conditions
-const conditionDisplayNames: Record<PayCondition, string> = {
-  'base': 'Base Rate',
-  'standard': 'Standard',
-  'weekday': 'Weekday',
-  'monday': 'Monday',
-  'tuesday': 'Tuesday',
-  'wednesday': 'Wednesday',
-  'thursday': 'Thursday',
-  'friday': 'Friday',
-  'shift-early-late': 'Early/Late Shift',
-  'saturday': 'Saturday',
-  'sunday': 'Sunday',
-  'public_holiday': 'Public Holiday',
-  'early_morning': 'Early Morning',
-  'evening': 'Evening',
-  'night': 'Night',
-  'overnight': 'Overnight',
-  'overtime-first-2-hours': 'Overtime (First 2 Hours)',
-  'overtime-after-2-hours': 'Overtime (After 2 Hours)',
-  'overtime-sunday': 'Overtime (Sunday)',
-  'overtime-public-holiday': 'Overtime (Public Holiday)'
+const payConditionLabels: Record<string, string> = {
+  base: 'Base Rate',
+  overtime_1_5: 'Overtime (1.5x)',
+  overtime_2: 'Overtime (2x)',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
+  public_holiday: 'Public Holiday',
+  early_morning: 'Early Morning',
+  evening: 'Evening',
+  night: 'Night Shift',
+  shift_allowance: 'Shift Allowance',
+  meal_allowance: 'Meal Allowance'
 };
 
 export function JobCostCalculator() {
-  const { settings } = useAwardSettings();
-  
-  // Form state
   const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
-  const [level, setLevel] = useState<EmployeeLevel>(1);
+  const [level, setLevel] = useState<EmployeeLevel>('1');
   const [hours, setHours] = useState<Record<PayCondition, number>>({
-    'base': 0,
-    'standard': 0,
-    'weekday': 0,
-    'monday': 0,
-    'tuesday': 0,
-    'wednesday': 0,
-    'thursday': 0,
-    'friday': 0,
-    'shift-early-late': 0,
-    'saturday': 0,
-    'sunday': 0,
-    'public_holiday': 0,
-    'early_morning': 0,
-    'evening': 0,
-    'night': 0,
-    'overnight': 0,
-    'overtime-first-2-hours': 0,
-    'overtime-after-2-hours': 0,
-    'overtime-sunday': 0,
-    'overtime-public-holiday': 0
+    base: 38,
+    overtime_1_5: 0,
+    overtime_2: 0,
+    saturday: 0,
+    sunday: 0,
+    public_holiday: 0,
+    early_morning: 0,
+    evening: 0,
+    night: 0,
+    shift_allowance: 0,
+    meal_allowance: 0
   });
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [marginPercentage, setMarginPercentage] = useState(20);
   
-  // Calculate results
-  const results = calculateJobCost({
+  const handleChangeHours = (condition: PayCondition, value: number) => {
+    setHours(prev => ({
+      ...prev,
+      [condition]: value
+    }));
+  };
+  
+  const result = calculateJobCost({
     employmentType,
     level,
     hours,
     overheadPercentage,
-    marginPercentage,
+    marginPercentage
   });
   
-  // Handle hour changes
-  const handleHoursChange = (condition: PayCondition, value: string) => {
-    setHours(prev => ({
-      ...prev,
-      [condition]: parseFloat(value) || 0
-    }));
-  };
-  
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Employment Type Selection */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Employment Type</label>
-          <select 
-            className="w-full p-2 border border-gray-300 rounded"
-            value={employmentType}
-            onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
-          >
-            <option value="full_time">Full Time</option>
-            <option value="part_time">Part Time</option>
-            <option value="casual">Casual</option>
-          </select>
-        </div>
-        
-        {/* Level Selection */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Level</label>
-          <select 
-            className="w-full p-2 border border-gray-300 rounded"
-            value={level}
-            onChange={(e) => setLevel(parseInt(e.target.value) as EmployeeLevel)}
-          >
-            <option value="1">Level 1</option>
-            <option value="2">Level 2</option>
-            <option value="3">Level 3</option>
-          </select>
-        </div>
-        
-        {/* Percentage Inputs */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-sm font-medium mb-1">Overhead %</label>
-            <input 
-              type="number" 
-              className="w-full p-2 border border-gray-300 rounded"
-              value={overheadPercentage}
-              onChange={(e) => setOverheadPercentage(parseFloat(e.target.value) || 0)}
-            />
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Cost Calculator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-medium mb-2">Employee Details</h3>
+              {/* Add employee type and level selectors here */}
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Hours by Condition</h3>
+              {Object.keys(hours).map(condition => (
+                <div key={condition} className="flex items-center justify-between mb-2">
+                  <label>{payConditionLabels[condition]}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={hours[condition as PayCondition]}
+                    onChange={(e) => handleChangeHours(condition as PayCondition, parseFloat(e.target.value) || 0)}
+                    className="w-20 px-2 py-1 border rounded"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Margin %</label>
-            <input 
-              type="number" 
-              className="w-full p-2 border border-gray-300 rounded"
-              value={marginPercentage}
-              onChange={(e) => setMarginPercentage(parseFloat(e.target.value) || 0)}
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* Hours Inputs */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Hours</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Object.entries(conditionDisplayNames).map(([condition, label]) => (
-            <div key={condition}>
-              <label className="block text-sm font-medium mb-1">{label}</label>
-              <input 
-                type="number" 
+          
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">Cost Settings</h3>
+            <div className="flex items-center justify-between mb-2">
+              <label>Overhead Percentage</label>
+              <input
+                type="number"
                 min="0"
-                step="0.5"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={hours[condition as PayCondition]}
-                onChange={(e) => handleHoursChange(condition as PayCondition, e.target.value)}
+                max="100"
+                value={overheadPercentage}
+                onChange={(e) => setOverheadPercentage(parseFloat(e.target.value) || 0)}
+                className="w-20 px-2 py-1 border rounded"
               />
             </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Results */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Results</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Base Rate</div>
-            <div className="text-xl font-bold">${results.baseRate.toFixed(2)}</div>
+            <div className="flex items-center justify-between mb-2">
+              <label>Margin Percentage</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={marginPercentage}
+                onChange={(e) => setMarginPercentage(parseFloat(e.target.value) || 0)}
+                className="w-20 px-2 py-1 border rounded"
+              />
+            </div>
           </div>
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Total Hours</div>
-            <div className="text-xl font-bold">{results.totalHours.toFixed(1)}</div>
+          
+          <div className="mt-4 border-t pt-4">
+            <h3 className="font-medium mb-2">Results</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Base Rate</p>
+                <p className="font-medium">${result.baseRate.toFixed(2)}/hr</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Labor Cost</p>
+                <p className="font-medium">${result.laborCost.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Overhead</p>
+                <p className="font-medium">${result.overheadCost.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Margin</p>
+                <p className="font-medium">${result.margin.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Hours</p>
+                <p className="font-medium">{result.totalHours}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Price</p>
+                <p className="font-medium">${result.price.toFixed(2)}</p>
+              </div>
+            </div>
           </div>
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Labor Cost</div>
-            <div className="text-xl font-bold">${results.laborCost.toFixed(2)}</div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Overhead Cost</div>
-            <div className="text-xl font-bold">${results.overheadCost.toFixed(2)}</div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Total Cost</div>
-            <div className="text-xl font-bold">${results.totalCost.toFixed(2)}</div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded">
-            <div className="text-sm text-gray-500">Margin</div>
-            <div className="text-xl font-bold">${results.margin.toFixed(2)}</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded col-span-2">
-            <div className="text-sm text-blue-500">Total Price</div>
-            <div className="text-2xl font-bold text-blue-700">${results.price.toFixed(2)}</div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Breakdown */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Breakdown</h3>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {results.items.map((item, index) => (
-              <tr key={index}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {conditionDisplayNames[item.condition] || item.condition}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.hours.toFixed(1)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${item.rate.toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${item.cost.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

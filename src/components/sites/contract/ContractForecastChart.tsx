@@ -1,95 +1,69 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar } from 'recharts';
-import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils/format';
+
+// Define the ContractForecast type locally to avoid dependency issues
+interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
 
 interface ContractForecastChartProps {
   data: ContractForecast[];
 }
 
 export function ContractForecastChart({ data }: ContractForecastChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-2 border rounded shadow-sm">
-          <p className="font-semibold">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`item-${index}`} style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-40 text-gray-500">
+        No forecast data available
+      </div>
+    );
+  }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Contract Revenue Forecast</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => formatCurrency(value, { notation: 'compact' })} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                name="Revenue"
-                stroke="#8884d8"
-                fill="#8884d8"
-                fillOpacity={0.3}
-                activeDot={{ r: 8 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="cost"
-                name="Cost"
-                stroke="#82ca9d"
-                fill="#82ca9d"
-                fillOpacity={0.3}
-              />
-              <Area
-                type="monotone"
-                dataKey="profit"
-                name="Profit"
-                stroke="#ffc658"
-                fill="#ffc658"
-                fillOpacity={0.3}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="h-64 mt-8">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => formatCurrency(value, { notation: 'compact' })} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Bar dataKey="revenue" name="Revenue" stackId="a" fill="#8884d8" />
-              <Bar dataKey="cost" name="Cost" stackId="a" fill="#82ca9d" />
-              <Bar dataKey="profit" name="Profit" fill="#ffc658" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart
+        data={data}
+        margin={{
+          top: 10,
+          right: 30,
+          left: 0,
+          bottom: 0,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="month" />
+        <YAxis tickFormatter={(value) => formatCurrency(value, { notation: 'compact' })} />
+        <Tooltip formatter={(value) => formatCurrency(value as number)} />
+        <Area 
+          type="monotone" 
+          dataKey="revenue" 
+          stackId="1" 
+          stroke="#4f46e5" 
+          fill="#818cf8" 
+          name="Revenue" 
+        />
+        <Area 
+          type="monotone" 
+          dataKey="cost" 
+          stackId="2" 
+          stroke="#ef4444" 
+          fill="#fca5a5" 
+          name="Cost" 
+        />
+        <Area 
+          type="monotone" 
+          dataKey="profit" 
+          stackId="3" 
+          stroke="#22c55e" 
+          fill="#86efac" 
+          name="Profit" 
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }

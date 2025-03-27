@@ -1,13 +1,19 @@
 
 import { useState, useEffect } from 'react';
 import { useContracts } from './useContracts';
-import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
 import { ContractSummaryData } from '@/lib/types/contracts';
-import { asJsonObject } from '@/lib/utils/json';
-import { addMonths, format } from 'date-fns';
+import { awardData } from '@/lib/award/awardData';
+
+// Local interface definition to avoid circular dependencies
+interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
 
 export function useContractForecast() {
-  const { contracts } = useContracts();
+  const { contractData, metrics } = useContracts();
   const [forecastData, setForecastData] = useState<ContractForecast[]>([]);
   
   const [summaryData, setSummaryData] = useState<ContractSummaryData>({
@@ -21,18 +27,17 @@ export function useContractForecast() {
     valueExpiringThisYear: 0,
     activeCount: 0,
     totalValue: 0,
-    totalContracts: 0,
+    totalCount: 0,
+    pendingCount: 0,
     totalRevenue: 0,
     totalCost: 0,
     totalProfit: 0,
     avgContractValue: 0,
-    profitMargin: 0,
-    totalCount: 0,
-    pendingCount: 0,
+    profitMargin: 0
   });
   
   useEffect(() => {
-    if (contracts.length > 0) {
+    if (contractData && contractData.length > 0) {
       // Generate forecast data
       const months = 12;
       const forecast: ContractForecast[] = [];
@@ -52,9 +57,10 @@ export function useContractForecast() {
       
       // Initialize forecast months
       for (let i = 0; i < months; i++) {
-        const date = addMonths(currentDate, i);
+        const date = new Date(currentDate);
+        date.setMonth(currentDate.getMonth() + i);
         forecast.push({
-          month: format(date, 'MMM yyyy'),
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
           revenue: 0,
           cost: 0,
           profit: 0
@@ -62,20 +68,25 @@ export function useContractForecast() {
       }
       
       // Calculate forecast and metrics
-      contracts.forEach(contract => {
+      contractData.forEach(contract => {
         const monthlyRevenue = contract.monthly_revenue || 0;
         totalValue += monthlyRevenue * 12; // Annual value
         
         if (contract.status === 'active') {
           activeCount++;
           
-          // Get contract details as an object
-          const contractDetails = asJsonObject(contract.contract_details, {});
-          
           // Handle contract expiry
-          const endDateStr = contractDetails.endDate;
-          if (endDateStr) {
-            const endDate = new Date(endDateStr);
+          let endDate: Date | null = null;
+          
+          // Safely extract contract details and endDate
+          if (contract.contract_details && typeof contract.contract_details === 'object') {
+            const details = contract.contract_details as any;
+            if (details.endDate) {
+              endDate = new Date(details.endDate);
+            }
+          }
+          
+          if (endDate) {
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
             const expiryMonth = endDate.getMonth();
@@ -88,14 +99,16 @@ export function useContractForecast() {
             }
             
             // Check if contract expires in the next 3 months
-            const threeMonthsLater = addMonths(currentDate, 3);
+            const threeMonthsLater = new Date(currentDate);
+            threeMonthsLater.setMonth(currentDate.getMonth() + 3);
             if (endDate <= threeMonthsLater) {
               expiringNext3Months++;
               valueExpiringNext3Months += monthlyRevenue * 12;
             }
             
             // Check if contract expires in the next 6 months
-            const sixMonthsLater = addMonths(currentDate, 6);
+            const sixMonthsLater = new Date(currentDate);
+            sixMonthsLater.setMonth(currentDate.getMonth() + 6);
             if (endDate <= sixMonthsLater) {
               expiringNext6Months++;
               valueExpiringNext6Months += monthlyRevenue * 12;
@@ -109,7 +122,8 @@ export function useContractForecast() {
             
             // Add contract revenue to forecast until expiry
             for (let i = 0; i < months; i++) {
-              const forecastDate = addMonths(currentDate, i);
+              const forecastDate = new Date(currentDate);
+              forecastDate.setMonth(currentDate.getMonth() + i);
               if (forecastDate <= endDate) {
                 const monthIndex = i;
                 if (monthIndex < forecast.length) {
@@ -157,17 +171,16 @@ export function useContractForecast() {
         valueExpiringThisYear,
         activeCount,
         totalValue,
-        totalContracts: contracts.length,
+        totalCount: contractData.length,
         totalRevenue,
         totalCost,
         totalProfit,
         avgContractValue,
         profitMargin,
-        totalCount: contracts.length,
-        pendingCount: contracts.filter(c => c.status === 'pending').length,
+        pendingCount: contractData.filter(c => c.status === 'pending').length,
       });
     }
-  }, [contracts]);
+  }, [contractData]);
   
   return { forecastData, summaryData };
 }

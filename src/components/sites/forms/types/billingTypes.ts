@@ -90,15 +90,4 @@ export interface BillingDetails {
   rate?: string;
   billingFrequency?: string;
   invoiceMethod?: string;
-  
-  // Additional fields used in other components
-  accountNumber?: string;
-  
-  // Totals
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
-  
-  // Budget
-  weeklyBudget?: number;
 }

@@ -1,74 +1,148 @@
 
-import { AwardData, AwardSettings, EmployeeLevelRates, PayCondition, RateDefinition } from './types';
+import { 
+  AwardData, 
+  AwardSettings, 
+  EmployeeLevel, 
+  EmployeeLevelRates, 
+  PayCondition, 
+  RateDefinition 
+} from './types';
 
-export const cleaningServicesRates: RateDefinition[] = [
-  { id: 'standard', dayType: 'all', multiplier: 1.0, percentage: 0, description: 'Standard Rate' },
-  { id: 'saturday', dayType: 'saturday', multiplier: 1.5, percentage: 50, description: 'Saturday Rate' },
-  { id: 'sunday', dayType: 'sunday', multiplier: 2.0, percentage: 100, description: 'Sunday Rate' },
-  { id: 'publicHoliday', dayType: 'public_holiday', multiplier: 2.5, percentage: 150, description: 'Public Holiday Rate' },
-  { id: 'overtime1', dayType: 'all', multiplier: 1.5, percentage: 50, description: 'Overtime (first 2 hours)' },
-  { id: 'overtime2', dayType: 'all', multiplier: 2.0, percentage: 100, description: 'Overtime (after 2 hours)' },
-  { id: 'earlyMorning', dayType: 'all', multiplier: 1.15, percentage: 15, description: 'Early Morning (before 6:00 AM)' },
-  { id: 'evening', dayType: 'all', multiplier: 1.15, percentage: 15, description: 'Evening (after 6:00 PM)' }
-];
-
-export const defaultBaseRates = {
-  1: 25.41, // Level 1
-  2: 26.73, // Level 2
-  3: 28.08, // Level 3
-  4: 29.61, // Level 4
-  5: 30.93, // Level 5
-};
-
-export const defaultEmployeeLevelRates: EmployeeLevelRates = {
-  level1: 25.41,
-  level2: 26.73,
-  level3: 28.08,
-  level4: 29.61,
-  level5: 30.93,
-  loading: 25, // Default casual loading percentage
-};
-
-export const defaultAllowances = {
-  meal: { amount: 15.94, unit: 'per shift' },
-  travel: { amount: 0.78, unit: 'per km' },
-  uniform: { amount: 1.20, unit: 'per day' },
-  laundry: { amount: 0.30, unit: 'per day' },
-  other: { amount: 0.00, unit: 'custom' }
-};
-
-export const defaultAwardSettings: AwardSettings = {
-  allowances: {
-    meal: 15.94,
-    travel: 0.78,
-    uniform: 1.20,
-    laundry: 0.30,
-    other: 0.00
+// Define the proper award data structure
+export const awardData: AwardData = {
+  name: "Cleaning Services Award",
+  description: "Award rates for cleaning services industry",
+  conditionRates: {
+    'base': {
+      id: 'base',
+      percentage: 100,
+      description: 'Base rate',
+      dayType: 'weekday',
+      startTime: '07:00',
+      endTime: '19:00',
+      multiplier: 1.0
+    },
+    'overtime_1_5': {
+      id: 'overtime_1_5',
+      percentage: 150,
+      description: 'Overtime (first 2 hours)',
+      multiplier: 1.5
+    },
+    'overtime_2': {
+      id: 'overtime_2',
+      percentage: 200,
+      description: 'Overtime (after 2 hours)',
+      multiplier: 2.0
+    },
+    'saturday': {
+      id: 'saturday',
+      percentage: 150,
+      description: 'Saturday rate',
+      dayType: 'saturday',
+      multiplier: 1.5
+    },
+    'sunday': {
+      id: 'sunday',
+      percentage: 200,
+      description: 'Sunday rate',
+      dayType: 'sunday',
+      multiplier: 2.0
+    },
+    'public_holiday': {
+      id: 'public_holiday',
+      percentage: 250,
+      description: 'Public holiday rate',
+      dayType: 'public_holiday',
+      multiplier: 2.5
+    },
+    'early_morning': {
+      id: 'early_morning',
+      percentage: 115,
+      description: 'Early morning (before 6am)',
+      startTime: '00:00',
+      endTime: '06:00',
+      multiplier: 1.15
+    },
+    'evening': {
+      id: 'evening',
+      percentage: 115,
+      description: 'Evening (after 6pm)',
+      startTime: '18:00',
+      endTime: '24:00',
+      multiplier: 1.15
+    },
+    'night': {
+      id: 'night',
+      percentage: 130,
+      description: 'Night shift',
+      startTime: '00:00',
+      endTime: '6:00',
+      multiplier: 1.3
+    },
+    'shift_allowance': {
+      id: 'shift_allowance',
+      percentage: 115,
+      description: 'Shift allowance',
+      multiplier: 1.15
+    },
+    'meal_allowance': {
+      id: 'meal_allowance',
+      percentage: 0,
+      description: 'Meal allowance',
+      multiplier: 0
+    }
   },
-  usePenalties: true,
+
+  // Fix employee level rates
+  employeeLevelRates: {
+    '1': { base: 21.75, title: 'Property Services Employee Level 1' },
+    '2': { base: 22.55, title: 'Property Services Employee Level 2' },
+    '3': { base: 23.69, title: 'Property Services Employee Level 3' },
+    '4': { base: 24.77, title: 'Property Services Employee Level 4' },
+    '5': { base: 25.88, title: 'Property Services Employee Level 5' },
+    'contractor': { base: 0, title: 'Contractor' }
+  },
+
+  // Award settings
+  settings: {
+    minimumShiftHours: 3,
+    casualMinimumHours: 2,
+    dailyMaxHours: 12,
+    weeklyMaxHours: 38,
+    breakThresholdHours: 5,
+    usePenalties: true,
+    allowances: {
+      meal: 15.94,
+      travel: 0.78,
+      uniform: 1.23,
+      laundry: 0.70,
+      other: 0
+    }
+  },
+  
+  // List of levels for dropdowns
+  levels: ['1', '2', '3', '4', '5', 'contractor']
+};
+
+// Default award settings export for the app
+export const defaultAwardSettings: AwardSettings = {
   minimumShiftHours: 3,
-  casualMinimumHours: 3,
+  casualMinimumHours: 2,
   dailyMaxHours: 12,
   weeklyMaxHours: 38,
   breakThresholdHours: 5,
+  usePenalties: true,
+  allowances: {
+    meal: 15.94,
+    travel: 0.78,
+    uniform: 1.23,
+    laundry: 0.70,
+    other: 0
+  },
   baseRateMultiplier: 1.0,
   overheadPercentageDefault: 15,
   marginPercentageDefault: 20
 };
 
-export const cleaningServicesAward: AwardData = {
-  settings: defaultAwardSettings,
-  baseRates: defaultBaseRates,
-  casualLoading: 25,
-  employeeLevelRates: defaultEmployeeLevelRates,
-  conditionRates: {
-    standard: cleaningServicesRates[0],
-    saturday: cleaningServicesRates[1],
-    sunday: cleaningServicesRates[2],
-    public_holiday: cleaningServicesRates[3],
-    overtime: cleaningServicesRates[4],
-    earlyMorning: cleaningServicesRates[6],
-    evening: cleaningServicesRates[7]
-  },
-  rates: cleaningServicesRates
-};
+// Export the cleaning services award
+export const cleaningServicesAward = awardData;

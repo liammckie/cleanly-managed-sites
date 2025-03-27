@@ -3,6 +3,12 @@ import { useState } from 'react';
 import { validateBasicInfo } from '@/components/sites/forms/types/validationUtils';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
+export interface StepperStep {
+  title: string;
+  description: string;
+  component: React.ReactNode;
+}
+
 export interface StepperState {
   currentStep: number;
   totalSteps: number;
@@ -14,6 +20,15 @@ export interface StepperState {
   goToStep: (step: number) => void;
   setCompletedStep: (step: number) => void;
   completionPercentage: number;
+  
+  // Additional properties needed by components
+  progress: number;
+  steps: StepperStep[];
+  handleNext: () => void;
+  handleBack: () => void;
+  isLastStep: boolean;
+  isFirstStep: boolean;
+  validateCurrentStep?: () => boolean;
 }
 
 // Validation functions for each step
@@ -26,7 +41,7 @@ const stepValidations = {
   5: (formData: SiteFormData) => true, // Review
 };
 
-export const useSiteFormStepper = (initialStep = 0, totalSteps = 6, formData: SiteFormData) => {
+export const useSiteFormStepper = (initialStep = 0, totalSteps = 6, formData: SiteFormData, steps: StepperStep[]) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
@@ -90,5 +105,14 @@ export const useSiteFormStepper = (initialStep = 0, totalSteps = 6, formData: Si
     setCompletedStep,
     completionPercentage: getCompletionPercentage(),
     validateStep,
+    
+    // Additional properties needed by components
+    progress: getCompletionPercentage(),
+    steps,
+    handleNext: goToNextStep,
+    handleBack: goToPreviousStep,
+    isLastStep: currentStep === totalSteps - 1,
+    isFirstStep: currentStep === 0,
+    validateCurrentStep: () => validateStep(currentStep)
   };
 };
