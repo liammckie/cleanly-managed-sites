@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { SiteFormData } from './types/siteFormData';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface SiteFormProps {
   formData: SiteFormData;
@@ -10,6 +12,7 @@ interface SiteFormProps {
   handleSubmit: () => void;
   isSubmitting: boolean;
   error?: string | null;
+  validationErrors?: Record<string, string>;
 }
 
 export function SiteForm(props: SiteFormProps) {
@@ -20,8 +23,19 @@ export function SiteForm(props: SiteFormProps) {
     handleDoubleNestedChange,
     handleSubmit,
     isSubmitting,
-    error
+    error,
+    validationErrors = {}
   } = props;
+
+  // Helper function to show validation error
+  const getFieldError = (field: string) => {
+    return validationErrors[field] || '';
+  };
+
+  // Helper function to determine if a field has an error
+  const hasFieldError = (field: string) => {
+    return !!validationErrors[field];
+  };
 
   // Render a simple form for now
   return (
@@ -29,9 +43,10 @@ export function SiteForm(props: SiteFormProps) {
       <h2 className="text-xl font-semibold">Site Information</h2>
       
       {error && (
-        <div className="p-3 bg-red-50 border border-red-300 text-red-800 rounded">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       
       <div className="space-y-4">
@@ -42,10 +57,15 @@ export function SiteForm(props: SiteFormProps) {
           <input
             type="text"
             id="name"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+              hasFieldError('name') ? 'border-red-500' : ''
+            }`}
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
           />
+          {hasFieldError('name') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+          )}
         </div>
         
         <div>
@@ -55,10 +75,15 @@ export function SiteForm(props: SiteFormProps) {
           <input
             type="text"
             id="address"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+              hasFieldError('address') ? 'border-red-500' : ''
+            }`}
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
           />
+          {hasFieldError('address') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('address')}</p>
+          )}
         </div>
         
         <div className="grid grid-cols-2 gap-4">
@@ -69,10 +94,15 @@ export function SiteForm(props: SiteFormProps) {
             <input
               type="text"
               id="city"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+                hasFieldError('city') ? 'border-red-500' : ''
+              }`}
               value={formData.city}
               onChange={(e) => handleChange('city', e.target.value)}
             />
+            {hasFieldError('city') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('city')}</p>
+            )}
           </div>
           
           <div>
@@ -82,10 +112,15 @@ export function SiteForm(props: SiteFormProps) {
             <input
               type="text"
               id="state"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+                hasFieldError('state') ? 'border-red-500' : ''
+              }`}
               value={formData.state}
               onChange={(e) => handleChange('state', e.target.value)}
             />
+            {hasFieldError('state') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('state')}</p>
+            )}
           </div>
         </div>
         
@@ -97,10 +132,15 @@ export function SiteForm(props: SiteFormProps) {
             <input
               type="text"
               id="postalCode"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+                hasFieldError('postalCode') ? 'border-red-500' : ''
+              }`}
               value={formData.postalCode}
               onChange={(e) => handleChange('postalCode', e.target.value)}
             />
+            {hasFieldError('postalCode') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('postalCode')}</p>
+            )}
           </div>
           
           <div>
@@ -110,10 +150,15 @@ export function SiteForm(props: SiteFormProps) {
             <input
               type="text"
               id="country"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+                hasFieldError('country') ? 'border-red-500' : ''
+              }`}
               value={formData.country}
               onChange={(e) => handleChange('country', e.target.value)}
             />
+            {hasFieldError('country') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('country')}</p>
+            )}
           </div>
         </div>
         
@@ -123,7 +168,9 @@ export function SiteForm(props: SiteFormProps) {
           </label>
           <select
             id="status"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+              hasFieldError('status') ? 'border-red-500' : ''
+            }`}
             value={formData.status}
             onChange={(e) => handleChange('status', e.target.value)}
           >
@@ -133,6 +180,9 @@ export function SiteForm(props: SiteFormProps) {
             <option value="lost">Lost</option>
             <option value="on-hold">On Hold</option>
           </select>
+          {hasFieldError('status') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('status')}</p>
+          )}
         </div>
         
         <div>
@@ -142,10 +192,15 @@ export function SiteForm(props: SiteFormProps) {
           <textarea
             id="notes"
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+            className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm ${
+              hasFieldError('notes') ? 'border-red-500' : ''
+            }`}
             value={formData.notes || ''}
             onChange={(e) => handleChange('notes', e.target.value)}
           />
+          {hasFieldError('notes') && (
+            <p className="mt-1 text-sm text-red-600">{getFieldError('notes')}</p>
+          )}
         </div>
       </div>
       
