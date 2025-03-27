@@ -220,9 +220,9 @@ export const getUserRoles = async (): Promise<UserRole[]> => {
       name: role.name,
       description: role.description,
       permissions: Array.isArray(role.permissions) 
-        ? role.permissions as string[]
+        ? role.permissions 
         : typeof role.permissions === 'object' && role.permissions !== null
-          ? Object.keys(role.permissions)
+          ? Object.keys(role.permissions).map(k => String(k))
           : [],
       created_at: role.created_at,
       updated_at: role.updated_at
@@ -287,9 +287,9 @@ export const updateUserRole = async (id: string, roleData: Partial<UserRole>): P
       name: data.name,
       description: data.description,
       permissions: Array.isArray(data.permissions) 
-        ? data.permissions 
+        ? data.permissions.map(p => String(p))
         : typeof data.permissions === 'object' && data.permissions !== null
-          ? Object.keys(data.permissions)
+          ? Object.keys(data.permissions).map(k => String(k))
           : [],
       created_at: data.created_at,
       updated_at: data.updated_at

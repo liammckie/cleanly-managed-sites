@@ -36,9 +36,14 @@ export function useTestData() {
     }
   };
 
+  // Alias generateTestData as createTestData for compatibility
+  const createTestData = generateTestData;
+  
   return {
     isGenerating,
     result,
-    generateTestData
+    generateTestData,
+    createTestData,
+    isCreating: isGenerating
   };
 }

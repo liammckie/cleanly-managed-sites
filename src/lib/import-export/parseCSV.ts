@@ -1,8 +1,16 @@
 
 import Papa from 'papaparse';
 
-export function parseCSV<T = any>(csvString: string): T[] {
+export async function parseCSV<T = any>(input: string | File): Promise<T[]> {
   try {
+    let csvString: string;
+    
+    if (input instanceof File) {
+      csvString = await readFileAsText(input);
+    } else {
+      csvString = input;
+    }
+    
     const result = Papa.parse(csvString, {
       header: true,
       skipEmptyLines: true,
@@ -19,4 +27,13 @@ export function parseCSV<T = any>(csvString: string): T[] {
     console.error('Error parsing CSV:', error);
     throw error;
   }
+}
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
 }

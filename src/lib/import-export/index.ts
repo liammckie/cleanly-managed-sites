@@ -1,5 +1,11 @@
 
-// Export functions from the import/export directory
-export * from './importOperations';
-export * from './parseCSV';
-export * from './setupTestData';
+// Re-export all import-export utilities
+export { parseCSV } from './parseCSV';
+export { setupTestData } from './setupTestData';
+export { 
+  importData,
+  importClients,
+  importContractors,
+  importSites,
+  importContracts
+} from './importOperations';

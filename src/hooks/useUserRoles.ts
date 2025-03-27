@@ -19,11 +19,23 @@ export function useUserRoles() {
         throw error;
       }
 
-      // Get user counts for each role
-      const { data: userCounts, error: countError } = await supabase
+      // Get user counts for each role - separate query
+      const { data: userCountsResult, error: countError } = await supabase
         .from('user_profiles')
-        .select('role_id, count(*)')
-        .groupBy('role_id');
+        .select('role_id, count')
+        .select('role_id, count(*)', { count: 'exact' })
+        .then(result => {
+          // Group results manually
+          const roleCounts: Record<string, number> = {};
+          if (result.data) {
+            for (const row of result.data) {
+              if (row.role_id) {
+                roleCounts[row.role_id] = parseInt(row.count, 10) || 0;
+              }
+            }
+          }
+          return { data: roleCounts, error: result.error };
+        });
 
       if (countError) {
         console.error('Error fetching role user counts:', countError);
@@ -32,7 +44,7 @@ export function useUserRoles() {
       // Convert permissions from Json to string[]
       return data.map(role => {
         // Find count for this role
-        const countRecord = userCounts?.find(c => c.role_id === role.id);
+        const userCount = userCountsResult?.[role.id] || 0;
         
         return {
           id: role.id,
@@ -45,7 +57,7 @@ export function useUserRoles() {
               : [],
           created_at: role.created_at,
           updated_at: role.updated_at,
-          user_count: countRecord ? Number(countRecord.count) : 0
+          user_count: userCount
         };
       }) as UserRole[];
     }

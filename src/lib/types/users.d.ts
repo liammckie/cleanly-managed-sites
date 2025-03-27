@@ -1,3 +1,4 @@
+
 import { Json } from '@/types/common';
 
 export type UserStatus = "active" | "pending" | "inactive";
@@ -29,7 +30,7 @@ export interface UserRole {
   permissions: string[];
   created_at: string;
   updated_at: string;
-  user_count?: number; // Add user_count property
+  user_count?: number;
 }
 
 // Alias UserRole as SystemUserRole for backward compatibility

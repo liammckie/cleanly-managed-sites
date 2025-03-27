@@ -15,7 +15,7 @@ export function useDataImportExport() {
   const { handleCSVImportSites, isImporting: isImportingSites, importResults: siteImportResults } = useImportSites();
   const { handleCSVImportContracts, isImporting: isImportingContracts, importResults: contractImportResults } = useImportContracts();
   const { handleCSVImportContractors, isImporting: isImportingContractors, importResults: contractorImportResults } = useImportContractors();
-  const { createTestData, isCreating: isCreatingTestData } = useTestData();
+  const { generateTestData, isGenerating: isCreatingTestData } = useTestData();
 
   const isImporting = isImportingClients || isImportingSites || isImportingContracts || isImportingContractors || isCreatingTestData;
   const importResults = importType === 'clients' ? clientImportResults 
@@ -61,7 +61,7 @@ export function useDataImportExport() {
     siteImportResults,
     contractImportResults,
     contractorImportResults,
-    createTestData,
+    createTestData: generateTestData,
     isCreatingTestData
   };
 }
