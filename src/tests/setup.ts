@@ -1,6 +1,6 @@
 
 import '@testing-library/jest-dom/vitest';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 
 // Mock browser APIs
 Object.defineProperty(window, 'matchMedia', {

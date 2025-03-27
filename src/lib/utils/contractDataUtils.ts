@@ -127,3 +127,66 @@ export function normalizeContractData(contractData: any): ContractDetails {
   
   return normalized;
 }
+
+/**
+ * Gets the start date from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns Start date string or null if not found
+ */
+export function getContractStartDate(contractDetails: any): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If contractDetails is a string (JSON), parse it
+    const details = typeof contractDetails === 'string' 
+      ? JSON.parse(contractDetails) 
+      : contractDetails;
+    
+    return details.startDate || details.start_date || null;
+  } catch (error) {
+    console.error('Error getting contract start date:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets the end date from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns End date string or null if not found
+ */
+export function getContractEndDate(contractDetails: any): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If contractDetails is a string (JSON), parse it
+    const details = typeof contractDetails === 'string' 
+      ? JSON.parse(contractDetails) 
+      : contractDetails;
+    
+    return details.endDate || details.end_date || null;
+  } catch (error) {
+    console.error('Error getting contract end date:', error);
+    return null;
+  }
+}
+
+/**
+ * Gets the contract type from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns Contract type string or default value if not found
+ */
+export function getContractType(contractDetails: any): string {
+  if (!contractDetails) return 'Standard';
+  
+  try {
+    // If contractDetails is a string (JSON), parse it
+    const details = typeof contractDetails === 'string' 
+      ? JSON.parse(contractDetails) 
+      : contractDetails;
+    
+    return details.contractType || details.contract_type || 'Standard';
+  } catch (error) {
+    console.error('Error getting contract type:', error);
+    return 'Standard';
+  }
+}

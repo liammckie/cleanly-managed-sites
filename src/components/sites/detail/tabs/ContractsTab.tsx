@@ -2,6 +2,7 @@
 import React from 'react';
 import { SiteRecord } from '@/lib/api';
 import { asJsonObject, jsonToString } from '@/lib/utils/json';
+import { getContractStartDate, getContractEndDate, getContractType } from '@/lib/utils/contractDataUtils';
 
 interface ContractsTabProps {
   site: SiteRecord;
@@ -16,7 +17,12 @@ export function ContractsTab({ site }: ContractsTabProps) {
     renewalTerms: '' 
   });
   
-  // Access properties safely with optional chaining and defaults
+  // Use the utility functions to safely get contract details
+  const startDate = getContractStartDate(site.contract_details) || 'Not specified';
+  const endDate = getContractEndDate(site.contract_details) || 'Not specified';
+  const contractType = getContractType(site.contract_details);
+  
+  // Access other properties safely with optional chaining and defaults
   const terminationPeriod = contractDetails.terminationPeriod || 'Not specified';
   const renewalTerms = contractDetails.renewalTerms || 'Not specified';
   
@@ -33,12 +39,12 @@ export function ContractsTab({ site }: ContractsTabProps) {
           
           <div>
             <p className="text-sm text-muted-foreground">Start Date</p>
-            <p className="font-medium">{jsonToString(contractDetails.startDate) || 'Not specified'}</p>
+            <p className="font-medium">{startDate}</p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">End Date</p>
-            <p className="font-medium">{jsonToString(contractDetails.endDate) || 'Not specified'}</p>
+            <p className="font-medium">{endDate}</p>
           </div>
           
           <div>
