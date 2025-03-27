@@ -1,70 +1,157 @@
 
 import React from 'react';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription 
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SiteFormData } from '../siteFormTypes';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SecurityDetails } from '../types/securityTypes';
 
 interface SecurityStepProps {
-  formData: SiteFormData;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
+  securityDetails: SecurityDetails;
+  handleChange: (field: string, value: any) => void;
 }
 
-export function SecurityStep({ formData, handleNestedChange }: SecurityStepProps) {
+export function SecurityStep({
+  securityDetails,
+  handleChange
+}: SecurityStepProps) {
   return (
-    <div className="glass-card p-6 space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="access-code">Access Code</Label>
-          <Input
-            id="access-code"
-            type="password"
-            placeholder="Enter access code"
-            value={formData.securityDetails.accessCode}
-            onChange={(e) => handleNestedChange('securityDetails', 'accessCode', e.target.value)}
-            className="glass-input"
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Security Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormField
+            name="alarmCode"
+            render={() => (
+              <FormItem>
+                <FormLabel>Alarm Code</FormLabel>
+                <FormControl>
+                  <Input
+                    value={securityDetails.alarmCode || ''}
+                    onChange={(e) => handleChange('alarmCode', e.target.value)}
+                    placeholder="Enter alarm code"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="alarm-code">Alarm Code</Label>
-          <Input
-            id="alarm-code"
-            type="password"
-            placeholder="Enter alarm code"
-            value={formData.securityDetails.alarmCode}
-            onChange={(e) => handleNestedChange('securityDetails', 'alarmCode', e.target.value)}
-            className="glass-input"
+          
+          <FormField
+            name="hasSecuritySystem"
+            render={() => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Security System</FormLabel>
+                  <FormDescription>
+                    Does this site have a security system?
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={securityDetails.hasSecuritySystem || false}
+                    onCheckedChange={(checked) => handleChange('hasSecuritySystem', checked)}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="key-location">Key Location</Label>
-        <Input
-          id="key-location"
-          placeholder="Enter key location"
-          value={formData.securityDetails.keyLocation}
-          onChange={(e) => handleNestedChange('securityDetails', 'keyLocation', e.target.value)}
-          className="glass-input"
-        />
-      </div>
-      
-      <div className="space-y-2 mt-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="out-of-hours" 
-            checked={formData.securityDetails.outOfHoursAccess}
-            onCheckedChange={(checked) => handleNestedChange('securityDetails', 'outOfHoursAccess', !!checked)}
+          
+          {securityDetails.hasSecuritySystem && (
+            <>
+              <FormField
+                name="securityCompany"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Security Company</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={securityDetails.securityCompany || ''}
+                        onChange={(e) => handleChange('securityCompany', e.target.value)}
+                        placeholder="Enter security company name"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                name="securityContact"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Security Contact</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={securityDetails.securityContact || ''}
+                        onChange={(e) => handleChange('securityContact', e.target.value)}
+                        placeholder="Enter security contact details"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+          
+          <FormField
+            name="keyLocation"
+            render={() => (
+              <FormItem>
+                <FormLabel>Key Location</FormLabel>
+                <FormControl>
+                  <Input
+                    value={securityDetails.keyLocation || ''}
+                    onChange={(e) => handleChange('keyLocation', e.target.value)}
+                    placeholder="Where are the keys stored?"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
-          <label
-            htmlFor="out-of-hours"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Out of Hours Access Available
-          </label>
-        </div>
-      </div>
+          
+          <FormField
+            name="accessInstructions"
+            render={() => (
+              <FormItem>
+                <FormLabel>Access Instructions</FormLabel>
+                <FormControl>
+                  <Textarea
+                    value={securityDetails.accessInstructions || ''}
+                    onChange={(e) => handleChange('accessInstructions', e.target.value)}
+                    placeholder="Instructions for accessing the site"
+                    rows={4}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            name="notes"
+            render={() => (
+              <FormItem>
+                <FormLabel>Security Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    value={securityDetails.notes || ''}
+                    onChange={(e) => handleChange('notes', e.target.value)}
+                    placeholder="Additional security notes"
+                    rows={4}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

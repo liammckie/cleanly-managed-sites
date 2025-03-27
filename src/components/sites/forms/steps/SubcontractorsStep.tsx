@@ -1,131 +1,199 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Trash2 } from 'lucide-react';
 
 interface SubcontractorsStepProps {
   subcontractors: any[];
-  onSubcontractorAdd: () => void;
-  onSubcontractorChange: (index: number, field: string, value: any) => void;
-  onSubcontractorRemove: (index: number) => void;
-  errors: Record<string, string>;
+  hasSubcontractors: boolean;
+  handleAddSubcontractor?: () => void;
+  handleUpdateSubcontractor?: (index: number, field: string, value: any) => void;
+  handleRemoveSubcontractor?: (index: number) => void;
 }
 
 export function SubcontractorsStep({
-  subcontractors = [],
-  onSubcontractorAdd,
-  onSubcontractorChange,
-  onSubcontractorRemove,
-  errors
+  subcontractors,
+  hasSubcontractors,
+  handleAddSubcontractor = () => {},
+  handleUpdateSubcontractor = () => {},
+  handleRemoveSubcontractor = () => {}
 }: SubcontractorsStepProps) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Subcontractors</h3>
-            <Button variant="outline" size="sm" onClick={onSubcontractorAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Add Subcontractor
-            </Button>
-          </div>
-          
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Subcontractors</CardTitle>
+          <Button 
+            type="button" 
+            onClick={handleAddSubcontractor}
+            variant="outline"
+          >
+            Add Subcontractor
+          </Button>
+        </CardHeader>
+        <CardContent>
           {subcontractors.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No subcontractors added. Click the button above to add one.
+            <div className="text-center py-6 text-muted-foreground">
+              No subcontractors have been added yet.
             </div>
           ) : (
             <div className="space-y-6">
               {subcontractors.map((subcontractor, index) => (
-                <div key={subcontractor.id || index} className="border p-4 rounded-md">
+                <div key={subcontractor.id || index} className="border rounded-md p-4 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-medium">Subcontractor {index + 1}</h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveSubcontractor(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`business-name-${index}`}>Business Name</Label>
-                      <Input
-                        id={`business-name-${index}`}
-                        value={subcontractor.business_name || ''}
-                        onChange={(e) => onSubcontractorChange(index, 'business_name', e.target.value)}
-                        placeholder="Business Name"
-                        className={errors[`subcontractors.${index}.business_name`] ? 'border-destructive' : ''}
-                      />
-                      {errors[`subcontractors.${index}.business_name`] && (
-                        <p className="text-destructive text-sm">{errors[`subcontractors.${index}.business_name`]}</p>
+                    <FormField
+                      name={`subcontractors[${index}].business_name`}
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Business Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={subcontractor.business_name || ''}
+                              onChange={(e) => 
+                                handleUpdateSubcontractor(index, 'business_name', e.target.value)
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
                       )}
-                    </div>
+                    />
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`contact-name-${index}`}>Contact Name</Label>
-                      <Input
-                        id={`contact-name-${index}`}
-                        value={subcontractor.contact_name || ''}
-                        onChange={(e) => onSubcontractorChange(index, 'contact_name', e.target.value)}
-                        placeholder="Contact Name"
-                        className={errors[`subcontractors.${index}.contact_name`] ? 'border-destructive' : ''}
-                      />
-                      {errors[`subcontractors.${index}.contact_name`] && (
-                        <p className="text-destructive text-sm">{errors[`subcontractors.${index}.contact_name`]}</p>
+                    <FormField
+                      name={`subcontractors[${index}].contact_name`}
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Contact Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={subcontractor.contact_name || ''}
+                              onChange={(e) => 
+                                handleUpdateSubcontractor(index, 'contact_name', e.target.value)
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
                       )}
-                    </div>
+                    />
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`email-${index}`}>Email</Label>
-                      <Input
-                        id={`email-${index}`}
-                        value={subcontractor.email || ''}
-                        onChange={(e) => onSubcontractorChange(index, 'email', e.target.value)}
-                        placeholder="Email"
-                        type="email"
-                      />
-                    </div>
+                    <FormField
+                      name={`subcontractors[${index}].email`}
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              value={subcontractor.email || ''}
+                              onChange={(e) => 
+                                handleUpdateSubcontractor(index, 'email', e.target.value)
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`phone-${index}`}>Phone</Label>
-                      <Input
-                        id={`phone-${index}`}
-                        value={subcontractor.phone || ''}
-                        onChange={(e) => onSubcontractorChange(index, 'phone', e.target.value)}
-                        placeholder="Phone"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`monthly-cost-${index}`}>Monthly Cost</Label>
-                      <Input
-                        id={`monthly-cost-${index}`}
-                        type="number"
-                        value={subcontractor.monthly_cost || 0}
-                        onChange={(e) => onSubcontractorChange(index, 'monthly_cost', parseFloat(e.target.value))}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2 flex items-end">
-                      <div className="flex space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`is-flat-rate-${index}`}
-                            checked={subcontractor.is_flat_rate === undefined ? true : subcontractor.is_flat_rate}
+                    <FormField
+                      name={`subcontractors[${index}].phone`}
+                      render={() => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={subcontractor.phone || ''}
+                              onChange={(e) => 
+                                handleUpdateSubcontractor(index, 'phone', e.target.value)
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    name={`subcontractors[${index}].is_flat_rate`}
+                    render={() => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel>Flat Rate</FormLabel>
+                          <FormDescription>
+                            Is this subcontractor paid a flat rate?
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={subcontractor.is_flat_rate}
                             onCheckedChange={(checked) => 
-                              onSubcontractorChange(index, 'is_flat_rate', checked === true)
+                              handleUpdateSubcontractor(index, 'is_flat_rate', checked)
                             }
                           />
-                          <Label htmlFor={`is-flat-rate-${index}`}>Flat Rate</Label>
-                        </div>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => onSubcontractorRemove(index)}
-                          className="text-destructive hover:text-destructive/90"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    name={`subcontractors[${index}].monthly_cost`}
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Monthly Cost</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            value={subcontractor.monthly_cost || ''}
+                            onChange={(e) => 
+                              handleUpdateSubcontractor(index, 'monthly_cost', 
+                                e.target.value === '' ? '' : parseFloat(e.target.value))
+                            }
+                            step="0.01"
+                            min="0"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    name={`subcontractors[${index}].notes`}
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            value={subcontractor.notes || ''}
+                            onChange={(e) => 
+                              handleUpdateSubcontractor(index, 'notes', e.target.value)
+                            }
+                            rows={3}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               ))}
             </div>

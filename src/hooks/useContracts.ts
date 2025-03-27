@@ -44,6 +44,7 @@ export function useContracts() {
           return {
             ...site,
             client_name: site.client?.name || 'Unknown Client',
+            status: site.status as SiteRecord['status'] // Ensure status is the correct type
           };
         });
 
@@ -62,10 +63,10 @@ export function useContracts() {
         activeSites.forEach(site => {
           // Safely check for contract_details and parse end date
           if (site.contract_details) {
-            // Handle when contract_details is an object or string
-            const contractDetails = typeof site.contract_details === 'object' 
-              ? site.contract_details 
-              : {};
+            // Handle different formats of contract_details
+            const contractDetails = typeof site.contract_details === 'string' 
+              ? JSON.parse(site.contract_details) 
+              : site.contract_details;
             
             if (contractDetails && 'endDate' in contractDetails) {
               const endDateStr = contractDetails.endDate as string;

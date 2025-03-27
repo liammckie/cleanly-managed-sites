@@ -1,319 +1,142 @@
-import { BillingAddress, BillingDetails } from "@/components/sites/forms/types/billingTypes";
-import { ContractDetails } from "@/components/sites/forms/types/contractTypes";
-import { Day, EmploymentType, Frequency, QuoteStatus } from "@/types/common";
-import { Quote, QuoteShift, QuoteSubcontractor } from "@/types/models";
-import { DbOverheadProfile, OverheadProfile } from "@/lib/utils/typeAdapters";
 
-// Day adapters
-export const adaptDay = (day: string): Day => {
-  const normalizedDay = day.toLowerCase().trim();
-  
-  if (
-    normalizedDay === 'monday' ||
-    normalizedDay === 'tuesday' ||
-    normalizedDay === 'wednesday' ||
-    normalizedDay === 'thursday' ||
-    normalizedDay === 'friday' ||
-    normalizedDay === 'saturday' ||
-    normalizedDay === 'sunday' ||
-    normalizedDay === 'weekday' ||
-    normalizedDay === 'public_holiday'
-  ) {
-    return normalizedDay as Day;
-  }
-  
-  // Default fallback
-  return 'monday';
-};
+import { Quote } from '@/types/models';
 
-// Employment type adapters
-export const adaptEmploymentType = (type: string): EmploymentType => {
-  const normalizedType = type.toLowerCase().trim().replace('_', '-');
-  
-  if (normalizedType === 'casual' || normalizedType === 'part-time' || normalizedType === 'full-time') {
-    return normalizedType as EmploymentType;
-  }
-  
-  // Default fallback
-  return 'casual';
-};
-
-export const adaptQuote = (data: any): Quote => {
-  if (!data) return {} as Quote;
-  
+// Utility function to adapt API quote data to frontend format
+export function adaptQuoteToFrontend(apiQuote: any): Quote {
   return {
-    id: data.id,
-    name: data.name || '',
-    clientName: data.client_name || '',
-    status: (data.status || 'draft') as QuoteStatus,
-    totalPrice: data.total_price || 0,
-    laborCost: data.labor_cost || 0,
-    overheadPercentage: data.overhead_percentage || 15,
-    marginPercentage: data.margin_percentage || 20,
-    subcontractorCost: data.subcontractor_cost || 0,
-    createdAt: data.created_at || '',
-    updatedAt: data.updated_at || '',
+    id: apiQuote.id || '',
+    clientName: apiQuote.client_name || '',
+    siteName: apiQuote.site_name || '',
+    status: apiQuote.status || 'draft',
+    totalPrice: apiQuote.total_price || 0,
+    laborCost: apiQuote.labor_cost || 0,
+    overheadPercentage: apiQuote.overhead_percentage || 15,
+    marginPercentage: apiQuote.margin_percentage || 20,
+    subcontractorCost: apiQuote.subcontractor_cost || 0,
+    createdAt: apiQuote.created_at || new Date().toISOString(),
+    updatedAt: apiQuote.updated_at || new Date().toISOString(),
+    title: apiQuote.name || '',
+    description: apiQuote.description || '',
     
-    // Optional fields with their aliases
-    title: data.title,
-    description: data.description,
-    // Properties need to match the Quote type
-    suppliesCost: data.supplies_cost || 0, 
-    equipmentCost: data.equipment_cost || 0,
-    quoteNumber: data.quote_number || '',
-    validUntil: data.valid_until || '',
-    clientId: data.client_id,
-    siteId: data.site_id,
-    overheadCost: data.overhead_cost || 0,
-    totalCost: data.total_cost || 0,
-    marginAmount: data.margin_amount || 0,
-    startDate: data.start_date || '',
-    endDate: data.end_date || '',
-    expiryDate: data.expiry_date || '',
-    contractLength: data.contract_length,
-    contractLengthUnit: data.contract_length_unit,
+    // Convert additional fields
+    marginAmount: apiQuote.margin_amount || 0,
+    overheadCost: apiQuote.overhead_cost || 0,
+    totalCost: apiQuote.total_cost || 0,
+    startDate: apiQuote.start_date || '',
+    endDate: apiQuote.end_date || '',
+    expiryDate: apiQuote.expiry_date || '',
+    notes: apiQuote.notes || '',
+    quoteNumber: apiQuote.quote_number || '',
+    contractLength: apiQuote.contract_length || 0,
+    contractLengthUnit: apiQuote.contract_length_unit || '',
     
-    // Include shifts and subcontractors if available
-    shifts: data.shifts ? data.shifts.map(adaptShift) : [],
-    subcontractors: data.subcontractors ? data.subcontractors.map(adaptSubcontractor) : []
-  };
-};
-
-export const adaptShift = (data: any): QuoteShift => {
-  return {
-    id: data.id,
-    quote_id: data.quote_id,
-    day: adaptDay(data.day),
-    start_time: data.start_time,
-    end_time: data.end_time,
-    break_duration: data.break_duration || 0,
-    number_of_cleaners: data.number_of_cleaners || 1,
-    employment_type: adaptEmploymentType(data.employment_type),
-    level: data.level || 1,
-    allowances: data.allowances || [],
-    estimated_cost: data.estimated_cost || 0,
-    location: data.location || '',
-    notes: data.notes || '',
-    
-    // Add camelCase aliases
-    quoteId: data.quote_id,
-    startTime: data.start_time,
-    endTime: data.end_time,
-    breakDuration: data.break_duration || 0,
-    numberOfCleaners: data.number_of_cleaners || 1,
-    employmentType: adaptEmploymentType(data.employment_type),
-    estimatedCost: data.estimated_cost || 0
-  };
-};
-
-export const adaptSubcontractor = (data: any): QuoteSubcontractor => {
-  return {
-    id: data.id,
-    quote_id: data.quote_id,
-    name: data.name || '',
-    description: data.description || '',
-    cost: data.cost || 0,
-    frequency: (data.frequency || 'monthly') as Frequency,
-    email: data.email || '',
-    phone: data.phone || '',
-    notes: data.notes || '',
-    
-    // Additional fields used in the UI
-    service: data.service || '',
-    services: data.services || [],
-    customServices: data.custom_services || '',
-    monthlyCost: data.monthly_cost || 0,
-    isFlatRate: data.is_flat_rate !== false,
-    
-    // Camel case alias
-    quoteId: data.quote_id
-  };
-};
-
-export const adaptModelsToQuotes = (models: any[]): Quote[] => {
-  return models.map(adaptQuote);
-};
-
-export const adaptJobSpecifications = (data: any): any => {
-  if (!data) return {};
-  
-  return {
-    daysPerWeek: data.daysPerWeek || data.days_per_week || 5,
-    hoursPerDay: data.hoursPerDay || data.hours_per_day || 8,
-    directEmployees: data.directEmployees || data.direct_employees || 0,
-    notes: data.notes || '',
-    cleaningFrequency: data.cleaningFrequency || data.cleaning_frequency || 'daily',
-    customFrequency: data.customFrequency || data.custom_frequency || '',
-    serviceDays: data.serviceDays || data.service_days || '',
-    serviceTime: data.serviceTime || data.service_time || '',
-    estimatedHours: data.estimatedHours || data.estimated_hours || '',
-    equipmentRequired: data.equipmentRequired || data.equipment_required || '',
-    scopeNotes: data.scopeNotes || data.scope_notes || '',
-    weeklyContractorCost: data.weeklyContractorCost || data.weekly_contractor_cost || 0,
-    monthlyContractorCost: data.monthlyContractorCost || data.monthly_contractor_cost || 0,
-    annualContractorCost: data.annualContractorCost || data.annual_contractor_cost || 0
-  };
-};
-
-export const dbToOverheadProfile = (data: any): DbOverheadProfile => {
-  return {
-    id: data.id,
-    name: data.name || 'Default Profile',
-    description: data.description || '',
-    labor_percentage: data.labor_percentage || 15,
-    // Fixed: Use labor_percentage instead of laborPercentage to match DbOverheadProfile interface
-    created_at: data.created_at || new Date().toISOString(),
-    updated_at: data.updated_at || new Date().toISOString(),
-    user_id: data.user_id
-  };
-};
-
-// Address adaptation
-export const adaptAddress = (address: string | BillingAddress): BillingAddress => {
-  if (typeof address === 'string') {
-    return {
-      street: address,
-      city: '',
-      state: '',
-      postcode: '',
-      country: ''
-    };
-  }
-  return address || { street: '', city: '', state: '', postcode: '', country: '' };
-};
-
-// BillingDetails adaptation to ensure required fields
-export const adaptBillingDetails = (details: Partial<BillingDetails> = {}): BillingDetails => {
-  return {
-    // Base properties with defaults
-    billingAddress: adaptAddress(details.billingAddress || {}),
-    useClientInfo: details.useClientInfo || false,
-    billingMethod: details.billingMethod || '',
-    paymentTerms: details.paymentTerms || '',
-    billingEmail: details.billingEmail || '',
-    contacts: details.contacts || [],
-    notes: details.notes || '',
-    
-    // Revenue properties
-    billingLines: details.billingLines || [],
-    totalWeeklyAmount: details.totalWeeklyAmount || 0,
-    totalMonthlyAmount: details.totalMonthlyAmount || 0,
-    totalAnnualAmount: details.totalAnnualAmount || 0,
-    weeklyRevenue: details.weeklyRevenue || 0,
-    monthlyRevenue: details.monthlyRevenue || 0,
-    
-    // Invoice and address properties
-    billingCity: details.billingCity || '',
-    billingState: details.billingState || '',
-    billingPostcode: details.billingPostcode || '',
-    billingFrequency: details.billingFrequency || '',
-    invoiceFrequency: details.invoiceFrequency || '',
-    invoiceDay: details.invoiceDay || '',
-    invoiceMethod: details.invoiceMethod || '',
-    invoiceEmail: details.invoiceEmail || '',
-    invoiceAddressLine1: details.invoiceAddressLine1 || '',
-    invoiceAddressLine2: details.invoiceAddressLine2 || '',
-    invoiceCity: details.invoiceCity || '',
-    invoiceState: details.invoiceState || '',
-    invoicePostalCode: details.invoicePostalCode || '',
-    
-    // Payment properties
-    accountNumber: details.accountNumber || '',
-    purchaseOrderRequired: details.purchaseOrderRequired || false,
-    purchaseOrderNumber: details.purchaseOrderNumber || '',
-    rate: details.rate || '',
-    xeroContactId: details.xeroContactId || '',
-    
-    // Service delivery properties
-    serviceType: details.serviceType || '',
-    deliveryMethod: details.deliveryMethod || '',
-    contractorCostFrequency: details.contractorCostFrequency || '',
-    weeklyContractorCost: details.weeklyContractorCost || 0,
-    monthlyContractorCost: details.monthlyContractorCost || 0,
-    annualContractorCost: details.annualContractorCost || 0,
-    contractorInvoiceFrequency: details.contractorInvoiceFrequency || '',
-    serviceDeliveryType: details.serviceDeliveryType || '',
-    weeklyBudget: details.weeklyBudget || 0
-  };
-};
-
-// ContractDetails adaptation to ensure required fields
-export const adaptContractDetails = (details: ContractDetails): ContractDetails => {
-  return {
-    startDate: details.startDate || '',
-    endDate: details.endDate || '',
-    ...details,
-    // Ensure the terms array exists
-    terms: details.terms || []
-  };
-};
-
-export function adaptQuoteFromApi(apiQuote: any): Quote {
-  return {
-    id: apiQuote.id,
-    name: apiQuote.name || '',
-    title: apiQuote.title,
-    client_name: apiQuote.client_name || apiQuote.clientName || '',
-    site_name: apiQuote.site_name || apiQuote.siteName,
-    description: apiQuote.description,
-    status: apiQuote.status,
-    overhead_percentage: apiQuote.overhead_percentage || apiQuote.overheadPercentage || 15,
-    margin_percentage: apiQuote.margin_percentage || apiQuote.marginPercentage || 20,
-    total_price: apiQuote.total_price || apiQuote.totalPrice || 0,
-    labor_cost: apiQuote.labor_cost || apiQuote.laborCost || 0,
-    subcontractor_cost: apiQuote.subcontractor_cost || apiQuote.subcontractorCost || 0,
-    created_at: apiQuote.created_at || apiQuote.createdAt || new Date().toISOString(),
-    updated_at: apiQuote.updated_at || apiQuote.updatedAt || new Date().toISOString(),
-    quote_number: apiQuote.quote_number || apiQuote.quoteNumber,
-    valid_until: apiQuote.valid_until || apiQuote.validUntil,
-    client_id: apiQuote.client_id || apiQuote.clientId,
-    site_id: apiQuote.site_id || apiQuote.siteId,
+    // Include any shifts or subcontractors
     shifts: apiQuote.shifts || [],
-    subcontractors: apiQuote.subcontractors || [],
-    overhead_cost: apiQuote.overhead_cost || apiQuote.overheadCost || 0,
-    total_cost: apiQuote.total_cost || apiQuote.totalCost || 0,
-    margin_amount: apiQuote.margin_amount || apiQuote.marginAmount || 0,
-    start_date: apiQuote.start_date || apiQuote.startDate,
-    end_date: apiQuote.end_date || apiQuote.endDate,
-    expiry_date: apiQuote.expiry_date || apiQuote.expiryDate,
-    equipment_cost: apiQuote.equipment_cost || apiQuote.equipmentCost || 0,
-    // Use supplies_cost with fallback - but don't add it as a non-existent property
-    // Instead map it to a valid property that exists in the Quote type
-    overhead_profile: apiQuote.overhead_profile || apiQuote.overheadProfile,
-    
-    // Aliases for the frontend
-    clientName: apiQuote.client_name || apiQuote.clientName || '',
-    siteName: apiQuote.site_name || apiQuote.siteName,
-    overheadPercentage: apiQuote.overhead_percentage || apiQuote.overheadPercentage || 15,
-    marginPercentage: apiQuote.margin_percentage || apiQuote.marginPercentage || 20,
-    totalPrice: apiQuote.total_price || apiQuote.totalPrice || 0,
-    laborCost: apiQuote.labor_cost || apiQuote.laborCost || 0,
-    equipmentCost: apiQuote.equipment_cost || apiQuote.equipmentCost || 0,
-    subcontractorCost: apiQuote.subcontractor_cost || apiQuote.subcontractorCost || 0,
-    createdAt: apiQuote.created_at || apiQuote.createdAt || new Date().toISOString(),
-    updatedAt: apiQuote.updated_at || apiQuote.updatedAt || new Date().toISOString(),
-    quoteNumber: apiQuote.quote_number || apiQuote.quoteNumber,
-    validUntil: apiQuote.valid_until || apiQuote.validUntil,
-    clientId: apiQuote.client_id || apiQuote.clientId,
-    siteId: apiQuote.site_id || apiQuote.siteId,
-    overheadCost: apiQuote.overhead_cost || apiQuote.overheadCost || 0,
-    totalCost: apiQuote.total_cost || apiQuote.totalCost || 0,
-    marginAmount: apiQuote.margin_amount || apiQuote.marginAmount || 0,
-    startDate: apiQuote.start_date || apiQuote.startDate,
-    endDate: apiQuote.end_date || apiQuote.endDate,
-    expiryDate: apiQuote.expiry_date || apiQuote.expiryDate,
-    overheadProfile: apiQuote.overhead_profile || apiQuote.overheadProfile,
+    subcontractors: apiQuote.subcontractors || []
   };
 }
 
+// Utility function to adapt frontend quote data to API format
+export function adaptQuoteToApi(frontendQuote: Partial<Quote>): any {
+  return {
+    name: frontendQuote.title || '',
+    client_name: frontendQuote.clientName || '',
+    site_name: frontendQuote.siteName || '',
+    status: frontendQuote.status || 'draft',
+    total_price: frontendQuote.totalPrice || 0,
+    labor_cost: frontendQuote.laborCost || 0,
+    overhead_percentage: frontendQuote.overheadPercentage || 15,
+    margin_percentage: frontendQuote.marginPercentage || 20,
+    subcontractor_cost: frontendQuote.subcontractorCost || 0,
+    
+    // Convert additional fields
+    margin_amount: frontendQuote.marginAmount || 0,
+    overhead_cost: frontendQuote.overheadCost || 0,
+    total_cost: frontendQuote.totalCost || 0,
+    start_date: frontendQuote.startDate || null,
+    end_date: frontendQuote.endDate || null,
+    expiry_date: frontendQuote.expiryDate || null,
+    notes: frontendQuote.notes || '',
+    contract_length: frontendQuote.contractLength || null,
+    contract_length_unit: frontendQuote.contractLengthUnit || null
+  };
+}
+
+// Adapt a database overhead profile to frontend format
 export function adaptOverheadProfile(dbProfile: any) {
   return {
     id: dbProfile.id,
     name: dbProfile.name,
-    // Fix the property name from laborPercentage to labor_percentage
+    description: dbProfile.description || '',
     labor_percentage: dbProfile.labor_percentage,
-    description: dbProfile.description,
-    // Also provide a camelCase version for frontend usage
-    laborPercentage: dbProfile.labor_percentage 
+    laborPercentage: dbProfile.labor_percentage, // Add camelCase alias
+    created_at: dbProfile.created_at,
+    updated_at: dbProfile.updated_at,
+    user_id: dbProfile.user_id
+  };
+}
+
+// Helper function to adapt billing details from API to frontend format
+export function adaptBillingDetails(billingDetailsFromApi: any) {
+  if (!billingDetailsFromApi) {
+    return {
+      billingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: ''
+      },
+      useClientInfo: false,
+      billingMethod: '',
+      paymentTerms: '',
+      billingEmail: '',
+      contacts: []
+    };
+  }
+
+  return {
+    billingAddress: billingDetailsFromApi.billingAddress || {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: ''
+    },
+    useClientInfo: billingDetailsFromApi.useClientInfo || false,
+    billingMethod: billingDetailsFromApi.billingMethod || '',
+    paymentTerms: billingDetailsFromApi.paymentTerms || '',
+    billingEmail: billingDetailsFromApi.billingEmail || '',
+    contacts: billingDetailsFromApi.contacts || [],
+    billingCity: billingDetailsFromApi.billingCity || '',
+    billingState: billingDetailsFromApi.billingState || '',
+    billingPostcode: billingDetailsFromApi.billingPostcode || '',
+    billingFrequency: billingDetailsFromApi.billingFrequency || '',
+    invoiceFrequency: billingDetailsFromApi.invoiceFrequency || '',
+    invoiceDay: billingDetailsFromApi.invoiceDay || '',
+    invoiceMethod: billingDetailsFromApi.invoiceMethod || '',
+    invoiceEmail: billingDetailsFromApi.invoiceEmail || '',
+    invoiceAddressLine1: billingDetailsFromApi.invoiceAddressLine1 || '',
+    invoiceAddressLine2: billingDetailsFromApi.invoiceAddressLine2 || '',
+    invoiceCity: billingDetailsFromApi.invoiceCity || '',
+    invoiceState: billingDetailsFromApi.invoiceState || '',
+    invoicePostalCode: billingDetailsFromApi.invoicePostalCode || '',
+    weeklyRevenue: billingDetailsFromApi.weeklyRevenue || 0,
+    monthlyRevenue: billingDetailsFromApi.monthlyRevenue || 0,
+    accountNumber: billingDetailsFromApi.accountNumber || '',
+    purchaseOrderRequired: billingDetailsFromApi.purchaseOrderRequired || false,
+    purchaseOrderNumber: billingDetailsFromApi.purchaseOrderNumber || '',
+    rate: billingDetailsFromApi.rate || '',
+    serviceType: billingDetailsFromApi.serviceType || '',
+    deliveryMethod: billingDetailsFromApi.deliveryMethod || '',
+    contractorCostFrequency: billingDetailsFromApi.contractorCostFrequency || '',
+    weeklyContractorCost: billingDetailsFromApi.weeklyContractorCost || 0,
+    monthlyContractorCost: billingDetailsFromApi.monthlyContractorCost || 0,
+    annualContractorCost: billingDetailsFromApi.annualContractorCost || 0,
+    contractorInvoiceFrequency: billingDetailsFromApi.contractorInvoiceFrequency || '',
+    serviceDeliveryType: billingDetailsFromApi.serviceDeliveryType || '',
+    weeklyBudget: billingDetailsFromApi.weeklyBudget || 0,
+    billingLines: billingDetailsFromApi.billingLines || [],
+    xeroContactId: billingDetailsFromApi.xeroContactId || ''
   };
 }

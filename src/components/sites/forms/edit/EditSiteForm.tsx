@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SiteFormStepper } from '../SiteFormStepper';
 import { BasicInformationStep } from '../steps/BasicInformationStep';
-import { ContactsStep } from '../steps/contacts';
+import { ContactsStep } from '../steps/contacts/ContactsStep';
 import { BillingDetailsStepWrapper } from '../steps/BillingDetailsStepWrapper';
 import { ContractDetailsStep } from '../steps/ContractDetailsStep';
 import { JobSpecificationsStepWrapper } from '../steps/JobSpecificationsStepWrapper';
@@ -82,18 +82,18 @@ export function EditSiteForm({
   
   // Handle field changes
   const handleChange = (field: keyof SiteFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
+    setFormData(prevData => ({
+      ...prevData,
       [field]: value
     }));
   };
   
   // Handle nested field changes
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
-    setFormData(prev => {
-      const currentSection = prev[section] || {};
+    setFormData(prevData => {
+      const currentSection = prevData[section] || {};
       return {
-        ...prev,
+        ...prevData,
         [section]: {
           ...currentSection,
           [field]: value
@@ -109,12 +109,12 @@ export function EditSiteForm({
     field: string, 
     value: any
   ) => {
-    setFormData(prev => {
-      const currentSection = prev[section] || {};
+    setFormData(prevData => {
+      const currentSection = prevData[section] || {};
       const currentSubsection = currentSection[subsection] || {};
       
       return {
-        ...prev,
+        ...prevData,
         [section]: {
           ...currentSection,
           [subsection]: {
@@ -162,13 +162,18 @@ export function EditSiteForm({
               <BasicInformationStep 
                 formData={formData} 
                 handleChange={handleInputChange} 
-                handleNestedChange={handleNestedChange}
                 handleClientChange={handleClientChange}
               />
             </TabsContent>
             
             <TabsContent value="contacts">
-              <ContactsStep contacts={formData.contacts || []} />
+              <ContactsStep 
+                formData={formData} 
+                errors={{}}
+                handleContactChange={() => {}}
+                addContact={() => {}}
+                removeContact={() => {}}
+              />
             </TabsContent>
             
             <TabsContent value="billing">
@@ -211,18 +216,25 @@ export function EditSiteForm({
               <SubcontractorsStep 
                 subcontractors={formData.subcontractors || []} 
                 hasSubcontractors={formData.hasSubcontractors || false}
+                handleAddSubcontractor={() => {}}
+                handleUpdateSubcontractor={() => {}}
+                handleRemoveSubcontractor={() => {}}
               />
             </TabsContent>
             
             <TabsContent value="replenishables">
               <ReplenishablesStep 
-                replenishables={formData.replenishables || {}} 
+                replenishables={formData.replenishables || {}}
+                handleAddItem={() => {}}
+                handleUpdateItem={() => {}}
+                handleRemoveItem={() => {}}
               />
             </TabsContent>
             
             <TabsContent value="security">
               <SecurityStep 
-                securityDetails={formData.securityDetails || {}} 
+                securityDetails={formData.securityDetails || {}}
+                handleChange={() => {}}
               />
             </TabsContent>
           </Tabs>

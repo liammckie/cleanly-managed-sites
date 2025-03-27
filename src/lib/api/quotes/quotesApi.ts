@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Quote } from '@/types/models';
-import { adaptQuote, adaptModelsToQuotes } from '@/lib/utils/quoteTypeAdapter';
+import { adaptQuoteToFrontend, adaptQuoteToApi } from '@/utils/typeAdapters';
 
 // Fetch all quotes
 export const fetchQuotes = async (): Promise<Quote[]> => {
@@ -15,7 +15,8 @@ export const fetchQuotes = async (): Promise<Quote[]> => {
       throw new Error(error.message);
     }
 
-    return adaptModelsToQuotes(data || []);
+    // Convert each quote to the frontend format
+    return (data || []).map(quote => adaptQuoteToFrontend(quote));
   } catch (error) {
     console.error('Error fetching quotes:', error);
     throw error;
@@ -39,7 +40,7 @@ export const fetchQuote = async (quoteId: string): Promise<Quote> => {
       throw new Error(error.message);
     }
 
-    return adaptQuote(data);
+    return adaptQuoteToFrontend(data);
   } catch (error) {
     console.error(`Error fetching quote ${quoteId}:`, error);
     throw error;
@@ -49,9 +50,12 @@ export const fetchQuote = async (quoteId: string): Promise<Quote> => {
 // Create a new quote
 export const createQuote = async (quoteData: Partial<Quote>): Promise<Quote> => {
   try {
+    // Convert from frontend format to API format
+    const apiData = adaptQuoteToApi(quoteData);
+    
     const { data, error } = await supabase
       .from('quotes')
-      .insert(quoteData)
+      .insert([apiData])
       .select()
       .single();
 
@@ -59,7 +63,7 @@ export const createQuote = async (quoteData: Partial<Quote>): Promise<Quote> => 
       throw new Error(error.message);
     }
 
-    return adaptQuote(data);
+    return adaptQuoteToFrontend(data);
   } catch (error) {
     console.error('Error creating quote:', error);
     throw error;
@@ -69,9 +73,12 @@ export const createQuote = async (quoteData: Partial<Quote>): Promise<Quote> => 
 // Update an existing quote
 export const updateQuote = async (quoteId: string, quoteData: Partial<Quote>): Promise<Quote> => {
   try {
+    // Convert from frontend format to API format
+    const apiData = adaptQuoteToApi(quoteData);
+    
     const { data, error } = await supabase
       .from('quotes')
-      .update(quoteData)
+      .update(apiData)
       .eq('id', quoteId)
       .select()
       .single();
@@ -80,7 +87,7 @@ export const updateQuote = async (quoteId: string, quoteData: Partial<Quote>): P
       throw new Error(error.message);
     }
 
-    return adaptQuote(data);
+    return adaptQuoteToFrontend(data);
   } catch (error) {
     console.error(`Error updating quote ${quoteId}:`, error);
     throw error;

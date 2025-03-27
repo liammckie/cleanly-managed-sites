@@ -1,13 +1,18 @@
 
 export interface SecurityDetails {
-  hasAlarm?: boolean;
   alarmCode?: string;
-  keyRequired?: boolean;
+  hasSecuritySystem?: boolean;
+  securityCompany?: string;
+  securityContact?: string;
   keyLocation?: string;
-  swipeCard?: boolean;
-  parkingDetails?: string;
-  accessNotes?: string;
-  // Additional fields needed by components
-  accessCode?: string;
-  outOfHoursAccess?: boolean;
+  accessInstructions?: string;
+  notes?: string;
+  
+  // Additional potential fields
+  keypadLocation?: string;
+  securityCameras?: boolean;
+  restrictedAreas?: string[];
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  specialInstructions?: string;
 }

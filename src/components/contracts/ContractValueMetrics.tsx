@@ -15,7 +15,7 @@ export function ContractValueMetrics() {
     (Array.isArray(sites) ? sites.filter(c => c.status === 'active').length : 0);
   
   // Calculate total contracts if it doesn't exist
-  const totalContracts = contractSummary?.totalContracts || contractSummary?.totalCount || 
+  const totalContracts = contractSummary?.totalCount || 
     (Array.isArray(sites) ? sites.length : 0);
   
   return (

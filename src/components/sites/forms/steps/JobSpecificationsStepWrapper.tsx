@@ -12,11 +12,10 @@ export function JobSpecificationsStepWrapper({
   formData, 
   handleNestedChange
 }: JobSpecificationsStepWrapperProps) {
-  // Pass the props to the underlying component with explicit typing
   return (
     <JobSpecificationsStep
       formData={formData}
-      handleNestedChange={handleNestedChange as any}
+      handleNestedChange={handleNestedChange}
     />
   );
 }
