@@ -1,4 +1,3 @@
-
 import { Quote } from '@/types/models';
 
 // Utility function to adapt API quote data to frontend format
@@ -140,3 +139,25 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
     xeroContactId: billingDetailsFromApi.xeroContactId || ''
   };
 }
+
+// Export adaptQuoteToFrontend as adaptQuote for backwards compatibility
+export const adaptQuote = adaptQuoteToFrontend;
+
+// Add missing function to adapt employment type (needed by ShiftScheduler)
+export function adaptEmploymentType(employmentType: string): string {
+  return employmentType;
+}
+
+// Add missing function to adapt address (needed by useClientData)
+export function adaptAddress(address: any): any {
+  return {
+    street: address?.street || address?.address_line1 || '',
+    city: address?.city || '',
+    state: address?.state || '',
+    postalCode: address?.postal_code || address?.postalCode || '',
+    country: address?.country || 'Australia',
+  };
+}
+
+// Alias dbToOverheadProfile to adaptOverheadProfile for backwards compatibility
+export const dbToOverheadProfile = adaptOverheadProfile;

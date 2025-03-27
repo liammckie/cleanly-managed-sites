@@ -13,8 +13,7 @@ import { QuoteSummary } from './QuoteSummary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useOverheadProfiles } from '@/hooks/quotes/useOverheadProfiles';
 import { Quote } from '@/types/models';
-import { dbToOverheadProfile } from '@/utils/typeAdapters';
-import { adaptOverheadProfile } from '@/utils/quoteAdapters';
+import { adaptOverheadProfile } from '@/utils/typeAdapters';
 
 interface OverheadProfile {
   id: string;
