@@ -1,8 +1,11 @@
 
 import { supabase } from '@/lib/supabase';
 
+// Define valid table names to improve type safety
+type ValidTableName = 'clients' | 'contractors' | 'sites' | 'site_additional_contracts';
+
 // Base functions for importing data
-export async function importData<T extends Record<string, any>>(tableName: string, data: T[]): Promise<void> {
+export async function importData<T extends Record<string, any>>(tableName: ValidTableName, data: T[]): Promise<void> {
   if (!data || data.length === 0) {
     throw new Error('No data to import');
   }
@@ -20,7 +23,7 @@ export async function importData<T extends Record<string, any>>(tableName: strin
     user_id: user.id
   }));
   
-  // Use any to bypass the type checking for table name
+  // Use type assertion for table name
   const { error } = await supabase
     .from(tableName)
     .insert(dataWithUserId);

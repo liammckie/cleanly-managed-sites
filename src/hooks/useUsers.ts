@@ -1,8 +1,9 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { SystemUser, SystemUserInsert } from '@/lib/types/users';
+import { SystemUser, UserStatus } from '@/lib/types/users';
 import { queryClient } from '@/lib/tanstack-query';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useUsers() {
   const usersQuery = useQuery({
@@ -22,7 +23,7 @@ export function useUsers() {
         last_name: user.last_name || '',
         phone: user.phone || '',
         title: user.title || '',
-        status: user.status as 'active' | 'pending' | 'inactive',
+        status: user.status as UserStatus,
         role_id: user.role_id,
         avatar_url: user.avatar_url,
         created_at: user.created_at,
@@ -40,12 +41,23 @@ export function useUsers() {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: async (userData: SystemUserInsert) => {
+    mutationFn: async (userData: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone?: string;
+      title?: string;
+      role_id: string;
+      status?: UserStatus;
+    }) => {
+      const userId = uuidv4();
+      
       const { data, error } = await supabase
         .from('user_profiles')
         .insert({
+          id: userId,
           email: userData.email,
-          full_name: userData.full_name || `${userData.firstName} ${userData.lastName}`,
+          full_name: `${userData.firstName} ${userData.lastName}`,
           first_name: userData.firstName,
           last_name: userData.lastName,
           phone: userData.phone || '',

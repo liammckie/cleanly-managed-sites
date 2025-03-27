@@ -1,98 +1,113 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { SystemUser } from '@/lib/types/users';
-import { formatDate } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Edit, Trash } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
 
 export interface UsersListProps {
   users: SystemUser[];
   isLoading: boolean;
-  refresh?: boolean;
-  onUserClick?: (userId: string) => void;
+  refreshKey?: number;
 }
 
-export function UsersList({ users, isLoading, onUserClick, refresh }: UsersListProps) {
+export function UsersList({ users, isLoading, refreshKey }: UsersListProps) {
+  const navigate = useNavigate();
+
+  const handleEditUser = (userId: string) => {
+    navigate(`/users/${userId}`);
+  };
+
+  const renderStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500">Active</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">Pending</Badge>;
+      case 'inactive':
+        return <Badge className="bg-gray-500">Inactive</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-12 bg-muted rounded-md w-full"></div>
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <div key={idx} className="flex items-center space-x-4">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (users?.length === 0) {
-    return (
-      <div className="text-center p-8 border rounded-md bg-muted/10">
-        <p className="text-muted-foreground">No users found</p>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="border rounded-md overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Login</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users?.map((user) => (
-            <TableRow 
-              key={user.id}
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onUserClick && onUserClick(user.id)}
-            >
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                    <AvatarFallback>
-                      {user.full_name.split(' ').map(name => name[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{user.full_name}</span>
-                </div>
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{user.role_id}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge 
-                  className={
-                    user.status === 'active' 
-                      ? 'bg-green-600 hover:bg-green-700' 
-                      : user.status === 'pending' 
-                        ? 'bg-yellow-600 hover:bg-yellow-700' 
-                        : 'bg-red-600 hover:bg-red-700'
-                  }
-                >
-                  {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                </Badge>
-              </TableCell>
-              <TableCell>{user.last_login ? formatDate(user.last_login, 'PP') : 'Never'}</TableCell>
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No users found
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.full_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.role_id ? (
+                      <span>{user.role_id}</span>
+                    ) : (
+                      <span className="text-muted-foreground">None</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{renderStatusBadge(user.status)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditUser(user.id)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

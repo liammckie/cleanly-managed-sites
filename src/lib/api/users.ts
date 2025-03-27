@@ -1,16 +1,20 @@
-import { supabase } from '@/lib/supabase';
-import { getCurrentUser } from '@/lib/auth';
-import { SystemUser, UserRole, SystemUserInsert } from '@/lib/types/users';
 
-const generateRandomPassword = () => {
-  const length = 12;
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-  let password = "";
-  for (let i = 0, n = charset.length; i < length; ++i) {
-    password += charset.charAt(Math.floor(Math.random() * n));
-  }
-  return password;
-};
+import { supabase } from '@/lib/supabase';
+import { SystemUser, UserRole, UserStatus } from '@/lib/types/users';
+import { v4 as uuidv4 } from 'uuid';
+
+// Define a local type for user inserts
+interface UserInsertData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  full_name?: string;
+  phone?: string;
+  title?: string;
+  role_id: string;
+  status?: UserStatus;
+  password?: string;
+}
 
 export const getUsers = async (): Promise<SystemUser[]> => {
   try {
@@ -31,15 +35,15 @@ export const getUsers = async (): Promise<SystemUser[]> => {
       last_name: user.last_name,
       phone: user.phone || '',
       title: user.title || '',
-      status: user.status,
+      status: user.status as UserStatus,
       role_id: user.role_id,
-      avatarUrl: user.avatarUrl,
+      avatar_url: user.avatar_url,
       created_at: user.created_at,
       updated_at: user.updated_at,
       last_login: user.last_login,
       custom_id: user.custom_id,
       notes: user.notes,
-      territories: user.territories,
+      territories: user.territories || [], // Ensure it's an array
       daily_summary: user.daily_summary
     }));
   } catch (error) {
@@ -48,39 +52,26 @@ export const getUsers = async (): Promise<SystemUser[]> => {
   }
 };
 
-export const createUser = async (userData: SystemUserInsert): Promise<SystemUser> => {
+export const createUser = async (userData: UserInsertData): Promise<SystemUser> => {
   try {
-    const { data: auth, error: authError } = await supabase.auth.admin.createUser({
-      email: userData.email,
-      password: userData.password || generateRandomPassword(),
-      email_confirm: true,
-    });
-
-    if (authError) {
-      console.error('Error creating auth user:', authError);
-      throw authError;
-    }
-
-    const userId = auth.user?.id;
+    const userId = uuidv4();
     
-    if (!userId) {
-      throw new Error('Failed to create user. No user ID returned.');
-    }
-
     // Create the user profile
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .insert({
         id: userId,
         email: userData.email,
-        full_name: userData.full_name,
+        full_name: userData.full_name || `${userData.firstName} ${userData.lastName}`,
         first_name: userData.firstName,
         last_name: userData.lastName,
-        phone: userData.phone,
-        title: userData.title,
+        phone: userData.phone || '',
+        title: userData.title || '',
         role_id: userData.role_id,
         status: userData.status || 'active',
-      });
+      })
+      .select()
+      .single();
 
     if (profileError) {
       console.error('Error creating user profile:', profileError);
@@ -88,17 +79,23 @@ export const createUser = async (userData: SystemUserInsert): Promise<SystemUser
     }
 
     return {
-      id: userId,
-      email: userData.email,
-      full_name: userData.full_name,
-      first_name: userData.firstName,
-      last_name: userData.lastName,
-      phone: userData.phone || '',
-      title: userData.title || '',
-      status: userData.status || 'active',
-      role_id: userData.role_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: profile.id,
+      email: profile.email,
+      full_name: profile.full_name,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      phone: profile.phone || '',
+      title: profile.title || '',
+      status: profile.status as UserStatus,
+      role_id: profile.role_id,
+      avatar_url: profile.avatar_url,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+      last_login: profile.last_login,
+      custom_id: profile.custom_id,
+      notes: profile.notes,
+      territories: profile.territories || [],
+      daily_summary: profile.daily_summary
     };
   } catch (error) {
     console.error('Error in createUser:', error);
@@ -128,15 +125,15 @@ export const updateUser = async (id: string, userData: Partial<SystemUser>): Pro
       last_name: data.last_name,
       phone: data.phone || '',
       title: data.title || '',
-      status: data.status,
+      status: data.status as UserStatus,
       role_id: data.role_id,
-      avatarUrl: data.avatarUrl,
+      avatar_url: data.avatar_url,
       created_at: data.created_at,
       updated_at: data.updated_at,
       last_login: data.last_login,
       custom_id: data.custom_id,
       notes: data.notes,
-      territories: data.territories,
+      territories: data.territories || [],
       daily_summary: data.daily_summary
     };
   } catch (error) {
@@ -164,7 +161,7 @@ export const deleteUser = async (id: string): Promise<void> => {
 
 export const getCurrentUserProfile = async (): Promise<SystemUser | null> => {
   try {
-    const user = await getCurrentUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
       return null;
@@ -189,15 +186,15 @@ export const getCurrentUserProfile = async (): Promise<SystemUser | null> => {
       last_name: data.last_name,
       phone: data.phone || '',
       title: data.title || '',
-      status: data.status,
+      status: data.status as UserStatus,
       role_id: data.role_id,
-      avatarUrl: data.avatarUrl,
+      avatar_url: data.avatar_url,
       created_at: data.created_at,
       updated_at: data.updated_at,
       last_login: data.last_login,
       custom_id: data.custom_id,
       notes: data.notes,
-      territories: data.territories,
+      territories: data.territories || [],
       daily_summary: data.daily_summary
     };
   } catch (error) {
@@ -224,7 +221,9 @@ export const getUserRoles = async (): Promise<UserRole[]> => {
       description: role.description,
       permissions: Array.isArray(role.permissions) 
         ? role.permissions as string[]
-        : Object.keys(role.permissions || {}),
+        : typeof role.permissions === 'object' && role.permissions !== null
+          ? Object.keys(role.permissions)
+          : [],
       created_at: role.created_at,
       updated_at: role.updated_at
     }));
@@ -255,7 +254,11 @@ export const createUserRole = async (roleData: Omit<UserRole, 'id' | 'created_at
       id: data.id,
       name: data.name,
       description: data.description,
-      permissions: data.permissions,
+      permissions: Array.isArray(data.permissions) 
+        ? data.permissions 
+        : typeof data.permissions === 'object' && data.permissions !== null
+          ? Object.keys(data.permissions)
+          : [],
       created_at: data.created_at,
       updated_at: data.updated_at
     };
@@ -283,7 +286,11 @@ export const updateUserRole = async (id: string, roleData: Partial<UserRole>): P
       id: data.id,
       name: data.name,
       description: data.description,
-      permissions: data.permissions,
+      permissions: Array.isArray(data.permissions) 
+        ? data.permissions 
+        : typeof data.permissions === 'object' && data.permissions !== null
+          ? Object.keys(data.permissions)
+          : [],
       created_at: data.created_at,
       updated_at: data.updated_at
     };

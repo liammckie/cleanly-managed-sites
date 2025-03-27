@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { UserRole, SystemUserInsert } from '@/lib/types/users';
+import { UserRole, UserStatus, SystemUserInsert } from '@/lib/types/users';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface NewUserDialogProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
       phone: '',
       title: '',
       role_id: '',
-      status: 'active',
+      status: 'active' as UserStatus,
       password: ''
     }
   });
@@ -48,10 +49,13 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
   const onSubmit = async (data: SystemUserInsert) => {
     setIsLoading(true);
     try {
+      const userId = uuidv4();
+      
       // Create the user profile
       const { error } = await supabase
         .from('user_profiles')
         .insert({
+          id: userId,
           email: data.email,
           full_name: `${data.firstName} ${data.lastName}`,
           first_name: data.firstName,

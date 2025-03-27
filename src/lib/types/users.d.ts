@@ -30,6 +30,7 @@ export interface UserRole {
   permissions: string[];
   created_at: string;
   updated_at: string;
+  user_count?: number; // Add user_count property
 }
 
 // Alias UserRole as SystemUserRole for backward compatibility
