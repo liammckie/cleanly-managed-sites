@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { sitesApi } from '@/lib/api/sites';
@@ -6,12 +5,18 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
 import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
+import { ContractDetailsDTO } from '@/components/sites/contract/types';
+import { BillingDetailsDTO } from '@/components/sites/forms/types/billingTypes';
 
 const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => {
   // Convert numerical values to make sure they're consistent with expected types
-  const renewalPeriod = formData.contractDetails?.renewalPeriod 
-    ? String(formData.contractDetails.renewalPeriod) 
-    : undefined;
+  const contractDetails = formData.contractDetails || formData.contract_details;
+  
+  // Create a compatible contract details object if it exists
+  const adaptedContractDetails: ContractDetailsDTO | undefined = contractDetails ? {
+    ...contractDetails,
+    renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
+  } : undefined;
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -21,6 +26,13 @@ const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => 
     postcode: formData.billingDetails.billingAddress.postcode || '',
     country: formData.billingDetails.billingAddress.country || 'Australia'
   } : undefined;
+  
+  // Create a compatible billing details object
+  const adaptedBillingDetails: BillingDetailsDTO | undefined = formData.billingDetails ? {
+    ...formData.billingDetails,
+    billingAddress,
+    billingLines: formData.billingDetails.billingLines || []
+  } : undefined;
 
   return {
     name: formData.name,
@@ -29,20 +41,8 @@ const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => 
     state: formData.state,
     postcode: formData.postalCode || formData.postcode, // Use either property
     status: formData.status === 'lost' ? 'inactive' : formData.status,
-    contract_details: formData.contractDetails 
-      ? {
-          ...formData.contractDetails,
-          renewalPeriod
-        }
-      : formData.contract_details,
-    billing_details: formData.billingDetails
-      ? {
-          ...formData.billingDetails,
-          billingAddress,
-          // Make sure billingLines exists
-          billingLines: formData.billingDetails.billingLines || []
-        }
-      : undefined,
+    contract_details: adaptedContractDetails,
+    billing_details: adaptedBillingDetails,
     email: formData.email,
     phone: formData.phone,
     representative: formData.representative,
@@ -63,11 +63,22 @@ export function useSiteUpdate() {
           throw new Error('Invalid site data: ' + Object.values(validation.errors || {}).join(', '));
         }
         const updateData = adaptSiteFormToUpdateData(data as SiteFormData);
-        return await sitesApi.updateSite(id, updateData as any);
+        return await sitesApi.updateSite(id, updateData);
       } 
-      // If it's already a DTO, just use it directly
+      // If it's already a DTO, just use it directly but convert renewalPeriod to string
+      else if (data.contract_details?.renewalPeriod && typeof data.contract_details.renewalPeriod === 'number') {
+        const adaptedData = {
+          ...data,
+          contract_details: {
+            ...data.contract_details,
+            renewalPeriod: data.contract_details.renewalPeriod.toString()
+          }
+        };
+        return await sitesApi.updateSite(id, adaptedData);
+      }
+      // Otherwise just use it directly
       else {
-        return await sitesApi.updateSite(id, data as Partial<SiteDTO>);
+        return await sitesApi.updateSite(id, data);
       }
     },
     onSuccess: (_, variables) => {

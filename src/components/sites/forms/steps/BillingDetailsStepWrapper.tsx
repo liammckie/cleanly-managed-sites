@@ -2,6 +2,7 @@
 import React from 'react';
 import { BillingDetailsStep } from './BillingDetailsStep';
 import { BillingDetailsDTO } from '@/types/dto';
+import { BillingDetails } from '../types/billingTypes';
 
 interface BillingDetailsStepWrapperProps {
   formData: any;
@@ -21,7 +22,7 @@ export function BillingDetailsStepWrapper({
   removeBillingLine
 }: BillingDetailsStepWrapperProps) {
   // Create default billing details with all required properties
-  const defaultBillingDetails: BillingDetailsDTO = {
+  const defaultBillingDetails: BillingDetails = {
     billingLines: [],
     useClientInfo: false,
     billingMethod: '',
@@ -34,13 +35,16 @@ export function BillingDetailsStepWrapper({
       postcode: '',
       country: 'Australia'
     },
-    serviceDeliveryType: 'direct'
+    serviceDeliveryType: 'direct',
+    contacts: []
   };
   
   // Merge the default values with any existing billing details
-  const billingDetails: BillingDetailsDTO = {
+  const billingDetails: BillingDetails = {
     ...defaultBillingDetails,
-    ...(formData.billingDetails || {})
+    ...(formData.billingDetails || {}),
+    // Ensure billingLines is always an array
+    billingLines: (formData.billingDetails?.billingLines || [])
   };
   
   const wrappedFormData = {

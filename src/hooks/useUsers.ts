@@ -1,10 +1,9 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getUsers, getUserById, createUser, updateUser, deleteUser } from '@/lib/api/users';
-import { SystemUser, SystemUserInsert } from '@/lib/types/users';
 import { validateWithZod } from '@/lib/validation';
-import { userSchema } from '@/lib/validation/userSchema';
+import { userProfileSchema } from '@/lib/validation/userSchema';
 
 export function useUsers() {
   const queryClient = useQueryClient();
@@ -15,9 +14,9 @@ export function useUsers() {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (userData: SystemUserInsert) => {
+    mutationFn: (userData: any) => {
       // Validate user data before sending to API
-      const validation = validateWithZod(userSchema, userData);
+      const validation = validateWithZod(userProfileSchema.partial(), userData);
       if (!validation.success) {
         throw new Error('Invalid user data: ' + Object.values(validation.errors || {}).join(', '));
       }
@@ -29,13 +28,13 @@ export function useUsers() {
     },
     onError: (error: any) => {
       toast.error(`Failed to create user: ${error.message}`);
-    },
+    }
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<SystemUser> }) => {
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
       // Validate user data before sending to API
-      const validation = validateWithZod(userSchema.partial(), data);
+      const validation = validateWithZod(userProfileSchema.partial(), data);
       if (!validation.success) {
         throw new Error('Invalid user data: ' + Object.values(validation.errors || {}).join(', '));
       }
@@ -48,7 +47,7 @@ export function useUsers() {
     },
     onError: (error: any) => {
       toast.error(`Failed to update user: ${error.message}`);
-    },
+    }
   });
 
   const deleteUserMutation = useMutation({
@@ -59,7 +58,7 @@ export function useUsers() {
     },
     onError: (error: any) => {
       toast.error(`Failed to delete user: ${error.message}`);
-    },
+    }
   });
 
   return {

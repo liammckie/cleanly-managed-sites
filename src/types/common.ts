@@ -30,12 +30,13 @@ export interface ValidationMessage {
   message: string;
   type: 'error' | 'warning' | 'info';
   row?: number; // Added row property to fix validation errors
+  value?: any; // Added value property required by validation functions
 }
 
 export interface ValidationResult {
   isValid: boolean;
-  errors: string[];
-  warnings: string[];
+  errors: string[] | ValidationMessage[];
+  warnings: string[] | ValidationMessage[];
   data: any[];
 }
 

@@ -1,133 +1,149 @@
 
-import { supabase } from '@/lib/supabase';
-import { ContractForecast, ContractData, ContractSummaryData } from '@/types/contracts';
-import { format, addMonths, startOfMonth } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { ContractSummaryData } from '@/types/contracts';
 
-// Sample data generator for development
-const generateSampleForecast = (): ContractForecast[] => {
-  const forecasts: ContractForecast[] = [];
-  const startMonth = startOfMonth(new Date());
+// Get summary data for all contracts
+export async function getContractsSummary(): Promise<ContractSummaryData> {
+  // Get current date for comparison
+  const today = new Date();
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const threeMonthsLater = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+  const sixMonthsLater = new Date(today.getFullYear(), today.getMonth() + 6, 0);
+  const yearEnd = new Date(today.getFullYear(), 11, 31);
   
-  for (let i = 0; i < 12; i++) {
-    const month = addMonths(startMonth, i);
-    const revenue = 10000 + (Math.random() * 5000) - 2500;
-    const cost = revenue * 0.7;
-    const profit = revenue - cost;
+  try {
+    // Get all contracts
+    const { data: contracts, error } = await supabase
+      .from('sites')
+      .select('id, contract_details, monthly_revenue, monthly_cost');
     
-    forecasts.push({
-      month: format(month, 'MMM yyyy'),
-      revenue,
-      cost,
-      profit,
-      contractCount: Math.floor(Math.random() * 20) + 10,
-      activeContracts: Math.floor(Math.random() * 15) + 10,
-      expiringContracts: Math.floor(Math.random() * 3),
-      renewingContracts: Math.floor(Math.random() * 2)
-    });
+    if (error) throw error;
+    
+    const allContracts = contracts || [];
+    const activeContracts = allContracts.filter(contract => 
+      contract.contract_details?.status === 'active'
+    );
+    
+    // Calculate expirations
+    const expiringWithin30Days = allContracts.filter(contract => {
+      const endDate = contract.contract_details?.endDate;
+      if (!endDate) return false;
+      
+      const expiryDate = new Date(endDate);
+      const diffTime = expiryDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays > 0 && diffDays <= 30;
+    }).length;
+    
+    const expiringThisMonth = allContracts.filter(contract => {
+      const endDate = contract.contract_details?.endDate;
+      if (!endDate) return false;
+      
+      const expiryDate = new Date(endDate);
+      return expiryDate <= monthEnd && expiryDate >= today;
+    }).length;
+    
+    const expiringNext3Months = allContracts.filter(contract => {
+      const endDate = contract.contract_details?.endDate;
+      if (!endDate) return false;
+      
+      const expiryDate = new Date(endDate);
+      return expiryDate <= threeMonthsLater && expiryDate >= today;
+    }).length;
+    
+    const expiringNext6Months = allContracts.filter(contract => {
+      const endDate = contract.contract_details?.endDate;
+      if (!endDate) return false;
+      
+      const expiryDate = new Date(endDate);
+      return expiryDate <= sixMonthsLater && expiryDate >= today;
+    }).length;
+    
+    const expiringThisYear = allContracts.filter(contract => {
+      const endDate = contract.contract_details?.endDate;
+      if (!endDate) return false;
+      
+      const expiryDate = new Date(endDate);
+      return expiryDate <= yearEnd && expiryDate >= today;
+    }).length;
+    
+    // Calculate totals
+    const totalValue = allContracts.reduce((sum, contract) => 
+      sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    const totalRevenue = activeContracts.reduce((sum, contract) => 
+      sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    const totalCost = activeContracts.reduce((sum, contract) => 
+      sum + (Number(contract.monthly_cost || 0) * 12), 0);
+    
+    const totalProfit = totalRevenue - totalCost;
+    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    
+    // Calculate value of expiring contracts
+    const valueExpiringThisMonth = allContracts
+      .filter(contract => {
+        const endDate = contract.contract_details?.endDate;
+        if (!endDate) return false;
+        
+        const expiryDate = new Date(endDate);
+        return expiryDate <= monthEnd && expiryDate >= today;
+      })
+      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    const valueExpiringNext3Months = allContracts
+      .filter(contract => {
+        const endDate = contract.contract_details?.endDate;
+        if (!endDate) return false;
+        
+        const expiryDate = new Date(endDate);
+        return expiryDate <= threeMonthsLater && expiryDate >= today;
+      })
+      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    const valueExpiringNext6Months = allContracts
+      .filter(contract => {
+        const endDate = contract.contract_details?.endDate;
+        if (!endDate) return false;
+        
+        const expiryDate = new Date(endDate);
+        return expiryDate <= sixMonthsLater && expiryDate >= today;
+      })
+      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    const valueExpiringThisYear = allContracts
+      .filter(contract => {
+        const endDate = contract.contract_details?.endDate;
+        if (!endDate) return false;
+        
+        const expiryDate = new Date(endDate);
+        return expiryDate <= yearEnd && expiryDate >= today;
+      })
+      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
+    
+    return {
+      totalContracts: allContracts.length,
+      activeCount: activeContracts.length,
+      pendingCount: allContracts.filter(c => c.contract_details?.status === 'pending').length,
+      totalValue,
+      totalCount: allContracts.length, // Added for backward compatibility
+      expiringWithin30Days,
+      expiringThisMonth,
+      expiringNext3Months,
+      expiringNext6Months,
+      expiringThisYear,
+      valueExpiringThisMonth,
+      valueExpiringNext3Months,
+      valueExpiringNext6Months,
+      valueExpiringThisYear,
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      profitMargin
+    };
+  } catch (error) {
+    console.error("Error getting contracts summary:", error);
+    throw error;
   }
-  
-  return forecasts;
-};
-
-const generateSampleContractSummary = (): ContractSummaryData => {
-  return {
-    totalCount: 45,
-    totalContracts: 45,
-    activeCount: 38,
-    pendingCount: 7,
-    totalValue: 850000,
-    totalRevenue: 850000,
-    totalCost: 595000,
-    totalProfit: 255000,
-    profitMargin: 30,
-    expiringWithin30Days: 3,
-    expiringThisMonth: 2,
-    expiringNext3Months: 5,
-    expiringNext6Months: 8,
-    expiringThisYear: 12,
-    valueExpiringThisMonth: 35000,
-    valueExpiringNext3Months: 87500,
-    valueExpiringNext6Months: 125000,
-    valueExpiringThisYear: 230000,
-    avgContractValue: 18889,
-    renewalRate: 85,
-    expiringCount: 12
-  };
-};
-
-export const contractsApi = {
-  async getContractForecast(): Promise<ContractForecast[]> {
-    // In a real implementation, this would fetch from the database
-    // For now, return sample data
-    return generateSampleForecast();
-  },
-  
-  async getContractSummary(): Promise<ContractSummaryData> {
-    // In a real implementation, this would fetch from the database
-    // For now, return sample data
-    return generateSampleContractSummary();
-  },
-  
-  async getActiveContracts(): Promise<ContractData[]> {
-    const { data, error } = await supabase
-      .from('site_additional_contracts')
-      .select(`
-        id,
-        site_id,
-        contract_type,
-        contract_number,
-        start_date,
-        end_date,
-        value,
-        auto_renew,
-        billing_cycle,
-        notes,
-        sites:site_id (
-          id,
-          name,
-          client_id,
-          client:client_id (
-            id,
-            name
-          )
-        )
-      `)
-      .order('end_date');
-    
-    if (error) {
-      console.error('Error fetching active contracts:', error);
-      throw error;
-    }
-    
-    // Transform the data to match the ContractData interface
-    return (data || []).map(item => ({
-      id: item.id,
-      client: {
-        id: item.sites?.client?.id || '',
-        name: item.sites?.client?.name || ''
-      },
-      site: {
-        id: item.sites?.id || '',
-        name: item.sites?.name || ''
-      },
-      site_id: item.site_id,
-      site_name: item.sites?.name || '',
-      client_id: item.sites?.client?.id || '',
-      client_name: item.sites?.client?.name || '',
-      value: item.value || 0,
-      startDate: item.start_date || '',
-      endDate: item.end_date || '',
-      status: item.end_date && new Date(item.end_date) < new Date() ? 'expired' : 'active',
-      contract_details: {
-        contractNumber: item.contract_number,
-        contractType: item.contract_type,
-        autoRenewal: item.auto_renew,
-        startDate: item.start_date,
-        endDate: item.end_date,
-        value: item.value,
-        billingCycle: item.billing_cycle,
-        notes: item.notes
-      }
-    }));
-  }
-};
+}

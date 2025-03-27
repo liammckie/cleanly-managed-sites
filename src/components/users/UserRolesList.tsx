@@ -1,163 +1,148 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { UserRole } from '@/lib/api/users';
+import { PlusCircle, Edit, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Edit, Trash2, Plus, Shield } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuTrigger, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator 
-} from '@/components/ui/dropdown-menu';
-import { UserRoleDTO } from '@/types/dto';
-import { EditRoleDialog } from './EditRoleDialog';
-import { DeleteRoleDialog } from './DeleteRoleDialog';
-import { CreateRoleDialog } from './CreateRoleDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { DialogWhenEmpty } from '@/components/shared/DialogWhenEmpty';
 
-interface UserRolesListProps {
-  roles: UserRoleDTO[];
-  onEdit: (role: UserRoleDTO) => void;
-  onDelete: (roleId: string) => void;
-  onCreate: (role: Omit<UserRoleDTO, 'id'>) => void;
-}
+import EditRoleDialog from './EditRoleDialog';
+import DeleteRoleDialog from './DeleteRoleDialog';
+import CreateRoleDialog from './CreateRoleDialog';
 
-export function UserRolesList({ roles, onEdit, onDelete, onCreate }: UserRolesListProps) {
-  const [editRoleDialogOpen, setEditRoleDialogOpen] = React.useState(false);
-  const [createRoleDialogOpen, setCreateRoleDialogOpen] = React.useState(false);
-  const [deleteRoleDialogOpen, setDeleteRoleDialogOpen] = React.useState(false);
-  const [selectedRoleId, setSelectedRoleId] = React.useState<string | null>(null);
-
-  const selectedRole = selectedRoleId 
-    ? roles.find(role => role.id === selectedRoleId) 
-    : null;
-
-  const handleOpenEditDialog = (roleId: string) => {
-    setSelectedRoleId(roleId);
-    setEditRoleDialogOpen(true);
+export default function UserRolesList() {
+  const { roles, isLoading, refetch } = useRoles();
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // Get user counts for each role (in a real app, this would come from the API)
+  useEffect(() => {
+    // This is a placeholder for real implementation
+    // In a real app, you would fetch user counts for each role from the API
+  }, [roles]);
+  
+  const handleCreateRole = () => {
+    setIsCreateDialogOpen(true);
   };
-
-  const handleOpenDeleteDialog = (roleId: string) => {
-    setSelectedRoleId(roleId);
-    setDeleteRoleDialogOpen(true);
+  
+  const handleEditRole = (role: UserRole) => {
+    setSelectedRole(role);
+    setIsEditDialogOpen(true);
   };
-
-  const handleSaveRole = (updatedRole: UserRoleDTO) => {
-    onEdit(updatedRole);
-    setEditRoleDialogOpen(false);
+  
+  const handleDeleteRole = (role: UserRole) => {
+    setSelectedRole(role);
+    setIsDeleteDialogOpen(true);
   };
-
-  const handleCreateRole = (newRole: Omit<UserRoleDTO, 'id'>) => {
-    onCreate(newRole);
-    setCreateRoleDialogOpen(false);
+  
+  const handleRoleUpdated = () => {
+    refetch();
+    toast.success('Roles updated successfully');
   };
-
-  const handleDeleteRole = () => {
-    if (selectedRoleId) {
-      onDelete(selectedRoleId);
-      setDeleteRoleDialogOpen(false);
-    }
-  };
-
+  
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">User Roles</h2>
-        <Button onClick={() => setCreateRoleDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Role
+        <h2 className="text-2xl font-bold">User Roles</h2>
+        <Button onClick={handleCreateRole}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          New Role
         </Button>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {roles.map((role) => (
-          <Card key={role.id} className="overflow-hidden">
-            <CardHeader className="bg-muted/50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    {role.name}
-                  </CardTitle>
-                  {role.description && (
-                    <CardDescription className="mt-1">{role.description}</CardDescription>
-                  )}
-                </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleOpenEditDialog(role.id)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => handleOpenDeleteDialog(role.id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Permissions:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(role.permissions)
-                      .filter(([_, hasPermission]) => hasPermission)
-                      .map(([permission]) => (
-                        <Badge key={permission} variant="outline">
-                          {permission}
-                        </Badge>
-                      ))}
-                    {Object.values(role.permissions).filter(Boolean).length === 0 && (
-                      <span className="text-muted-foreground text-sm">No permissions assigned</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-muted/20 px-6 py-3">
-              <div className="text-sm text-muted-foreground">
-                {role.user_count !== undefined ? `${role.user_count} user${role.user_count !== 1 ? 's' : ''}` : 'No users'}
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      {selectedRole && (
-        <>
-          <EditRoleDialog
-            role={selectedRole}
-            open={editRoleDialogOpen}
-            onOpenChange={setEditRoleDialogOpen}
-            onSave={handleSaveRole}
-          />
-          <DeleteRoleDialog
-            roleName={selectedRole.name}
-            open={deleteRoleDialogOpen}
-            onOpenChange={setDeleteRoleDialogOpen}
-            onDelete={handleDeleteRole}
-          />
-        </>
-      )}
-
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Roles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : !roles || roles.length === 0 ? (
+            <DialogWhenEmpty
+              title="No roles found"
+              description="Create your first role to manage user permissions."
+              buttonText="Create Role"
+              onAction={handleCreateRole}
+              icon={<Users className="h-8 w-8 text-muted-foreground" />}
+            />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Users</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell className="max-w-md truncate">
+                      {role.description || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        <Users className="h-3 w-3 mr-1" />
+                        {role.user_count || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditRole(role)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteRole(role)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <EditRoleDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        role={selectedRole}
+        onRoleUpdated={handleRoleUpdated}
+      />
+      
+      <DeleteRoleDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        role={selectedRole}
+        onRoleDeleted={handleRoleUpdated}
+      />
+      
       <CreateRoleDialog
-        open={createRoleDialogOpen}
-        onOpenChange={setCreateRoleDialogOpen}
-        onSave={handleCreateRole}
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onRoleCreated={handleRoleUpdated}
       />
     </div>
   );

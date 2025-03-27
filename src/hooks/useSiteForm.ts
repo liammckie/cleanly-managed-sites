@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,6 +21,7 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
         billingDetails: {
           ...(data.billingDetails || {}),
           ...(initialData.billingDetails || {}),
+          // Ensure billingLines is always defined
           billingLines: initialData.billingDetails?.billingLines || []
         }
       };
@@ -41,6 +43,7 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
         billingDetails: {
           ...(baseData.billingDetails || {}),
           ...(initialData.billingDetails || {}),
+          // Ensure billingLines is always defined
           billingLines: initialData.billingDetails?.billingLines || []
         }
       };
@@ -100,8 +103,10 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
     };
     
     setFormData(prev => {
+      // Make sure we have a billingDetails object
       const prevBillingDetails = prev.billingDetails || {};
       
+      // Make sure we have a billingLines array
       const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {
@@ -116,8 +121,10 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const updateBillingLine = (id: string, field: string, value: any) => {
     setFormData(prev => {
+      // Make sure we have a billingDetails object
       const prevBillingDetails = prev.billingDetails || {};
       
+      // Make sure we have a billingLines array
       const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {
@@ -134,8 +141,10 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const removeBillingLine = (id: string) => {
     setFormData(prev => {
+      // Make sure we have a billingDetails object
       const prevBillingDetails = prev.billingDetails || {};
       
+      // Make sure we have a billingLines array
       const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {

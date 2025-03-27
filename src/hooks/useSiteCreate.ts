@@ -7,13 +7,19 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
 import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
+import { ContractDetailsDTO } from '@/components/sites/contract/types';
+import { BillingDetailsDTO } from '@/components/sites/forms/types/billingTypes';
 
 // Adapt site data for API submission
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   // Convert numerical values to make sure they're consistent with expected types
-  const renewalPeriod = formData.contractDetails?.renewalPeriod 
-    ? String(formData.contractDetails.renewalPeriod) 
-    : undefined;
+  const contractDetails = formData.contractDetails || formData.contract_details;
+  
+  // Create a compatible contract details object if it exists
+  const adaptedContractDetails: ContractDetailsDTO | undefined = contractDetails ? {
+    ...contractDetails,
+    renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
+  } : undefined;
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -22,6 +28,13 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
     state: formData.billingDetails.billingAddress.state || '',
     postcode: formData.billingDetails.billingAddress.postcode || '',
     country: formData.billingDetails.billingAddress.country || 'Australia'
+  } : undefined;
+  
+  // Create a compatible billing details object
+  const adaptedBillingDetails: BillingDetailsDTO | undefined = formData.billingDetails ? {
+    ...formData.billingDetails,
+    billingAddress,
+    billingLines: formData.billingDetails.billingLines || []
   } : undefined;
   
   return {
@@ -34,22 +47,10 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
     status: formData.status === 'lost' ? 'inactive' : formData.status,
     
     // Convert contract details to match DTO
-    contract_details: formData.contractDetails 
-      ? {
-          ...formData.contractDetails,
-          renewalPeriod
-        }
-      : formData.contract_details,
+    contract_details: adaptedContractDetails,
     
     // Convert billing details to match DTO
-    billing_details: formData.billingDetails 
-      ? {
-          ...formData.billingDetails,
-          billingAddress,
-          // Make sure billingLines exists
-          billingLines: formData.billingDetails.billingLines || []
-        }
-      : undefined,
+    billing_details: adaptedBillingDetails,
     
     email: formData.email,
     phone: formData.phone,

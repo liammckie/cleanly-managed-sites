@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,32 +9,21 @@ import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
-import { UserRole } from '@/lib/api/users';
 import { permissionCategories, permissionDescriptions } from '@/lib/permissions';
 
-interface EditRoleDialogProps {
+interface CreateRoleDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  role: UserRole | null;
-  onRoleUpdated?: () => void;
+  onRoleCreated?: () => void;
 }
 
-function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialogProps) {
+export default function CreateRoleDialog({ isOpen, onClose, onRoleCreated }: CreateRoleDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [permissions, setPermissions] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { updateRole, deleteRole } = useRoles();
-  
-  // Load role data when the dialog opens
-  useEffect(() => {
-    if (role) {
-      setName(role.name || '');
-      setDescription(role.description || '');
-      setPermissions(role.permissions || {});
-    }
-  }, [role]);
+  const { createRole } = useRoles();
   
   const handlePermissionChange = (permissionKey: string, value: boolean) => {
     setPermissions(prev => ({
@@ -46,11 +35,6 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!role?.id) {
-      toast.error("No role selected");
-      return;
-    }
-    
     if (!name) {
       toast.error("Role name is required");
       return;
@@ -59,52 +43,27 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
     setIsSubmitting(true);
     
     try {
-      await updateRole({
-        id: role.id,
-        data: {
-          name,
-          description,
-          permissions
-        }
+      await createRole({
+        name,
+        description,
+        permissions
       });
       
-      // Close dialog
-      onClose();
-      
-      // Notify parent
-      if (onRoleUpdated) {
-        onRoleUpdated();
-      }
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update role');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleDelete = async () => {
-    if (!role?.id) return;
-    
-    if (!window.confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      await deleteRole(role.id);
+      // Reset form
+      setName('');
+      setDescription('');
+      setPermissions({});
       
       // Close dialog
       onClose();
       
       // Notify parent
-      if (onRoleUpdated) {
-        onRoleUpdated();
+      if (onRoleCreated) {
+        onRoleCreated();
       }
     } catch (error) {
-      console.error('Error deleting role:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete role');
+      console.error('Error creating role:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create role');
     } finally {
       setIsSubmitting(false);
     }
@@ -114,7 +73,7 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Role</DialogTitle>
+          <DialogTitle>Create New Role</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit}>
@@ -181,24 +140,16 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
             </div>
           </div>
           
-          <div className="flex justify-between mt-6">
-            <Button type="button" variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              Delete Role
+          <div className="flex justify-end gap-2 mt-6">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
             </Button>
-            
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Role'}
+            </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
-
-export default EditRoleDialog;

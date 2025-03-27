@@ -1,5 +1,5 @@
 
-import { ContractData, ContractSummaryData, GroupedContracts } from '@/lib/types/contracts';
+import { ContractData, ContractSummaryData, GroupedContracts } from '@/types/contracts';
 
 /**
  * Re-export the contract types from lib/types/contracts for consistency
@@ -34,7 +34,7 @@ export interface ContractDetails {
   endDate?: string;
   autoRenewal?: boolean;
   renewalPeriod?: number;
-  renewalNotice?: number;
+  renewalNoticeDays?: number;
   noticeUnit?: string;
   terminationPeriod?: string;
   renewalTerms?: string;
@@ -42,10 +42,37 @@ export interface ContractDetails {
   contractLengthUnit?: string;
   serviceFrequency?: string;
   serviceDeliveryMethod?: string;
-  terms?: { id: string; name: string; description: string }[];
+  terms?: ContractTerm[];
   additionalContracts?: any[];
   contractType?: string;
   value?: number;
   billingCycle?: string;
   notes?: string;
+  type?: string;
+  status?: string;
+}
+
+export interface ContractDetailsDTO {
+  id?: string;
+  contractNumber?: string;
+  startDate?: string;
+  endDate?: string;
+  autoRenewal?: boolean;
+  renewalPeriod: string; // Must be string in DTO
+  renewalNoticeDays?: number;
+  noticeUnit?: string;
+  terminationPeriod?: string;
+  renewalTerms?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  terms?: ContractTerm[];
+  additionalContracts?: any[];
+  contractType?: string;
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
+  type?: string;
+  status?: string;
 }
