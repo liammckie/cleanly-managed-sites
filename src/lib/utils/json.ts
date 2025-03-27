@@ -1,4 +1,3 @@
-
 /**
  * Safely parses a JSON string with a fallback default value
  * @param jsonString The JSON string to parse
@@ -119,5 +118,18 @@ export function parseJson(jsonString: string | null | undefined): Record<string,
   } catch (error) {
     console.error('Error parsing JSON:', error);
     return null;
+  }
+}
+
+export function jsonToString(value: any): string {
+  if (value === null || value === undefined) return '';
+  
+  if (typeof value === 'string') return value;
+  
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.error('Error converting to string:', error);
+    return '';
   }
 }
