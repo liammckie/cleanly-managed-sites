@@ -27,11 +27,16 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
     country: formData.billingDetails.billingAddress.country || 'Australia'
   } : undefined;
   
+  // Ensure serviceDeliveryType is properly typed
+  const serviceDeliveryType = formData.billingDetails?.serviceDeliveryType === 'contractor' 
+    ? 'contractor' as const 
+    : 'direct' as const;
+  
   // Create a compatible billing details object
   const adaptedBillingDetails = formData.billingDetails ? {
     ...formData.billingDetails,
     billingAddress,
-    serviceDeliveryType: formData.billingDetails.serviceDeliveryType === 'contractor' ? 'contractor' : 'direct',
+    serviceDeliveryType,
     billingLines: formData.billingDetails.billingLines || []
   } : undefined;
   

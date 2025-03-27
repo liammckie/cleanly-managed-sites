@@ -1,3 +1,4 @@
+
 // Define general types for the application
 
 export type Json =
@@ -14,7 +15,7 @@ export interface SystemUser {
   email: string;
   first_name?: string;
   last_name?: string;
-  full_name?: string;
+  full_name: string;
   avatar_url?: string;
   role_id?: string;
   role?: UserRole;
@@ -27,14 +28,14 @@ export interface SystemUser {
   custom_id?: string;
   note?: string;
   territories?: string[];
-  permissions?: string[]; // Add permissions property
+  permissions?: Record<string, boolean>; // Changed from string array to Record
 }
 
 export interface UserRole {
   id: string;
   name: string;
   description?: string;
-  permissions: string[];
+  permissions: Record<string, boolean>; // Changed from string array to Record
   created_at?: string;
   updated_at?: string;
 }
@@ -43,7 +44,7 @@ export interface UserRoleWithCount extends UserRole {
   id: string;
   name: string;
   description?: string;
-  permissions: string[];
+  permissions: Record<string, boolean>; // Changed from string array to Record
   user_count?: number;
 }
 

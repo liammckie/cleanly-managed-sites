@@ -1,8 +1,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { createRole, deleteRole, getRole, getRoles, updateRole } from '@/lib/api/users';
-import { UserRole } from '@/lib/types/users';
+import { usersApi } from '@/lib/api/users';
+import { UserRole } from '@/lib/types';
 import { validateWithZod } from '@/lib/validation';
 import { userRoleSchema } from '@/lib/validation/userSchema';
 
@@ -11,7 +11,7 @@ export function useRoles() {
 
   const { data: roles, isLoading, error, refetch } = useQuery({
     queryKey: ['roles'],
-    queryFn: getRoles,
+    queryFn: usersApi.getRoles,
   });
 
   const createRoleMutation = useMutation({
@@ -21,7 +21,7 @@ export function useRoles() {
       if (!validation.success) {
         throw new Error('Invalid role data: ' + Object.values(validation.errors || {}).join(', '));
       }
-      return createRole(role);
+      return usersApi.createRole(role);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
@@ -39,7 +39,7 @@ export function useRoles() {
       if (!validation.success) {
         throw new Error('Invalid role data: ' + Object.values(validation.errors || {}).join(', '));
       }
-      return updateRole(id, data);
+      return usersApi.updateRole(id, data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
@@ -52,7 +52,7 @@ export function useRoles() {
   });
 
   const deleteRoleMutation = useMutation({
-    mutationFn: (id: string) => deleteRole(id),
+    mutationFn: (id: string) => usersApi.deleteRole(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['roles'] });
       toast.success('Role deleted successfully');
@@ -79,7 +79,7 @@ export function useRoles() {
 export function useRole(id?: string) {
   const { data: role, isLoading, error } = useQuery({
     queryKey: ['role', id],
-    queryFn: () => (id ? getRole(id) : Promise.reject('No role ID provided')),
+    queryFn: () => (id ? usersApi.getRole(id) : Promise.reject('No role ID provided')),
     enabled: !!id,
   });
 

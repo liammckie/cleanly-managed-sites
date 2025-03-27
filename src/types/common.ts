@@ -1,3 +1,4 @@
+
 // src/types/common.ts
 
 export type Json =
@@ -34,7 +35,11 @@ export type UnifiedDay =
   | 'thursday'
   | 'friday'
   | 'saturday'
-  | 'sunday';
+  | 'sunday'
+  | 'weekday'
+  | 'public_holiday';
+
+export type Day = UnifiedDay;
 
 export type EmploymentType =
   | 'full-time'
@@ -49,4 +54,11 @@ export type QuoteStatus =
   | 'approved'
   | 'pending'
   | 'declined'
-  | 'expired';
+  | 'expired'
+  | 'sent'
+  | 'accepted'
+  | 'rejected';
+
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+
+export type UserStatus = 'active' | 'pending' | 'inactive';

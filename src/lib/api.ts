@@ -8,13 +8,8 @@ export * from './api/authApi';
 export * from './api/workorders';
 export * from './api/contractors';
 export * from './api/contacts'; // Updated to use the new modular contacts API
-export * from './api/users';  // Export the users API
 
-// Also directly export the contactsApi object for backward compatibility
-import { contactsApi } from './api/contacts';
-export { contactsApi };
-
-// Export the usersApi object for backward compatibility
+// Export users API without UserRole to avoid conflict
 import { usersApi } from './api/users';
 export { usersApi };
 

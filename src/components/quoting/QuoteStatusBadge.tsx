@@ -23,6 +23,10 @@ export function QuoteStatusBadge({ status }: QuoteStatusBadgeProps) {
       return <Badge variant="destructive">Rejected</Badge>;
     case 'expired':
       return <Badge variant="outline" className="text-muted-foreground">Expired</Badge>;
+    case 'declined':
+      return <Badge variant="destructive">Declined</Badge>;
+    case 'submitted':
+      return <Badge variant="secondary">Submitted</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
-import { adaptBillingDetails } from '@/utils/typeAdapters';
+import { adaptBillingDetailsToDTO } from '@/utils/typeAdapters';
 import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
 
 interface BillingDetailsStepWrapperProps {
@@ -18,8 +18,19 @@ export function BillingDetailsStepWrapper({
   // Use the billing lines hook to manage billing lines
   const { billingLines, addBillingLine, updateBillingLine, removeBillingLine } = useSiteFormBillingLines();
   
-  // Ensure billingDetails has all the required properties using our adapter
-  const billingDetails = adaptBillingDetails(formData.billingDetails);
+  // Ensure billingDetails has all the required properties
+  const billingDetails = formData.billingDetails || {
+    billingLines: [],
+    useClientInfo: false,
+    serviceDeliveryType: 'direct',
+    billingAddress: {
+      street: '',
+      city: '',
+      state: '',
+      postcode: '',
+      country: 'Australia'
+    }
+  };
   
   const wrappedFormData = {
     ...formData,

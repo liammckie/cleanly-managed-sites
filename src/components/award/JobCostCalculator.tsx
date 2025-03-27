@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { EmploymentType } from '@/types/common';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PayCondition } from '@/lib/award/types';
 import { awardData } from '@/lib/award/awardData';
-import { EmploymentType, EmployeeLevel } from '@/types/common';
 import { validateEmployeeLevel } from '@/lib/utils/typeMapping';
 
 const payConditionLabels: Record<string, string> = {
@@ -20,7 +20,7 @@ const payConditionLabels: Record<string, string> = {
 };
 
 export function JobCostCalculator() {
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>('full-time');
   const [level, setLevel] = useState<EmployeeLevel>(1);
   const [hours, setHours] = useState<Partial<Record<PayCondition, number>>>({
     base: 38,

@@ -23,7 +23,14 @@ export function useUsers() {
       if (!result.success) {
         throw new Error(`Invalid user data: ${Object.values(result.errors).join(', ')}`);
       }
-      return await usersApi.createUser(userData);
+      // Make sure email is provided when creating a user
+      if (!userData.email) {
+        throw new Error("Email is required when creating a user");
+      }
+      return await usersApi.createUser({
+        ...userData,
+        email: userData.email
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
