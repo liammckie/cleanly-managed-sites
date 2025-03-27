@@ -1,6 +1,5 @@
 
 import { toast } from 'sonner';
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 import { parseCSV, importContracts, convertCSVToContractFormat } from '@/lib/import-export';
 
 export function useImportContracts() {

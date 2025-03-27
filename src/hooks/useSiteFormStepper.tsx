@@ -1,98 +1,106 @@
 
-import { useState, ReactNode } from 'react';
-import { BasicInformationStep } from '@/components/sites/forms/steps/BasicInformationStep';
-import { ContactsStep } from '@/components/sites/forms/steps/contacts';
-import { ContractDetailsStep } from '@/components/sites/forms/steps/ContractDetailsStep';
-import { BillingDetailsStep } from '@/components/sites/forms/steps/BillingDetailsStep';
-import { SubcontractorsStep } from '@/components/sites/forms/steps/SubcontractorsStep';
-import { JobSpecificationsStep } from '@/components/sites/forms/steps/JobSpecificationsStep';
-import { ReplenishablesStep } from '@/components/sites/forms/steps/ReplenishablesStep';
+import React, { useState } from 'react';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { Button } from '@/components/ui/button';
+import { getSiteFormSteps } from '@/components/sites/forms/siteFormConfig';
 
-export interface StepDefinition {
-  title: string;
-  description: string;
-  component: ReactNode;
-}
-
-export interface StepperState {
+type Props = {
   currentStep: number;
-  steps: StepDefinition[];
-  totalSteps: number;
-  isFirstStep: boolean;
-  isLastStep: boolean;
-  progress: number;
-  handleBack: () => void;
-  handleNext: () => void;
-  validateCurrentStep?: () => boolean;
-}
+  setCurrentStep: (step: number) => void;
+  formData: SiteFormData;
+  handleChange: (field: keyof SiteFormData, value: any) => void;
+  handleNestedChange: (section: string, field: string, value: any) => void;
+  handleArrayChange: (field: string, values: any[]) => void;
+  handleArrayUpdate: (field: string, index: number, value: any) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
+  addArrayItem: (field: string) => void;
+  removeArrayItem: (field: string, index: number) => void;
+  addSubcontractor: () => void;
+  updateSubcontractor: (index: number, field: string, value: any) => void;
+  removeSubcontractor: (index: number) => void;
+  addReplenishable: () => void;
+  updateReplenishable: (index: number, field: string, value: any) => void;
+  removeReplenishable: (index: number) => void;
+  addBillingLine: () => void;
+  updateBillingLine: (id: string, field: string, value: any) => void;
+  removeBillingLine: (id: string) => void;
+  addContractTerm: () => void;
+  updateContractTerm: (index: number, field: string, value: any) => void;
+  removeContractTerm: (index: number) => void;
+  addAdditionalContract: () => void;
+  updateAdditionalContract: (index: number, field: string, value: any) => void;
+  removeAdditionalContract: (index: number) => void;
+  handleFileUpload: (field: string, file: File) => void;
+  handleFileRemove: (field: string, fileName: string) => void;
+  errors: Record<string, string>;
+};
 
-export function useSiteFormStepper(): StepperState {
-  const [currentStep, setCurrentStep] = useState(0);
-  
-  // Define steps with proper JSX components
-  const steps: StepDefinition[] = [
-    {
-      title: 'Basic Information',
-      description: 'Enter site basic details',
-      component: <BasicInformationStep />
-    },
-    {
-      title: 'Contact Information',
-      description: 'Add site contacts',
-      component: <ContactsStep />
-    },
-    {
-      title: 'Contract Details',
-      description: 'Define contract terms',
-      component: <ContractDetailsStep />
-    },
-    {
-      title: 'Billing Information',
-      description: 'Setup billing details',
-      component: <BillingDetailsStep />
-    },
-    {
-      title: 'Subcontractors',
-      description: 'Add subcontractors if needed',
-      component: <SubcontractorsStep />
-    },
-    {
-      title: 'Job Specifications',
-      description: 'Define job requirements',
-      component: <JobSpecificationsStep />
-    },
-    {
-      title: 'Supplies & Replenishables',
-      description: 'Add supply requirements',
-      component: <ReplenishablesStep />
-    }
-  ];
-  
-  const totalSteps = steps.length;
-  const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === totalSteps - 1;
-  const progress = Math.round(((currentStep + 1) / totalSteps) * 100);
-  
-  const handleBack = () => {
-    if (!isFirstStep) {
-      setCurrentStep(prev => prev - 1);
-    }
-  };
-  
-  const handleNext = () => {
-    if (!isLastStep) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
-  
+export const useSiteFormStepper = (props: Props) => {
+  const steps = getSiteFormSteps(
+    props.formData,
+    props.handleChange,
+    props.handleNestedChange,
+    props.handleArrayChange,
+    props.handleArrayUpdate,
+    props.handleDoubleNestedChange,
+    props.addArrayItem,
+    props.removeArrayItem,
+    props.addSubcontractor,
+    props.updateSubcontractor,
+    props.removeSubcontractor,
+    props.addReplenishable,
+    props.updateReplenishable,
+    props.removeReplenishable,
+    props.addBillingLine,
+    props.updateBillingLine,
+    props.removeBillingLine,
+    props.addContractTerm,
+    props.updateContractTerm,
+    props.removeContractTerm,
+    props.addAdditionalContract,
+    props.updateAdditionalContract,
+    props.removeAdditionalContract,
+    props.handleFileUpload,
+    props.handleFileRemove,
+    props.errors
+  );
+
+  const NextButton = () => (
+    <Button 
+      onClick={() => props.setCurrentStep(props.currentStep + 1)}
+      disabled={props.currentStep >= steps.length - 1}
+    >
+      Next
+    </Button>
+  );
+
+  const PreviousButton = () => (
+    <Button 
+      variant="outline"
+      onClick={() => props.setCurrentStep(props.currentStep - 1)}
+      disabled={props.currentStep <= 0}
+    >
+      Previous
+    </Button>
+  );
+
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center space-x-1 my-4">
+      {steps.map((_, index) => (
+        <div
+          key={index}
+          className={`h-2 w-2 rounded-full ${
+            index === props.currentStep ? "bg-primary" : "bg-gray-300"
+          }`}
+        />
+      ))}
+    </div>
+  );
+
   return {
-    currentStep,
     steps,
-    totalSteps,
-    isFirstStep,
-    isLastStep,
-    progress,
-    handleBack,
-    handleNext
+    NextButton,
+    PreviousButton,
+    StepIndicator
   };
-}
+};

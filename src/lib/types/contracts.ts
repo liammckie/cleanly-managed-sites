@@ -32,6 +32,13 @@ export interface ContractForecastItem {
 }
 
 /**
+ * Grouped contracts by client, type, etc.
+ */
+export interface GroupedContracts {
+  [key: string]: ContractData[];
+}
+
+/**
  * Summary data for contract expirations and values
  */
 export interface ContractSummaryData {
@@ -50,6 +57,7 @@ export interface ContractSummaryData {
   // Overall contract data
   totalContracts: number;
   totalValue: number;
+  activeCount: number;  // Added missing property
   
   // Financial metrics
   totalRevenue: number;

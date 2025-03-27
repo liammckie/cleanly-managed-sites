@@ -1,66 +1,44 @@
 
-import { Json } from '@/lib/types';
-import { QuoteStatus } from '@/lib/types/award/types';
-
 /**
- * Type guard to ensure a string value is a valid QuoteStatus
+ * Type guards for checking JavaScript types
  */
-export function isValidQuoteStatus(status: string): status is QuoteStatus {
-  return ['draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'].includes(status);
+
+export function isObject(val: unknown): val is Record<string, any> {
+  return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
-/**
- * Safely converts a string to a QuoteStatus, defaulting to 'draft' if invalid
- */
-export function toQuoteStatus(status: string): QuoteStatus {
-  return isValidQuoteStatus(status) ? status : 'draft';
+export function isArray(val: unknown): val is Array<any> {
+  return Array.isArray(val);
 }
 
-/**
- * Safely converts a possibly null or undefined JSON value to a string
- */
-export function jsonToString(value: Json | null | undefined): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  if (typeof value === 'string') {
-    return value;
-  }
-  return String(value);
+export function isString(val: unknown): val is string {
+  return typeof val === 'string';
 }
 
-/**
- * Safely converts a possibly null or undefined JSON value to a number
- */
-export function jsonToNumber(value: Json | null | undefined): number {
-  if (value === null || value === undefined) {
-    return 0;
-  }
-  if (typeof value === 'number') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
-  }
-  return 0;
+export function isNumber(val: unknown): val is number {
+  return typeof val === 'number' && !isNaN(val);
 }
 
-/**
- * Safely converts a possibly null or undefined JSON value to a boolean
- */
-export function jsonToBoolean(value: Json | null | undefined): boolean {
-  if (value === null || value === undefined) {
-    return false;
-  }
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    return value.toLowerCase() === 'true';
-  }
-  if (typeof value === 'number') {
-    return value !== 0;
-  }
-  return false;
+export function isBoolean(val: unknown): val is boolean {
+  return typeof val === 'boolean';
+}
+
+export function isDate(val: unknown): val is Date {
+  return val instanceof Date;
+}
+
+export function isFunction(val: unknown): val is Function {
+  return typeof val === 'function';
+}
+
+export function isUndefined(val: unknown): val is undefined {
+  return typeof val === 'undefined';
+}
+
+export function isNull(val: unknown): val is null {
+  return val === null;
+}
+
+export function isNullOrUndefined(val: unknown): val is null | undefined {
+  return isNull(val) || isUndefined(val);
 }

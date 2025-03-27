@@ -1,20 +1,35 @@
 
+/**
+ * Types for replenishable items in site form
+ */
+
 export interface ReplenishableItem {
   id: string;
   name: string;
   quantity: number;
   reorderLevel: number;
   unit: string;
-  description?: string;
-  location?: string;
-  cost?: number;
+  isStockItem?: boolean;
 }
 
-export interface ReplenishableStock extends ReplenishableItem {
-  isStockItem: true;
+export interface ReplenishableSupplies {
+  id: string;
+  name: string;
+  quantity: number;
+  reorderLevel: number;
+  unit: string;
 }
 
-export interface ReplenishableSupplies extends ReplenishableItem {
-  supplier?: string;
-  orderLeadTime?: number;
+export interface ReplenishableStock {
+  id: string;
+  name: string;
+  quantity: number;
+  reorderLevel: number;
+  unit: string;
+}
+
+export interface Replenishables {
+  stock?: ReplenishableStock[];
+  supplies?: ReplenishableSupplies[];
+  notes?: string;
 }

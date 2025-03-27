@@ -1,89 +1,56 @@
 
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+/**
+ * Types for billing-related data in the site form
+ */
+
+export interface BillingContact {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  position: string;
+}
+
+export interface BillingAddress {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
 
 export interface BillingLine {
   id: string;
   description: string;
   amount: number;
-  frequency: BillingFrequency;
+  frequency: string;
   isRecurring: boolean;
   onHold: boolean;
-  weeklyAmount: number;
-  monthlyAmount: number;
-  annualAmount: number;
-}
-
-export interface BillingContact {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  role: string;
-}
-
-export interface BillingAmounts {
-  totalWeeklyAmount: number;
-  totalMonthlyAmount: number;
-  totalAnnualAmount: number;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
 }
 
 export interface BillingDetails {
+  useClientInfo?: boolean;
+  clientPO?: string;
+  clientReference?: string;
+  billingContacts?: BillingContact[];
+  billingAddress?: BillingAddress;
   billingLines?: BillingLine[];
-  contacts?: BillingContact[];
-  billingNotes?: string;
-  notes?: string;
-  // Billing status fields
-  billingOnHold?: boolean;
-  billingHoldStartDate?: string;
-  billingHoldEndDate?: string;
-  billingHoldReason?: string;
-  // Billing configuration
-  billingFrequency?: BillingFrequency;
-  billingCycle?: string;
+  billingFrequency?: string;
   paymentTerms?: string;
-  invoiceMethod?: string;
-  billingEmail?: string;
-  // Billing address fields
-  useSiteAddress?: boolean;
-  billingAddress?: string;
-  billingCity?: string;
-  billingState?: string;
-  billingPostcode?: string;
-  // Purchase order fields
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  // Account information
-  accountNumber?: string;
-  taxId?: string;
+  paymentMethod?: string;
+  directDebit?: boolean;
+  bankDetails?: {
+    accountName?: string;
+    bsb?: string;
+    accountNumber?: string;
+  };
   xeroContactId?: string;
-  // Calculation fields
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
-  // Invoice fields
-  invoiceFrequency?: string;
-  invoiceDay?: string;
-  invoiceEmail?: string;
-  invoiceAddressLine1?: string;
-  invoiceAddressLine2?: string;
-  invoiceCity?: string;
-  invoiceState?: string;
-  invoicePostalCode?: string;
-  // Revenue fields
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  annualRevenue?: number;
-  // Rate field
-  rate?: number;
-  // Service delivery fields
-  serviceDeliveryType?: string;
-  serviceType?: string;
-  deliveryMethod?: string;
-  // Contractor cost fields
-  weeklyBudget?: number;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  annualContractorCost?: number;
-  contractorCostFrequency?: string;
+  xeroItemId?: string;
+  xeroAccountId?: string;
+  notes?: string;
+  contractorPaymentTerms?: string;
   contractorInvoiceFrequency?: string;
 }
