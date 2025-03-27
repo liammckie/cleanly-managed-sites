@@ -1,5 +1,6 @@
+
 import { supabase } from '@/lib/supabase';
-import { UserRole, SystemUser, SystemUserInsert } from '@/lib/types/users';
+import { UserRole, SystemUser, SystemUserInsert, UserStatus } from '@/lib/types/users';
 import { Json } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 

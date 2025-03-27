@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useForm } from 'react-hook-form';
@@ -12,14 +12,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UserRole } from '@/lib/types/users';
-import { useUpdateRole } from '@/hooks/useUserRoles';
+import { useUpdateRole, useRole } from '@/hooks/useUserRoles';
 import { PERMISSIONS, PERMISSION_GROUPS } from '@/lib/permissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditRoleDialogProps {
-  role: UserRole | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
+  roleId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -29,16 +29,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const EditRoleDialog = ({ role, isOpen, onClose, onSave }: EditRoleDialogProps) => {
+const EditRoleDialog = ({ roleId, open, onOpenChange }: EditRoleDialogProps) => {
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const { updateRole } = useUpdateRole();
+  const { role, isLoading: isRoleLoading } = useRole(roleId || undefined);
+  const { updateRole, isLoading: isUpdating } = useUpdateRole();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: role?.name || '',
-      description: role?.description || '',
+      name: '',
+      description: '',
     },
   });
 
@@ -71,36 +71,49 @@ const EditRoleDialog = ({ role, isOpen, onClose, onSave }: EditRoleDialogProps) 
   };
 
   const handleSubmit = async (data: FormValues) => {
-    if (!role) return;
+    if (!roleId) return;
     
     try {
-      setIsLoading(true);
-      
       // Convert the permissions map to an array of strings
       const permissionsArray = Object.keys(selectedPermissions);
       
       await updateRole({
-        roleId: role.id,
+        roleId,
         data: {
           name: data.name,
           description: data.description,
-          permissions: permissionsArray // This is correctly typed now
+          permissions: permissionsArray
         }
       });
       
-      toast.success('Role updated successfully');
-      onSave();
-      onClose();
+      toast("Role updated successfully", {
+        description: `${data.name} role has been updated.`,
+      });
+      
+      onOpenChange(false);
     } catch (error) {
       console.error('Error updating role:', error);
-      toast.error('Failed to update role');
-    } finally {
-      setIsLoading(false);
+      toast("Failed to update role", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
     }
   };
 
+  if (isRoleLoading) {
+    return (
+      <Dialog open={open} onOpenChange={open => !open && onOpenChange(false)}>
+        <DialogContent>
+          <div className="flex justify-center p-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
+    <Dialog open={open} onOpenChange={open => !open && onOpenChange(false)}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Role: {role?.name}</DialogTitle>
@@ -141,50 +154,52 @@ const EditRoleDialog = ({ role, isOpen, onClose, onSave }: EditRoleDialogProps) 
             />
 
             <div className="space-y-4">
-              <Label>Permissions</Label>
+              <FormLabel>Permissions</FormLabel>
               
-              {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => (
-                <div key={groupKey} className="border rounded-md p-4">
-                  <h3 className="font-medium mb-2">{group.label}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {group.permissions.map(permissionKey => {
-                      const permission = PERMISSIONS[permissionKey];
-                      return (
-                        <div key={permissionKey} className="flex items-start space-x-2">
-                          <Checkbox
-                            id={`permission-${permissionKey}`}
-                            checked={!!selectedPermissions[permissionKey]}
-                            onCheckedChange={(checked) => 
-                              handlePermissionChange(permissionKey, checked === true)
-                            }
-                          />
-                          <div className="grid gap-1.5 leading-none">
-                            <label
-                              htmlFor={`permission-${permissionKey}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {permission.label}
-                            </label>
-                            {permission.description && (
-                              <p className="text-xs text-muted-foreground">
-                                {permission.description}
-                              </p>
-                            )}
+              <ScrollArea className="h-72 rounded-md border p-4">
+                {Object.entries(PERMISSION_GROUPS).map(([groupKey, group]) => (
+                  <div key={groupKey} className="mb-4">
+                    <h3 className="font-medium mb-2">{group.label}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {group.permissions.map((permKey) => {
+                        const permission = PERMISSIONS[permKey as keyof typeof PERMISSIONS];
+                        return (
+                          <div key={permKey} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`permission-${permKey}`}
+                              checked={!!selectedPermissions[permKey]}
+                              onCheckedChange={(checked) => 
+                                handlePermissionChange(permKey, checked === true)
+                              }
+                            />
+                            <div className="grid gap-1.5 leading-none">
+                              <label
+                                htmlFor={`permission-${permKey}`}
+                                className="text-sm font-medium leading-none"
+                              >
+                                {permission.label}
+                              </label>
+                              {permission.description && (
+                                <p className="text-xs text-muted-foreground">
+                                  {permission.description}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </ScrollArea>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
             </DialogFooter>

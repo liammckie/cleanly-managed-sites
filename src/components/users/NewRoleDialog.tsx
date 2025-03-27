@@ -1,22 +1,19 @@
+
 import React, { useState } from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useForm } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Form,
   FormControl,
@@ -25,37 +22,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCreateRole } from '@/hooks/useUserRoles';
+import { PERMISSIONS, PERMISSION_GROUPS } from '@/lib/permissions';
 
 interface NewRoleDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
-
-const permissionOptions = [
-  "clients.read",
-  "clients.write",
-  "sites.read",
-  "sites.write",
-  "contractors.read",
-  "contractors.write",
-  "users.read",
-  "users.write",
-  "roles.read",
-  "roles.write",
-  "quotes.read",
-  "quotes.write",
-  "workorders.read",
-  "workorders.write",
-  "billing.read",
-  "billing.write",
-  "reports.read",
-  "reports.write",
-];
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -64,16 +40,11 @@ const formSchema = z.object({
   description: z.string().optional(),
 });
 
-interface FormValues {
-  name: string;
-  description?: string;
-}
+type FormValues = z.infer<typeof formSchema>;
 
-const NewRoleDialog = ({ isOpen, onClose, onSave }: NewRoleDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+const NewRoleDialog = ({ open, onOpenChange }: NewRoleDialogProps) => {
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
-  const { createRole } = useCreateRole();
+  const { createRole, isLoading } = useCreateRole();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -97,37 +68,36 @@ const NewRoleDialog = ({ isOpen, onClose, onSave }: NewRoleDialogProps) => {
 
   const handleSubmit = async (data: FormValues) => {
     try {
-      setIsLoading(true);
-      
       // Convert the permissions map to an array of strings
       const permissionsArray = Object.keys(selectedPermissions);
       
       await createRole({
         name: data.name,
         description: data.description,
-        permissions: permissionsArray // This is correctly typed now
+        permissions: permissionsArray
       });
       
-      toast.success('Role created successfully');
-      onSave();
-      onClose();
+      toast("Role created successfully", {
+        description: `${data.name} role has been created.`,
+      });
+      
+      onOpenChange(false);
     } catch (error) {
       console.error('Error creating role:', error);
-      toast.error('Failed to create role');
-    } finally {
-      setIsLoading(false);
+      toast("Failed to create role", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Create New Role</AlertDialogTitle>
-          <AlertDialogDescription>
-            Define a new user role with specific permissions.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Create New Role</DialogTitle>
+        </DialogHeader>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
@@ -143,6 +113,7 @@ const NewRoleDialog = ({ isOpen, onClose, onSave }: NewRoleDialogProps) => {
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
               name="description"
@@ -150,44 +121,58 @@ const NewRoleDialog = ({ isOpen, onClose, onSave }: NewRoleDialogProps) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Description" {...field} />
+                    <Textarea placeholder="Role description" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
             <div>
               <FormLabel>Permissions</FormLabel>
               <FormDescription>
                 Select permissions for this role.
               </FormDescription>
-              <ScrollArea className="rounded-md border p-4 h-48">
-                <div className="grid gap-2">
-                  {permissionOptions.map((permission) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={permission}
-                        checked={!!selectedPermissions[permission]}
-                        onCheckedChange={(checked) => handlePermissionChange(permission, !!checked)}
-                      />
-                      <Label htmlFor={permission} className="capitalize">
-                        {permission}
-                      </Label>
+              <ScrollArea className="h-72 rounded-md border p-4">
+                {Object.entries(PERMISSION_GROUPS).map(([key, group]) => (
+                  <div key={key} className="mb-4">
+                    <h3 className="font-medium mb-2">{group.label}</h3>
+                    <div className="grid gap-2">
+                      {group.permissions.map((permKey) => (
+                        <div key={permKey} className="flex items-start space-x-2">
+                          <Checkbox
+                            id={`perm-${permKey}`}
+                            checked={!!selectedPermissions[permKey]}
+                            onCheckedChange={(checked) => handlePermissionChange(permKey, !!checked)}
+                          />
+                          <div className="grid gap-0.5">
+                            <label htmlFor={`perm-${permKey}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              {PERMISSIONS[permKey as keyof typeof PERMISSIONS].label}
+                            </label>
+                            <p className="text-xs text-muted-foreground">
+                              {PERMISSIONS[permKey as keyof typeof PERMISSIONS].description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </ScrollArea>
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create"}
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
               </Button>
-            </AlertDialogFooter>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Role"}
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   );
 };
 

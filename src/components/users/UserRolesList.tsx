@@ -10,20 +10,11 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Edit, UsersRound, ShieldCheck } from 'lucide-react';
-import { NewRoleDialog } from './NewRoleDialog';
-import { EditRoleDialog } from './EditRoleDialog';
+import NewRoleDialog from './NewRoleDialog';
+import EditRoleDialog from './EditRoleDialog';
 
 export function UserRolesList() {
   const { roles, isLoading } = useUserRoles();
@@ -91,7 +82,7 @@ export function UserRolesList() {
             <CardFooter className="pt-4">
               <div className="flex items-center text-sm text-muted-foreground">
                 <UsersRound className="mr-2 h-4 w-4" />
-                <span>Users with this role: {role.userCount || 0}</span>
+                <span>Users with this role: {role.user_count || 0}</span>
               </div>
             </CardFooter>
           </Card>
