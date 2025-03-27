@@ -1,89 +1,72 @@
 
-import {
-  EmploymentType,
-  EmployeeLevel,
-  PayCondition,
-  JobCostCalculationInput,
-  CostCalculationResult,
-  RateDefinition,
-  CostItem
+import { 
+  JobCostCalculationInput, 
+  PayCondition, 
+  CostCalculationResult 
 } from './types';
-import { awardData } from './awardData';
+import { cleaningServicesAward } from './awardData';
 
-// Helper function to get the base rate
-export function getBaseRate(employmentType: EmploymentType, level: EmployeeLevel): number {
-  const levelRates = awardData.employeeLevelRates[level];
-  if (!levelRates) {
-    console.warn(`No level rates found for level ${level}`);
-    return 0;
-  }
-  const rate = levelRates.base;
-  if (!rate) {
-    console.warn(`No rate found for employment type ${employmentType} and level ${level}`);
-    return 0;
-  }
-  return rate;
-}
-
-// Helper function to calculate rate based on condition
-export function calculateConditionRate(baseRate: number, condition: PayCondition): number {
-  const rateDefinition: RateDefinition | undefined = awardData.conditionRates[condition];
-  if (!rateDefinition) {
-    console.warn(`No rate definition found for condition ${condition}`);
-    return baseRate;
-  }
-  return baseRate * (rateDefinition.percentage / 100);
-}
-
-// Main function to calculate job cost
+// Calculate job cost based on input parameters and award rules
 export function calculateJobCost(input: JobCostCalculationInput): CostCalculationResult {
-  const { employmentType, level, hours, overheadPercentage, marginPercentage } = input;
-
-  // Get the base rate
-  const baseRate = getBaseRate(employmentType, level);
-
-  // Calculate labor cost for each condition
-  let laborCost = 0;
-  let totalHours = 0;
-  const costItems: CostItem[] = [];
-
-  for (const condition in hours) {
-    if (hours.hasOwnProperty(condition)) {
-      const hoursForCondition = hours[condition as PayCondition] || 0;
-      totalHours += hoursForCondition;
-      const conditionRate = calculateConditionRate(baseRate, condition as PayCondition);
-      const conditionCost = conditionRate * hoursForCondition;
-      laborCost += conditionCost;
-
-      costItems.push({
-        condition: condition as PayCondition,
-        hours: hoursForCondition,
-        rate: conditionRate,
-        cost: conditionCost
-      });
-    }
+  // Get base rate for the specified level
+  const baseRate = input.baseRate || 
+    (cleaningServicesAward.employeeLevelRates[input.level] || 
+     cleaningServicesAward.baseLevelRates[input.level]);
+  
+  // Apply casual loading if applicable
+  const appliedBaseRate = input.employmentType === 'casual' 
+    ? baseRate * (1 + cleaningServicesAward.casualLoading) 
+    : baseRate;
+  
+  // Calculate labor cost based on hours and conditions
+  let laborCost = appliedBaseRate * input.hours;
+  
+  // Apply any penalty rates from the conditions
+  if (input.conditions && Object.keys(input.conditions).length > 0) {
+    laborCost = Object.entries(input.conditions).reduce(
+      (cost, [condition, hours]) => {
+        const rate = cleaningServicesAward.conditionRates[condition as PayCondition] || 1;
+        return cost + (appliedBaseRate * rate * hours);
+      },
+      0
+    );
   }
-
-  // Calculate overhead and margin
-  const overheadCost = laborCost * (overheadPercentage / 100);
+  
+  // Calculate overhead cost
+  const overheadPercentage = input.overheadPercentage !== undefined 
+    ? input.overheadPercentage 
+    : cleaningServicesAward.defaultSettings.overheadPercentageDefault || 15;
+  
+  const overheadCost = (laborCost * overheadPercentage) / 100;
+  
+  // Calculate total cost before margin
   const totalCostBeforeMargin = laborCost + overheadCost;
-  const margin = totalCostBeforeMargin * (marginPercentage / 100);
-
+  
+  // Calculate margin
+  const marginPercentage = input.marginPercentage !== undefined 
+    ? input.marginPercentage 
+    : cleaningServicesAward.defaultSettings.marginPercentageDefault || 20;
+  
+  const margin = (totalCostBeforeMargin * marginPercentage) / 100;
+  
+  // Calculate final price
+  const price = totalCostBeforeMargin + margin;
+  
+  // Create cost calculation result
   return {
-    baseRate,
-    totalHours,
+    baseRate: appliedBaseRate,
+    totalHours: input.hours,
+    laborHours: input.hours,
     laborCost,
     overheadCost,
     totalCost: totalCostBeforeMargin,
-    margin,
-    price: totalCostBeforeMargin + margin,
-    totalCostBeforeMargin,
-    items: costItems,
-    // Add required properties
-    laborHours: totalHours,
-    breakdownByDay: {},
-    byTimeOfDay: {},
     profitMargin: marginPercentage,
-    finalPrice: totalCostBeforeMargin + margin
+    margin,
+    price,
+    finalPrice: price,
+    totalCostBeforeMargin,
+    items: [],
+    breakdownByDay: {},
+    byTimeOfDay: {}
   };
 }

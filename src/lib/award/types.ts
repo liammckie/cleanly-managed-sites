@@ -1,140 +1,145 @@
 
-// Award Types
+import { Day, EmploymentType, EmployeeLevel } from '@/types/common';
 
-export type EmploymentType = 'casual' | 'full_time' | 'part_time' | 'contractor';
-export type EmployeeLevel = '1' | '2' | '3' | '4' | '5' | 'contractor';
 export type PayCondition = 
-  'base' | 
-  'overtime_1_5' | 
-  'overtime_2' | 
-  'saturday' | 
-  'sunday' | 
-  'public_holiday' | 
-  'early_morning' | 
-  'evening' | 
-  'night' | 
-  'shift_allowance' |
-  'meal_allowance';
-
-export type DayType = 'weekday' | 'saturday' | 'sunday' | 'public_holiday';
-export type Frequency = 'hourly' | 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'per_event';
+  | 'base'
+  | 'saturday'
+  | 'sunday'
+  | 'publicHoliday'
+  | 'earlyMorning'
+  | 'evening'
+  | 'overnight'
+  | 'overtime1'
+  | 'overtime2'
+  | 'overtime3';
 
 export interface RateDefinition {
   id: string;
   percentage: number;
   description: string;
-  dayType?: DayType;
-  startTime?: string;
-  endTime?: string;
-  multiplier?: number;
 }
 
 export interface EmployeeLevelRates {
-  base: number;
-  title?: string;
-  description?: string;
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+  6?: number;
 }
 
 export interface AwardSettings {
-  allowances: Record<string, number>;
   usePenalties: boolean;
   minimumShiftHours: number;
   casualMinimumHours: number;
   dailyMaxHours: number;
   weeklyMaxHours: number;
   breakThresholdHours: number;
+  allowances: Record<string, number>;
   baseRateMultiplier?: number;
   overheadPercentageDefault?: number;
   marginPercentageDefault?: number;
 }
 
 export interface AwardData {
-  name: string;
-  description: string;
-  conditionRates: Record<PayCondition, RateDefinition>;
-  employeeLevelRates: Record<string, EmployeeLevelRates>;
-  settings: AwardSettings;
-  levels: string[];
+  baseLevelRates: EmployeeLevelRates;
+  casualLoading: number;
+  levels: EmployeeLevel[];
+  rates: RateDefinition[];
+  penaltyRates: Record<PayCondition, RateDefinition>;
+  employeeLevelRates: EmployeeLevelRates;
+  allowances: Record<string, { amount: number; unit: string }>;
+  conditionRates: Record<PayCondition, number>;
+  defaultSettings: AwardSettings;
 }
 
 export interface JobCostCalculationInput {
+  baseRate: number;
+  hours: number;
   employmentType: EmploymentType;
   level: EmployeeLevel;
-  hours: Record<PayCondition, number>;
-  overheadPercentage: number;
-  marginPercentage: number;
-}
-
-export interface CostItem {
-  condition: PayCondition;
-  hours: number;
-  rate: number;
-  cost: number;
+  conditions?: Partial<Record<PayCondition, number>>;
+  allowances?: string[];
+  overheadPercentage?: number;
+  marginPercentage?: number;
 }
 
 export interface CostCalculationResult {
   baseRate: number;
   totalHours: number;
+  laborHours: number;
   laborCost: number;
   overheadCost: number;
   totalCost: number;
+  profitMargin: number;
   margin: number;
   price: number;
-  totalCostBeforeMargin: number;
-  items: CostItem[];
-  // Required by TypeScript errors
-  laborHours: number;
-  breakdownByDay: any;
-  byTimeOfDay: any;
-  profitMargin: number;
   finalPrice: number;
-}
-
-// Quote Types
-export interface Quote {
-  id: string;
-  name: string;
-  client_name?: string;
-  site_name?: string;
-  status: 'draft' | 'pending' | 'sent' | 'rejected' | 'expired' | 'approved';
-  created_at: string;
-  updated_at: string;
-  total_price: number;
-  total_cost: number;
-  margin_percentage: number;
-  margin_amount: number;
-  overhead_percentage: number;
-  overhead_cost: number;
-  labor_cost: number;
-  subcontractor_cost: number;
-  start_date?: string;
-  end_date?: string;
-  expiry_date?: string;
-  notes?: string;
-  created_by?: string;
-  user_id?: string;
+  totalCostBeforeMargin: number;
+  items: any[];
+  breakdownByDay: Record<string, number>;
+  byTimeOfDay: Record<string, number>;
 }
 
 export interface QuoteShift {
   id: string;
   quote_id: string;
-  day: string;
+  day: Day;
   start_time: string;
   end_time: string;
   break_duration: number;
-  employment_type: EmploymentType;
-  level: number;
   number_of_cleaners: number;
+  employment_type: EmploymentType;
+  level: EmployeeLevel;
+  allowances: string[];
   estimated_cost: number;
-  location?: string;
-  allowances?: any[];
-  notes?: string;
+  location: string;
+  notes: string;
+}
+
+export interface Quote {
+  id: string;
+  name: string;
+  title?: string;
+  client_name: string;
+  site_name?: string;
+  description?: string;
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
+  overhead_percentage: number;
+  margin_percentage: number;
+  total_price: number;
+  labor_cost: number;
+  equipment_cost?: number;
+  subcontractor_cost: number;
+  created_at: string;
+  updated_at: string;
+  quote_number?: string;
+  valid_until?: string;
+  client_id?: string;
+  site_id?: string;
+  shifts?: QuoteShift[];
+  subcontractors?: any[];
+  overhead_cost?: number;
+  total_cost?: number;
+  margin_amount?: number;
+  start_date?: string;
+  end_date?: string;
+  expiry_date?: string;
+  contract_length?: number;
+  contract_length_unit?: 'days' | 'weeks' | 'months' | 'years';
+  overhead_profile?: string;
+  user_id?: string;
+  created_by?: string;
+  notes: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
 }
 
 export interface Subcontractor {
   id: string;
-  business_name: string;
-  contact_name: string;
-  cost?: number;
-  frequency?: Frequency;
+  name: string;
+  cost: number;
+  frequency: string;
+  description?: string;
 }

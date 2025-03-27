@@ -13,7 +13,7 @@ export function useUnifiedImport() {
         mode: options.mode
       };
       
-      await handleUnifiedImport(file, options);
+      await handleUnifiedImport(file, importOptions, true);
       toast.success('Import completed successfully');
     } catch (error: any) {
       toast.error(`Import failed: ${error.message}`);

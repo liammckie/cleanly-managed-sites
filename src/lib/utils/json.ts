@@ -1,87 +1,78 @@
 
-import { Json } from '@/lib/types';
+export type Json = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
 
 /**
- * Safely parse a JSON string into a typed object
- * @param jsonString The JSON string to parse
- * @returns The parsed object or null if parsing fails
+ * Safely convert any value to a JSON object
+ * @param value Any value to convert to a JSON object
+ * @returns JSON object or empty object if conversion fails
  */
-export function parseJson<T>(jsonString: string | null | undefined): T | null {
-  if (!jsonString) return null;
+export function asJsonObject<T>(value: any): T {
+  if (!value) return {} as T;
+  
+  if (typeof value === 'object') {
+    return value as T;
+  }
   
   try {
-    return JSON.parse(jsonString) as T;
-  } catch (error) {
-    console.error('Failed to parse JSON:', error);
-    return null;
+    if (typeof value === 'string') {
+      const parsed = JSON.parse(value);
+      return parsed as T;
+    }
+  } catch (e) {
+    console.warn('Failed to parse JSON:', e);
   }
-}
-
-/**
- * Safely converts a JSON object to a specific type
- * Returns the JSON object cast to type T if it's a non-null object, or a default empty object
- */
-export function convertJsonToType<T>(jsonData: Json): T {
-  if (typeof jsonData === 'object' && jsonData !== null) {
-    return jsonData as unknown as T;
-  }
+  
   return {} as T;
 }
 
 /**
- * Converts a JSON object or string to a string representation
+ * Convert JSON to string representation
+ * @param data JSON data to stringify
+ * @returns String representation of JSON data
  */
-export function jsonToString(json: Json | null | undefined): string {
-  if (json === null || json === undefined) return '';
-  if (typeof json === 'string') return json;
+export function jsonToString(data: any): string {
+  if (!data) return '';
   
   try {
-    return JSON.stringify(json, null, 2);
-  } catch (error) {
-    console.error('Error stringifying JSON:', error);
-    return '';
-  }
-}
-
-/**
- * Safely access a property from a JSON object with a default value
- */
-export function getJsonProperty<T>(json: Json | null | undefined, key: string, defaultValue: T): T {
-  if (!json || typeof json !== 'object' || json === null || Array.isArray(json)) {
-    return defaultValue;
-  }
-  
-  const typedJson = json as {[key: string]: any};
-  return (key in typedJson && typedJson[key] !== undefined && typedJson[key] !== null)
-    ? typedJson[key] as T
-    : defaultValue;
-}
-
-/**
- * Convert JSON to a typed object with defaultValues for missing properties
- */
-export function asJsonObject<T>(json: Json | null | undefined, defaultValues: T): T {
-  if (!json) return defaultValues;
-  if (typeof json === 'string') {
-    try {
-      json = JSON.parse(json);
-    } catch (e) {
-      return defaultValues;
+    if (typeof data === 'string') {
+      return data;
     }
+    return JSON.stringify(data, null, 2);
+  } catch (e) {
+    console.warn('Failed to stringify JSON:', e);
+    return '';
   }
-  if (typeof json !== 'object' || json === null) return defaultValues;
-  
-  return { ...defaultValues, ...json as Object } as T;
 }
 
 /**
- * Safe JSON stringify with error handling
+ * Deep merge of two objects
  */
-export function safeJsonStringify(value: any): string {
-  try {
-    return JSON.stringify(value);
-  } catch (error) {
-    console.error('Error stringifying value:', error);
-    return '';
+export function deepMerge<T>(target: T, source: any): T {
+  const result = { ...target };
+  
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(result, { [key]: source[key] });
+        } else {
+          (result as any)[key] = deepMerge((target as any)[key], source[key]);
+        }
+      } else {
+        Object.assign(result, { [key]: source[key] });
+      }
+    });
   }
+  
+  return result;
+}
+
+function isObject(item: any): boolean {
+  return item && typeof item === 'object' && !Array.isArray(item);
 }

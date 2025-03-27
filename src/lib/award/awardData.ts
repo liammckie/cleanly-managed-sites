@@ -1,148 +1,107 @@
 
-import { 
-  AwardData, 
-  AwardSettings, 
-  EmployeeLevel, 
-  EmployeeLevelRates, 
-  PayCondition, 
-  RateDefinition 
-} from './types';
+import { PayCondition, AwardData, RateDefinition, AwardSettings } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
-// Define the proper award data structure
-export const awardData: AwardData = {
-  name: "Cleaning Services Award",
-  description: "Award rates for cleaning services industry",
-  conditionRates: {
-    'base': {
-      id: 'base',
-      percentage: 100,
-      description: 'Base rate',
-      dayType: 'weekday',
-      startTime: '07:00',
-      endTime: '19:00',
-      multiplier: 1.0
-    },
-    'overtime_1_5': {
-      id: 'overtime_1_5',
-      percentage: 150,
-      description: 'Overtime (first 2 hours)',
-      multiplier: 1.5
-    },
-    'overtime_2': {
-      id: 'overtime_2',
-      percentage: 200,
-      description: 'Overtime (after 2 hours)',
-      multiplier: 2.0
-    },
-    'saturday': {
-      id: 'saturday',
-      percentage: 150,
-      description: 'Saturday rate',
-      dayType: 'saturday',
-      multiplier: 1.5
-    },
-    'sunday': {
-      id: 'sunday',
-      percentage: 200,
-      description: 'Sunday rate',
-      dayType: 'sunday',
-      multiplier: 2.0
-    },
-    'public_holiday': {
-      id: 'public_holiday',
-      percentage: 250,
-      description: 'Public holiday rate',
-      dayType: 'public_holiday',
-      multiplier: 2.5
-    },
-    'early_morning': {
-      id: 'early_morning',
-      percentage: 115,
-      description: 'Early morning (before 6am)',
-      startTime: '00:00',
-      endTime: '06:00',
-      multiplier: 1.15
-    },
-    'evening': {
-      id: 'evening',
-      percentage: 115,
-      description: 'Evening (after 6pm)',
-      startTime: '18:00',
-      endTime: '24:00',
-      multiplier: 1.15
-    },
-    'night': {
-      id: 'night',
-      percentage: 130,
-      description: 'Night shift',
-      startTime: '00:00',
-      endTime: '6:00',
-      multiplier: 1.3
-    },
-    'shift_allowance': {
-      id: 'shift_allowance',
-      percentage: 115,
-      description: 'Shift allowance',
-      multiplier: 1.15
-    },
-    'meal_allowance': {
-      id: 'meal_allowance',
-      percentage: 0,
-      description: 'Meal allowance',
-      multiplier: 0
-    }
+// Define the cleaning services award data
+export const cleaningServicesAward: AwardData = {
+  baseLevelRates: {
+    1: 22.46,
+    2: 23.37,
+    3: 24.55,
+    4: 25.74,
+    5: 27.20,
+    6: 29.50  // Supervisor level (optional)
   },
-
-  // Fix employee level rates
+  casualLoading: 0.25, // 25% casual loading
+  levels: [1, 2, 3, 4, 5],
+  rates: [
+    { id: uuidv4(), percentage: 1.0, description: "Base rate" },
+    { id: uuidv4(), percentage: 1.5, description: "Saturday rate" },
+    { id: uuidv4(), percentage: 2.0, description: "Sunday rate" },
+    { id: uuidv4(), percentage: 2.5, description: "Public holiday rate" },
+    { id: uuidv4(), percentage: 1.15, description: "Early morning (midnight to 6am)" },
+    { id: uuidv4(), percentage: 1.15, description: "Evening (6pm to midnight)" },
+    { id: uuidv4(), percentage: 1.30, description: "Overnight (midnight to 6am)" },
+    { id: uuidv4(), percentage: 1.5, description: "Overtime (first 2 hours)" },
+    { id: uuidv4(), percentage: 2.0, description: "Overtime (after 2 hours)" },
+    { id: uuidv4(), percentage: 2.5, description: "Overtime (public holiday)" }
+  ],
+  penaltyRates: {
+    base: { id: uuidv4(), percentage: 1.0, description: "Base rate" },
+    saturday: { id: uuidv4(), percentage: 1.5, description: "Saturday rate" },
+    sunday: { id: uuidv4(), percentage: 2.0, description: "Sunday rate" },
+    publicHoliday: { id: uuidv4(), percentage: 2.5, description: "Public holiday rate" },
+    earlyMorning: { id: uuidv4(), percentage: 1.15, description: "Early morning (midnight to 6am)" },
+    evening: { id: uuidv4(), percentage: 1.15, description: "Evening (6pm to midnight)" },
+    overnight: { id: uuidv4(), percentage: 1.30, description: "Overnight (midnight to 6am)" },
+    overtime1: { id: uuidv4(), percentage: 1.5, description: "Overtime (first 2 hours)" },
+    overtime2: { id: uuidv4(), percentage: 2.0, description: "Overtime (after 2 hours)" },
+    overtime3: { id: uuidv4(), percentage: 2.5, description: "Overtime (public holiday)" }
+  },
   employeeLevelRates: {
-    '1': { base: 21.75, title: 'Property Services Employee Level 1' },
-    '2': { base: 22.55, title: 'Property Services Employee Level 2' },
-    '3': { base: 23.69, title: 'Property Services Employee Level 3' },
-    '4': { base: 24.77, title: 'Property Services Employee Level 4' },
-    '5': { base: 25.88, title: 'Property Services Employee Level 5' },
-    'contractor': { base: 0, title: 'Contractor' }
+    1: 22.46,
+    2: 23.37,
+    3: 24.55,
+    4: 25.74,
+    5: 27.20
   },
-
-  // Award settings
-  settings: {
-    minimumShiftHours: 3,
-    casualMinimumHours: 2,
+  // Define penalty rates for each condition
+  conditionRates: {
+    base: 1.0,
+    saturday: 1.5,
+    sunday: 2.0,
+    publicHoliday: 2.5,
+    earlyMorning: 1.15,
+    evening: 1.15,
+    overnight: 1.3,
+    overtime1: 1.5,
+    overtime2: 2.0,
+    overtime3: 2.5
+  },
+  
+  // Define allowances 
+  allowances: {
+    meal: { amount: 13.87, unit: "each" },
+    travel: { amount: 0.78, unit: "per km" },
+    uniform: { amount: 7.50, unit: "per week" },
+    laundry: { amount: 1.55, unit: "per day" },
+    other: { amount: 0, unit: "each" }
+  },
+  
+  // Default settings for the award
+  defaultSettings: {
+    usePenalties: true,
+    minimumShiftHours: 4,
+    casualMinimumHours: 3,
     dailyMaxHours: 12,
     weeklyMaxHours: 38,
     breakThresholdHours: 5,
-    usePenalties: true,
     allowances: {
-      meal: 15.94,
+      meal: 13.87,
       travel: 0.78,
-      uniform: 1.23,
-      laundry: 0.70,
-      other: 0
-    }
-  },
-  
-  // List of levels for dropdowns
-  levels: ['1', '2', '3', '4', '5', 'contractor']
+      uniform: 7.50,
+      laundry: 1.55
+    },
+    baseRateMultiplier: 1.0,
+    overheadPercentageDefault: 15,
+    marginPercentageDefault: 20
+  }
 };
 
-// Default award settings export for the app
 export const defaultAwardSettings: AwardSettings = {
-  minimumShiftHours: 3,
-  casualMinimumHours: 2,
+  usePenalties: true,
+  minimumShiftHours: 4,
+  casualMinimumHours: 3,
   dailyMaxHours: 12,
   weeklyMaxHours: 38,
   breakThresholdHours: 5,
-  usePenalties: true,
   allowances: {
-    meal: 15.94,
+    meal: 13.87,
     travel: 0.78,
-    uniform: 1.23,
-    laundry: 0.70,
-    other: 0
+    uniform: 7.50,
+    laundry: 1.55
   },
   baseRateMultiplier: 1.0,
   overheadPercentageDefault: 15,
   marginPercentageDefault: 20
 };
-
-// Export the cleaning services award
-export const cleaningServicesAward = awardData;

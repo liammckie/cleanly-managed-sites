@@ -1,94 +1,64 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractData } from '@/lib/types/contracts';
+import { ContractData, ContractSummaryData } from '@/types/contracts';
 import { asJsonObject } from '@/lib/utils/json';
-import { parseContractDetails } from '@/lib/utils/fixes';
+import { adaptContract, adaptContracts } from '../contracts/contractAdapter';
 
-export const contractsApi = {
-  // Get all contracts
-  getContracts: async (): Promise<ContractData[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('sites')
-        .select(`
-          id,
-          name,
-          client_id,
-          monthly_revenue,
-          contract_details,
-          status
-        `)
-        .order('name');
+/**
+ * Fetch contracts for a specific site
+ */
+export async function fetchContractsForSite(siteId: string): Promise<ContractData[]> {
+  try {
+    const { data, error } = await supabase
+      .from('sites')
+      .select(`
+        id,
+        site_id:id,
+        site_name:name,
+        client_id,
+        client_name,
+        monthly_revenue,
+        contract_details,
+        status,
+        is_primary:true
+      `)
+      .eq('id', siteId)
+      .eq('status', 'active');
 
-      if (error) throw error;
-
-      // Transform the data to the expected format with defaults
-      return (data || []).map(site => {
-        return {
-          id: site.id,
-          site_id: site.id,
-          site_name: site.name || '',
-          client_id: site.client_id || '',
-          client_name: '', // We don't have client_name in the query
-          monthly_revenue: site.monthly_revenue || 0,
-          contract_details: site.contract_details || {},
-          status: site.status || 'inactive',
-          is_primary: true // Default to primary
-        };
-      });
-    } catch (error) {
-      console.error('Error fetching contracts:', error);
-      return [];
-    }
-  },
-
-  // Get contracts expiring within a specific timeframe
-  getExpiringContracts: async (days: number = 90): Promise<ContractData[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('sites')
-        .select(`
-          id,
-          name,
-          client_id,
-          monthly_revenue,
-          contract_details,
-          status
-        `);
-
-      if (error) throw error;
-
-      const now = new Date();
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + days);
-
-      // Filter contracts expiring in the specified timeframe
-      return (data || [])
-        .filter(site => {
-          const detailsObj = parseContractDetails(site.contract_details);
-          if (!detailsObj || !detailsObj.endDate) return false;
-          
-          try {
-            const endDate = new Date(detailsObj.endDate);
-            return endDate >= now && endDate <= futureDate;
-          } catch (e) {
-            return false;
-          }
-        })
-        .map(site => ({
-          id: site.id,
-          site_id: site.id,
-          site_name: site.name || '',
-          client_id: site.client_id || '',
-          client_name: '', // We don't have client_name in the query
-          monthly_revenue: site.monthly_revenue || 0,
-          contract_details: site.contract_details || {},
-          status: site.status || 'inactive',
-          is_primary: true
-        }));
-    } catch (error) {
-      console.error('Error fetching expiring contracts:', error);
-      return [];
-    }
+    if (error) throw error;
+    
+    return adaptContracts(data || []);
+  } catch (error) {
+    console.error('Error fetching site contracts:', error);
+    throw error;
   }
-};
+}
+
+/**
+ * Fetch all contracts
+ */
+export async function fetchAllContracts(): Promise<ContractData[]> {
+  try {
+    const { data, error } = await supabase
+      .from('sites')
+      .select(`
+        id,
+        site_id:id,
+        site_name:name,
+        client_id,
+        client_name,
+        monthly_revenue,
+        contract_details,
+        status,
+        is_primary:true
+      `)
+      .eq('status', 'active');
+
+    if (error) throw error;
+    
+    return adaptContracts(data || []);
+  } catch (error) {
+    console.error('Error fetching all contracts:', error);
+    throw error;
+  }
+}

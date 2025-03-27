@@ -86,8 +86,15 @@ export interface BillingDetails {
   contractorInvoiceFrequency?: string;
   contractorCostFrequency?: string;
   
+  // Additional fields for components
+  accountNumber?: string;
+  weeklyBudget?: number;
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  invoiceMethod?: string;
+  
   // Additional fields for BillingDetailsSummary
   rate?: string;
   billingFrequency?: string;
-  invoiceMethod?: string;
 }

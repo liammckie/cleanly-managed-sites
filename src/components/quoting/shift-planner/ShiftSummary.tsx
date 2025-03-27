@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { QuoteShift } from '@/lib/award/types';
+import { QuoteShift } from '@/lib/types/quotes';
 import { calculateHourDifference } from '@/lib/award/utils';
 import { Clock, DollarSign, Calendar, Users } from 'lucide-react';
 
@@ -13,7 +13,7 @@ interface ShiftSummaryProps {
 export function ShiftSummary({ shifts, totalCost }: ShiftSummaryProps) {
   // Calculate total hours
   const totalHours = shifts.reduce((total, shift) => 
-    total + calculateHourDifference(shift.startTime, shift.endTime, shift.breakDuration) * shift.numberOfCleaners, 
+    total + calculateHourDifference(shift.start_time, shift.end_time, shift.break_duration) * shift.number_of_cleaners, 
     0
   );
   
@@ -21,7 +21,7 @@ export function ShiftSummary({ shifts, totalCost }: ShiftSummaryProps) {
   const uniqueDays = new Set(shifts.map(shift => shift.day));
   
   // Get total staff count
-  const totalStaff = shifts.reduce((total, shift) => total + shift.numberOfCleaners, 0);
+  const totalStaff = shifts.reduce((total, shift) => total + shift.number_of_cleaners, 0);
   
   if (shifts.length === 0) {
     return null;

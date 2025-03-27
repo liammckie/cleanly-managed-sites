@@ -1,29 +1,59 @@
 
-import { ContractData } from '@/components/contracts/ContractColumns';
-import { SiteRecord } from '@/lib/types';
+import { ContractData } from '@/types/contracts';
+import { Json } from '@/types/common';
 import { asJsonObject } from '@/lib/utils/json';
 
-export const adaptContractsToColumnFormat = (contracts: any[]): ContractData[] => {
-  return contracts.map(contract => {
-    const contractDetails = typeof contract.contract_details === 'object' 
-      ? contract.contract_details 
-      : asJsonObject(contract.contract_details, {});
-    
-    // Safely access properties
-    const startDate = contractDetails && typeof contractDetails === 'object' ? contractDetails.startDate || '' : '';
-    const endDate = contractDetails && typeof contractDetails === 'object' ? contractDetails.endDate || '' : '';
-    const status = contractDetails && typeof contractDetails === 'object' ? contractDetails.status || 'active' : 'active';
-    
+export function convertContractDetails(contractDetails: string | number | boolean | { [key: string]: Json } | Json[] | null): any {
+  if (!contractDetails) {
     return {
-      id: contract.id || '',
-      client: contract.client_name || 'Unknown Client',
-      site: contract.site_name || 'Unknown Site',
-      value: contract.monthly_revenue || 0,
-      startDate: startDate,
-      endDate: endDate,
-      status: status as any
+      contractNumber: '',
+      startDate: '',
+      endDate: '',
+      autoRenewal: false,
+      renewalPeriod: 0,
+      renewalNotice: 0,
+      noticeUnit: 'days',
+      terminationPeriod: ''
     };
-  });
-};
+  }
+  
+  if (typeof contractDetails === 'object') {
+    return contractDetails;
+  }
+  
+  try {
+    if (typeof contractDetails === 'string') {
+      return JSON.parse(contractDetails);
+    }
+    return {};
+  } catch (e) {
+    return {
+      contractNumber: '',
+      startDate: '',
+      endDate: '',
+      autoRenewal: false,
+      renewalPeriod: 0,
+      renewalNotice: 0,
+      noticeUnit: 'days',
+      terminationPeriod: ''
+    };
+  }
+}
 
-// More adapter functions...
+export function adaptContract(rawContract: any): ContractData {
+  return {
+    id: rawContract.id,
+    site_id: rawContract.site_id,
+    site_name: rawContract.site_name,
+    client_id: rawContract.client_id,
+    client_name: rawContract.client_name,
+    monthly_revenue: rawContract.monthly_revenue || 0,
+    status: rawContract.status,
+    is_primary: rawContract.is_primary,
+    contract_details: convertContractDetails(rawContract.contract_details)
+  };
+}
+
+export function adaptContracts(rawContracts: any[]): ContractData[] {
+  return rawContracts.map(adaptContract);
+}

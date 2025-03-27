@@ -1,37 +1,25 @@
 
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
-export type EmploymentType = 'casual' | 'part_time' | 'full_time';
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once' | 'one-time' | 'accepted';
-
-export type QuoteStatus = 
-  | 'draft' 
-  | 'sent' 
-  | 'approved' 
-  | 'rejected' 
-  | 'expired' 
-  | 'pending' 
-  | 'accepted';
+import { Day, EmploymentType, EmployeeLevel, Frequency } from '@/types/common';
 
 export interface QuoteShift {
   id: string;
-  quoteId: string;
+  quote_id: string;
   day: Day;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: EmploymentType;
+  start_time: string;
+  end_time: string;
+  break_duration: number;
+  number_of_cleaners: number;
+  employment_type: EmploymentType;
   level: EmployeeLevel;
   allowances: string[];
-  estimatedCost: number;
+  estimated_cost: number;
   location: string;
   notes: string;
 }
 
 export interface QuoteSubcontractor {
   id: string;
-  quoteId: string;
+  quote_id: string;
   name: string;
   description?: string;
   cost: number;
@@ -48,11 +36,9 @@ export interface Quote {
   name: string;
   title?: string;
   client_name: string;
-  clientName?: string;
   site_name?: string;
-  siteName?: string;
   description?: string;
-  status: QuoteStatus;
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
   overhead_percentage: number;
   margin_percentage: number;
   total_price: number;
@@ -68,28 +54,31 @@ export interface Quote {
   site_id?: string;
   shifts?: QuoteShift[];
   subcontractors?: QuoteSubcontractor[];
-  overheadCost?: number;
-  totalCost?: number;
-  marginAmount?: number;
-  startDate?: string;
+  overhead_cost?: number;
+  total_cost?: number;
+  margin_amount?: number;
   start_date?: string;
-  endDate?: string;
   end_date?: string;
-  expiryDate?: string;
   expiry_date?: string;
-  contractLength?: number;
-  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
-  overheadProfile?: string;
-  userId?: string;
-  createdBy?: string;
+  contract_length?: number;
+  contract_length_unit?: 'days' | 'weeks' | 'months' | 'years';
+  overhead_profile?: string;
+  user_id?: string;
+  created_by?: string;
   notes: string;
   frequency?: string;
   scope?: string;
   terms?: string;
+  
+  // Client and site related fields (for convenience)
+  clientName?: string;
+  siteName?: string;
   clientContact?: string;
   clientEmail?: string;
   clientPhone?: string;
   siteAddress?: string;
+  
+  // UI convenience properties (to avoid property not found errors) 
   overheadPercentage?: number;
   marginPercentage?: number;
   totalPrice?: number;
@@ -103,4 +92,12 @@ export interface Quote {
   validUntil?: string;
   clientId?: string;
   siteId?: string;
+  overheadCost?: number;
+  totalCost?: number;
+  marginAmount?: number;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
+  contractLength?: number;
+  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
 }

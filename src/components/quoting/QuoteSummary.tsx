@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { QuoteShift } from '@/lib/award/types';
+import { QuoteShift } from '@/lib/types/quotes';
 
 // Helper function to format currency
 const formatCurrency = (amount: number): string => {
@@ -49,11 +49,11 @@ const calculateSubcontractorMonthlyCost = (subcontractor: any): number => {
 // Helper function to calculate total hours from shifts
 const calculateTotalHours = (shifts: QuoteShift[]): number => {
   return shifts.reduce((total, shift) => {
-    const start = new Date(`1970-01-01T${shift.startTime}:00`);
-    const end = new Date(`1970-01-01T${shift.endTime}:00`);
+    const start = new Date(`1970-01-01T${shift.start_time}:00`);
+    const end = new Date(`1970-01-01T${shift.end_time}:00`);
     let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    hours -= shift.breakDuration / 60; // Convert break minutes to hours
-    return total + (hours * shift.numberOfCleaners);
+    hours -= shift.break_duration / 60; // Convert break minutes to hours
+    return total + (hours * shift.number_of_cleaners);
   }, 0);
 };
 
@@ -95,7 +95,7 @@ export function QuoteSummary({
 }: QuoteSummaryProps) {
   
   const laborCost = useMemo(() => 
-    shifts.reduce((sum, shift) => sum + (shift.estimatedCost || 0), 0),
+    shifts.reduce((sum, shift) => sum + (shift.estimated_cost || 0), 0),
   [shifts]);
   
   const subcontractorCost = useMemo(() => 
