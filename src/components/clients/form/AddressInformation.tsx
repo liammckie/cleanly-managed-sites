@@ -1,23 +1,27 @@
 
 import React from 'react';
 import { ClientFormData } from './types';
-import { FormField, FormLabel, FormMessage } from '@/components/ui/form';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Controller, useFormContext } from 'react-hook-form';
 
 interface AddressInformationProps {
-  formData: ClientFormData;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSelectChange: (name: string, value: string) => void;
   errors?: Record<string, string>;
+  handleSelectChange: (name: string, value: string) => void;
 }
 
 export function AddressInformation({
-  formData,
-  handleChange,
-  handleSelectChange,
-  errors = {}
+  errors = {},
+  handleSelectChange
 }: AddressInformationProps) {
+  const { control } = useFormContext<ClientFormData>();
+  
   const stateOptions = [
     { value: 'NSW', label: 'New South Wales' },
     { value: 'VIC', label: 'Victoria' },
@@ -35,70 +39,83 @@ export function AddressInformation({
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Address Information</h3>
       
-      <div>
-        <FormField>
-          <FormLabel htmlFor="address">Address</FormLabel>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className={hasError('address') ? 'border-red-500' : ''}
-          />
-          {hasError('address') && <FormMessage>{errors.address}</FormMessage>}
-        </FormField>
-      </div>
+      <Controller
+        control={control}
+        name="address"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="address">Address</FormLabel>
+            <Input
+              id="address"
+              {...field}
+              className={hasError('address') ? 'border-red-500' : ''}
+            />
+            {hasError('address') && <FormMessage>{errors.address}</FormMessage>}
+          </FormItem>
+        )}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <FormField>
-            <FormLabel htmlFor="city">City</FormLabel>
-            <Input
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className={hasError('city') ? 'border-red-500' : ''}
-            />
-            {hasError('city') && <FormMessage>{errors.city}</FormMessage>}
-          </FormField>
-        </div>
+        <Controller
+          control={control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="city">City</FormLabel>
+              <Input
+                id="city"
+                {...field}
+                className={hasError('city') ? 'border-red-500' : ''}
+              />
+              {hasError('city') && <FormMessage>{errors.city}</FormMessage>}
+            </FormItem>
+          )}
+        />
         
-        <div>
-          <FormField>
-            <FormLabel htmlFor="state">State</FormLabel>
-            <Select
-              value={formData.state}
-              onValueChange={(value) => handleSelectChange('state', value)}
-            >
-              <SelectTrigger className={hasError('state') ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Select a state" />
-              </SelectTrigger>
-              <SelectContent>
-                {stateOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {hasError('state') && <FormMessage>{errors.state}</FormMessage>}
-          </FormField>
-        </div>
+        <Controller
+          control={control}
+          name="state"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="state">State</FormLabel>
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleSelectChange('state', value);
+                }}
+              >
+                <SelectTrigger className={hasError('state') ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select a state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stateOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasError('state') && <FormMessage>{errors.state}</FormMessage>}
+            </FormItem>
+          )}
+        />
         
-        <div>
-          <FormField>
-            <FormLabel htmlFor="postcode">Postal Code</FormLabel>
-            <Input
-              id="postcode"
-              name="postcode"
-              value={formData.postcode}
-              onChange={handleChange}
-              className={hasError('postcode') ? 'border-red-500' : ''}
-            />
-            {hasError('postcode') && <FormMessage>{errors.postcode}</FormMessage>}
-          </FormField>
-        </div>
+        <Controller
+          control={control}
+          name="postcode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="postcode">Postal Code</FormLabel>
+              <Input
+                id="postcode"
+                {...field}
+                className={hasError('postcode') ? 'border-red-500' : ''}
+              />
+              {hasError('postcode') && <FormMessage>{errors.postcode}</FormMessage>}
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

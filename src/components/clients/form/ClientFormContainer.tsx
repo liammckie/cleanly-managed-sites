@@ -9,6 +9,7 @@ import { ClientFormProps } from './types';
 import { useClientForm } from './useClientForm';
 import { toast } from 'sonner';
 import { clientFormSchema } from '@/lib/validation/clientSchema';
+import { FormProvider, useForm } from 'react-hook-form';
 
 export function ClientFormContainer({ mode, client }: ClientFormProps) {
   const {
@@ -23,6 +24,11 @@ export function ClientFormContainer({ mode, client }: ClientFormProps) {
   } = useClientForm(mode, client);
   
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Initialize form with values from formData
+  const methods = useForm({
+    defaultValues: formData
+  });
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,42 +57,40 @@ export function ClientFormContainer({ mode, client }: ClientFormProps) {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="animate-fade-in">
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle>{mode === 'create' ? 'Create New Client' : 'Edit Client'}</CardTitle>
-        </CardHeader>
-        
-        <CardContent className="space-y-8">
-          <BasicInformation 
-            formData={formData} 
-            errors={{...apiErrors, ...validationErrors}} 
-            handleChange={handleChange} 
-          />
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit} className="animate-fade-in">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle>{mode === 'create' ? 'Create New Client' : 'Edit Client'}</CardTitle>
+          </CardHeader>
           
-          <AddressInformation 
-            formData={formData} 
-            handleChange={handleChange} 
-            handleSelectChange={handleSelectChange}
-            errors={validationErrors} 
-          />
+          <CardContent className="space-y-8">
+            <BasicInformation 
+              formData={formData} 
+              errors={{...apiErrors, ...validationErrors}} 
+              handleChange={handleChange} 
+            />
+            
+            <AddressInformation 
+              handleSelectChange={handleSelectChange}
+              errors={{...apiErrors, ...validationErrors}} 
+            />
+            
+            <AdditionalInformation 
+              handleStatusChange={handleStatusChange} 
+              errors={{...apiErrors, ...validationErrors}}
+            />
+          </CardContent>
           
-          <AdditionalInformation 
-            formData={formData} 
-            handleChange={handleChange} 
-            handleStatusChange={handleStatusChange} 
-            errors={validationErrors}
-          />
-        </CardContent>
-        
-        <CardFooter className="flex justify-between pt-4 border-t">
-          <ClientFormActions 
-            mode={mode} 
-            isLoading={isLoading} 
-            onCancel={handleCancel} 
-          />
-        </CardFooter>
-      </Card>
-    </form>
+          <CardFooter className="flex justify-between pt-4 border-t">
+            <ClientFormActions 
+              mode={mode} 
+              isLoading={isLoading} 
+              onCancel={handleCancel} 
+            />
+          </CardFooter>
+        </Card>
+      </form>
+    </FormProvider>
   );
 }

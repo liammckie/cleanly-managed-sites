@@ -1,104 +1,80 @@
 
-import { useState } from 'react';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { BillingContact } from '@/components/sites/forms/types/billingTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
 export function useSiteFormBillingContacts(
   formData: SiteFormData,
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) {
-  const [isAddContactDialogOpen, setIsAddContactDialogOpen] = useState(false);
-  const [isEditContactDialogOpen, setIsEditContactDialogOpen] = useState(false);
-  const [currentContact, setCurrentContact] = useState<any>(null);
+  // Initialize billing contacts from formData or with an empty array
+  const [billingContacts, setBillingContacts] = useState<BillingContact[]>(() => {
+    // Ensure billingDetails exists and initialize if needed
+    const billingDetails = formData.billingDetails || { billingLines: [], contacts: [] };
+    
+    // Ensure contacts exists and initialize if needed
+    return billingDetails.contacts || [];
+  });
 
-  const addBillingContact = (contact: any) => {
-    const newContact = {
-      ...contact,
-      id: uuidv4()
+  // Update form data whenever billing contacts change
+  useEffect(() => {
+    setFormData(prev => {
+      // Ensure billingDetails exists
+      const billingDetails = prev.billingDetails || { billingLines: [], contacts: [] };
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          contacts: billingContacts
+        }
+      };
+    });
+  }, [billingContacts, setFormData]);
+
+  // Function to add a new billing contact
+  const addBillingContact = () => {
+    const newContact: BillingContact = {
+      id: uuidv4(),
+      name: '',
+      email: '',
+      phone: '',
+      role: ''
     };
 
-    setFormData(prev => {
-      // Get the current billing details or create a new object
-      const currentBillingDetails = prev.billingDetails || {};
-      // Get the current contacts array or create a new array
-      const currentContacts = currentBillingDetails.contacts || [];
-      // Ensure billingLines exists
-      const billingLines = currentBillingDetails.billingLines || [];
-
-      return {
-        ...prev,
-        billingDetails: {
-          ...currentBillingDetails,
-          contacts: [...currentContacts, newContact],
-          billingLines
-        }
-      };
-    });
+    setBillingContacts(prev => [...prev, newContact]);
   };
 
-  const updateBillingContact = (id: string, updatedContact: any) => {
-    setFormData(prev => {
-      // Get the current billing details or create a new object
-      const currentBillingDetails = prev.billingDetails || {};
-      // Get the current contacts array or create a new array
-      const currentContacts = currentBillingDetails.contacts || [];
-      // Ensure billingLines exists
-      const billingLines = currentBillingDetails.billingLines || [];
-
-      return {
-        ...prev,
-        billingDetails: {
-          ...currentBillingDetails,
-          contacts: currentContacts.map(contact => 
-            contact.id === id ? { ...contact, ...updatedContact } : contact
-          ),
-          billingLines
-        }
-      };
-    });
+  // Function to update a billing contact
+  const updateBillingContact = (id: string, field: keyof BillingContact, value: any) => {
+    setBillingContacts(prev => 
+      prev.map(contact => 
+        contact.id === id ? { ...contact, [field]: value } : contact
+      )
+    );
   };
 
+  // Function to remove a billing contact
   const removeBillingContact = (id: string) => {
-    setFormData(prev => {
-      // Get the current billing details or create a new object
-      const currentBillingDetails = prev.billingDetails || {};
-      // Get the current contacts array or create a new array
-      const currentContacts = currentBillingDetails.contacts || [];
-      // Ensure billingLines exists
-      const billingLines = currentBillingDetails.billingLines || [];
-
-      return {
-        ...prev,
-        billingDetails: {
-          ...currentBillingDetails,
-          contacts: currentContacts.filter(contact => contact.id !== id),
-          billingLines
-        }
-      };
-    });
+    setBillingContacts(prev => prev.filter(contact => contact.id !== id));
   };
 
-  const openAddContactDialog = () => {
-    setCurrentContact(null);
-    setIsAddContactDialogOpen(true);
-  };
-
-  const openEditContactDialog = (contact: any) => {
-    setCurrentContact(contact);
-    setIsEditContactDialogOpen(true);
+  // Function to set a contact as primary
+  const setPrimaryBillingContact = (id: string) => {
+    setBillingContacts(prev => 
+      prev.map(contact => ({
+        ...contact,
+        isPrimary: contact.id === id
+      }))
+    );
   };
 
   return {
-    billingContacts: formData.billingDetails?.contacts || [],
+    billingContacts,
     addBillingContact,
     updateBillingContact,
     removeBillingContact,
-    openAddContactDialog,
-    closeAddContactDialog: () => setIsAddContactDialogOpen(false),
-    openEditContactDialog,
-    closeEditContactDialog: () => setIsEditContactDialogOpen(false),
-    isAddContactDialogOpen,
-    isEditContactDialogOpen,
-    currentContact
+    setPrimaryBillingContact
   };
 }

@@ -1,56 +1,71 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { ClientFormData } from './types';
+import { FormField, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Controller, useFormContext } from 'react-hook-form';
 
 interface AdditionalInformationProps {
-  formData: {
-    status: 'active' | 'inactive' | 'pending';
-    notes: string;
-  };
-  handleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleStatusChange: (value: string) => void;
+  errors?: Record<string, string>;
 }
 
-export function AdditionalInformation({ 
-  formData, 
-  handleChange, 
-  handleStatusChange 
+export function AdditionalInformation({
+  handleStatusChange,
+  errors = {}
 }: AdditionalInformationProps) {
+  const { control } = useFormContext<ClientFormData>();
+  
+  const hasError = (field: string) => Boolean(errors[field]);
+  
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select value={formData.status} onValueChange={handleStatusChange}>
-          <SelectTrigger id="status">
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <h3 className="text-lg font-medium">Additional Information</h3>
       
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          placeholder="Enter any additional notes about this client"
-          rows={4}
-        />
-      </div>
+      <Controller
+        control={control}
+        name="status"
+        render={({ field }) => (
+          <div>
+            <FormLabel htmlFor="status">Status</FormLabel>
+            <Select
+              value={field.value}
+              onValueChange={(value) => {
+                field.onChange(value);
+                handleStatusChange(value);
+              }}
+            >
+              <SelectTrigger id="status" className={hasError('status') ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasError('status') && <FormMessage>{errors.status}</FormMessage>}
+          </div>
+        )}
+      />
+      
+      <Controller
+        control={control}
+        name="notes"
+        render={({ field }) => (
+          <div>
+            <FormLabel htmlFor="notes">Notes</FormLabel>
+            <Textarea
+              id="notes"
+              {...field}
+              rows={4}
+              className={hasError('notes') ? 'border-red-500' : ''}
+            />
+            {hasError('notes') && <FormMessage>{errors.notes}</FormMessage>}
+          </div>
+        )}
+      />
     </div>
   );
 }

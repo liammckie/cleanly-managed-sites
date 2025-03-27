@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { z } from 'zod';
+
+import React from 'react';
+import { useForm, Controller, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { contactFormSchema } from '@/lib/validation/contactSchema';
-import { validateWithZod } from '@/utils/zodValidation';
-import { FormField, FormLabel, FormMessage, Form } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormMessage, Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
-interface ContactFormProps {
+export interface ContactFormProps {
   initialData: {
     id?: string;
     name?: string;
@@ -33,121 +34,136 @@ export function ContactForm({
   onCancel,
   isSubmitting = false
 }: ContactFormProps) {
-  const [formData, setFormData] = useState(initialData);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleCheckboxChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: checked }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Reset validation errors
-    setValidationErrors({});
-    
-    // Validate with Zod
-    const result = validateWithZod(contactFormSchema, formData);
-    
-    if (!result.success) {
-      setValidationErrors(result.errors);
-      toast.error('Please fix the validation errors');
-      return;
+  const methods = useForm({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: initialData.name || '',
+      role: initialData.role || '',
+      department: initialData.department || '',
+      email: initialData.email || '',
+      phone: initialData.phone || '',
+      notes: initialData.notes || '',
+      is_primary: initialData.is_primary || false,
     }
-    
-    // If validation passes, proceed with form submission
-    onSubmit(result.data);
-  };
+  });
+  
+  const handleSubmit = methods.handleSubmit((data) => {
+    onSubmit({
+      ...initialData,
+      ...data
+    });
+  });
   
   return (
-    <Form>
+    <FormProvider {...methods}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField>
-          <FormLabel htmlFor="name">Name</FormLabel>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name || ''}
-            onChange={handleChange}
-            className={validationErrors.name ? 'border-red-500' : ''}
-          />
-          {validationErrors.name && <FormMessage>{validationErrors.name}</FormMessage>}
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="name"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel htmlFor="name">Name</FormLabel>
+              <Input
+                id="name"
+                {...field}
+                className={fieldState.error ? 'border-red-500' : ''}
+              />
+              {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+            </FormItem>
+          )}
+        />
         
-        <FormField>
-          <FormLabel htmlFor="role">Role</FormLabel>
-          <Input
-            id="role"
-            name="role"
-            value={formData.role || ''}
-            onChange={handleChange}
-            className={validationErrors.role ? 'border-red-500' : ''}
-          />
-          {validationErrors.role && <FormMessage>{validationErrors.role}</FormMessage>}
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="role"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel htmlFor="role">Role</FormLabel>
+              <Input
+                id="role"
+                {...field}
+                className={fieldState.error ? 'border-red-500' : ''}
+              />
+              {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+            </FormItem>
+          )}
+        />
         
-        <FormField>
-          <FormLabel htmlFor="department">Department</FormLabel>
-          <Input
-            id="department"
-            name="department"
-            value={formData.department || ''}
-            onChange={handleChange}
-          />
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="department">Department</FormLabel>
+              <Input
+                id="department"
+                {...field}
+              />
+            </FormItem>
+          )}
+        />
         
-        <FormField>
-          <FormLabel htmlFor="email">Email</FormLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email || ''}
-            onChange={handleChange}
-            className={validationErrors.email ? 'border-red-500' : ''}
-          />
-          {validationErrors.email && <FormMessage>{validationErrors.email}</FormMessage>}
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <FormItem>
+              <FormLabel htmlFor="email">Email</FormLabel>
+              <Input
+                id="email"
+                type="email"
+                {...field}
+                className={fieldState.error ? 'border-red-500' : ''}
+              />
+              {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+            </FormItem>
+          )}
+        />
         
-        <FormField>
-          <FormLabel htmlFor="phone">Phone</FormLabel>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone || ''}
-            onChange={handleChange}
-          />
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="phone">Phone</FormLabel>
+              <Input
+                id="phone"
+                {...field}
+              />
+            </FormItem>
+          )}
+        />
         
-        <FormField>
-          <FormLabel htmlFor="notes">Notes</FormLabel>
-          <Textarea
-            id="notes"
-            name="notes"
-            value={formData.notes || ''}
-            onChange={handleChange}
-          />
-        </FormField>
+        <Controller
+          control={methods.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="notes">Notes</FormLabel>
+              <Textarea
+                id="notes"
+                {...field}
+              />
+            </FormItem>
+          )}
+        />
         
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="is_primary"
-            checked={formData.is_primary || false}
-            onCheckedChange={(checked) => handleCheckboxChange('is_primary', checked as boolean)}
-          />
-          <label htmlFor="is_primary" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            Primary Contact
-          </label>
-        </div>
-        
-        {validationErrors._general && (
-          <div className="text-red-500 text-sm">{validationErrors._general}</div>
-        )}
+        <Controller
+          control={methods.control}
+          name="is_primary"
+          render={({ field }) => (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_primary"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+              <label htmlFor="is_primary" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Primary Contact
+              </label>
+            </div>
+          )}
+        />
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={onCancel}>
@@ -158,6 +174,6 @@ export function ContactForm({
           </Button>
         </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

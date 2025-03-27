@@ -1,60 +1,80 @@
 
-import { ClientRecord } from '@/lib/types';
-import { EnhancedValidationResult, ValidationMessage } from '@/types/common';
+import { ValidationResult, ValidationMessage } from './types';
 
-export function validateClientRecord(record: Partial<ClientRecord>, rowNumber: number): ValidationMessage[] {
-  const errors: ValidationMessage[] = [];
-  
-  if (!record.name || record.name.trim() === '') {
-    errors.push({
-      field: 'name',
-      message: 'Client name is required',
-      row: rowNumber,
-      type: 'error'
-    });
-  }
-  
-  if (!record.contact_name || record.contact_name.trim() === '') {
-    errors.push({
-      field: 'contact_name',
-      message: 'Contact name is required',
-      row: rowNumber,
-      type: 'error'
-    });
-  }
-  
-  if (record.email && !/^\S+@\S+\.\S+$/.test(record.email)) {
-    errors.push({
-      field: 'email',
-      message: 'Invalid email format',
-      row: rowNumber,
-      type: 'error'
-    });
-  }
-  
-  return errors;
-}
-
-export function validateClientImport(clients: Partial<ClientRecord>[]): EnhancedValidationResult {
+/**
+ * Validates client data for importing
+ * @param clientData The client data to validate
+ * @returns Validation result with success flag and error messages
+ */
+export function validateClientData(clientData: any[]): ValidationResult {
+  const messages: ValidationMessage[] = [];
   let isValid = true;
-  const errors: ValidationMessage[] = [];
-  const warnings: ValidationMessage[] = [];
   
-  clients.forEach((client, index) => {
-    const recordErrors = validateClientRecord(client, index);
-    
-    if (recordErrors.length > 0) {
+  if (!Array.isArray(clientData)) {
+    messages.push({
+      type: 'error',
+      field: 'data',
+      message: 'Client data must be an array'
+    });
+    return { valid: false, messages };
+  }
+  
+  clientData.forEach((client, index) => {
+    // Required fields
+    if (!client.name) {
+      messages.push({
+        type: 'error',
+        field: 'name',
+        message: `Row ${index + 1}: Client name is required`,
+        row: index
+      });
       isValid = false;
-      errors.push(...recordErrors);
+    }
+    
+    if (!client.contact_name) {
+      messages.push({
+        type: 'error',
+        field: 'contact_name',
+        message: `Row ${index + 1}: Contact name is required`,
+        row: index
+      });
+      isValid = false;
+    }
+    
+    // Email validation
+    if (client.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.email)) {
+      messages.push({
+        type: 'error',
+        field: 'email',
+        message: `Row ${index + 1}: Invalid email format`,
+        row: index,
+        value: client.email
+      });
+      isValid = false;
+    }
+    
+    // Status validation
+    if (client.status && !['active', 'inactive', 'pending'].includes(client.status)) {
+      messages.push({
+        type: 'warning',
+        field: 'status',
+        message: `Row ${index + 1}: Invalid status '${client.status}', will default to 'active'`,
+        row: index,
+        value: client.status
+      });
+    }
+    
+    // Phone format warning
+    if (client.phone && !/^\+?[0-9\s()-]{8,}$/.test(client.phone)) {
+      messages.push({
+        type: 'warning',
+        field: 'phone',
+        message: `Row ${index + 1}: Phone number format may be invalid`,
+        row: index,
+        value: client.phone
+      });
     }
   });
   
-  return {
-    isValid,
-    errors,
-    warnings,
-    messages: [...errors, ...warnings],
-    data: clients,
-    success: isValid
-  };
+  return { valid: isValid, messages };
 }

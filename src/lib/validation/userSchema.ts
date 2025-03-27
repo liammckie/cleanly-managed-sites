@@ -1,43 +1,57 @@
 
 import { z } from 'zod';
+import { UserStatus } from '@/types/common';
 
-// Schema for user role permissions
-export const userRolePermissionsSchema = z.record(z.boolean());
-
-// Schema for user roles
-export const userRoleSchema = z.object({
-  id: z.string().uuid().optional(),
-  name: z.string().min(2, { message: 'Role name must be at least 2 characters' }),
-  description: z.string().optional(),
-  permissions: userRolePermissionsSchema,
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  user_count: z.number().optional(),
-});
-
-// Schema for user creation/updates
+// Basic user schema for validation
 export const userSchema = z.object({
-  id: z.string().uuid().optional(),
-  email: z.string().email({ message: 'Invalid email address' }),
-  full_name: z.string().min(2, { message: 'Full name must be at least 2 characters' }),
+  email: z.string().email('Invalid email address'),
+  full_name: z.string().min(2, 'Full name must be at least 2 characters'),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
-  avatar_url: z.string().url().optional().or(z.literal('')),
-  title: z.string().optional(),
+  status: z.union([
+    z.literal('active'),
+    z.literal('pending'),
+    z.literal('inactive')
+  ]).default('active'),
+  role_id: z.string().uuid('Invalid role ID'),
+  avatar_url: z.string().url('Invalid URL').optional().or(z.literal('')),
   phone: z.string().optional(),
-  custom_id: z.string().optional(),
-  note: z.string().optional(),
+  title: z.string().optional(),
   notes: z.string().optional(),
   territories: z.array(z.string()).optional(),
-  status: z.enum(['active', 'pending', 'inactive']),
-  role_id: z.string().uuid().optional(),
+  custom_id: z.string().optional(),
+  daily_summary: z.boolean().optional()
+});
+
+// User profile schema that extends userSchema
+export const userProfileSchema = userSchema.extend({
+  id: z.string().uuid('Invalid user ID').optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   last_login: z.string().optional(),
-  daily_summary: z.boolean().optional(),
 });
 
-// Define the TypeScript types derived from the schemas
-export type UserRole = z.infer<typeof userRoleSchema>;
-export type UserRolePermissions = z.infer<typeof userRolePermissionsSchema>;
-export type User = z.infer<typeof userSchema>;
+// User role schema for role validation
+export const userRoleSchema = z.object({
+  name: z.string().min(2, 'Role name must be at least 2 characters'),
+  description: z.string().optional(),
+  permissions: z.record(z.boolean()).or(z.record(z.string().transform(val => val === 'true'))),
+  id: z.string().uuid('Invalid role ID').optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});
+
+// User invitation schema for sending invitations
+export const userInviteSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  full_name: z.string().min(2, 'Full name must be at least 2 characters'),
+  role_id: z.string().uuid('Invalid role ID'),
+  title: z.string().optional(),
+  territories: z.array(z.string()).optional(),
+});
+
+// Types derived from schemas
+export type UserSchemaType = z.infer<typeof userSchema>;
+export type UserProfileSchemaType = z.infer<typeof userProfileSchema>;
+export type UserRoleSchemaType = z.infer<typeof userRoleSchema>;
+export type UserInviteSchemaType = z.infer<typeof userInviteSchema>;

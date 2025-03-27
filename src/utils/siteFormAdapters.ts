@@ -21,12 +21,7 @@ export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
     // Add any other properties needed for UIBillingLine
     weeklyAmount: modelLine.weeklyAmount,
     monthlyAmount: modelLine.monthlyAmount,
-    annualAmount: modelLine.annualAmount,
-    holdStartDate: modelLine.holdStartDate,
-    holdEndDate: modelLine.holdEndDate,
-    creditAmount: modelLine.creditAmount?.toString(),
-    creditDate: modelLine.creditDate,
-    creditReason: modelLine.creditReason
+    annualAmount: modelLine.annualAmount
   };
   
   return formattedLine;

@@ -1,22 +1,19 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
-import { validateWithZod } from '@/lib/validation';
+import { validateWithZod } from '@/utils/zodValidation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
-import { ContractDetailsDTO } from '@/components/sites/contract/types';
-import { BillingDetailsDTO } from '@/components/sites/forms/types/billingTypes';
+import { normalizeContractData } from '@/lib/utils/contractDataUtils';
 
 const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => {
   // Convert numerical values to make sure they're consistent with expected types
   const contractDetails = formData.contractDetails || formData.contract_details;
   
   // Create a compatible contract details object if it exists
-  const adaptedContractDetails: ContractDetailsDTO | undefined = contractDetails ? {
-    ...contractDetails,
-    renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
-  } : undefined;
+  const adaptedContractDetails = contractDetails ? normalizeContractData(contractDetails) : undefined;
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -28,10 +25,15 @@ const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => 
   } : undefined;
   
   // Create a compatible billing details object
-  const adaptedBillingDetails: BillingDetailsDTO | undefined = formData.billingDetails ? {
+  const adaptedBillingDetails = formData.billingDetails ? {
     ...formData.billingDetails,
     billingAddress,
-    billingLines: formData.billingDetails.billingLines || []
+    billingLines: formData.billingDetails.billingLines || [],
+    // Ensure serviceDeliveryType is a valid enum value
+    serviceDeliveryType: (formData.billingDetails.serviceDeliveryType === 'direct' || 
+                         formData.billingDetails.serviceDeliveryType === 'contractor') 
+                         ? formData.billingDetails.serviceDeliveryType as 'direct' | 'contractor'
+                         : 'direct'
   } : undefined;
 
   return {
@@ -65,14 +67,12 @@ export function useSiteUpdate() {
         const updateData = adaptSiteFormToUpdateData(data as SiteFormData);
         return await sitesApi.updateSite(id, updateData);
       } 
-      // If it's already a DTO, just use it directly but convert renewalPeriod to string
-      else if (data.contract_details?.renewalPeriod && typeof data.contract_details.renewalPeriod === 'number') {
+      // If it's already a DTO, just use it directly but ensure contract_details is properly formatted
+      else if (data.contract_details) {
+        // Handle renewal period conversion if needed
         const adaptedData = {
           ...data,
-          contract_details: {
-            ...data.contract_details,
-            renewalPeriod: data.contract_details.renewalPeriod.toString()
-          }
+          contract_details: normalizeContractData(data.contract_details)
         };
         return await sitesApi.updateSite(id, adaptedData);
       }

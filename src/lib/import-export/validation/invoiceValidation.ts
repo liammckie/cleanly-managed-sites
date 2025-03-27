@@ -1,160 +1,159 @@
 
-import { ValidationMessage, ValidationResult } from '../types';
-import { InvoiceRecord, InvoiceLineItemRecord } from '../types';
+import { ValidationResult, ValidationMessage } from './types';
 
-// Validate invoice data
-export const validateInvoiceData = (data: any[]): ValidationResult => {
-  const errors: ValidationMessage[] = [];
-  const warnings: ValidationMessage[] = [];
-  const validData: Partial<InvoiceRecord>[] = [];
+/**
+ * Validates invoice data for importing
+ * @param invoiceData The invoice data to validate
+ * @returns Validation result with success flag and error messages
+ */
+export function validateInvoiceData(invoiceData: any[]): ValidationResult {
+  const messages: ValidationMessage[] = [];
+  let isValid = true;
   
-  data.forEach((row, index) => {
+  if (!Array.isArray(invoiceData)) {
+    messages.push({
+      type: 'error',
+      field: 'data',
+      message: 'Invoice data must be an array'
+    });
+    return { valid: false, messages };
+  }
+  
+  invoiceData.forEach((invoice, index) => {
     // Required fields
-    if (!row.client_id) {
-      errors.push({
-        row: index + 1,
+    if (!invoice.client_id) {
+      messages.push({
+        type: 'error',
         field: 'client_id',
-        message: 'Client ID is required',
-        value: row.client_id
+        message: `Row ${index + 1}: Client ID is required`,
+        row: index,
+        value: invoice.client_id
       });
+      isValid = false;
     }
     
-    if (!row.invoice_date) {
-      errors.push({
-        row: index + 1,
-        field: 'invoice_date',
-        message: 'Invoice date is required',
-        value: row.invoice_date
-      });
-    }
-    
-    if (row.amount === undefined || row.amount === null) {
-      errors.push({
-        row: index + 1,
+    if (!invoice.amount && invoice.amount !== 0) {
+      messages.push({
+        type: 'error',
         field: 'amount',
-        message: 'Amount is required',
-        value: row.amount
+        message: `Row ${index + 1}: Amount is required`,
+        row: index,
+        value: invoice.amount
       });
+      isValid = false;
     }
     
-    // Date validations
-    const dateFields = ['invoice_date', 'due_date'];
-    dateFields.forEach(field => {
-      if (row[field] && !/^\d{4}-\d{2}-\d{2}$/.test(row[field])) {
-        warnings.push({
-          row: index + 1,
-          field,
-          message: `${field} should be in YYYY-MM-DD format`,
-          value: row[field]
+    if (!invoice.invoice_date) {
+      messages.push({
+        type: 'error',
+        field: 'invoice_date',
+        message: `Row ${index + 1}: Invoice date is required`,
+        row: index,
+        value: invoice.invoice_date
+      });
+      isValid = false;
+    }
+    
+    // Date validation
+    if (invoice.invoice_date && isNaN(Date.parse(invoice.invoice_date))) {
+      messages.push({
+        type: 'error',
+        field: 'invoice_date',
+        message: `Row ${index + 1}: Invalid invoice date format`,
+        row: index,
+        value: invoice.invoice_date
+      });
+      isValid = false;
+    }
+    
+    if (invoice.due_date && isNaN(Date.parse(invoice.due_date))) {
+      messages.push({
+        type: 'error',
+        field: 'due_date',
+        message: `Row ${index + 1}: Invalid due date format`,
+        row: index,
+        value: invoice.due_date
+      });
+      isValid = false;
+    }
+    
+    // Logic validation
+    if (invoice.invoice_date && invoice.due_date) {
+      const invoiceDate = new Date(invoice.invoice_date);
+      const dueDate = new Date(invoice.due_date);
+      
+      if (invoiceDate > dueDate) {
+        messages.push({
+          type: 'warning',
+          field: 'dates',
+          message: `Row ${index + 1}: Due date is before invoice date`,
+          row: index,
+          value: invoice.due_date
         });
       }
-    });
+    }
     
-    // Numeric field validations
-    if (row.amount !== undefined && isNaN(parseFloat(row.amount))) {
-      warnings.push({
-        row: index + 1,
+    // Amount validation
+    if (invoice.amount !== undefined && (isNaN(Number(invoice.amount)) || Number(invoice.amount) < 0)) {
+      messages.push({
+        type: 'error',
         field: 'amount',
-        message: 'Amount must be a number',
-        value: row.amount
+        message: `Row ${index + 1}: Amount must be a positive number`,
+        row: index,
+        value: invoice.amount
       });
+      isValid = false;
     }
     
     // Status validation
-    if (row.status && !['draft', 'sent', 'paid', 'overdue', 'void'].includes(row.status)) {
-      warnings.push({
-        row: index + 1,
+    if (invoice.status && !['draft', 'sent', 'paid', 'overdue', 'canceled'].includes(invoice.status)) {
+      messages.push({
+        type: 'warning',
         field: 'status',
-        message: 'Status should be one of: draft, sent, paid, overdue, void',
-        value: row.status
+        message: `Row ${index + 1}: Invalid status, will default to 'draft'`,
+        row: index,
+        value: invoice.status
       });
     }
     
-    // Add the row to validData if it has all required fields
-    if (row.client_id && row.invoice_date && row.amount !== undefined && row.amount !== null) {
-      // Add to valid data even with warnings
-      validData.push(row);
+    // Line items validation if present
+    if (invoice.line_items && Array.isArray(invoice.line_items)) {
+      invoice.line_items.forEach((item: any, itemIndex: number) => {
+        if (!item.description) {
+          messages.push({
+            type: 'error',
+            field: `line_items[${itemIndex}].description`,
+            message: `Row ${index + 1}, Item ${itemIndex + 1}: Description is required`,
+            row: index,
+            value: null
+          });
+          isValid = false;
+        }
+        
+        if (item.unit_price !== undefined && (isNaN(Number(item.unit_price)) || Number(item.unit_price) < 0)) {
+          messages.push({
+            type: 'error',
+            field: `line_items[${itemIndex}].unit_price`,
+            message: `Row ${index + 1}, Item ${itemIndex + 1}: Unit price must be a positive number`,
+            row: index,
+            value: item.unit_price
+          });
+          isValid = false;
+        }
+        
+        if (item.quantity !== undefined && (isNaN(Number(item.quantity)) || Number(item.quantity) <= 0)) {
+          messages.push({
+            type: 'error',
+            field: `line_items[${itemIndex}].quantity`,
+            message: `Row ${index + 1}, Item ${itemIndex + 1}: Quantity must be a positive number`,
+            row: index,
+            value: item.quantity
+          });
+          isValid = false;
+        }
+      });
     }
   });
   
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    data: validData
-  };
-};
-
-// Validate invoice line item data
-export const validateInvoiceLineItemData = (data: any[]): ValidationResult => {
-  const errors: ValidationMessage[] = [];
-  const warnings: ValidationMessage[] = [];
-  const validData: Partial<InvoiceLineItemRecord>[] = [];
-  
-  data.forEach((row, index) => {
-    // Required fields
-    if (!row.invoice_id) {
-      errors.push({
-        row: index + 1,
-        field: 'invoice_id',
-        message: 'Invoice ID is required',
-        value: row.invoice_id
-      });
-    }
-    
-    if (!row.description) {
-      errors.push({
-        row: index + 1,
-        field: 'description',
-        message: 'Description is required',
-        value: row.description
-      });
-    }
-    
-    if (row.quantity === undefined || row.quantity === null) {
-      errors.push({
-        row: index + 1,
-        field: 'quantity',
-        message: 'Quantity is required',
-        value: row.quantity
-      });
-    }
-    
-    if (row.unit_price === undefined || row.unit_price === null) {
-      errors.push({
-        row: index + 1,
-        field: 'unit_price',
-        message: 'Unit price is required',
-        value: row.unit_price
-      });
-    }
-    
-    // Numeric field validations
-    const numericFields = ['quantity', 'unit_price'];
-    numericFields.forEach(field => {
-      if (row[field] !== undefined && isNaN(parseFloat(row[field]))) {
-        warnings.push({
-          row: index + 1,
-          field,
-          message: `${field} must be a number`,
-          value: row[field]
-        });
-      }
-    });
-    
-    // Add the row to validData if it has all required fields
-    if (row.invoice_id && row.description && 
-        row.quantity !== undefined && row.quantity !== null && 
-        row.unit_price !== undefined && row.unit_price !== null) {
-      // Add to valid data even with warnings
-      validData.push(row);
-    }
-  });
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    data: validData
-  };
-};
+  return { valid: isValid, messages };
+}

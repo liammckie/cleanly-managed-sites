@@ -1,72 +1,103 @@
 
-import { JsonValue } from '@/types/common';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { differenceInMonths, parseISO, isAfter, isBefore, addMonths } from 'date-fns';
 
 /**
- * Safely extract a value from a potentially undefined JSON object
- */
-export function extractJsonValue<T>(json: JsonValue | undefined, path: string, defaultValue: T): T {
-  if (!json || typeof json !== 'object' || json === null) {
-    return defaultValue;
-  }
-  
-  const keys = path.split('.');
-  let current: any = json;
-  
-  for (const key of keys) {
-    if (current === null || typeof current !== 'object' || !(key in current)) {
-      return defaultValue;
-    }
-    current = current[key];
-  }
-  
-  return (current as unknown as T) ?? defaultValue;
-}
-
-/**
- * Format a contract value for display
- */
-export function formatContractValue(value: number): string {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-    minimumFractionDigits: 2
-  }).format(value);
-}
-
-/**
- * Get a field from contract details with proper type handling
- * @param contractDetails Contract details object which could be undefined or null
- * @param fieldName The name of the field to extract
- * @param defaultValue Default value to return if the field doesn't exist
- */
-export function getContractField<T>(contractDetails: any, fieldName: string, defaultValue: T): T {
-  if (!contractDetails || typeof contractDetails !== 'object') {
-    return defaultValue;
-  }
-  
-  return (contractDetails[fieldName] as T) ?? defaultValue;
-}
-
-/**
- * Check if a contract is expiring soon within the specified number of days
- * @param contractDetails Contract details object
- * @param days Number of days to check
+ * Checks if a contract is expiring soon (within the next 30 days)
+ * @param contract The contract details to check
+ * @param daysThreshold Number of days to consider as "soon" (default: 30)
  * @returns Boolean indicating if the contract is expiring soon
  */
-export function isContractExpiringSoon(contractDetails: any, days: number = 30): boolean {
-  if (!contractDetails || typeof contractDetails !== 'object') {
+export function isContractExpiringSoon(contract: ContractDetails | null | undefined, daysThreshold = 30): boolean {
+  if (!contract || !contract.endDate) return false;
+
+  try {
+    const endDate = parseISO(contract.endDate);
+    const now = new Date();
+    const thresholdDate = addMonths(now, 1); // Default to 30 days
+    
+    return isAfter(endDate, now) && isBefore(endDate, thresholdDate);
+  } catch (error) {
+    console.error('Error checking if contract is expiring soon:', error);
     return false;
   }
-  
-  const endDate = getContractField(contractDetails, 'endDate', null);
-  if (!endDate) {
-    return false;
+}
+
+/**
+ * Gets the value of a specific field from contract details
+ * @param contract The contract details object
+ * @param field The field name to retrieve
+ * @param defaultValue Default value to return if the field is not found
+ * @returns The field value or default value
+ */
+export function getContractField<T>(
+  contract: ContractDetails | null | undefined, 
+  field: keyof ContractDetails, 
+  defaultValue: T
+): T {
+  if (!contract || contract[field] === undefined || contract[field] === null) {
+    return defaultValue;
   }
   
-  const endDateObj = new Date(endDate);
-  const today = new Date();
-  const diffTime = endDateObj.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return contract[field] as unknown as T;
+}
+
+/**
+ * Calculates the remaining months in a contract
+ * @param contract The contract details
+ * @returns Number of months remaining (negative if expired)
+ */
+export function getRemainingMonths(contract: ContractDetails | null | undefined): number {
+  if (!contract || !contract.endDate) return 0;
   
-  return diffDays > 0 && diffDays <= days;
+  try {
+    const endDate = parseISO(contract.endDate);
+    const now = new Date();
+    
+    return differenceInMonths(endDate, now);
+  } catch (error) {
+    console.error('Error calculating remaining months:', error);
+    return 0;
+  }
+}
+
+/**
+ * Formats a date string to a readable format
+ * @param dateString The date string to format
+ * @param format The format to use (default: 'dd/MM/yyyy')
+ * @returns Formatted date string or empty string if invalid
+ */
+export function formatContractDate(dateString: string | undefined, format = 'dd/MM/yyyy'): string {
+  if (!dateString) return '';
+  
+  try {
+    const date = parseISO(dateString);
+    return date.toLocaleDateString('en-AU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting contract date:', error);
+    return '';
+  }
+}
+
+/**
+ * Checks if a contract has expired
+ * @param contract The contract details to check
+ * @returns Boolean indicating if the contract has expired
+ */
+export function isContractExpired(contract: ContractDetails | null | undefined): boolean {
+  if (!contract || !contract.endDate) return false;
+  
+  try {
+    const endDate = parseISO(contract.endDate);
+    const now = new Date();
+    
+    return isBefore(endDate, now);
+  } catch (error) {
+    console.error('Error checking if contract has expired:', error);
+    return false;
+  }
 }

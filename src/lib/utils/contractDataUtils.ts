@@ -1,65 +1,129 @@
 
-import { Json } from '@/types/common';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { format, parseISO } from 'date-fns';
 
-export function parseContractData(data: string | Json | null): any {
-  if (!data) return null;
+/**
+ * Extracts contract data from JSON format for API usage
+ * @param contractData Contract data from API (possibly as JSON)
+ * @returns Properly formatted ContractDetails object
+ */
+export function extractContractData(contractData: any): ContractDetails | null {
+  if (!contractData) return null;
   
   try {
-    if (typeof data === 'string') {
-      return JSON.parse(data);
+    // If it's a string, try to parse it
+    if (typeof contractData === 'string') {
+      try {
+        contractData = JSON.parse(contractData);
+      } catch (e) {
+        console.error('Error parsing contract data string:', e);
+      }
     }
     
-    return data;
+    return {
+      id: contractData.id,
+      contractNumber: contractData.contractNumber || contractData.contract_number,
+      type: contractData.type,
+      status: contractData.status,
+      startDate: contractData.startDate || contractData.start_date,
+      endDate: contractData.endDate || contractData.end_date,
+      autoRenewal: contractData.autoRenewal || contractData.auto_renewal,
+      renewalNoticeDays: contractData.renewalNoticeDays || contractData.renewal_notice_days,
+      renewalLengthMonths: contractData.renewalLengthMonths || contractData.renewal_length_months,
+      reviewDate: contractData.reviewDate || contractData.review_date,
+      annualValue: contractData.annualValue || contractData.annual_value,
+      terminationClause: contractData.terminationClause || contractData.termination_clause,
+      noticePeriodDays: contractData.noticePeriodDays || contractData.notice_period_days,
+      nextIncreaseDate: contractData.nextIncreaseDate || contractData.next_increase_date,
+      specialTerms: contractData.specialTerms || contractData.special_terms,
+      value: contractData.value,
+      billingCycle: contractData.billingCycle || contractData.billing_cycle,
+      contractType: contractData.contractType || contractData.contract_type,
+      terminationPeriod: contractData.terminationPeriod || contractData.termination_period,
+      renewalTerms: contractData.renewalTerms || contractData.renewal_terms,
+      contractLength: contractData.contractLength || contractData.contract_length,
+      contractLengthUnit: contractData.contractLengthUnit || contractData.contract_length_unit,
+      renewalPeriod: contractData.renewalPeriod || contractData.renewal_period,
+      renewalNotice: contractData.renewalNotice || contractData.renewal_notice,
+      noticeUnit: contractData.noticeUnit || contractData.notice_unit,
+      serviceFrequency: contractData.serviceFrequency || contractData.service_frequency,
+      serviceDeliveryMethod: contractData.serviceDeliveryMethod || contractData.service_delivery_method,
+      notes: contractData.notes
+    };
   } catch (error) {
-    console.error('Error parsing contract data:', error);
+    console.error('Error extracting contract data:', error);
     return null;
   }
 }
 
-export function formatContractData(data: any): Json {
-  if (!data) return null;
+/**
+ * Formats a contract for display purposes
+ * @param contract The contract details to format
+ * @returns Formatted contract information as a string
+ */
+export function formatContractForDisplay(contract: ContractDetails | null): string {
+  if (!contract) return 'No contract information';
   
-  try {
-    if (typeof data === 'string') {
-      return JSON.parse(data) as Json;
+  const parts = [];
+  
+  if (contract.contractNumber) {
+    parts.push(`Contract #${contract.contractNumber}`);
+  }
+  
+  if (contract.startDate && contract.endDate) {
+    try {
+      const formattedStart = format(parseISO(contract.startDate), 'dd/MM/yyyy');
+      const formattedEnd = format(parseISO(contract.endDate), 'dd/MM/yyyy');
+      parts.push(`${formattedStart} - ${formattedEnd}`);
+    } catch (e) {
+      // Skip date formatting if dates are invalid
     }
+  }
+  
+  if (contract.value) {
+    parts.push(`$${contract.value.toLocaleString()}`);
     
-    return data as Json;
-  } catch (error) {
-    console.error('Error formatting contract data:', error);
-    return null;
+    if (contract.billingCycle) {
+      parts[parts.length - 1] += ` per ${contract.billingCycle}`;
+    }
   }
+  
+  if (contract.status) {
+    parts.push(`Status: ${contract.status}`);
+  }
+  
+  return parts.join(' | ');
 }
 
 /**
- * Extract contract start date from contract details
+ * Normalizes the contract data to ensure consistency
+ * @param contractData Raw contract data
+ * @returns Normalized contract data
  */
-export function getContractStartDate(contractDetails: any): string | null {
-  if (!contractDetails || typeof contractDetails !== 'object') {
-    return null;
+export function normalizeContractData(contractData: any): ContractDetails {
+  if (!contractData) return {} as ContractDetails;
+  
+  const normalized: ContractDetails = { ...contractData };
+  
+  // Convert any number fields stored as strings to numbers
+  if (typeof normalized.renewalPeriod === 'string') {
+    normalized.renewalPeriod = parseInt(normalized.renewalPeriod, 10) || undefined;
   }
   
-  return contractDetails.startDate || contractDetails.start_date || null;
-}
-
-/**
- * Extract contract end date from contract details
- */
-export function getContractEndDate(contractDetails: any): string | null {
-  if (!contractDetails || typeof contractDetails !== 'object') {
-    return null;
+  if (typeof normalized.renewalNoticeDays === 'string') {
+    normalized.renewalNoticeDays = parseInt(normalized.renewalNoticeDays, 10) || undefined;
   }
   
-  return contractDetails.endDate || contractDetails.end_date || null;
-}
-
-/**
- * Extract contract type from contract details
- */
-export function getContractType(contractDetails: any): string {
-  if (!contractDetails || typeof contractDetails !== 'object') {
-    return 'Standard';
+  if (typeof normalized.contractLength === 'string') {
+    normalized.contractLength = parseInt(normalized.contractLength, 10) || undefined;
   }
   
-  return contractDetails.type || contractDetails.contract_type || 'Standard';
+  if (typeof normalized.value === 'string') {
+    normalized.value = parseFloat(normalized.value) || undefined;
+  }
+  
+  // Ensure boolean fields are actual booleans
+  normalized.autoRenewal = !!normalized.autoRenewal;
+  
+  return normalized;
 }

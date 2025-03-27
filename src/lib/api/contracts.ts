@@ -1,149 +1,167 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { ContractSummaryData } from '@/types/contracts';
+import { extractContractData, normalizeContractData } from '@/lib/utils/contractDataUtils';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { SiteRecord } from '@/lib/types';
+import { isAfter, isBefore, parseISO, addMonths, isValid } from 'date-fns';
 
-// Get summary data for all contracts
-export async function getContractsSummary(): Promise<ContractSummaryData> {
-  // Get current date for comparison
-  const today = new Date();
-  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  const threeMonthsLater = new Date(today.getFullYear(), today.getMonth() + 3, 0);
-  const sixMonthsLater = new Date(today.getFullYear(), today.getMonth() + 6, 0);
-  const yearEnd = new Date(today.getFullYear(), 11, 31);
-  
+interface ContractFilters {
+  status?: string;
+  clientId?: string;
+  expiringWithin?: number;
+}
+
+/**
+ * Fetches all contracts from the sites table
+ * @param filters Optional filters for the contracts query
+ * @returns Array of contracts with site information
+ */
+export async function fetchContracts(filters: ContractFilters = {}) {
   try {
-    // Get all contracts
-    const { data: contracts, error } = await supabase
+    let query = supabase
       .from('sites')
-      .select('id, contract_details, monthly_revenue, monthly_cost');
+      .select('id, name, client_id, status, contract_details, clients(name)')
+      .not('contract_details', 'is', null);
+    
+    // Apply filters
+    if (filters.clientId) {
+      query = query.eq('client_id', filters.clientId);
+    }
+    
+    const { data, error } = await query;
     
     if (error) throw error;
     
-    const allContracts = contracts || [];
-    const activeContracts = allContracts.filter(contract => 
-      contract.contract_details?.status === 'active'
-    );
-    
-    // Calculate expirations
-    const expiringWithin30Days = allContracts.filter(contract => {
-      const endDate = contract.contract_details?.endDate;
-      if (!endDate) return false;
-      
-      const expiryDate = new Date(endDate);
-      const diffTime = expiryDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      return diffDays > 0 && diffDays <= 30;
-    }).length;
-    
-    const expiringThisMonth = allContracts.filter(contract => {
-      const endDate = contract.contract_details?.endDate;
-      if (!endDate) return false;
-      
-      const expiryDate = new Date(endDate);
-      return expiryDate <= monthEnd && expiryDate >= today;
-    }).length;
-    
-    const expiringNext3Months = allContracts.filter(contract => {
-      const endDate = contract.contract_details?.endDate;
-      if (!endDate) return false;
-      
-      const expiryDate = new Date(endDate);
-      return expiryDate <= threeMonthsLater && expiryDate >= today;
-    }).length;
-    
-    const expiringNext6Months = allContracts.filter(contract => {
-      const endDate = contract.contract_details?.endDate;
-      if (!endDate) return false;
-      
-      const expiryDate = new Date(endDate);
-      return expiryDate <= sixMonthsLater && expiryDate >= today;
-    }).length;
-    
-    const expiringThisYear = allContracts.filter(contract => {
-      const endDate = contract.contract_details?.endDate;
-      if (!endDate) return false;
-      
-      const expiryDate = new Date(endDate);
-      return expiryDate <= yearEnd && expiryDate >= today;
-    }).length;
-    
-    // Calculate totals
-    const totalValue = allContracts.reduce((sum, contract) => 
-      sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    const totalRevenue = activeContracts.reduce((sum, contract) => 
-      sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    const totalCost = activeContracts.reduce((sum, contract) => 
-      sum + (Number(contract.monthly_cost || 0) * 12), 0);
-    
-    const totalProfit = totalRevenue - totalCost;
-    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-    
-    // Calculate value of expiring contracts
-    const valueExpiringThisMonth = allContracts
-      .filter(contract => {
-        const endDate = contract.contract_details?.endDate;
-        if (!endDate) return false;
+    // Process and filter contracts
+    return data
+      .filter(site => site.contract_details)
+      .map(site => {
+        const contract = extractContractData(site.contract_details);
         
-        const expiryDate = new Date(endDate);
-        return expiryDate <= monthEnd && expiryDate >= today;
-      })
-      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    const valueExpiringNext3Months = allContracts
-      .filter(contract => {
-        const endDate = contract.contract_details?.endDate;
-        if (!endDate) return false;
+        // Skip sites without valid contract details
+        if (!contract) return null;
         
-        const expiryDate = new Date(endDate);
-        return expiryDate <= threeMonthsLater && expiryDate >= today;
-      })
-      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    const valueExpiringNext6Months = allContracts
-      .filter(contract => {
-        const endDate = contract.contract_details?.endDate;
-        if (!endDate) return false;
+        // Filter by contract status if specified
+        if (filters.status && contract.status !== filters.status) {
+          return null;
+        }
         
-        const expiryDate = new Date(endDate);
-        return expiryDate <= sixMonthsLater && expiryDate >= today;
-      })
-      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    const valueExpiringThisYear = allContracts
-      .filter(contract => {
-        const endDate = contract.contract_details?.endDate;
-        if (!endDate) return false;
+        // Filter by expiration if specified
+        if (filters.expiringWithin && contract.endDate) {
+          const endDate = parseISO(contract.endDate);
+          if (!isValid(endDate)) return null;
+          
+          const now = new Date();
+          const thresholdDate = addMonths(now, filters.expiringWithin);
+          
+          // Keep only contracts expiring within the specified period
+          if (!isAfter(endDate, now) || !isBefore(endDate, thresholdDate)) {
+            return null;
+          }
+        }
         
-        const expiryDate = new Date(endDate);
-        return expiryDate <= yearEnd && expiryDate >= today;
+        return {
+          id: site.id,
+          siteName: site.name,
+          clientId: site.client_id,
+          clientName: site.clients?.name,
+          siteStatus: site.status,
+          contract: contract
+        };
       })
-      .reduce((sum, contract) => sum + (Number(contract.monthly_revenue || 0) * 12), 0);
-    
-    return {
-      totalContracts: allContracts.length,
-      activeCount: activeContracts.length,
-      pendingCount: allContracts.filter(c => c.contract_details?.status === 'pending').length,
-      totalValue,
-      totalCount: allContracts.length, // Added for backward compatibility
-      expiringWithin30Days,
-      expiringThisMonth,
-      expiringNext3Months,
-      expiringNext6Months,
-      expiringThisYear,
-      valueExpiringThisMonth,
-      valueExpiringNext3Months,
-      valueExpiringNext6Months,
-      valueExpiringThisYear,
-      totalRevenue,
-      totalCost,
-      totalProfit,
-      profitMargin
-    };
+      .filter(Boolean); // Remove null entries
   } catch (error) {
-    console.error("Error getting contracts summary:", error);
+    console.error('Error fetching contracts:', error);
     throw error;
   }
 }
+
+/**
+ * Fetches contract history for a site
+ * @param siteId The site ID to fetch contract history for
+ * @returns Array of contract history entries
+ */
+export async function fetchContractHistory(siteId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('site_contract_history')
+      .select('*')
+      .eq('site_id', siteId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data.map(entry => ({
+      ...entry,
+      contract_details: extractContractData(entry.contract_details)
+    }));
+  } catch (error) {
+    console.error('Error fetching contract history:', error);
+    throw error;
+  }
+}
+
+/**
+ * Updates a site's contract details
+ * @param siteId The site ID to update
+ * @param contractDetails The new contract details
+ * @returns The updated site record
+ */
+export async function updateSiteContract(siteId: string, contractDetails: ContractDetails) {
+  try {
+    // Normalize contract data before saving
+    const normalizedContract = normalizeContractData(contractDetails);
+    
+    const { data, error } = await supabase
+      .from('sites')
+      .update({ contract_details: normalizedContract })
+      .eq('id', siteId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error updating site contract:', error);
+    throw error;
+  }
+}
+
+/**
+ * Searches for contracts based on keywords
+ * @param query The search query
+ * @returns Array of matching contracts with site information
+ */
+export async function searchContracts(query: string) {
+  try {
+    const { data, error } = await supabase
+      .from('sites')
+      .select('id, name, client_id, contract_details, clients(name)')
+      .not('contract_details', 'is', null)
+      .or(`name.ilike.%${query}%,clients.name.ilike.%${query}%`);
+    
+    if (error) throw error;
+    
+    return data
+      .filter(site => site.contract_details)
+      .map(site => ({
+        id: site.id,
+        siteName: site.name,
+        clientId: site.client_id,
+        clientName: site.clients?.name,
+        contract: extractContractData(site.contract_details)
+      }))
+      .filter(item => item.contract); // Filter out items with null contracts
+  } catch (error) {
+    console.error('Error searching contracts:', error);
+    throw error;
+  }
+}
+
+// Export a combined API object for convenience
+export const contractsApi = {
+  fetchContracts,
+  fetchContractHistory,
+  updateSiteContract,
+  searchContracts
+};

@@ -2,118 +2,120 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useSiteCreate } from './useSiteCreate';
+import { useSiteUpdate } from './useSiteUpdate';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { v4 as uuidv4 } from 'uuid';
-import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
+import { SiteRecord } from '@/lib/types';
 import { BillingLine } from '@/components/sites/forms/types/billingTypes';
-import { SiteStatus } from '@/types/common';
 
-export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
+export function useSiteForm(mode: 'create' | 'edit', initialData?: SiteRecord) {
   const navigate = useNavigate();
+  const { createSiteMutation, isCreating } = useSiteCreate();
+  const { updateSiteMutation, isUpdating } = useSiteUpdate();
+  
+  // Initialize form data with defaults and any provided initialData
   const [formData, setFormData] = useState<SiteFormData>(() => {
-    if (initialData) {
-      const data = getInitialFormData();
+    const defaultData: SiteFormData = {
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'Australia',
+      status: 'active',
+      notes: '',
+      contacts: [],
+      billingDetails: {
+        billingLines: [],
+        useClientInfo: false,
+        billingMethod: '',
+        paymentTerms: '',
+        billingEmail: '',
+        contacts: []
+      }
+    };
+    
+    if (mode === 'edit' && initialData) {
       return {
-        ...data,
-        ...initialData,
-        contractDetails: initialData.contractDetails || initialData.contract_details || data.contractDetails,
-        billingDetails: {
-          ...(data.billingDetails || {}),
-          ...(initialData.billingDetails || {}),
-          // Ensure billingLines is always defined
-          billingLines: initialData.billingDetails?.billingLines || []
-        }
+        ...defaultData,
+        name: initialData.name,
+        address: initialData.address || '',
+        city: initialData.city || '',
+        state: initialData.state || '',
+        postalCode: initialData.postcode || '',
+        country: initialData.country || 'Australia',
+        status: initialData.status as any,
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        representative: initialData.representative || '',
+        customId: initialData.custom_id || '',
+        client_id: initialData.client_id,
+        contract_details: initialData.contract_details || {},
+        billingDetails: initialData.billing_details || defaultData.billingDetails,
+        notes: initialData.notes || '',
       };
     }
-    return getInitialFormData();
+    
+    return defaultData;
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  useEffect(() => {
-    if (initialData) {
-      const baseData = getInitialFormData();
-      const newData = {
-        ...baseData,
-        ...initialData,
-        contractDetails: initialData.contractDetails || initialData.contract_details || baseData.contractDetails,
-        billingDetails: {
-          ...(baseData.billingDetails || {}),
-          ...(initialData.billingDetails || {}),
-          // Ensure billingLines is always defined
-          billingLines: initialData.billingDetails?.billingLines || []
-        }
-      };
-      
-      setFormData(newData);
-    }
-  }, [initialData]);
-  
+  // Direct field change handler
   const handleChange = (field: keyof SiteFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
-  const handleSelectChange = (field: keyof SiteFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // Nested field change handler (e.g., for contract_details)
+  const handleNestedChange = (section: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof SiteFormData],
+        [field]: value
+      }
+    }));
   };
   
-  const handleNestedChange = (section: string, field: string, value: any) => {
-    setFormData(prev => {
-      const sectionData = prev[section as keyof SiteFormData] as Record<string, any> || {};
-      
-      return {
-        ...prev,
-        [section]: {
-          ...sectionData,
+  // Double nested field change handler (e.g., for billingDetails.billingAddress)
+  const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof SiteFormData],
+        [subsection]: {
+          ...(prev[section as keyof SiteFormData] as any)?.[subsection],
           [field]: value
         }
-      };
-    });
+      }
+    }));
   };
   
-  const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
-    setFormData(prev => {
-      const sectionData = prev[section as keyof SiteFormData] as Record<string, any> || {};
-      const subsectionData = sectionData[subsection] as Record<string, any> || {};
-      
-      return {
-        ...prev,
-        [section]: {
-          ...sectionData,
-          [subsection]: {
-            ...subsectionData,
-            [field]: value
-          }
-        }
-      };
-    });
-  };
-  
+  // Utility functions for billingLines
   const addBillingLine = () => {
     const newBillingLine: BillingLine = {
       id: uuidv4(),
       description: '',
       amount: 0,
+      frequency: 'monthly',
       isRecurring: true,
-      onHold: false,
-      frequency: 'monthly'
+      onHold: false
     };
     
     setFormData(prev => {
-      // Make sure we have a billingDetails object
-      const prevBillingDetails = prev.billingDetails || {};
+      // Ensure billingDetails exists
+      const billingDetails = prev.billingDetails || { billingLines: [] };
       
-      // Make sure we have a billingLines array
-      const prevBillingLines = prevBillingDetails.billingLines || [];
+      // Ensure billingLines exists
+      const billingLines = billingDetails.billingLines || [];
       
       return {
         ...prev,
         billingDetails: {
-          ...prevBillingDetails,
-          billingLines: [...prevBillingLines, newBillingLine]
+          ...billingDetails,
+          billingLines: [...billingLines, newBillingLine]
         }
       };
     });
@@ -121,19 +123,21 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const updateBillingLine = (id: string, field: string, value: any) => {
     setFormData(prev => {
-      // Make sure we have a billingDetails object
-      const prevBillingDetails = prev.billingDetails || {};
+      // Ensure billingDetails exists
+      const billingDetails = prev.billingDetails || { billingLines: [] };
       
-      // Make sure we have a billingLines array
-      const prevBillingLines = prevBillingDetails.billingLines || [];
+      // Ensure billingLines exists
+      const billingLines = billingDetails.billingLines || [];
+      
+      const updatedLines = billingLines.map(line => 
+        line.id === id ? { ...line, [field]: value } : line
+      );
       
       return {
         ...prev,
         billingDetails: {
-          ...prevBillingDetails,
-          billingLines: prevBillingLines.map(line => 
-            line.id === id ? { ...line, [field]: value } : line
-          )
+          ...billingDetails,
+          billingLines: updatedLines
         }
       };
     });
@@ -141,131 +145,63 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const removeBillingLine = (id: string) => {
     setFormData(prev => {
-      // Make sure we have a billingDetails object
-      const prevBillingDetails = prev.billingDetails || {};
+      // Ensure billingDetails exists
+      const billingDetails = prev.billingDetails || { billingLines: [] };
       
-      // Make sure we have a billingLines array
-      const prevBillingLines = prevBillingDetails.billingLines || [];
+      // Ensure billingLines exists
+      const billingLines = billingDetails.billingLines || [];
+      
+      const filteredLines = billingLines.filter(line => line.id !== id);
       
       return {
         ...prev,
         billingDetails: {
-          ...prevBillingDetails,
-          billingLines: prevBillingLines.filter(line => line.id !== id)
+          ...billingDetails,
+          billingLines: filteredLines
         }
       };
     });
   };
   
-  const addContact = (contact: any) => {
-    const newContact = {
-      ...contact,
-      id: uuidv4()
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      contacts: [...(prev.contacts || []), newContact]
-    }));
-  };
-  
-  const updateContact = (id: string, updatedContact: any) => {
-    setFormData(prev => ({
-      ...prev,
-      contacts: (prev.contacts || []).map(contact => 
-        contact.id === id ? { ...contact, ...updatedContact } : contact
-      )
-    }));
-  };
-  
-  const removeContact = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      contacts: (prev.contacts || []).filter(contact => contact.id !== id)
-    }));
-  };
-  
-  const addSubcontractor = (subcontractor: any) => {
-    const newSubcontractor = {
-      ...subcontractor,
-      id: uuidv4()
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      subcontractors: [...(prev.subcontractors || []), newSubcontractor]
-    }));
-  };
-  
-  const updateSubcontractor = (id: string, updatedSubcontractor: any) => {
-    setFormData(prev => ({
-      ...prev,
-      subcontractors: (prev.subcontractors || []).map(sub => 
-        sub.id === id ? { ...sub, ...updatedSubcontractor } : sub
-      )
-    }));
-  };
-  
-  const removeSubcontractor = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      subcontractors: (prev.subcontractors || []).filter(sub => sub.id !== id)
-    }));
-  };
-  
+  // Form submission handler
   const handleSubmit = async () => {
-    const validationErrors = validateSiteForm(formData);
-    
-    setErrors(validationErrors);
-    
-    if (Object.keys(validationErrors).length > 0) {
-      toast.error('Please fix the form errors before submitting.');
-      return;
-    }
-    
     setIsSubmitting(true);
+    setErrors({});
     
     try {
-      toast.success(mode === 'create' ? 'Site created successfully!' : 'Site updated successfully!');
-      navigate('/sites');
+      if (mode === 'create') {
+        await createSiteMutation.mutateAsync(formData);
+        toast.success('Site created successfully!');
+        navigate('/sites');
+      } else if (mode === 'edit' && initialData) {
+        await updateSiteMutation.mutateAsync({ id: initialData.id, data: formData });
+        navigate(`/sites/${initialData.id}`);
+      }
     } catch (error: any) {
-      const errorMsg = error.message || 'An unknown error occurred';
-      setErrors(prev => ({ ...prev, general: errorMsg }));
-      toast.error(`Error: ${errorMsg}`);
+      console.error('Error submitting site form:', error);
+      
+      if (error.message) {
+        setErrors({ general: error.message });
+      } else {
+        setErrors({ general: 'An unknown error occurred' });
+      }
+      
+      toast.error('Failed to save site');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const nextStep = () => {
-    setCurrentStep((prevStep) => prevStep + 1);
-  };
-  
-  const prevStep = () => {
-    setCurrentStep((prevStep) => Math.max(0, prevStep - 1));
-  };
-  
   return {
     formData,
-    setFormData,
     errors,
-    currentStep,
-    isSubmitting,
+    isSubmitting: isSubmitting || isCreating || isUpdating,
     handleChange,
-    handleSelectChange,
     handleNestedChange,
     handleDoubleNestedChange,
+    handleSubmit,
     addBillingLine,
     updateBillingLine,
-    removeBillingLine,
-    addContact,
-    removeContact,
-    updateContact,
-    addSubcontractor,
-    updateSubcontractor,
-    removeSubcontractor,
-    handleSubmit,
-    nextStep,
-    prevStep
+    removeBillingLine
   };
-};
+}

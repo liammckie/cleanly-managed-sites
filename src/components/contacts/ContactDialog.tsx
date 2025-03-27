@@ -1,149 +1,81 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ContactRecord } from '@/lib/types';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ContactForm } from './ContactForm';
-import { EmployeeContactForm } from './EmployeeContactForm';
+import { toast } from 'sonner';
+import { ContactRecord } from '@/lib/types';
+import { EntityType } from './contactSchema';
 
-export interface ContactDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  contact?: ContactRecord;
-  entityType?: 'site' | 'client' | 'supplier' | 'internal';
-  entityId?: string;
-  isSubmitting?: boolean;
+interface ContactDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (contact: Partial<ContactRecord>) => Promise<void>;
+  initialData?: Partial<ContactRecord>;
+  entityId: string;
+  entityType: EntityType;
   title?: string;
-  onSubmit: (contactData: Partial<ContactRecord>) => Promise<void | boolean>;
-  trigger?: React.ReactNode;
-  onSuccess?: () => void;
 }
 
 export function ContactDialog({
-  open,
-  onOpenChange,
-  contact,
-  entityType,
+  isOpen,
+  onClose,
+  onSave,
+  initialData = {},
   entityId,
-  isSubmitting = false,
-  title = 'Contact',
-  onSubmit,
-  trigger,
-  onSuccess,
+  entityType,
+  title = 'Add Contact'
 }: ContactDialogProps) {
-  const [isOpen, setIsOpen] = useState(open || false);
-  const [isSubmittingLocal, setIsSubmittingLocal] = useState(isSubmitting);
-  const [selectedEntityType, setSelectedEntityType] = useState<'site' | 'client' | 'supplier' | 'internal'>(
-    entityType || (contact?.entity_type as any) || 'client'
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentEntityType, setCurrentEntityType] = useState<EntityType>(entityType);
 
-  useEffect(() => {
-    if (open !== undefined) {
-      setIsOpen(open);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    setIsSubmittingLocal(isSubmitting);
-  }, [isSubmitting]);
-
-  useEffect(() => {
-    if (entityType) {
-      setSelectedEntityType(entityType);
-    } else if (contact?.entity_type) {
-      setSelectedEntityType(contact.entity_type as any);
-    }
-  }, [entityType, contact]);
-
-  const handleOpenChange = (newOpen: boolean) => {
-    setIsOpen(newOpen);
-    if (onOpenChange) {
-      onOpenChange(newOpen);
-    }
+  const handleEntityTypeChange = (newType: EntityType) => {
+    setCurrentEntityType(newType);
   };
 
   const handleSubmit = async (values: Partial<ContactRecord>) => {
     try {
-      setIsSubmittingLocal(true);
-      const result = await onSubmit(values);
-      // If onSubmit returns true or void (undefined), consider it successful
-      if (result !== false) {
-        handleOpenChange(false);
-        
-        if (onSuccess) {
-          onSuccess();
-        }
-      }
+      setIsSubmitting(true);
+      
+      // Ensure entity type and ID are included
+      const contactData = {
+        ...values,
+        entity_id: entityId,
+        entity_type: currentEntityType
+      };
+      
+      await onSave(contactData);
+      toast.success('Contact saved successfully');
+      onClose();
     } catch (error) {
       console.error('Error saving contact:', error);
+      toast.error('Failed to save contact');
     } finally {
-      setIsSubmittingLocal(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleEntityTypeChange = (newType: 'site' | 'client' | 'supplier' | 'internal') => {
-    setSelectedEntityType(newType);
+  const enhancedInitialData = {
+    ...initialData,
+    entity_id: entityId,
+    entity_type: currentEntityType
   };
-
-  const renderForm = () => {
-    // Use the employee form for internal contacts
-    if (selectedEntityType === 'internal') {
-      return (
-        <EmployeeContactForm
-          contact={contact}
-          onSubmit={handleSubmit}
-          onCancel={() => handleOpenChange(false)}
-          isSubmitting={isSubmittingLocal}
-        />
-      );
-    }
-
-    // Use the regular contact form for other contact types
-    return (
-      <ContactForm
-        contact={contact}
-        entityType={entityType}
-        entityId={entityId}
-        onSubmit={handleSubmit}
-        onCancel={() => handleOpenChange(false)}
-        isSubmitting={isSubmittingLocal}
-        onEntityTypeChange={handleEntityTypeChange}
-      />
-    );
-  };
-
-  const renderContent = () => (
-    <DialogContent className="sm:max-w-[600px]">
-      <DialogHeader>
-        <DialogTitle>
-          {contact 
-            ? `Edit ${selectedEntityType === 'internal' ? 'Employee' : title}` 
-            : `Add ${selectedEntityType === 'internal' ? 'Employee' : title}`}
-        </DialogTitle>
-        <DialogDescription>
-          {selectedEntityType === 'internal' 
-            ? 'Manage employee information including roles, departments, and employment details.' 
-            : `${contact ? 'Edit' : 'Enter'} ${title.toLowerCase()} details below`}
-        </DialogDescription>
-      </DialogHeader>
-      
-      {renderForm()}
-    </DialogContent>
-  );
-
-  if (trigger) {
-    return (
-      <>
-        <div onClick={() => handleOpenChange(true)}>{trigger}</div>
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-          {renderContent()}
-        </Dialog>
-      </>
-    );
-  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      {renderContent()}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        
+        <ContactForm
+          initialData={enhancedInitialData}
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          isSubmitting={isSubmitting}
+        />
+      </DialogContent>
     </Dialog>
   );
 }
+
+export default ContactDialog;

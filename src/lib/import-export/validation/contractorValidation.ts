@@ -1,83 +1,91 @@
 
-import { ValidationMessage, ValidationResult } from '@/types/common';
+import { ValidationResult, ValidationMessage } from './types';
 
-// Validate contractor data
-export const validateContractorData = (data: any[]): ValidationResult => {
-  const errors: ValidationMessage[] = [];
-  const warnings: ValidationMessage[] = [];
-  const validData: any[] = [];
+/**
+ * Validates contractor data for importing
+ * @param contractorData The contractor data to validate
+ * @returns Validation result with success flag and error messages
+ */
+export function validateContractorData(contractorData: any[]): ValidationResult {
+  const messages: ValidationMessage[] = [];
+  let isValid = true;
   
-  data.forEach((row, index) => {
+  if (!Array.isArray(contractorData)) {
+    messages.push({
+      type: 'error',
+      field: 'data',
+      message: 'Contractor data must be an array'
+    });
+    return { valid: false, messages };
+  }
+  
+  contractorData.forEach((contractor, index) => {
     // Required fields
-    if (!row.business_name) {
-      errors.push({
+    if (!contractor.business_name) {
+      messages.push({
+        type: 'error',
         field: 'business_name',
-        message: 'Business name is required'
+        message: `Row ${index + 1}: Business name is required`
       });
+      isValid = false;
     }
     
-    if (!row.contact_name) {
-      errors.push({
+    if (!contractor.contact_name) {
+      messages.push({
+        type: 'error',
         field: 'contact_name',
-        message: 'Contact name is required'
+        message: `Row ${index + 1}: Contact name is required`
       });
+      isValid = false;
     }
     
-    // Optional fields with format validation
-    if (row.email && !isValidEmail(row.email)) {
-      warnings.push({
+    // Email validation
+    if (contractor.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contractor.email)) {
+      messages.push({
+        type: 'error',
         field: 'email',
-        message: 'Invalid email format'
+        message: `Row ${index + 1}: Invalid email format`
       });
+      isValid = false;
     }
     
-    if (row.phone && !isValidPhone(row.phone)) {
-      warnings.push({
+    // Phone format validation
+    if (contractor.phone && !/^\+?[0-9\s()-]{8,}$/.test(contractor.phone)) {
+      messages.push({
+        type: 'warning',
         field: 'phone',
-        message: 'Invalid phone format'
+        message: `Row ${index + 1}: Phone number format may be invalid`
       });
     }
     
-    // Services format check if present
-    if (row.services) {
-      if (typeof row.services === 'string') {
-        try {
-          JSON.parse(row.services);
-        } catch (e) {
-          warnings.push({
-            field: 'services',
-            message: 'Services should be a valid JSON array'
-          });
-        }
-      } else if (!Array.isArray(row.services)) {
-        warnings.push({
-          field: 'services',
-          message: 'Services should be an array'
-        });
-      }
+    // ABN validation
+    if (contractor.abn && !/^\d{11}$/.test(contractor.abn.replace(/\s/g, ''))) {
+      messages.push({
+        type: 'warning',
+        field: 'abn',
+        message: `Row ${index + 1}: ABN format may be invalid`
+      });
     }
     
-    // Add to valid data if has required fields
-    if (row.business_name && row.contact_name) {
-      validData.push(row);
+    // Status validation
+    if (contractor.status && !['active', 'inactive', 'pending'].includes(contractor.status)) {
+      messages.push({
+        type: 'warning',
+        field: 'status',
+        message: `Row ${index + 1}: Invalid status, will default to 'active'`
+      });
+    }
+    
+    // Rate validation
+    if (contractor.hourly_rate && (isNaN(Number(contractor.hourly_rate)) || Number(contractor.hourly_rate) < 0)) {
+      messages.push({
+        type: 'error',
+        field: 'hourly_rate',
+        message: `Row ${index + 1}: Hourly rate must be a positive number`
+      });
+      isValid = false;
     }
   });
   
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    data: validData
-  };
-};
-
-// Helper functions
-function isValidEmail(email: string): boolean {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
-function isValidPhone(phone: string): boolean {
-  const re = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,4}$/;
-  return re.test(phone);
+  return { valid: isValid, messages };
 }

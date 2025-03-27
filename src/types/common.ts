@@ -1,52 +1,50 @@
 
-// Common enums and types used throughout the application
+// Define common types used across the application
 
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-
-// Extended day type including additional options
-export type UnifiedDay = Day | 'weekday' | 'weekend' | 'public_holiday';
-
-export type EmploymentType = 'full_time' | 'part_time' | 'casual';
-
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
-
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
-
-export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
-
-export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'submitted' | 'approved' | 'accepted' | 'declined' | 'rejected' | 'expired';
-
+// Status types
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
-
 export type UserStatus = 'active' | 'pending' | 'inactive';
+export type ContractStatus = 'active' | 'pending' | 'expired' | 'terminated' | 'renewed';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
+export type WorkOrderStatus = 'draft' | 'scheduled' | 'in-progress' | 'completed' | 'canceled';
 
-// JSON utility types
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-export type Json = JsonValue | { [key: string]: JsonValue };
+// Time periods
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
+export type ContractLengthUnit = 'days' | 'weeks' | 'months' | 'years';
 
-// Validation types
-export interface ValidationMessage {
-  field: string;
-  message: string;
-  type: 'error' | 'warning' | 'info';
-  row?: number; // Added row property to fix validation errors
-  value?: any; // Added value property required by validation functions
-}
+// Employee types
+export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contractor';
+export type EmployeeLevel = 1 | 2 | 3;
+export type EmployeeStatus = 'active' | 'on-leave' | 'terminated';
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[] | ValidationMessage[];
-  warnings: string[] | ValidationMessage[];
-  data: any[];
-}
+// Service types
+export type ServiceDeliveryType = 'direct' | 'contractor';
+export type ServiceType = 'cleaning' | 'maintenance' | 'security' | 'other';
 
-export interface EnhancedValidationResult extends ValidationResult {
-  success: boolean;
-  messages: ValidationMessage[];
-  imported?: number;
-}
+// Permission types
+export type Permission = 
+  | 'manage_users'
+  | 'manage_clients'
+  | 'manage_sites'
+  | 'manage_quotes'
+  | 'manage_work_orders'
+  | 'manage_invoices'
+  | 'manage_contracts'
+  | 'manage_suppliers'
+  | 'manage_reports'
+  | 'manage_settings';
 
-// Helper function to validate enum values
-export function isValidEnumValue<T extends string>(value: string, enumValues: readonly T[]): value is T {
-  return (enumValues as readonly string[]).includes(value);
-}
+// Notification types
+export type NotificationType = 'info' | 'warning' | 'error' | 'success';
+
+// Used with type Json from the database
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
