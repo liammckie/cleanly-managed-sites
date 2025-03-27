@@ -1,67 +1,77 @@
 
 import { useState } from 'react';
+import { useTestData } from './useTestData';
 import { useImportClients } from './useImportClients';
+import { useImportContractors } from './useImportContractors';
 import { useImportSites } from './useImportSites';
 import { useImportContracts } from './useImportContracts';
-import { useImportContractors } from './useImportContractors';
-import { useTestData } from './useTestData';
-
-export type ImportType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'invoices';
 
 export function useDataImportExport() {
-  const [importType, setImportType] = useState<ImportType>('clients');
   const [activeTab, setActiveTab] = useState('import');
-  const { handleCSVImportClients, isImporting: isImportingClients, importResults: clientImportResults } = useImportClients();
-  const { handleCSVImportSites, isImporting: isImportingSites, importResults: siteImportResults } = useImportSites();
-  const { handleCSVImportContracts, isImporting: isImportingContracts, importResults: contractImportResults } = useImportContracts();
-  const { handleCSVImportContractors, isImporting: isImportingContractors, importResults: contractorImportResults } = useImportContractors();
-  const { generateTestData, isGenerating: isCreatingTestData } = useTestData();
-
-  const isImporting = isImportingClients || isImportingSites || isImportingContracts || isImportingContractors || isCreatingTestData;
-  const importResults = importType === 'clients' ? clientImportResults 
-                      : importType === 'sites' ? siteImportResults
-                      : importType === 'contracts' ? contractImportResults
-                      : contractorImportResults;
-
-  const handleImportCSV = async (file: File): Promise<void> => {
-    switch (importType) {
-      case 'clients':
-        return handleCSVImportClients(file);
-      case 'sites':
-        return handleCSVImportSites(file);
-      case 'contracts':
-        return handleCSVImportContracts(file);
-      case 'contractors':
-        return handleCSVImportContractors(file);
-      default:
-        throw new Error(`Unsupported import type: ${importType}`);
-    }
-  };
-
-  const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental'): Promise<void> => {
-    // For future implementation - handle unified import
-    console.log(`Unified import (${mode} mode) not yet implemented`);
-    throw new Error(`Unified import (${mode} mode) not yet implemented`);
-  };
-
+  const testData = useTestData();
+  
+  // Import hooks
+  const {
+    importClients,
+    isImporting: isImportingClients,
+    result: clientsResult
+  } = useImportClients();
+  
+  const {
+    importContractors,
+    isImporting: isImportingContractors,
+    result: contractorsResult
+  } = useImportContractors();
+  
+  const {
+    importSites,
+    isImporting: isImportingSites,
+    result: sitesResult
+  } = useImportSites();
+  
+  const {
+    importContracts,
+    isImporting: isImportingContracts,
+    result: contractsResult
+  } = useImportContracts();
+  
+  // Overall import status
+  const isImporting = 
+    isImportingClients || 
+    isImportingContractors || 
+    isImportingSites || 
+    isImportingContracts;
+  
   return {
-    importType,
-    setImportType,
     activeTab,
     setActiveTab,
-    isImporting,
-    importResults,
-    handleImportCSV,
-    handleUnifiedImportMode,
-    isImportingClients,
-    isImportingSites,
-    isImportingContracts,
-    isImportingContractors,
-    clientImportResults,
-    siteImportResults,
-    contractImportResults,
-    contractorImportResults,
-    createTestData: generateTestData,
-    isCreatingTestData
+    testData: {
+      createTestData: testData.generateTestData,
+      isCreating: testData.isGenerating,
+      result: testData.result
+    },
+    imports: {
+      clients: {
+        importClients,
+        isImporting: isImportingClients,
+        result: clientsResult
+      },
+      contractors: {
+        importContractors,
+        isImporting: isImportingContractors,
+        result: contractorsResult
+      },
+      sites: {
+        importSites,
+        isImporting: isImportingSites,
+        result: sitesResult
+      },
+      contracts: {
+        importContracts,
+        isImporting: isImportingContracts,
+        result: contractsResult
+      }
+    },
+    isImporting
   };
 }

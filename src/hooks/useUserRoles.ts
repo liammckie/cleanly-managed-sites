@@ -22,20 +22,30 @@ export function useUserRoles() {
       // Get user counts for each role - we need to do this as a separate query
       const { data: userCounts, error: countError } = await supabase
         .from('user_profiles')
-        .select('role_id, count(*)', { count: 'exact', head: false })
-        .then(res => {
+        .select('role_id, count')
+        .is('role_id', 'not.null')
+        .then(async (res) => {
           if (res.error) throw res.error;
           
-          // Process the count data into a more usable format
-          const roleCounts: Record<string, number> = {};
-          if (res.data) {
-            for (const row of res.data) {
-              if (row.role_id) {
-                roleCounts[row.role_id] = parseInt(row.count, 10) || 0;
-              }
+          // Group by role_id and count occurrences
+          const counts: Record<string, number> = {};
+          
+          // Get the counts by executing a separate query
+          const { data: countData, error: countErr } = await supabase
+            .from('user_profiles')
+            .select('role_id')
+            .is('role_id', 'not.null');
+            
+          if (countErr) throw countErr;
+          
+          // Count occurrences of each role_id
+          for (const row of countData || []) {
+            if (row.role_id) {
+              counts[row.role_id] = (counts[row.role_id] || 0) + 1;
             }
           }
-          return { data: roleCounts, error: null };
+          
+          return { data: counts, error: null };
         });
 
       if (countError) {

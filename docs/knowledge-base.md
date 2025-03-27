@@ -54,7 +54,15 @@ Contacts represent people associated with various entities:
 - Contact details
 - Primary contact designation
 
-### 5. Quotes
+### 5. User Management
+
+The system includes comprehensive user management features:
+- Role-based access control
+- Custom permissions
+- User profiles
+- Status tracking (active, inactive, pending)
+
+### 6. Quotes
 
 Quotes represent service proposals to clients:
 - Pricing information
@@ -64,7 +72,7 @@ Quotes represent service proposals to clients:
 - Contract terms
 - Margin and overhead calculations
 
-### 6. Work Orders
+### 7. Work Orders
 
 Work orders represent specific jobs to be performed:
 - Site association
@@ -73,6 +81,22 @@ Work orders represent specific jobs to be performed:
 - Assignment to staff or contractors
 
 ## Key Features
+
+### User Roles and Permissions
+
+The system uses a comprehensive role-based access control system:
+- User roles with custom permissions
+- Role management interface for administrators
+- User count tracking per role
+- Version history for role modifications
+
+### Import/Export Functionality
+
+The application supports importing and exporting data:
+- CSV parsing and generation
+- Import operations for clients, contractors, sites, and contracts
+- Test data generation capabilities
+- Proper error handling and validation
 
 ### Award Rate Calculations
 
@@ -124,6 +148,14 @@ The application makes extensive use of JSON fields in the database to store stru
 - `periodicals`: Recurring service schedules
 - `replenishables`: Supply management
 
+### User Role Structures
+
+User roles are structured with:
+- Role name and description
+- Array of permission strings
+- User count association
+- Version tracking with timestamps
+
 ### Helper Functions
 
 Several utility functions have been implemented to safely work with JSON data:
@@ -138,6 +170,7 @@ The system tracks version history for several entity types:
 - Contractor version history
 - Site contract history
 - Quote version comparison
+- User role modifications
 
 ## Business Rules
 
@@ -157,6 +190,14 @@ The award rate calculator follows cleaning service award rules:
 - Penalty rates for non-standard hours
 - Allowances for special circumstances
 - Level-based pay scales
+
+### User Management
+
+User management follows these patterns:
+- Users must have assigned roles
+- Roles determine access to system features
+- Admin roles have management capabilities
+- User statistics are tracked for audit purposes
 
 ## Key Components
 
@@ -185,6 +226,7 @@ The API is structured by domain entity:
 - `/contractors` - Contractor management
 - `/quotes` - Quote management
 - `/workorders` - Work order management
+- `/users` - User and role management
 
 Each entity typically supports:
 - Get all entities
@@ -193,6 +235,15 @@ Each entity typically supports:
 - Update entity
 - Delete entity
 - Specialized operations (e.g., set primary contact)
+
+## Import/Export System
+
+The import/export system includes:
+- CSV parsing with validation
+- Import workflows for different entity types
+- Test data generation for development
+- User interface for import and export operations
+- Format conversion utilities
 
 ## Best Practices
 
@@ -206,4 +257,3 @@ Each entity typically supports:
 8. **Validation**: Use Zod for validation schemas.
 9. **Database Usage**: Follow Supabase best practices.
 10. **Modularity**: Create focused components and utilities.
-
