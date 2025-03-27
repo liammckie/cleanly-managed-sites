@@ -1,52 +1,50 @@
 
-import { Quote } from '@/types/models';
+import { Quote } from '@/lib/types/quotes';
 
-export function adaptDbToQuote(dbQuote: any): Partial<Quote> {
+export function adaptQuoteForServer(quote: Partial<Quote>): any {
+  // Add any server-side adaptations here
   return {
-    id: dbQuote.id,
-    name: dbQuote.name,
-    description: dbQuote.description || '',
-    clientName: dbQuote.client_name,
-    siteName: dbQuote.site_name,
-    status: dbQuote.status as any,
-    
-    // Financial data
-    laborCost: dbQuote.labor_cost || 0,
-    equipmentCost: dbQuote.equipment_cost || 0,
-    subcontractorCost: dbQuote.subcontractor_cost || 0,
-    overheadCost: dbQuote.overhead_cost || 0,
-    overheadPercentage: dbQuote.overhead_percentage || 15,
-    marginAmount: dbQuote.margin_amount || 0,
-    marginPercentage: dbQuote.margin_percentage || 20,
-    totalCost: dbQuote.total_cost || 0,
-    totalPrice: dbQuote.total_price || 0,
-    
-    // Dates
-    startDate: dbQuote.start_date || '',
-    endDate: dbQuote.end_date || '',
-    expiryDate: dbQuote.expiry_date || '',
-    createdAt: dbQuote.created_at || '',
-    updatedAt: dbQuote.updated_at || '',
-    
-    // Contract details
-    contractLength: dbQuote.contract_length || 0,
-    contractLengthUnit: dbQuote.contract_length_unit as any || 'months',
-    
-    // Client and site details
-    clientContact: dbQuote.client_contact || '',
-    clientEmail: dbQuote.client_email || '',
-    clientPhone: dbQuote.client_phone || '',
-    siteAddress: dbQuote.site_address || '',
-    frequency: dbQuote.frequency || '',
-    scope: dbQuote.scope || '',
-    terms: dbQuote.terms || '',
-    
-    // Reference IDs
-    clientId: dbQuote.client_id || '',
-    siteId: dbQuote.site_id || '',
-    createdBy: dbQuote.created_by || '',
-    userId: dbQuote.user_id || '',
-    
-    notes: dbQuote.notes || ''
+    ...quote,
+    // Map frontend properties to backend properties if needed
+    user_id: quote.userId,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
+    labor_cost: quote.laborCost,
+    overhead_cost: quote.overheadCost,
+    overhead_percentage: quote.overheadPercentage,
+    margin_amount: quote.marginAmount,
+    margin_percentage: quote.marginPercentage,
+    total_cost: quote.totalCost,
+    total_price: quote.totalPrice,
+    subcontractor_cost: quote.subcontractorCost,
+    contract_length: quote.contractLength,
+    contract_length_unit: quote.contractLengthUnit,
+    overhead_profile: quote.overheadProfile
+    // equipmentCost is not needed in the backend
+  };
+}
+
+export function adaptQuoteFromServer(serverQuote: any): Partial<Quote> {
+  // Add any client-side adaptations here
+  return {
+    ...serverQuote,
+    // Map backend properties to frontend properties
+    id: serverQuote.id,
+    userId: serverQuote.user_id,
+    clientName: serverQuote.client_name,
+    siteName: serverQuote.site_name,
+    laborCost: serverQuote.labor_cost,
+    overheadCost: serverQuote.overhead_cost,
+    overheadPercentage: serverQuote.overhead_percentage,
+    marginAmount: serverQuote.margin_amount,
+    marginPercentage: serverQuote.margin_percentage,
+    totalCost: serverQuote.total_cost,
+    totalPrice: serverQuote.total_price,
+    subcontractorCost: serverQuote.subcontractor_cost,
+    contractLength: serverQuote.contract_length,
+    contractLengthUnit: serverQuote.contract_length_unit,
+    overheadProfile: serverQuote.overhead_profile,
+    // Client-side only property
+    isDirty: false
   };
 }

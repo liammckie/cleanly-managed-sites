@@ -1,7 +1,12 @@
 
 import { toast } from 'sonner';
 import { ClientRecord } from '@/lib/types';
-import { parseCSV, importClients, convertCSVToClientFormat } from '@/lib/import-export';
+import { 
+  parseImportedFile, 
+  importClients, 
+  convertCSVToClientFormat 
+} from '@/lib/import-export/importOperations';
+import { parseCSV } from '@/lib/import-export/parseImportedFile';
 
 export function useImportClients() {
   const handleImportClients = async (data: any[], fileType: 'json' | 'csv' = 'json') => {

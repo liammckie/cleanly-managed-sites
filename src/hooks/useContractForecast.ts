@@ -49,16 +49,16 @@ export function useContractForecast() {
     // Initialize monthly buckets for the forecast period
     for (let i = 0; i < forecastMonths; i++) {
       const month = addMonths(today, i);
-      forecast.push({
-        id: `forecast-${i}`,
+      const forecastItem: ContractForecast = {
+        month: format(month, 'MMM yyyy'),
         startDate: format(month, 'yyyy-MM-01'),
         endDate: format(addDays(addMonths(month, 1), -1), 'yyyy-MM-dd'),
-        value: 0,
-        month: format(month, 'MMM yyyy'),
         revenue: 0,
         cost: 0,
-        profit: 0
-      });
+        profit: 0,
+        value: 0
+      };
+      forecast.push(forecastItem);
     }
     
     // Allocate contract values to months

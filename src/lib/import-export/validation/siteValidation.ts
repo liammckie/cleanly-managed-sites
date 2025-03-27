@@ -1,6 +1,6 @@
 
 import { SiteRecord } from '../../types';
-import { ValidationMessage, ValidationResult } from '../types';
+import { ValidationMessage, ValidationResult } from '@/types/common';
 
 // Validate site data
 export const validateSiteData = (data: any[]): ValidationResult => {
@@ -11,28 +11,22 @@ export const validateSiteData = (data: any[]): ValidationResult => {
   data.forEach((row, index) => {
     if (!row.name) {
       errors.push({
-        row: index + 1,
         field: 'name',
-        message: 'Site name is required',
-        value: row.name
+        message: 'Site name is required'
       });
     }
     
     if (!row.address) {
       errors.push({
-        row: index + 1,
         field: 'address',
-        message: 'Site address is required',
-        value: row.address
+        message: 'Site address is required'
       });
     }
     
     if (!row.client_id) {
       errors.push({
-        row: index + 1,
         field: 'client_id',
-        message: 'Client ID is required',
-        value: row.client_id
+        message: 'Client ID is required'
       });
     }
     

@@ -1,19 +1,37 @@
 
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { setupTestData as setupTestDataFn } from '@/lib/import-export';
+import { setupTestData } from '@/lib/import-export/importOperations';
 
 export function useTestData() {
-  const setupTestData = async (): Promise<void> => {
+  const [isCreating, setIsCreating] = useState(false);
+  
+  const createTestData = async () => {
     try {
-      await setupTestDataFn();
+      setIsCreating(true);
+      
+      const testDataGenerator = setupTestData();
+      
+      // Create test clients
+      await testDataGenerator.createTestClients();
+      
+      // Create test sites
+      await testDataGenerator.createTestSites();
+      
+      // Create test contracts
+      await testDataGenerator.createTestContracts();
+      
       toast.success('Test data created successfully!');
     } catch (error: any) {
+      console.error('Error creating test data:', error);
       toast.error(`Failed to create test data: ${error.message}`);
-      throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
-
+  
   return {
-    setupTestData
+    isCreating,
+    createTestData
   };
 }

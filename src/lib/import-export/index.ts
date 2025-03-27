@@ -1,14 +1,15 @@
+
 import { EnhancedValidationResult, ValidationMessage } from '@/types/common';
-import { validateClients } from './validation/clientValidation';
-import { validateSites } from './validation/siteValidation';
-import { validateContracts } from './validation/contractValidation';
-import { validateContractors } from './validation/contractorValidation';
-import { validateInvoices } from './validation/invoiceValidation';
+import { validateClientData } from './validation/clientValidation';
+import { validateSiteData } from './validation/siteValidation';
+import { validateContractData } from './validation/contractValidation';
+import { validateContractorData } from './validation/contractorValidation';
+import { validateInvoiceData } from './validation/invoiceValidation';
 
 // When returning validation results, ensure they have the right format:
 export function validateClientImport(clients: any[]): EnhancedValidationResult {
   // Perform validation
-  const validationResult = validateClients(clients);
+  const validationResult = validateClientData(clients);
   
   // Ensure that the structure matches EnhancedValidationResult
   const result: EnhancedValidationResult = {
@@ -23,7 +24,7 @@ export function validateClientImport(clients: any[]): EnhancedValidationResult {
 
 export function validateSiteImport(sites: any[]): EnhancedValidationResult {
   // Perform validation
-  const validationResult = validateSites(sites);
+  const validationResult = validateSiteData(sites);
   
   // Ensure that the structure matches EnhancedValidationResult
   const result: EnhancedValidationResult = {
@@ -37,7 +38,7 @@ export function validateSiteImport(sites: any[]): EnhancedValidationResult {
 }
 
 export function validateContractImport(contracts: any[]): EnhancedValidationResult {
-  const validationResult = validateContracts(contracts);
+  const validationResult = validateContractData(contracts);
   
   const result: EnhancedValidationResult = {
     isValid: validationResult.isValid,
@@ -50,7 +51,7 @@ export function validateContractImport(contracts: any[]): EnhancedValidationResu
 }
 
 export function validateContractorImport(contractors: any[]): EnhancedValidationResult {
-  const validationResult = validateContractors(contractors);
+  const validationResult = validateContractorData(contractors);
   
    const result: EnhancedValidationResult = {
     isValid: validationResult.isValid,
@@ -63,7 +64,7 @@ export function validateContractorImport(contractors: any[]): EnhancedValidation
 }
 
 export function validateInvoiceImport(invoices: any[]): EnhancedValidationResult {
-  const validationResult = validateInvoices(invoices);
+  const validationResult = validateInvoiceData(invoices);
   
   const result: EnhancedValidationResult = {
     isValid: validationResult.isValid,
@@ -74,3 +75,7 @@ export function validateInvoiceImport(invoices: any[]): EnhancedValidationResult
   
   return result;
 }
+
+// Re-export functions from importOperations
+export * from './importOperations';
+export * from './parseImportedFile';

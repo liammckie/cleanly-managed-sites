@@ -1,7 +1,11 @@
 
 import { toast } from 'sonner';
 import { SiteRecord } from '@/lib/types';
-import { parseCSV, importSites, convertCSVToSiteFormat } from '@/lib/import-export';
+import { 
+  parseCSV, 
+  importSites, 
+  convertCSVToSiteFormat 
+} from '@/lib/import-export/parseImportedFile';
 
 export function useImportSites() {
   const handleImportSites = async (data: any[], fileType: 'json' | 'csv' = 'json') => {

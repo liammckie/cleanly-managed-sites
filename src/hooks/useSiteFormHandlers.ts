@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteStatus } from '@/types/common';
@@ -26,10 +27,12 @@ export function useSiteFormHandlers(initialFormData: SiteFormData) {
   const handleStatusChange = useCallback((status: SiteStatus) => {
     // Normalize status values to ensure compatibility
     let normalizedStatus: SiteStatus;
-    if (status === 'on_hold') {
-      normalizedStatus = 'on-hold';
+    
+    // Fixed comparison to use the correct dash format for "on-hold" 
+    if (status === "on_hold") {
+      normalizedStatus = "on-hold";
     } else {
-      normalizedStatus = status as SiteStatus;
+      normalizedStatus = status;
     }
     
     setFormData(prev => ({

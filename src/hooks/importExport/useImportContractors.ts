@@ -1,11 +1,15 @@
 
 import { toast } from 'sonner';
-import { parseCSV, convertCSVToContractorFormat, importContractors as importContractorsFn } from '@/lib/import-export';
+import { 
+  parseCSV, 
+  convertCSVToContractorFormat, 
+  importContractors 
+} from '@/lib/import-export/parseImportedFile';
 
 export function useImportContractors() {
   const handleImportContractors = async (data: any[]): Promise<void> => {
     try {
-      await importContractorsFn(data);
+      await importContractors(data);
       toast.success('Contractors imported successfully');
     } catch (error: any) {
       toast.error(`Failed to import contractors: ${error.message}`);

@@ -1,81 +1,68 @@
 
-import { ContractorRecord, ValidationMessage, ValidationResult } from '../types';
+import { ValidationMessage, ValidationResult } from '@/types/common';
 
+// Validate contractor data
 export const validateContractorData = (data: any[]): ValidationResult => {
   const errors: ValidationMessage[] = [];
   const warnings: ValidationMessage[] = [];
-  const validData: Partial<ContractorRecord>[] = [];
-
-  data.forEach((item, index) => {
-    const rowNum = index + 1;
-    const contractor: Partial<ContractorRecord> = {};
-    let hasErrors = false;
-
+  const validData: any[] = [];
+  
+  data.forEach((row, index) => {
     // Required fields
-    if (!item.business_name) {
+    if (!row.business_name) {
       errors.push({
-        row: rowNum,
         field: 'business_name',
-        message: 'Business name is required',
-        value: item.business_name
+        message: 'Business name is required'
       });
-      hasErrors = true;
-    } else {
-      contractor.business_name = item.business_name;
     }
-
-    if (!item.contact_name) {
-      errors.push({
-        row: rowNum,
-        field: 'contact_name',
-        message: 'Contact name is required',
-        value: item.contact_name
-      });
-      hasErrors = true;
-    } else {
-      contractor.contact_name = item.contact_name;
-    }
-
-    // Optional fields
-    contractor.email = item.email || undefined;
-    contractor.phone = item.phone || undefined;
-    contractor.address = item.address || undefined;
-    contractor.city = item.city || undefined;
-    contractor.state = item.state || undefined;
-    contractor.postcode = item.postcode || undefined;
-    contractor.status = item.status || 'active';
-    contractor.notes = item.notes || undefined;
-    contractor.custom_id = item.custom_id || undefined;
     
-    // Handle services as an array if provided
-    if (item.services) {
-      try {
-        if (typeof item.services === 'string') {
-          // Try to parse JSON string
-          if (item.services.startsWith('[') && item.services.endsWith(']')) {
-            contractor.services = JSON.parse(item.services);
-          } else {
-            // Comma-separated string
-            contractor.services = item.services.split(',').map((s: string) => s.trim());
-          }
-        } else if (Array.isArray(item.services)) {
-          contractor.services = item.services;
+    if (!row.contact_name) {
+      errors.push({
+        field: 'contact_name',
+        message: 'Contact name is required'
+      });
+    }
+    
+    // Optional fields with format validation
+    if (row.email && !isValidEmail(row.email)) {
+      warnings.push({
+        field: 'email',
+        message: 'Invalid email format'
+      });
+    }
+    
+    if (row.phone && !isValidPhone(row.phone)) {
+      warnings.push({
+        field: 'phone',
+        message: 'Invalid phone format'
+      });
+    }
+    
+    // Services format check if present
+    if (row.services) {
+      if (typeof row.services === 'string') {
+        try {
+          JSON.parse(row.services);
+        } catch (e) {
+          warnings.push({
+            field: 'services',
+            message: 'Services should be a valid JSON array'
+          });
         }
-      } catch (error) {
+      } else if (!Array.isArray(row.services)) {
         warnings.push({
-          row: rowNum,
           field: 'services',
-          message: 'Services could not be parsed as an array',
-          value: item.services
+          message: 'Services should be an array'
         });
       }
     }
-
-    if (!hasErrors) {
-      validData.push(contractor);
+    
+    // Add to valid data if has required fields
+    if (row.business_name && row.contact_name) {
+      validData.push(row);
     }
   });
-
+  
   return {
     isValid: errors.length === 0,
     errors,
@@ -83,3 +70,14 @@ export const validateContractorData = (data: any[]): ValidationResult => {
     data: validData
   };
 };
+
+// Helper functions
+function isValidEmail(email: string): boolean {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+function isValidPhone(phone: string): boolean {
+  const re = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,4}$/;
+  return re.test(phone);
+}

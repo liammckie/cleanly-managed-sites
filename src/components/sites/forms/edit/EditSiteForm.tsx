@@ -81,9 +81,8 @@ export function EditSiteForm() {
     setIsSubmitting(true);
     
     try {
-      // Replace problematic spread operator with explicit assignment
       const updatedFormData = {
-        ...site,
+        id: site?.id,
         name: form.getValues().name,
         address: form.getValues().address,
         city: form.getValues().city,
@@ -91,19 +90,24 @@ export function EditSiteForm() {
         postal_code: form.getValues().postalCode,
         country: form.getValues().country,
         status: form.getValues().status,
+        client_id: site?.client_id,
+        client_name: site?.client_name,
+        user_id: site?.user_id,
+        created_at: site?.created_at,
+        updated_at: new Date().toISOString(),
+        contract_details: site?.contract_details || {},
+        billing_details: site?.billing_details || {},
+        job_specifications: site?.job_specifications || {},
       };
       
-      // For validating the form:
       const validationResult = validateSiteForm(updatedFormData as SiteFormData);
       
       if (!validationResult.isValid) {
-        // Handle validation errors
         setErrors(validationResult.errors);
         setIsSubmitting(false);
         return;
       }
       
-      // Process and submit the form
       const result = await updateSiteMutation.mutateAsync({
         id: siteId,
         data: updatedFormData

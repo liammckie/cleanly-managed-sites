@@ -37,9 +37,9 @@ export type ContractLengthUnit = 'days' | 'weeks' | 'months' | 'years';
 // Define validation types
 export interface ValidationResult {
   isValid: boolean;
-  errors: string[];
+  errors: ValidationMessage[];
   data: any[];
-  warnings?: string[];
+  warnings?: ValidationMessage[];
 }
 
 // Define validation message type to match what's used in import-export
@@ -47,6 +47,7 @@ export interface ValidationMessage {
   field: string;
   message: string;
   row?: number;
+  value?: any;
 }
 
 // Enhanced validation result type to work with the existing code
@@ -58,7 +59,7 @@ export interface EnhancedValidationResult {
   imported?: number;
 }
 
-// Add Day, EmploymentType, EmployeeLevel, Frequency types
+// Add missing types for Day, EmploymentType, EmployeeLevel, Frequency
 export type Day = 
   | 'monday'
   | 'tuesday'

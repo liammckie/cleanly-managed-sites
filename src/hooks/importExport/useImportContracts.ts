@@ -1,54 +1,48 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { parseCSV, convertCSVToContractFormat, importContractors } from '@/lib/import-export';
-import { ImportOptions } from '@/types/models';
+import { 
+  parseCSV, 
+  convertCSVToContractFormat, 
+  importContracts 
+} from '@/lib/import-export/parseImportedFile';
 
 export function useImportContracts() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResults, setImportResults] = useState<any>(null);
-  
-  const handleImportCSV = async (file: File) => {
+
+  const handleImportContracts = async (data: any[]): Promise<void> => {
     try {
       setIsImporting(true);
-      
-      // Parse the CSV file into a JSON array
-      const parsedData = await parseCSV(file);
-      
-      if (!parsedData || parsedData.length === 0) {
-        toast.error('No valid data found in CSV file');
-        return;
-      }
-      
-      // Convert the parsed data to the contract format
-      const contractData = convertCSVToContractFormat(parsedData);
-      
-      // Import the contracts with options
-      const importOptions: ImportOptions = {
-        mode: 'incremental',
-        format: 'csv',
-        type: 'contracts'  // Changed from 'contractors' to 'contracts'
-      };
-      
-      const results = await importContractors(contractData, importOptions);
-      
-      setImportResults(results);
-      
-      // Show a success message
-      const importedCount = results && typeof results === 'object' && 'imported' in results ? results.imported || 0 : 0;
-      toast.success(`Successfully imported ${importedCount} contracts`);
-      
-    } catch (error) {
-      console.error('Error importing contracts:', error);
-      toast.error('Failed to import contracts');
+      const result = await importContracts(data);
+      setImportResults(result);
+      toast.success('Contracts imported successfully');
+    } catch (error: any) {
+      toast.error(`Failed to import contracts: ${error.message}`);
+      throw error;
     } finally {
       setIsImporting(false);
     }
   };
-  
+
+  const handleCSVImportContracts = async (file: File): Promise<void> => {
+    try {
+      setIsImporting(true);
+      const csvData = await parseCSV(file);
+      const contracts = convertCSVToContractFormat(csvData);
+      await handleImportContracts(contracts);
+    } catch (error: any) {
+      toast.error(`Failed to import contracts from CSV: ${error.message}`);
+      throw error;
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return {
     isImporting,
     importResults,
-    handleImportCSV
+    handleImportContracts,
+    handleCSVImportContracts
   };
 }

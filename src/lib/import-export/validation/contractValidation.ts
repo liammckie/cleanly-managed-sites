@@ -1,5 +1,5 @@
 
-import { ValidationMessage, ValidationResult } from '../types';
+import { ValidationMessage, ValidationResult } from '@/types/common';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
 // Validate contract data
@@ -11,10 +11,8 @@ export const validateContractData = (data: any[]): ValidationResult => {
   data.forEach((row, index) => {
     if (!row.site_id) {
       errors.push({
-        row: index + 1,
         field: 'site_id',
-        message: 'Site ID is required',
-        value: row.site_id
+        message: 'Site ID is required'
       });
     }
     
