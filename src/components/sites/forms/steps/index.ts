@@ -1,13 +1,14 @@
 
-export * from './BasicInformationStep';
-export * from './BillingDetailsStep';
-export * from './BillingDetailsSummary';
-export * from './ContractDetailsStep';
-export * from './JobSpecificationsStep';
-export * from './PeriodicalsStep';
-export * from './ReplenishablesStep';
-export * from './ReviewStep';
-export * from './SecurityStep';
-export * from './SubcontractorsStep';
-export * from './contacts/ContactsStep';
-export * from './contacts';
+// Export all steps
+export { BasicInformationStep } from './BasicInformationStep';
+export { BillingDetailsStep } from './BillingDetailsStep';
+export { BillingDetailsStepWrapper } from '../BillingDetailsStepWrapper';
+export { ContractDetailsStep } from './ContractDetailsStep';
+export { JobSpecificationsStep } from './JobSpecificationsStep';
+export { JobSpecificationsStepWrapper } from './JobSpecificationsStepWrapper';
+export { PeriodicalsStep } from './PeriodicalsStep';
+export { PeriodicalsStepWrapper } from './PeriodicalsStepWrapper';
+export { ReplenishablesStep } from './ReplenishablesStep';
+export { SecurityStep } from './SecurityStep';
+export { SubcontractorsStep } from './SubcontractorsStep';
+export { ContactsStep } from './contacts';
