@@ -1,73 +1,60 @@
+import { useState, useEffect } from 'react';
+import { format, addMonths, parseISO } from 'date-fns';
+import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
 
-import { useQuery } from '@tanstack/react-query';
-import { ContractForecast } from '@/types/contracts';
-import { contractsApi } from '@/lib/api/contracts';
-import { format, addMonths, startOfMonth } from 'date-fns';
-
-interface UseContractForecastResult {
-  forecasts: ContractForecast[];
-  loaded: boolean;
-  error: any;
-}
-
-const calculateProjectedRevenue = (month: Date): number => {
-  // Sample calculation logic, will need to be replaced with actual data
-  const baseAmount = 10000;
-  const growth = 0.02;
-  const currentMonth = new Date().getMonth();
-  const monthDiff = (month.getMonth() - currentMonth + 12) % 12;
+// Mock implementation for getContractForecast until the actual API function is created
+const mockGetContractForecast = async (siteId: string, months: number = 12): Promise<ContractForecast[]> => {
+  // Create a forecast for the specified number of months
+  const forecast: ContractForecast[] = [];
+  const now = new Date();
   
-  return baseAmount * (1 + growth * monthDiff);
-};
-
-// Generate sample forecast data for 12 months
-const generateForecastData = (): ContractForecast[] => {
-  const forecasts: ContractForecast[] = [];
-  const startMonth = startOfMonth(new Date());
-  
-  for (let i = 0; i < 12; i++) {
-    const month = addMonths(startMonth, i);
-    const revenue = calculateProjectedRevenue(month);
-    const cost = revenue * 0.7; // Assuming 70% cost
-    const profit = revenue * 0.3; // Assuming 30% profit
-    
-    forecasts.push({
-      month: format(month, 'MMM yyyy'),
-      revenue,
-      cost,
-      profit,
-      contractCount: Math.floor(revenue / 2000), // Sample calculation
-      activeContracts: Math.floor(revenue / 2500), // Sample calculation
-      expiringContracts: Math.floor(revenue / 25000), // Sample calculation
-      renewingContracts: Math.floor(revenue / 30000), // Sample calculation
+  for (let i = 0; i < months; i++) {
+    const forecastDate = addMonths(now, i);
+    forecast.push({
+      month: format(forecastDate, 'MMM yyyy'),
+      revenue: 5000 + Math.random() * 1000,
+      cost: 3000 + Math.random() * 800,
+      profit: 2000 + Math.random() * 500
     });
   }
   
-  return forecasts;
+  return new Promise(resolve => {
+    setTimeout(() => resolve(forecast), 500);
+  });
 };
 
-export function useContractForecast(): UseContractForecastResult {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['contract-forecast'],
-    queryFn: async () => {
+// Add the mock function to contracts API
+const contractsApi = {
+  // ... existing API methods
+  getContractForecast: mockGetContractForecast
+};
+
+export function useContractForecast(siteId: string, months: number = 12) {
+  const [forecast, setForecast] = useState<ContractForecast[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchForecast = async () => {
+      if (!siteId) return;
+      
       try {
-        // Try to fetch from API first
-        const data = await contractsApi.getContractForecast();
-        return data;
-      } catch (e) {
-        // Fallback to generated data if API fails
-        console.warn('Failed to fetch contract forecast, using sample data', e);
-        return generateForecastData();
+        setIsLoading(true);
+        setError(null);
+        
+        // Use the mock function directly until the real API is implemented
+        const data = await mockGetContractForecast(siteId, months);
+        setForecast(data);
+      } catch (err) {
+        console.error('Error fetching contract forecast:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch contract forecast'));
+      } finally {
+        setIsLoading(false);
       }
-    },
-    meta: {
-      errorMessage: 'Failed to fetch contract forecast data'
-    }
-  });
-  
-  return {
-    forecasts: data || [],
-    loaded: !isLoading,
-    error
-  };
+    };
+
+    fetchForecast();
+  }, [siteId, months]);
+
+  return { forecast, isLoading, error };
 }

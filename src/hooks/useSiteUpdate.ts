@@ -1,8 +1,10 @@
+
 import { useMutation } from '@tanstack/react-query';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteRecord } from '@/lib/types';
 import { toast } from 'sonner';
+import { ServiceDeliveryType } from '@/types/common';
 
 export function useSiteUpdate() {
   // Create the mutation
@@ -11,7 +13,9 @@ export function useSiteUpdate() {
       // Handle billing details type casting to ensure serviceDeliveryType is "direct" or "contractor"
       if (data.billingDetails?.serviceDeliveryType) {
         data.billingDetails.serviceDeliveryType = 
-          data.billingDetails.serviceDeliveryType === 'contractor' ? 'contractor' : 'direct';
+          data.billingDetails.serviceDeliveryType === 'contractor' 
+            ? 'contractor' as ServiceDeliveryType 
+            : 'direct' as ServiceDeliveryType;
       }
       
       return await sitesApi.updateSite(id, data);
@@ -28,6 +32,6 @@ export function useSiteUpdate() {
     updateSite: mutation.mutate,
     isUpdating: mutation.isPending,
     error: mutation.error,
-    updateSiteMutation: mutation  // Add this property for compatibility
+    updateSiteMutation: mutation  // Keep this property for compatibility
   };
 }

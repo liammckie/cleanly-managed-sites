@@ -11,7 +11,7 @@ interface StatusSelectorProps {
 
 export const StatusSelector: React.FC<StatusSelectorProps> = ({ value, onChange, disabled = false }) => {
   return (
-    <Select value={value} onValueChange={onChange as any} disabled={disabled}>
+    <Select value={value} onValueChange={(val: string) => onChange(val as SiteStatus)} disabled={disabled}>
       <SelectTrigger>
         <SelectValue placeholder="Select status" />
       </SelectTrigger>

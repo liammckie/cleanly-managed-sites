@@ -62,3 +62,31 @@ export type QuoteStatus =
 export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 
 export type UserStatus = 'active' | 'pending' | 'inactive';
+
+// Add missing type definitions below
+export type SiteStatus = 'active' | 'inactive' | 'pending' | 'lost' | 'on-hold';
+
+export type Frequency =
+  | 'daily'
+  | 'weekly'
+  | 'fortnightly'
+  | 'monthly'
+  | 'quarterly'
+  | 'yearly'
+  | 'once';
+
+export type BillingFrequency = 
+  | 'weekly'
+  | 'monthly' 
+  | 'quarterly' 
+  | 'annually';
+
+export type ServiceDeliveryType = 'direct' | 'contractor';
+
+// Fixed properties in ValidationResult to align with how it's being used
+export interface LegacyValidationResult<T = unknown> {
+  isValid: boolean;
+  data?: T;
+  errors?: ValidationError[];
+  warnings?: ValidationError[];
+}

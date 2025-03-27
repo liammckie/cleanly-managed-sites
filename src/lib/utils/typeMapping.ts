@@ -9,17 +9,21 @@
 import { QuoteStatus, SiteStatus, EmploymentType, EmployeeLevel, UserStatus } from '@/types/common';
 
 // Map frontend employment types to database employment types
-export const employmentTypeMap: Record<string, EmploymentType> = {
+export const employmentTypeMap: Record<EmploymentType, string> = {
   'full-time': 'full_time',
   'part-time': 'part_time',
-  'casual': 'casual'
+  'casual': 'casual',
+  'contract': 'contract',
+  'intern': 'intern'
 };
 
 // Map database employment types to frontend employment types
 export const dbToFrontendEmploymentType = (dbType: string): EmploymentType => {
-  if (dbType === 'full_time' || dbType === 'full-time') return 'full_time';
-  if (dbType === 'part_time' || dbType === 'part-time') return 'part_time';
+  if (dbType === 'full_time' || dbType === 'full-time') return 'full-time';
+  if (dbType === 'part_time' || dbType === 'part-time') return 'part-time';
   if (dbType === 'casual') return 'casual';
+  if (dbType === 'contract') return 'contract';
+  if (dbType === 'intern') return 'intern';
   // Default to casual if unknown type
   return 'casual';
 };
@@ -33,19 +37,22 @@ export const validateEmployeeLevel = (level: number): EmployeeLevel => {
 };
 
 // Map frontend quote status to database quote status
-export const quoteStatusMap: Record<string, QuoteStatus> = {
+export const quoteStatusMap: Record<string, string> = {
   'draft': 'draft',
   'pending': 'pending',
   'sent': 'sent',
   'approved': 'approved',
   'accepted': 'accepted',
   'rejected': 'rejected',
-  'expired': 'expired'
+  'expired': 'expired',
+  'submitted': 'submitted',
+  'declined': 'declined'
 };
 
 // Ensure site status is valid
 export const validateSiteStatus = (status: string): SiteStatus => {
-  if (['active', 'pending', 'inactive', 'on-hold', 'lost'].includes(status)) {
+  const validStatuses: SiteStatus[] = ['active', 'pending', 'inactive', 'on-hold', 'lost'];
+  if (validStatuses.includes(status as SiteStatus)) {
     return status as SiteStatus;
   }
   return 'active'; // Default to active if invalid

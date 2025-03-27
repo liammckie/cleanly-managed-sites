@@ -6,6 +6,8 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
 import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
+import { ServiceDeliveryType } from '@/types/common';
+import { adaptContractDetailsToApi, adaptBillingDetailsToDTO } from '@/utils/typeAdapters';
 
 // Adapt site data for API submission
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
@@ -13,10 +15,7 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   const contractDetails = formData.contractDetails || formData.contract_details;
   
   // Create a compatible contract details object if it exists
-  const adaptedContractDetails = contractDetails ? {
-    ...contractDetails,
-    renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
-  } : undefined;
+  const adaptedContractDetails = contractDetails ? adaptContractDetailsToApi(contractDetails) : undefined;
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -29,8 +28,8 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   
   // Ensure serviceDeliveryType is properly typed
   const serviceDeliveryType = formData.billingDetails?.serviceDeliveryType === 'contractor' 
-    ? 'contractor' as const 
-    : 'direct' as const;
+    ? 'contractor' as ServiceDeliveryType 
+    : 'direct' as ServiceDeliveryType;
   
   // Create a compatible billing details object
   const adaptedBillingDetails = formData.billingDetails ? {

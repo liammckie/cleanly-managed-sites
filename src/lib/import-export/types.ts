@@ -1,98 +1,53 @@
 
-import { ValidationMessage, ValidationResult, EnhancedValidationResult } from '@/types/common';
+import { 
+  ValidationMessage, 
+  ValidationResult, 
+  EnhancedValidationResult, 
+  ValidationError 
+} from '@/types/common';
 
-// Re-export the types
-export type { ValidationMessage, ValidationResult, EnhancedValidationResult };
-
-// Define additional types needed
-export type ExportFormat = 'json' | 'csv' | 'xlsx';
-export type DataType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'unified' | 'invoices';
-
-// Add any additional import-export specific types below
-export interface ImportOptions {
-  skipValidation?: boolean;
-  updateExisting?: boolean;
-  dryRun?: boolean;
-  format?: 'json' | 'csv' | 'xlsx';
-  type?: DataType;
-  mode?: 'full' | 'incremental';
+export interface LegacyValidationResult<T = unknown> {
+  isValid: boolean;
+  data?: T;
+  errors?: ValidationError[];
+  warnings?: ValidationError[];
 }
 
-export interface ExportOptions {
-  format?: 'json' | 'csv';
-  includeRelatedData?: boolean;
-  filename?: string;
-  type?: DataType;
+export interface ImportOptions {
+  mapping?: Record<string, string>;
+  skipValidation?: boolean;
+  skipExistingCheck?: boolean;
+  updateExisting?: boolean;
+  dryRun?: boolean;
 }
 
 export interface ImportResult {
   success: boolean;
-  created: number;
-  updated: number;
-  skipped: number;
-  errors: ValidationMessage[];
-}
-
-export interface ExportResult {
-  success: boolean;
-  data: any;
+  message: string;
   count: number;
-  format: string;
+  failures?: any[];
+  data?: any[];
 }
 
-export interface ContractorRecord {
-  id: string;
-  name?: string;
-  business_name: string;
-  contact_name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postal_code?: string;
-  postcode?: string;
-  abn?: string;
-  tax_id?: string;
-  insurance_details?: any;
-  payment_details?: any;
-  services?: string[];
-  notes?: string;
-  status?: 'active' | 'inactive' | 'pending';
-  created_at?: string;
-  updated_at?: string;
-  document_ids?: string[];
-  contractor_type?: string;
-  hourly_rate?: number;
-  day_rate?: number;
-  specialty?: string[];
-  rating?: number;
-  custom_id?: string;
+export interface ExportOptions {
+  includeHeaders?: boolean;
+  format?: 'csv' | 'xlsx' | 'json';
+  fileName?: string;
 }
 
-export interface InvoiceRecord {
-  id: string;
-  invoice_number: string;
-  client_id: string;
-  site_id?: string;
-  amount: number;
-  status: string;
-  due_date: string;
-  issue_date: string;
-  paid_date?: string;
-  notes?: string;
-  payment_method?: string;
-  payment_reference?: string;
-  line_items?: InvoiceLineItemRecord[];
+// Add cross-mapping functions to help with legacy code
+export function legacyToNewValidationResult<T>(legacy: LegacyValidationResult<T>): ValidationResult<T> {
+  return {
+    valid: legacy.isValid,
+    data: legacy.data,
+    errors: legacy.errors
+  };
 }
 
-export interface InvoiceLineItemRecord {
-  id: string;
-  invoice_id: string;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  amount: number;
-  tax_rate?: number;
-  tax_amount?: number;
+export function newToLegacyValidationResult<T>(result: ValidationResult<T>): LegacyValidationResult<T> {
+  return {
+    isValid: result.valid,
+    data: result.data,
+    errors: result.errors
+  };
 }

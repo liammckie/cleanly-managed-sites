@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
-import { adaptBillingDetailsToDTO } from '@/utils/typeAdapters';
 import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
 
 interface BillingDetailsStepWrapperProps {
