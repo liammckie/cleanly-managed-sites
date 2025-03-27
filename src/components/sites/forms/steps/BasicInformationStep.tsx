@@ -1,192 +1,204 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from '@/components/ui/select';
-import { SiteFormData } from '../siteFormTypes';
-import { SiteStatus } from '@/lib/types/commonTypes';
-import { FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { ClientSelect } from '../../clients/ClientSelect';
-import { useClientData } from '@/hooks/useClientData';
+import { SiteFormData } from '../types/siteFormData';
+import { siteStatusOptions } from '../types/siteFormData';
+import { ClientSelector } from '@/components/clients/ClientSelector';
 
 interface BasicInformationStepProps {
-  formData: SiteFormData;
-  errors: Record<string, string>;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleStatusChange: (value: SiteStatus) => void;
-  handleClientChange: (clientId: string) => void;
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
+  formData?: SiteFormData;
+  handleChange?: (field: keyof SiteFormData, value: any) => void;
+  handleClientChange?: (clientId: string) => void;
+  errors?: Record<string, string>;
 }
 
-export function BasicInformationStep({ 
-  formData, 
-  errors,
-  handleChange, 
-  handleStatusChange,
-  handleClientChange,
-  setFormData
+export function BasicInformationStep({
+  formData = {} as SiteFormData,
+  handleChange = () => {},
+  handleClientChange = () => {},
+  errors = {}
 }: BasicInformationStepProps) {
-  const clientData = useClientData(formData.clientId, formData, setFormData);
-
-  useEffect(() => {
-    if (formData.clientId && formData.clientId.trim() === '') {
-      handleClientChange('');
-    }
-  }, [formData.clientId, handleClientChange]);
-
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4">
-        <FormItem className="space-y-2">
-          <Label htmlFor="client">Client <span className="text-destructive">*</span></Label>
-          <ClientSelect 
-            value={formData.clientId}
-            onChange={(clientId) => {
-              handleClientChange(clientId);
-            }}
-            error={errors['clientId']}
-          />
-          {errors['clientId'] && <FormMessage>{errors['clientId']}</FormMessage>}
-        </FormItem>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormItem className="space-y-2">
-            <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
-            <FormControl>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Site Name <span className="text-destructive">*</span></Label>
               <Input
                 id="name"
-                name="name"
+                value={formData.name || ''}
+                onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Enter site name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`glass-input ${errors['name'] ? 'border-destructive' : ''}`}
-                required
-                aria-invalid={!!errors['name']}
+                className={errors.name ? 'border-destructive' : ''}
               />
-            </FormControl>
-            {errors['name'] && <FormMessage>{errors['name']}</FormMessage>}
-          </FormItem>
-          
-          <FormItem className="space-y-2">
-            <Label htmlFor="customId">Custom ID</Label>
-            <FormControl>
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="client">Client <span className="text-destructive">*</span></Label>
+              <ClientSelector
+                selectedClientId={formData.client_id || ''}
+                onClientSelect={handleClientChange}
+                error={errors.client_id}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
+              <Select
+                value={formData.status || 'active'}
+                onValueChange={(value) => handleChange('status', value)}
+              >
+                <SelectTrigger id="status" className={errors.status ? 'border-destructive' : ''}>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {siteStatusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.status && (
+                <p className="text-sm text-destructive">{errors.status}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="customId">Custom ID</Label>
               <Input
                 id="customId"
-                name="customId"
-                placeholder="Enter custom ID (optional)"
                 value={formData.customId || ''}
-                onChange={handleChange}
-                className="glass-input"
+                onChange={(e) => handleChange('customId', e.target.value)}
+                placeholder="Enter custom ID (optional)"
               />
-            </FormControl>
-            <p className="text-xs text-muted-foreground">Leave blank to use system-generated ID</p>
-          </FormItem>
-        </div>
-        
-        <FormItem className="space-y-2">
-          <Label htmlFor="address">Address <span className="text-destructive">*</span></Label>
-          <FormControl>
-            <Input
-              id="address"
-              name="address"
-              placeholder="Enter street address"
-              value={formData.address}
-              onChange={handleChange}
-              className={`glass-input ${errors['address'] ? 'border-destructive' : ''}`}
-              required
-              aria-invalid={!!errors['address']}
-            />
-          </FormControl>
-          {errors['address'] && <FormMessage>{errors['address']}</FormMessage>}
-        </FormItem>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormItem className="space-y-2">
-            <Label htmlFor="city">City <span className="text-destructive">*</span></Label>
-            <FormControl>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-4">Site Address</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="address">Address <span className="text-destructive">*</span></Label>
+              <Input
+                id="address"
+                value={formData.address || ''}
+                onChange={(e) => handleChange('address', e.target.value)}
+                placeholder="Enter street address"
+                className={errors.address ? 'border-destructive' : ''}
+              />
+              {errors.address && (
+                <p className="text-sm text-destructive">{errors.address}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="city">City <span className="text-destructive">*</span></Label>
               <Input
                 id="city"
-                name="city"
+                value={formData.city || ''}
+                onChange={(e) => handleChange('city', e.target.value)}
                 placeholder="Enter city"
-                value={formData.city}
-                onChange={handleChange}
-                className={`glass-input ${errors['city'] ? 'border-destructive' : ''}`}
-                required
-                aria-invalid={!!errors['city']}
+                className={errors.city ? 'border-destructive' : ''}
               />
-            </FormControl>
-            {errors['city'] && <FormMessage>{errors['city']}</FormMessage>}
-          </FormItem>
-          
-          <FormItem className="space-y-2">
-            <Label htmlFor="state">State <span className="text-destructive">*</span></Label>
-            <Select 
-              value={formData.state} 
-              onValueChange={(value) => handleChange({ target: { name: 'state', value } } as any)}
-            >
-              <SelectTrigger 
-                id="state" 
-                className={`glass-input ${errors['state'] ? 'border-destructive' : ''}`}
-                aria-invalid={!!errors['state']}
-              >
-                <SelectValue placeholder="Select state" />
-              </SelectTrigger>
-              <SelectContent className="glass">
-                <SelectItem value="NSW">New South Wales</SelectItem>
-                <SelectItem value="VIC">Victoria</SelectItem>
-                <SelectItem value="QLD">Queensland</SelectItem>
-                <SelectItem value="WA">Western Australia</SelectItem>
-                <SelectItem value="SA">South Australia</SelectItem>
-                <SelectItem value="TAS">Tasmania</SelectItem>
-                <SelectItem value="ACT">Australian Capital Territory</SelectItem>
-                <SelectItem value="NT">Northern Territory</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors['state'] && <FormMessage>{errors['state']}</FormMessage>}
-          </FormItem>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormItem className="space-y-2">
-            <Label htmlFor="postcode">Postcode <span className="text-destructive">*</span></Label>
-            <FormControl>
+              {errors.city && (
+                <p className="text-sm text-destructive">{errors.city}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="state">State <span className="text-destructive">*</span></Label>
               <Input
-                id="postcode"
-                name="postcode"
-                placeholder="Enter postcode"
-                value={formData.postcode}
-                onChange={handleChange}
-                className={`glass-input ${errors['postcode'] ? 'border-destructive' : ''}`}
-                required
-                aria-invalid={!!errors['postcode']}
+                id="state"
+                value={formData.state || ''}
+                onChange={(e) => handleChange('state', e.target.value)}
+                placeholder="Enter state"
+                className={errors.state ? 'border-destructive' : ''}
               />
-            </FormControl>
-            {errors['postcode'] && <FormMessage>{errors['postcode']}</FormMessage>}
-          </FormItem>
-          
-          <div className="space-y-2">
-            <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={handleStatusChange}
-            >
-              <SelectTrigger id="status" className="glass-input">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent className="glass">
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
+              {errors.state && (
+                <p className="text-sm text-destructive">{errors.state}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="postalCode">Postal Code <span className="text-destructive">*</span></Label>
+              <Input
+                id="postalCode"
+                value={formData.postalCode || ''}
+                onChange={(e) => handleChange('postalCode', e.target.value)}
+                placeholder="Enter postal code"
+                className={errors.postalCode ? 'border-destructive' : ''}
+              />
+              {errors.postalCode && (
+                <p className="text-sm text-destructive">{errors.postalCode}</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
+                value={formData.country || 'Australia'}
+                onChange={(e) => handleChange('country', e.target.value)}
+                placeholder="Enter country"
+              />
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone || ''}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="Enter phone number"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                value={formData.email || ''}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="Enter email address"
+                type="email"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="representative">Site Representative</Label>
+              <Input
+                id="representative"
+                value={formData.representative || ''}
+                onChange={(e) => handleChange('representative', e.target.value)}
+                placeholder="Enter site representative name"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

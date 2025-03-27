@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { contractsApi } from '@/lib/api/sites/contractsApi';
-import { ContractSummaryData, ContractData, GroupedContracts } from '@/components/sites/contract/types';
+import { ContractData, ContractSummaryData, GroupedContracts } from '@/lib/types/contracts';
 
 export function useContracts() {
   const [contractData, setContractData] = useState<ContractData[]>([]);
@@ -94,7 +94,7 @@ export function useContracts() {
     // Calculate metrics
     contracts.forEach(contract => {
       // Add to total revenue
-      const monthlyRevenue = contract.monthly_revenue || 0;
+      const monthlyRevenue = Number(contract.monthly_revenue) || 0;
       newMetrics.totalValue += monthlyRevenue;
       
       // Count active contracts
@@ -103,9 +103,9 @@ export function useContracts() {
       }
       
       // Check expiration dates
-      if (contract.contract_details && contract.contract_details.endDate) {
+      if (contract.contract_details && typeof contract.contract_details === 'object' && contract.contract_details.endDate) {
         try {
-          const endDate = new Date(contract.contract_details.endDate);
+          const endDate = new Date(contract.contract_details.endDate as string);
           
           // This month
           if (endDate <= thisMonthEnd) {
@@ -159,7 +159,7 @@ export function useContracts() {
     }
     
     // Group by status
-    const byStatus: GroupedContracts = {};
+    const byStatus: Record<string, ContractData[]> = {};
     
     contracts.forEach(contract => {
       const status = contract.status || 'unknown';
@@ -170,7 +170,7 @@ export function useContracts() {
     });
     
     setGroupedContracts({
-      byStatus
+      ...byStatus
     });
   };
 

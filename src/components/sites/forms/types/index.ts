@@ -8,12 +8,12 @@ export type { Subcontractor } from './subcontractorTypes';
 export type { Periodicals } from './periodicalTypes';
 export type { ReplenishableItem } from './replenishableTypes';
 export type { SecurityDetails } from './securityTypes';
-export type { SiteFormValidationErrors } from './formValidation';
+export type { FormValidationErrors as SiteFormValidationErrors } from './formValidation';
 export * from './initialFormData';
 export type { SiteFormHandlers } from './siteFormHandlers';
 
 // Export billing types with proper 'export type' syntax
-export { 
+export type { 
   BillingFrequency
 } from './billingTypes';
 

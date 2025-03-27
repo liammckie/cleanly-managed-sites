@@ -7,7 +7,7 @@ import { ContractExpiryList } from './ContractExpiryList';
 import { useContractForecast } from '@/hooks/useContractForecast';
 import { useQuery } from '@tanstack/react-query';
 import { SiteRecord } from '@/lib/types';
-import { ContractSummaryData } from './types';
+import { ContractSummaryData } from '@/lib/types/contracts';
 
 /**
  * Dashboard component for contract management
@@ -34,7 +34,8 @@ export function ContractDashboard() {
     totalCost: forecastData?.summaryData?.totalCost || 0,
     totalProfit: forecastData?.summaryData?.totalProfit || 0,
     avgContractValue: forecastData?.summaryData?.avgContractValue || 0,
-    profitMargin: forecastData?.summaryData?.profitMargin || 0
+    profitMargin: forecastData?.summaryData?.profitMargin || 0,
+    activeCount: metrics?.activeCount || 0
   };
   
   return (

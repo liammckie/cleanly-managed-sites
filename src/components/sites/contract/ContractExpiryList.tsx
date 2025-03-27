@@ -1,119 +1,101 @@
 
 import React from 'react';
-import { SiteRecord } from '@/lib/types';
-import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from '@/components/ui/badge';
-import { asJsonObject } from '@/lib/utils/json';
+import { CalendarIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format, differenceInDays } from 'date-fns';
+import { SiteRecord } from '@/lib/types';
 
 interface ContractExpiryListProps {
   sites: SiteRecord[];
   isLoading: boolean;
 }
 
-/**
- * Component to display a list of contracts expiring soon
- */
 export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps) {
   if (isLoading) {
-    return <p>Loading expiring contracts...</p>;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Upcoming Contract Expirations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex justify-between items-center pb-2 border-b">
+                <div>
+                  <Skeleton className="h-5 w-40 mb-1" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  if (!sites || sites.length === 0) {
-    return <p>No expiring contracts found.</p>;
-  }
-
-  // Filter sites to only include those expiring within the next 90 days
-  const expiringSites = sites.filter(site => {
-    if (!site.contract_details) return false;
-
-    const contractDetails = asJsonObject(site.contract_details, { endDate: '' });
-    const endDateStr = contractDetails.endDate as string | undefined;
-    
-    if (!endDateStr) return false;
-    
-    const endDate = parseISO(endDateStr);
-    const now = new Date();
-    const timeDiff = endDate.getTime() - now.getTime();
-    const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-    return daysUntilExpiry <= 90 && daysUntilExpiry >= 0;
-  });
-
-  // Sort sites by expiry date
-  expiringSites.sort((a, b) => {
-    const contractDetailsA = asJsonObject(a.contract_details || {}, { endDate: '' });
-    const contractDetailsB = asJsonObject(b.contract_details || {}, { endDate: '' });
-
-    const endDateA = contractDetailsA.endDate as string | undefined;
-    const endDateB = contractDetailsB.endDate as string | undefined;
-
-    if (!endDateA || !endDateB) return 0;
-
-    const expiryDateA = parseISO(endDateA);
-    const expiryDateB = parseISO(endDateB);
-
-    return expiryDateA.getTime() - expiryDateB.getTime();
-  });
+  // Filter out sites with valid contract end dates and sort by closeness to expiration
+  const sitesWithExpirations = sites
+    .filter(site => site.contract_details?.endDate)
+    .map(site => {
+      const endDateStr = site.contract_details?.endDate as string;
+      const endDate = new Date(endDateStr);
+      const daysUntilExpiry = differenceInDays(endDate, new Date());
+      
+      return {
+        ...site,
+        endDate,
+        daysUntilExpiry
+      };
+    })
+    .filter(site => site.daysUntilExpiry > 0) // Only show future expirations
+    .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
+    .slice(0, 5); // Show only the closest 5
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expiring Contracts (Next 90 Days)</CardTitle>
+        <CardTitle>Upcoming Contract Expirations</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[450px] w-full">
-          <div className="p-4">
-            {expiringSites.map(site => {
-              const contractDetails = asJsonObject(site.contract_details || {}, { endDate: '', contractNumber: '' });
-              const endDate = contractDetails.endDate as string | undefined;
-
-              if (!endDate) return null;
-
-              const expiryDate = parseISO(endDate);
-              const now = new Date();
-              const timeDiff = expiryDate.getTime() - now.getTime();
-              const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-              // Ensure contractNumber is safely accessed
-              const contractNumber = (contractDetails.contractNumber as string) || 'N/A';
-
-              return (
-                <div key={site.id} className="mb-4 p-4 border rounded-md">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="text-lg font-semibold">{site.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Client: {site.client_name}
-                      </p>
-                    </div>
-                    <div>
-                      {daysUntilExpiry <= 30 ? (
-                        <Badge variant="destructive">
-                          Expires in {daysUntilExpiry} days
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          Expires in {daysUntilExpiry} days
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <p className="text-sm">
-                      Contract Number: {contractNumber}
-                    </p>
-                    <p className="text-sm">
-                      Expires On: {format(expiryDate, 'PPP')}
-                    </p>
-                  </div>
+      <CardContent>
+        {sitesWithExpirations.length === 0 ? (
+          <p className="text-center text-muted-foreground py-4">
+            No upcoming contract expirations found
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {sitesWithExpirations.map(site => (
+              <div key={site.id} className="flex justify-between items-center pb-2 border-b">
+                <div>
+                  <p className="font-medium">{site.name}</p>
+                  <p className="text-sm text-muted-foreground flex items-center">
+                    <CalendarIcon className="h-3 w-3 mr-1" />
+                    {format(site.endDate, 'dd MMM yyyy')}
+                  </p>
                 </div>
-              );
-            })}
+                <ExpiryBadge daysRemaining={site.daysUntilExpiry} />
+              </div>
+            ))}
           </div>
-        </ScrollArea>
+        )}
       </CardContent>
     </Card>
   );
+}
+
+function ExpiryBadge({ daysRemaining }: { daysRemaining: number }) {
+  let variant: "default" | "destructive" | "outline" | "secondary" = "default";
+  let label = `${daysRemaining} days`;
+  
+  if (daysRemaining <= 30) {
+    variant = "destructive";
+  } else if (daysRemaining <= 60) {
+    variant = "secondary";
+  } else if (daysRemaining <= 90) {
+    variant = "outline";
+  }
+  
+  return <Badge variant={variant}>{label}</Badge>;
 }

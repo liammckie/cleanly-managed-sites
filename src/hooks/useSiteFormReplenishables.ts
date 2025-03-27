@@ -1,81 +1,71 @@
 
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { ReplenishableSupply } from '@/components/sites/forms/types/replenishableTypes';
+import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { ReplenishableItem, ReplenishableSupplies } from '@/components/sites/forms/types/replenishableTypes';
 
-export const useSiteFormReplenishables = (
-  formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
-) => {
-  // Handle stock item changes with type safety
-  const handleStockChange = (index: number, value: string) => {
-    const updatedStock = [...formData.replenishables.stock];
-    updatedStock[index] = value;
-    
-    setFormData(prev => ({
-      ...prev,
-      replenishables: {
-        ...prev.replenishables,
-        stock: updatedStock
-      }
-    }));
-  };
-  
-  // Add a new replenishable
-  const addReplenishable = () => {
-    const newReplenishable: ReplenishableSupply = {
-      id: crypto.randomUUID(),
+export function useSiteFormReplenishables() {
+  const [stockItems, setStockItems] = useState<ReplenishableItem[]>([]);
+  const [supplies, setSupplies] = useState<ReplenishableSupplies[]>([]);
+
+  const addStockItem = () => {
+    const newItem: ReplenishableItem = {
+      id: uuidv4(),
       name: '',
       quantity: 0,
-      notes: ''
+      reorderLevel: 0,
+      unit: 'ea',
+      description: ''
     };
-    
-    setFormData(prev => ({
-      ...prev,
-      replenishables: {
-        ...prev.replenishables,
-        supplies: [...(prev.replenishables.supplies || []), newReplenishable]
-      }
-    }));
+    setStockItems(prev => [...prev, newItem]);
   };
-  
-  // Update a replenishable item
-  const updateReplenishable = (index: number, field: string, value: any) => {
-    const updatedSupplies = [...(formData.replenishables.supplies || [])];
-    
-    if (updatedSupplies[index]) {
-      updatedSupplies[index] = {
-        ...updatedSupplies[index],
-        [field]: value
-      };
-      
-      setFormData(prev => ({
-        ...prev,
-        replenishables: {
-          ...prev.replenishables,
-          supplies: updatedSupplies
-        }
-      }));
-    }
+
+  const addSupply = () => {
+    const newSupply: ReplenishableSupplies = {
+      id: uuidv4(),
+      name: '',
+      quantity: 0,
+      reorderLevel: 0,
+      unit: 'ea',
+      description: '',
+      isStockItem: true,
+      supplier: '',
+      orderLeadTime: 7
+    };
+    setSupplies(prev => [...prev, newSupply]);
   };
-  
-  // Remove a replenishable item
-  const removeReplenishable = (index: number) => {
-    const updatedSupplies = [...(formData.replenishables.supplies || [])];
-    updatedSupplies.splice(index, 1);
-    
-    setFormData(prev => ({
-      ...prev,
-      replenishables: {
-        ...prev.replenishables,
-        supplies: updatedSupplies
-      }
-    }));
+
+  const updateStockItem = (index: number, field: keyof ReplenishableItem, value: any) => {
+    setStockItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
-  
+
+  const updateSupply = (index: number, field: keyof ReplenishableSupplies, value: any) => {
+    setSupplies(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const removeStockItem = (index: number) => {
+    setStockItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeSupply = (index: number) => {
+    setSupplies(prev => prev.filter((_, i) => i !== index));
+  };
+
   return {
-    handleStockChange,
-    addReplenishable,
-    updateReplenishable,
-    removeReplenishable
+    stockItems,
+    supplies,
+    addStockItem,
+    addSupply,
+    updateStockItem,
+    updateSupply,
+    removeStockItem,
+    removeSupply
   };
-};
+}

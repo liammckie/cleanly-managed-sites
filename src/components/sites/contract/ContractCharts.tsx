@@ -25,7 +25,7 @@ export function ContractCharts({ contractData, groupedContracts, isLoading }: Co
   const valueByStatus = Object.entries(groupedContracts).map(([status, contracts]) => {
     let totalValue = 0;
     if (Array.isArray(contracts)) {
-      totalValue = contracts.reduce((sum, contract) => sum + (contract.monthly_revenue || 0) * 12, 0);
+      totalValue = contracts.reduce((sum, contract) => sum + (parseFloat(contract.monthly_revenue?.toString() || '0') * 12), 0);
     }
     return {
       name: status.charAt(0).toUpperCase() + status.slice(1),

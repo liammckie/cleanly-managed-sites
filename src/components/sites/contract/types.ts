@@ -1,8 +1,14 @@
 
+import { ContractData, ContractSummaryData, GroupedContracts } from '@/lib/types/contracts';
+
+/**
+ * Re-export the contract types from lib/types/contracts for consistency
+ */
+export type { ContractData, ContractSummaryData, GroupedContracts };
+
 /**
  * Types for the contract-related components
  */
-
 export interface ContractTerm {
   id?: string;
   name: string;
@@ -38,56 +44,4 @@ export interface ContractDetails {
   terms?: { id: string; name: string; description: string }[];
   additionalContracts?: any[];
   contractType?: string;
-}
-
-export interface ContractSummaryData {
-  // Expiration counts
-  expiringThisMonth: number;
-  expiringNext3Months: number;
-  expiringNext6Months: number;
-  expiringThisYear: number;
-  
-  // Expiration values
-  valueExpiringThisMonth: number;
-  valueExpiringNext3Months: number;
-  valueExpiringNext6Months: number;
-  valueExpiringThisYear: number;
-  
-  // Overall contract data
-  totalContracts: number;
-  totalValue: number;
-  
-  // Financial metrics
-  totalRevenue: number;
-  totalCost: number;
-  totalProfit: number;
-  avgContractValue: number;
-  profitMargin: number;
-  
-  // Additional metrics
-  activeCount?: number;
-}
-
-// Define contract data interface for individual contracts
-export interface ContractData {
-  id: string;
-  client: string;
-  site: string;
-  value: number;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
-
-// Define contract forecast interface
-export interface ContractForecast {
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
-}
-
-// Define interface for grouped contracts
-export interface GroupedContracts {
-  [key: string]: ContractData[];
 }

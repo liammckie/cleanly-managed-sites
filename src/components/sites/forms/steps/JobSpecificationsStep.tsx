@@ -1,44 +1,50 @@
-
 import React from 'react';
-import { SiteFormData } from '../siteFormTypes';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 
-interface JobSpecificationsStepProps {
-  formData: SiteFormData;
-  handleNestedChange: (section: keyof SiteFormData, field: string, value: any) => void;
-}
-
-export function JobSpecificationsStep({ 
-  formData, 
-  handleNestedChange 
-}: JobSpecificationsStepProps) {
-  const jobSpecs = formData.jobSpecifications || {
-    cleaningFrequency: 'daily',
-    customFrequency: '',
-    serviceDays: '',
-    serviceTime: '',
-    estimatedHours: '',
-    equipmentRequired: '',
-    scopeNotes: ''
-  };
-  
+export function JobSpecificationsStep() {
   return (
-    <div className="space-y-6">
-      <Card className="p-6 space-y-4">
-        <h3 className="text-lg font-medium">Job Specifications</h3>
-        
-        <div className="space-y-4">
+    <div>
+      <h3 className="text-lg font-semibold mb-4">Job Specifications</h3>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="cleaning-frequency">Cleaning Frequency</Label>
-            <select 
-              id="cleaning-frequency"
+            <label htmlFor="daysPerWeek" className="text-sm font-medium">
+              Days Per Week
+            </label>
+            <input
+              id="daysPerWeek"
+              type="number"
+              min="1"
+              max="7"
               className="w-full p-2 border rounded-md"
-              value={jobSpecs.cleaningFrequency || 'daily'}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'cleaningFrequency', e.target.value)}
+              placeholder="e.g. 5"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="hoursPerDay" className="text-sm font-medium">
+              Hours Per Day
+            </label>
+            <input
+              id="hoursPerDay"
+              type="number"
+              min="0.5"
+              step="0.5"
+              className="w-full p-2 border rounded-md"
+              placeholder="e.g. 8"
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="cleaningFrequency" className="text-sm font-medium">
+              Cleaning Frequency
+            </label>
+            <select
+              id="cleaningFrequency"
+              className="w-full p-2 border rounded-md"
             >
+              <option value="">Select frequency</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="fortnightly">Fortnightly</option>
@@ -47,80 +53,138 @@ export function JobSpecificationsStep({
             </select>
           </div>
           
-          {(jobSpecs.cleaningFrequency || 'daily') === 'custom' && (
-            <div className="space-y-2">
-              <Label htmlFor="custom-frequency">Custom Frequency</Label>
-              <Input
-                id="custom-frequency"
-                placeholder="Specify custom frequency"
-                value={jobSpecs.customFrequency || ''}
-                onChange={(e) => handleNestedChange('jobSpecifications', 'customFrequency', e.target.value)}
-                className="w-full"
-              />
-            </div>
-          )}
-          
           <div className="space-y-2">
-            <Label htmlFor="service-days">Service Days</Label>
-            <Input
-              id="service-days"
-              placeholder="e.g., Monday, Wednesday, Friday"
-              value={jobSpecs.serviceDays || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'serviceDays', e.target.value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="service-time">Service Time</Label>
-            <Input
-              id="service-time"
-              placeholder="e.g., After 5:00 PM"
-              value={jobSpecs.serviceTime || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'serviceTime', e.target.value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="estimated-hours">Estimated Hours Per Service</Label>
-            <Input
-              id="estimated-hours"
+            <label htmlFor="directEmployees" className="text-sm font-medium">
+              Number of Direct Employees
+            </label>
+            <input
+              id="directEmployees"
               type="number"
               min="0"
-              step="0.5"
-              placeholder="0"
-              value={jobSpecs.estimatedHours || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'estimatedHours', e.target.value)}
-              className="w-full"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="equipment-required">Equipment Required</Label>
-            <Textarea
-              id="equipment-required"
-              placeholder="List equipment needed for this job"
-              value={jobSpecs.equipmentRequired || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'equipmentRequired', e.target.value)}
-              className="w-full"
-              rows={3}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="scope-notes">Scope Notes</Label>
-            <Textarea
-              id="scope-notes"
-              placeholder="Additional notes about job scope"
-              value={jobSpecs.scopeNotes || ''}
-              onChange={(e) => handleNestedChange('jobSpecifications', 'scopeNotes', e.target.value)}
-              className="w-full"
-              rows={4}
+              className="w-full p-2 border rounded-md"
+              placeholder="e.g. 2"
             />
           </div>
         </div>
-      </Card>
+        
+        <div className="space-y-2">
+          <label htmlFor="serviceDays" className="text-sm font-medium">
+            Service Days
+          </label>
+          <input
+            id="serviceDays"
+            type="text"
+            className="w-full p-2 border rounded-md"
+            placeholder="e.g. Monday, Wednesday, Friday"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="serviceTime" className="text-sm font-medium">
+            Service Time
+          </label>
+          <input
+            id="serviceTime"
+            type="text"
+            className="w-full p-2 border rounded-md"
+            placeholder="e.g. 6:00 PM - 8:00 PM"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="estimatedHours" className="text-sm font-medium">
+            Estimated Hours
+          </label>
+          <input
+            id="estimatedHours"
+            type="text"
+            className="w-full p-2 border rounded-md"
+            placeholder="e.g. 10 hours per week"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="equipmentRequired" className="text-sm font-medium">
+            Equipment Required
+          </label>
+          <input
+            id="equipmentRequired"
+            type="text"
+            className="w-full p-2 border rounded-md"
+            placeholder="e.g. Vacuum, mop, cleaning supplies"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="scopeNotes" className="text-sm font-medium">
+            Scope Notes
+          </label>
+          <textarea
+            id="scopeNotes"
+            rows={4}
+            className="w-full p-2 border rounded-md"
+            placeholder="Enter detailed scope of work..."
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="weeklyContractorCost" className="text-sm font-medium">
+              Weekly Contractor Cost
+            </label>
+            <input
+              id="weeklyContractorCost"
+              type="number"
+              min="0"
+              step="0.01"
+              className="w-full p-2 border rounded-md"
+              placeholder="$0.00"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="monthlyContractorCost" className="text-sm font-medium">
+              Monthly Contractor Cost
+            </label>
+            <input
+              id="monthlyContractorCost"
+              type="number"
+              min="0"
+              step="0.01"
+              className="w-full p-2 border rounded-md"
+              placeholder="$0.00"
+              disabled
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="annualContractorCost" className="text-sm font-medium">
+              Annual Contractor Cost
+            </label>
+            <input
+              id="annualContractorCost"
+              type="number"
+              min="0"
+              step="0.01"
+              className="w-full p-2 border rounded-md"
+              placeholder="$0.00"
+              disabled
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="notes" className="text-sm font-medium">
+            Additional Notes
+          </label>
+          <textarea
+            id="notes"
+            rows={3}
+            className="w-full p-2 border rounded-md"
+            placeholder="Any additional notes about job specifications..."
+          />
+        </div>
+      </div>
     </div>
   );
 }

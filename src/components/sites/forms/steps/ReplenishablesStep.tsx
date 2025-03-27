@@ -1,165 +1,55 @@
-
-// Let's modify only the part with the contactDetails error
 import React from 'react';
-import { SiteFormData } from '../siteFormTypes';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
 
-interface ReplenishablesStepProps {
-  formData: SiteFormData;
-  handleNestedChange: (section: string, field: string, value: any) => void;
-}
-
-export function ReplenishablesStep({ 
-  formData, 
-  handleNestedChange 
-}: ReplenishablesStepProps) {
-  // Initialize replenishables object if it doesn't exist
-  const replenishables = formData.replenishables || { 
-    stock: [], 
-    supplies: [],
-    notes: '' 
-  };
-  
-  // Handle adding a new stock item
-  const addStockItem = () => {
-    const updatedStock = [...(replenishables.stock || []), ''];
-    handleNestedChange('replenishables', 'stock', updatedStock);
-  };
-  
-  // Handle updating a stock item
-  const updateStockItem = (index: number, value: string) => {
-    const updatedStock = [...(replenishables.stock || [])];
-    updatedStock[index] = value;
-    handleNestedChange('replenishables', 'stock', updatedStock);
-  };
-  
-  // Handle removing a stock item
-  const removeStockItem = (index: number) => {
-    const updatedStock = [...(replenishables.stock || [])];
-    updatedStock.splice(index, 1);
-    handleNestedChange('replenishables', 'stock', updatedStock);
-  };
-  
-  // Handle adding a new supplies item
-  const addSuppliesItem = () => {
-    const updatedSupplies = [...(replenishables.supplies || []), ''];
-    handleNestedChange('replenishables', 'supplies', updatedSupplies);
-  };
-  
-  // Handle updating a supplies item
-  const updateSuppliesItem = (index: number, value: string) => {
-    const updatedSupplies = [...(replenishables.supplies || [])];
-    updatedSupplies[index] = value;
-    handleNestedChange('replenishables', 'supplies', updatedSupplies);
-  };
-  
-  // Handle removing a supplies item
-  const removeSuppliesItem = (index: number) => {
-    const updatedSupplies = [...(replenishables.supplies || [])];
-    updatedSupplies.splice(index, 1);
-    handleNestedChange('replenishables', 'supplies', updatedSupplies);
-  };
-  
+export function ReplenishablesStep() {
   return (
-    <div className="space-y-6">
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-medium mb-4">Stock Items</h3>
-        
-        <div className="space-y-4">
-          {(replenishables.stock || []).map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                value={item}
-                onChange={(e) => updateStockItem(index, e.target.value)}
-                placeholder="Item name, e.g. Bleach, Toilet Paper"
-              />
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                onClick={() => removeStockItem(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+    <div>
+      <h3 className="text-lg font-semibold mb-4">Supplies & Replenishables</h3>
+      <div className="space-y-4">
+        <div className="border rounded-md p-4">
+          <h4 className="font-medium mb-2">Stock Items</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add items that are kept on-site and need to be replenished regularly.
+          </p>
+          <div className="space-y-2">
+            {/* Stock items list would go here */}
+            <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+              <span>No stock items added yet</span>
             </div>
-          ))}
-          
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm"
-            onClick={addStockItem}
+          </div>
+          <button 
+            type="button"
+            className="mt-4 text-sm text-primary hover:underline"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Stock Item
-          </Button>
+            + Add Stock Item
+          </button>
         </div>
-      </div>
-      
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-medium mb-4">Supplies</h3>
         
-        <div className="space-y-4">
-          {(replenishables.supplies || []).map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                value={item}
-                onChange={(e) => updateSuppliesItem(index, e.target.value)}
-                placeholder="Item name, e.g. Mop Heads, Cleaning Cloths"
-              />
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                onClick={() => removeSuppliesItem(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+        <div className="border rounded-md p-4">
+          <h4 className="font-medium mb-2">Supplies</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add supplies that need to be ordered from suppliers.
+          </p>
+          <div className="space-y-2">
+            {/* Supplies list would go here */}
+            <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+              <span>No supplies added yet</span>
             </div>
-          ))}
-          
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm"
-            onClick={addSuppliesItem}
+          </div>
+          <button 
+            type="button"
+            className="mt-4 text-sm text-primary hover:underline"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Supply Item
-          </Button>
+            + Add Supply
+          </button>
         </div>
-      </div>
-      
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-medium mb-4">Notes</h3>
         
-        <div className="space-y-2">
-          <Label htmlFor="replenishables-notes">Additional Notes</Label>
-          <Textarea
-            id="replenishables-notes"
-            value={replenishables.notes || ''}
-            onChange={(e) => handleNestedChange('replenishables', 'notes', e.target.value)}
-            placeholder="Add any additional notes on replenishables..."
-            rows={4}
+        <div className="border rounded-md p-4">
+          <h4 className="font-medium mb-2">Notes</h4>
+          <textarea
+            className="w-full min-h-[100px] p-2 border rounded-md"
+            placeholder="Add any notes about replenishables or supplies..."
           />
         </div>
-        
-        {/* Safe access to the contactDetails property */}
-        {'contactDetails' in replenishables && (
-          <div className="mt-4 space-y-2">
-            <Label htmlFor="replenishables-contact">Contact Details</Label>
-            <Input
-              id="replenishables-contact"
-              value={(replenishables as any).contactDetails || ''}
-              onChange={(e) => handleNestedChange('replenishables', 'contactDetails', e.target.value)}
-              placeholder="Supplier contact details..."
-            />
-          </div>
-        )}
       </div>
     </div>
   );
