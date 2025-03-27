@@ -1,16 +1,16 @@
 
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { BillingContact } from '@/components/sites/forms/types/billingTypes';
+import { BillingContact, BillingDetails } from '@/components/sites/forms/types/billingTypes';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData'; 
-import { getDefaultBillingDetails, ensureBillingDetails } from '@/components/sites/forms/steps/DefaultBillingDetails';
+import { adaptBillingDetails } from '@/utils/typeAdapters';
 
 export const useSiteFormBillingContacts = (
   formData: SiteFormData,
   setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) => {
   // Ensure we're working with a properly initialized form data object
-  const safeFormData = ensureBillingDetails(formData);
+  const billingDetails = adaptBillingDetails(formData.billingDetails || {});
   
   // Add a billing contact
   const addBillingContact = (contact: BillingContact) => {
@@ -22,13 +22,14 @@ export const useSiteFormBillingContacts = (
     
     // Update the form data with the new contact
     setFormData((prev) => {
-      const updatedFormData = ensureBillingDetails(prev);
+      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
+      const contacts = [...(prevBillingDetails.contacts || []), newContact];
       
       return {
-        ...updatedFormData,
+        ...prev,
         billingDetails: {
-          ...updatedFormData.billingDetails,
-          contacts: [...(updatedFormData.billingDetails.contacts || []), newContact]
+          ...prevBillingDetails,
+          contacts
         }
       };
     });
@@ -37,8 +38,8 @@ export const useSiteFormBillingContacts = (
   // Update a billing contact
   const updateBillingContact = (index: number, field: string, value: any) => {
     setFormData((prev) => {
-      const updatedFormData = ensureBillingDetails(prev);
-      const contacts = [...(updatedFormData.billingDetails.contacts || [])];
+      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
+      const contacts = [...(prevBillingDetails.contacts || [])];
       
       if (contacts[index]) {
         contacts[index] = {
@@ -48,9 +49,9 @@ export const useSiteFormBillingContacts = (
       }
       
       return {
-        ...updatedFormData,
+        ...prev,
         billingDetails: {
-          ...updatedFormData.billingDetails,
+          ...prevBillingDetails,
           contacts
         }
       };
@@ -60,34 +61,15 @@ export const useSiteFormBillingContacts = (
   // Remove a billing contact
   const removeBillingContact = (index: number) => {
     setFormData((prev) => {
-      const updatedFormData = ensureBillingDetails(prev);
-      const contacts = [...(updatedFormData.billingDetails.contacts || [])];
+      const prevBillingDetails = adaptBillingDetails(prev.billingDetails || {});
+      const contacts = [...(prevBillingDetails.contacts || [])];
       
       contacts.splice(index, 1);
       
       return {
-        ...updatedFormData,
+        ...prev,
         billingDetails: {
-          ...updatedFormData.billingDetails,
-          contacts
-        }
-      };
-    });
-  };
-  
-  // Set a contact as primary
-  const setPrimaryBillingContact = (index: number) => {
-    setFormData((prev) => {
-      const updatedFormData = ensureBillingDetails(prev);
-      const contacts = [...(updatedFormData.billingDetails.contacts || [])].map((contact, i) => ({
-        ...contact,
-        isPrimary: i === index
-      }));
-      
-      return {
-        ...updatedFormData,
-        billingDetails: {
-          ...updatedFormData.billingDetails,
+          ...prevBillingDetails,
           contacts
         }
       };
@@ -95,10 +77,9 @@ export const useSiteFormBillingContacts = (
   };
   
   return {
-    contacts: safeFormData.billingDetails?.contacts || [],
+    contacts: billingDetails.contacts || [],
     addBillingContact,
     updateBillingContact,
-    removeBillingContact,
-    setPrimaryBillingContact
+    removeBillingContact
   };
 };

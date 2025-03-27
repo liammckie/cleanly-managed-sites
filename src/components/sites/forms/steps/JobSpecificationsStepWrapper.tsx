@@ -22,10 +22,10 @@ export function JobSpecificationsStepWrapper({
     jobSpecifications
   };
   
-  return (
-    <JobSpecificationsStep 
-      formData={wrappedFormData}
-      handleNestedChange={handleNestedChange}
-    />
-  );
+  const jobSpecsProps = {
+    formData: wrappedFormData,
+    handleNestedChange
+  };
+  
+  return <JobSpecificationsStep {...jobSpecsProps} />;
 }

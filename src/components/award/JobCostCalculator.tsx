@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PayCondition, EmploymentType, EmployeeLevel } from '@/lib/award/types';
+import { PayCondition, EmployeeLevel } from '@/lib/award/types';
 import { awardData } from '@/lib/award/awardData';
+import { EmploymentType } from '@/types/common';
 
 const payConditionLabels: Record<string, string> = {
   base: 'Base Rate',
@@ -19,7 +20,7 @@ const payConditionLabels: Record<string, string> = {
 };
 
 export function JobCostCalculator() {
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>('full-time');
   const [level, setLevel] = useState<EmployeeLevel>(1);
   const [hours, setHours] = useState<Partial<Record<PayCondition, number>>>({
     base: 38,
@@ -69,8 +70,8 @@ export function JobCostCalculator() {
                   onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
                   className="w-full px-3 py-2 border rounded"
                 >
-                  <option value="full_time">Full Time</option>
-                  <option value="part_time">Part Time</option>
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
                   <option value="casual">Casual</option>
                 </select>
               </div>

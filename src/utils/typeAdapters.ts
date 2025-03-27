@@ -1,176 +1,103 @@
 
-import { BillingDetails, BillingAddress, BillingLine } from '@/components/sites/forms/types/billingTypes';
-import { Quote } from '@/types/models';
+import { SiteStatus, QuoteStatus } from '@/types/common';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
 
-// Default BillingAddress for when it's missing or incomplete
-const defaultBillingAddress: BillingAddress = {
-  street: '',
-  city: '',
-  state: '',
-  postalCode: '',
-  country: 'Australia'
-};
-
-// Adapter for BillingDetails to ensure it has all required properties
-export function adaptBillingDetails(data: any = {}): BillingDetails {
+// Adapter for job specifications
+export function adaptJobSpecifications(jobSpecifications: any = {}) {
   return {
-    billingAddress: data.billingAddress || defaultBillingAddress,
-    useClientInfo: !!data.useClientInfo,
-    billingMethod: data.billingMethod || 'fixed',
-    paymentTerms: data.paymentTerms || '30days',
-    billingEmail: data.billingEmail || '',
-    contacts: Array.isArray(data.contacts) ? data.contacts : [],
-    billingLines: Array.isArray(data.billingLines) ? data.billingLines : [],
-    // Copy any other properties that might exist
-    ...data,
+    daysPerWeek: jobSpecifications.daysPerWeek || 0,
+    hoursPerDay: jobSpecifications.hoursPerDay || 0,
+    directEmployees: jobSpecifications.directEmployees || 0,
+    notes: jobSpecifications.notes || '',
+    cleaningFrequency: jobSpecifications.cleaningFrequency || '',
+    customFrequency: jobSpecifications.customFrequency || '',
+    serviceDays: jobSpecifications.serviceDays || '',
+    serviceTime: jobSpecifications.serviceTime || '',
+    estimatedHours: jobSpecifications.estimatedHours || '',
+    equipmentRequired: jobSpecifications.equipmentRequired || '',
+    scopeNotes: jobSpecifications.scopeNotes || '',
+    weeklyContractorCost: jobSpecifications.weeklyContractorCost || 0,
+    monthlyContractorCost: jobSpecifications.monthlyContractorCost || 0,
+    annualContractorCost: jobSpecifications.annualContractorCost || 0,
   };
 }
 
-// Adapter for JobSpecifications
-export function adaptJobSpecifications(data: any = {}): any {
+// Create an adapter function for quotes
+export function adaptQuote(quote: any = {}) {
   return {
-    daysPerWeek: data.daysPerWeek || 5,
-    hoursPerDay: data.hoursPerDay || 8,
-    directEmployees: data.directEmployees || 0,
-    notes: data.notes || '',
-    cleaningFrequency: data.cleaningFrequency || 'daily',
-    customFrequency: data.customFrequency || '',
-    serviceDays: data.serviceDays || '',
-    serviceTime: data.serviceTime || '',
-    estimatedHours: data.estimatedHours || '',
-    equipmentRequired: data.equipmentRequired || '',
-    scopeNotes: data.scopeNotes || '',
-    weeklyContractorCost: data.weeklyContractorCost || 0,
-    monthlyContractorCost: data.monthlyContractorCost || 0,
-    annualContractorCost: data.annualContractorCost || 0,
-    // Copy any other properties
-    ...data
-  };
-}
-
-// Adapter for Periodicals
-export function adaptPeriodicals(data: any = {}): any {
-  return {
-    items: Array.isArray(data.items) ? data.items : [],
-    notes: data.notes || '',
-    // Copy any other properties
-    ...data
-  };
-}
-
-// Adapter for Quote to handle camelCase/snake_case conversion
-export function adaptQuote(quote: any = {}): Quote {
-  const result: Partial<Quote> = {
     id: quote.id || '',
     name: quote.name || '',
-    clientName: quote.clientName || quote.client_name || '',
-    siteName: quote.siteName || quote.site_name || '',
-    status: quote.status || 'draft',
-    totalPrice: quote.totalPrice || quote.total_price || 0,
-    laborCost: quote.laborCost || quote.labor_cost || 0,
-    overheadPercentage: quote.overheadPercentage || quote.overhead_percentage || 15,
-    marginPercentage: quote.marginPercentage || quote.margin_percentage || 20,
-    subcontractorCost: quote.subcontractorCost || quote.subcontractor_cost || 0,
-    createdAt: quote.createdAt || quote.created_at || new Date().toISOString(),
-    updatedAt: quote.updatedAt || quote.updated_at || new Date().toISOString(),
-    
-    // Additional properties
-    title: quote.title || '',
-    description: quote.description || '',
-    
-    // Handle costs with various naming patterns
-    suppliesCost: quote.suppliesCost || quote.supplies_cost || 0,
-    equipmentCost: quote.equipmentCost || quote.equipment_cost || 0,
-    
-    // Handle other properties
-    quoteNumber: quote.quoteNumber || quote.quote_number || '',
-    validUntil: quote.validUntil || quote.valid_until || '',
-    
-    // Client and site IDs
-    clientId: quote.clientId || quote.client_id || '',
-    siteId: quote.siteId || quote.site_id || '',
-    
-    // Cost calculations
-    overheadCost: quote.overheadCost || quote.overhead_cost || 0,
-    totalCost: quote.totalCost || quote.total_cost || 0,
-    marginAmount: quote.marginAmount || quote.margin_amount || 0,
-    
-    // Dates
-    startDate: quote.startDate || quote.start_date || '',
-    endDate: quote.endDate || quote.end_date || '',
-    expiryDate: quote.expiryDate || quote.expiry_date || '',
-    
-    // Notes and contract details
-    notes: quote.notes || '',
-    contractLength: quote.contractLength || quote.contract_length || 0,
-    contractLengthUnit: quote.contractLengthUnit || quote.contract_length_unit || 'months',
+    clientName: quote.client_name || quote.clientName || '',
+    status: (quote.status || 'draft') as QuoteStatus,
+    totalPrice: quote.total_price || quote.totalPrice || 0,
+    createdAt: quote.created_at || quote.createdAt || new Date().toISOString(),
+    expiryDate: quote.expiry_date || quote.expiryDate || '',
+    suppliesCost: quote.supplies_cost || quote.suppliesCost || 0,
+    equipmentCost: quote.equipment_cost || quote.equipmentCost || 0,
+    quoteNumber: quote.quote_number || quote.quoteNumber || '',
+    validUntil: quote.valid_until || quote.validUntil || '',
+    clientId: quote.client_id || quote.clientId || '',
+    siteId: quote.site_id || quote.siteId || '',
+    overheadCost: quote.overhead_cost || quote.overheadCost || 0,
+    totalCost: quote.total_cost || quote.totalCost || 0,
+    marginAmount: quote.margin_amount || quote.marginAmount || 0,
+    startDate: quote.start_date || quote.startDate || '',
+    endDate: quote.end_date || quote.endDate || ''
   };
-  
-  return result as Quote;
 }
 
-// Function to adapt day values between different formats 
-// (needed for ShiftScheduler component)
-export function adaptDay(day: string): string {
-  const dayMap: Record<string, string> = {
-    // Map various day formats to a common format
-    'weekday': 'monday', // Default mapping for "weekday"
-    'monday': 'monday',
-    'tuesday': 'tuesday',
-    'wednesday': 'wednesday',
-    'thursday': 'thursday',
-    'friday': 'friday',
-    'saturday': 'saturday',
-    'sunday': 'sunday',
-    'mon': 'monday',
-    'tue': 'tuesday',
-    'wed': 'wednesday',
-    'thu': 'thursday',
-    'fri': 'friday',
-    'sat': 'saturday',
-    'sun': 'sunday',
-  };
-  
-  return dayMap[day.toLowerCase()] || day;
-}
-
-// Create default billing details
-export function getDefaultBillingDetails(): BillingDetails {
+// Create adapter for billing details
+export function adaptBillingDetails(billingDetails: any = {}): BillingDetails {
   return {
-    billingAddress: defaultBillingAddress,
-    useClientInfo: false,
-    billingMethod: 'fixed',
-    paymentTerms: '30days',
-    billingEmail: '',
-    contacts: [],
-    billingLines: []
+    billingAddress: billingDetails.billingAddress || {},
+    useClientInfo: billingDetails.useClientInfo || false,
+    billingMethod: billingDetails.billingMethod || 'email',
+    paymentTerms: billingDetails.paymentTerms || 'net30',
+    billingEmail: billingDetails.billingEmail || '',
+    billingLines: billingDetails.billingLines || [],
+    contacts: billingDetails.contacts || [],
+    notes: billingDetails.notes || ''
   };
 }
 
-// Ensure that billing details exist on an object
-export function ensureBillingDetails(data: any): any {
-  if (!data.billingDetails) {
-    return {
-      ...data,
-      billingDetails: getDefaultBillingDetails()
-    };
-  }
-  return data;
+// Create adapter for contract details
+export function adaptContractDetails(contractDetails: any = {}): ContractDetails {
+  return {
+    id: contractDetails.id,
+    startDate: contractDetails.startDate || '',
+    endDate: contractDetails.endDate || '',
+    contractLength: contractDetails.contractLength || 0,
+    contractLengthUnit: contractDetails.contractLengthUnit || 'months',
+    autoRenewal: contractDetails.autoRenewal || false,
+    renewalPeriod: contractDetails.renewalPeriod || 0,
+    renewalNotice: contractDetails.renewalNotice || 0,
+    noticeUnit: contractDetails.noticeUnit || 'days',
+    serviceFrequency: contractDetails.serviceFrequency || '',
+    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod || '',
+    contractNumber: contractDetails.contractNumber || '',
+    renewalTerms: contractDetails.renewalTerms || '',
+    terminationPeriod: contractDetails.terminationPeriod || '',
+    contractType: contractDetails.contractType || 'cleaning',
+    value: contractDetails.value || 0,
+    billingCycle: contractDetails.billingCycle || 'monthly',
+    notes: contractDetails.notes || '',
+    terms: contractDetails.terms || []
+  };
 }
 
-// Create a contract term adapter to handle different shapes
-export function adaptContractTerm(term: any): any {
-  // Return a contract term with all required fields
+// Overhead profile adapter
+export function dbToOverheadProfile(profile: any) {
   return {
-    id: term.id || crypto.randomUUID(),
-    title: term.title || term.name || '',
-    content: term.content || term.description || '',
-    startDate: term.startDate || '',
-    endDate: term.endDate || '',
-    renewalTerms: term.renewalTerms || '',
-    terminationPeriod: term.terminationPeriod || '',
-    autoRenew: term.autoRenew || false,
-    // Include any additional fields
-    ...term
+    id: profile.id || '',
+    name: profile.name || '',
+    description: profile.description || '',
+    basePercentage: profile.base_percentage || profile.basePercentage || 0,
+    additionalFees: profile.additional_fees?.map((fee: any) => ({
+      id: fee.id || crypto.randomUUID(),
+      name: fee.name || '',
+      percentage: fee.percentage || 0,
+      isEnabled: fee.is_enabled !== undefined ? fee.is_enabled : true
+    })) || []
   };
 }

@@ -2,10 +2,7 @@
 // Common type definitions used across the application
 
 // Day of the week
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-
-// UnifiedDay type to handle both specific days and general categories
-export type UnifiedDay = Day | 'weekday' | 'weekend';
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'weekend';
 
 // Employment types
 export type EmploymentType = 'full-time' | 'part-time' | 'casual';
@@ -20,7 +17,14 @@ export type Frequency = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterl
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
 // Quote status
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'accepted' | 'pending';
 
 // Site status
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
+
+// JSON value type definition
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+export type Json = JsonValue;
+
+// User status
+export type UserStatus = 'active' | 'pending' | 'inactive';

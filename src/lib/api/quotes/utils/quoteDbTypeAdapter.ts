@@ -1,4 +1,3 @@
-
 import { Day, QuoteStatus, EmployeeLevel, EmploymentType, Frequency } from '@/types/common';
 
 // Convert string status to QuoteStatus enum
@@ -100,5 +99,31 @@ export function toContractLengthUnit(unit: string): 'days' | 'weeks' | 'months' 
       return unit as 'days' | 'weeks' | 'months' | 'years';
     default:
       return 'months';
+  }
+}
+
+export function mapEmploymentTypeToDatabase(type: EmploymentType): string {
+  switch (type) {
+    case 'part-time':
+      return 'part-time';
+    case 'casual':
+      return 'casual';
+    case 'full-time':
+    default:
+      return 'full-time';
+  }
+}
+
+export function mapEmploymentTypeFromDatabase(type: string): EmploymentType {
+  switch (type) {
+    case 'part_time':
+    case 'part-time':
+      return 'part-time';
+    case 'casual':
+      return 'casual';
+    case 'full_time':
+    case 'full-time':
+    default:
+      return 'full-time';
   }
 }

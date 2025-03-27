@@ -1,7 +1,13 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { StepConfig } from './siteFormConfig';
+
+interface StepConfig {
+  id: string;
+  title: string;
+  description: string;
+  component: React.ReactNode;
+}
 
 interface FormStepGuidanceProps {
   step: StepConfig;

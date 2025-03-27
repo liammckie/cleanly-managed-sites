@@ -14,12 +14,15 @@ export function QuoteStatusBadge({ status }: QuoteStatusBadgeProps) {
     case 'sent':
       return <Badge variant="secondary">Sent</Badge>;
     case 'approved':
-    case 'accepted':
       return <Badge variant="success">Approved</Badge>;
+    case 'accepted':
+      return <Badge variant="success">Accepted</Badge>;
     case 'rejected':
       return <Badge variant="destructive">Rejected</Badge>;
     case 'expired':
       return <Badge variant="outline" className="text-muted-foreground">Expired</Badge>;
+    case 'pending':
+      return <Badge variant="warning">Pending</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }

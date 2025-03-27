@@ -2,24 +2,28 @@
 import React from 'react';
 import { BillingDetailsStep } from './BillingDetailsStep';
 import { adaptBillingDetails } from '@/utils/typeAdapters';
-import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
 
 interface BillingDetailsStepWrapperProps {
   formData: any;
   handleNestedChange: (section: string, field: string, value: any) => void;
-  handleDoubleNestedChange?: (section: string, subsection: string, field: string, value: any) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
+  addBillingLine: () => void;
+  updateBillingLine: (id: string, field: string, value: any) => void;
+  removeBillingLine: (id: string) => void;
 }
 
 export function BillingDetailsStepWrapper({ 
   formData, 
   handleNestedChange,
-  handleDoubleNestedChange
+  handleDoubleNestedChange,
+  addBillingLine,
+  updateBillingLine,
+  removeBillingLine
 }: BillingDetailsStepWrapperProps) {
-  // Use the billing lines hook to manage billing lines
-  const { billingLines, addBillingLine, updateBillingLine, removeBillingLine } = useSiteFormBillingLines();
-  
-  // Ensure billingDetails has all the required properties using our adapter
-  const billingDetails = adaptBillingDetails(formData.billingDetails);
+  // Ensure billingDetails has all the required properties
+  const billingDetails = formData.billingDetails ? 
+    adaptBillingDetails(formData.billingDetails) : 
+    adaptBillingDetails({});
   
   const wrappedFormData = {
     ...formData,

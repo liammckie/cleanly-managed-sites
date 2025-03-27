@@ -1,21 +1,21 @@
 
 export interface ContractTerm {
-  id: string;
-  title: string;
-  content: string;
+  id?: string;
+  title?: string;
+  content?: string;
+  name?: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
   renewalTerms?: string;
   terminationPeriod?: string;
   autoRenew?: boolean;
-  // Also include the alternative property names for compatibility
-  name?: string;
-  description?: string;
 }
 
 export interface ContractDetails {
-  startDate: string;
-  endDate: string;
+  id?: string;
+  startDate?: string;
+  endDate?: string;
   contractLength?: number;
   contractLengthUnit?: string;
   autoRenewal?: boolean;
@@ -28,6 +28,9 @@ export interface ContractDetails {
   renewalTerms?: string;
   terminationPeriod?: string;
   contractType?: string;
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
   terms?: ContractTerm[];
 }
 
@@ -39,9 +42,19 @@ export interface ContractHistoryEntry {
   notes: string;
   created_by: string;
   created_at: string;
-  // Additional fields needed for compatibility
   date: string;
   user: string;
   changes: any;
   contractor_id?: any;
+}
+
+export interface ContractForecast {
+  id: string;
+  startDate: string;
+  endDate: string;
+  value: number;
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
 }

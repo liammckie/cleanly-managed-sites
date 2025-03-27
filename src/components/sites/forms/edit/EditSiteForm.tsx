@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { SiteFormData } from '../types/siteFormData';
@@ -27,7 +28,6 @@ export interface EditSiteFormProps {
   siteId: string;
   isLoading: boolean;
   onSubmit: (data: any) => void;
-  site?: SiteRecord;
 }
 
 export function EditSiteForm({ 
@@ -40,11 +40,11 @@ export function EditSiteForm({
   const [activeTab, setActiveTab] = useState('basic-info');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<SiteFormData>({
-    defaultValues: initialData
+    defaultValues: initialData || {}
   });
   
   // Use the site form data hook to prepare data
-  useSiteFormData(initialData, formData, setFormData, form);
+  useSiteFormData(initialData || {}, formData, setFormData, form);
   
   // Use billing lines hook
   const { 
@@ -132,6 +132,12 @@ export function EditSiteForm({
     // Additional logic to fetch client data could go here
   };
   
+  // Create an adapter function for input events
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    handleChange(name as keyof SiteFormData, value);
+  };
+  
   return (
     <div className="space-y-6">
       <Card>
@@ -155,17 +161,14 @@ export function EditSiteForm({
             <TabsContent value="basic-info">
               <BasicInformationStep 
                 formData={formData} 
-                handleChange={handleChange} 
+                handleChange={handleInputChange} 
                 handleNestedChange={handleNestedChange}
                 handleClientChange={handleClientChange}
               />
             </TabsContent>
             
             <TabsContent value="contacts">
-              <ContactsStep 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
-              />
+              <ContactsStep contacts={formData.contacts || []} />
             </TabsContent>
             
             <TabsContent value="billing">
@@ -173,6 +176,9 @@ export function EditSiteForm({
                 formData={formData} 
                 handleNestedChange={handleNestedChange}
                 handleDoubleNestedChange={handleDoubleNestedChange}
+                addBillingLine={addBillingLine}
+                updateBillingLine={updateBillingLine}
+                removeBillingLine={removeBillingLine}
               />
             </TabsContent>
             
@@ -183,9 +189,6 @@ export function EditSiteForm({
                 addContractTerm={addContractTerm}
                 updateContractTerm={updateContractTerm}
                 removeContractTerm={removeContractTerm}
-                addAdditionalContract={addAdditionalContract}
-                updateAdditionalContract={updateAdditionalContract}
-                removeAdditionalContract={removeAdditionalContract}
               />
             </TabsContent>
             
@@ -200,27 +203,26 @@ export function EditSiteForm({
               <PeriodicalsStepWrapper 
                 formData={formData} 
                 handleNestedChange={handleNestedChange}
+                handleDoubleNestedChange={handleDoubleNestedChange}
               />
             </TabsContent>
             
             <TabsContent value="subcontractors">
               <SubcontractorsStep 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
+                subcontractors={formData.subcontractors || []} 
+                hasSubcontractors={formData.hasSubcontractors || false}
               />
             </TabsContent>
             
             <TabsContent value="replenishables">
               <ReplenishablesStep 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
+                replenishables={formData.replenishables || {}} 
               />
             </TabsContent>
             
             <TabsContent value="security">
               <SecurityStep 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
+                securityDetails={formData.securityDetails || {}} 
               />
             </TabsContent>
           </Tabs>
