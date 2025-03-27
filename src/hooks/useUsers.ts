@@ -1,45 +1,53 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi, SystemUserInsert } from '@/lib/api/users/index';
-import { SystemUser } from '@/lib/types';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
+import { usersApi, SystemUserInsert } from '@/lib/api/users';
+import { SystemUser } from '@/lib/types/users';
 
-export const useUsers = () => {
-  const queryClient = useQueryClient();
-
-  // Get all users
-  const {
-    data: users,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
+export function useUsers() {
+  const usersQuery = useQuery({
     queryKey: ['users'],
-    queryFn: () => usersApi.getUsers(),
+    queryFn: async () => {
+      return await usersApi.getAllUsers();
+    },
+    meta: {
+      errorMessage: 'Failed to fetch users'
+    }
   });
 
-  // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: (userData: SystemUserInsert) => usersApi.createUser(userData),
+    mutationFn: async (userData: {
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      title: string;
+      roleId: string;
+      password: string;
+    }) => {
+      return await usersApi.createUser(userData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
+    }
   });
 
-  // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<SystemUser> }) => 
-      usersApi.updateUser(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+    mutationFn: async ({ id, data }: { id: string; data: Partial<SystemUser> }) => {
+      return await usersApi.updateUser(id, data);
     },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['users', data.id] });
+    }
   });
 
   return {
-    users: users || [],
-    isLoading,
-    error,
-    refetch,
+    users: usersQuery.data as SystemUser[],
+    isLoading: usersQuery.isLoading,
+    error: usersQuery.error as Error | null,
+    refetch: usersQuery.refetch,
     createUserMutation,
     updateUserMutation
   };
-};
+}

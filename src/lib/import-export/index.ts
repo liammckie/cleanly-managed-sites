@@ -76,6 +76,19 @@ export function validateInvoiceImport(invoices: any[]): EnhancedValidationResult
   return result;
 }
 
-// Re-export functions from importOperations
-export * from './importOperations';
+// Export specific functions from importOperations to avoid duplicate exports
+export { 
+  parseCSV, 
+  importClients, 
+  importSites, 
+  importContracts, 
+  importContractors,
+  setupTestData,
+  convertCSVToClientFormat,
+  convertCSVToSiteFormat,
+  convertCSVToContractFormat,
+  convertCSVToContractorFormat
+} from './importOperations';
+
+// Export other functions from parseImportedFile
 export * from './parseImportedFile';

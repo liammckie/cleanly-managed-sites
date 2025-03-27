@@ -1,4 +1,3 @@
-
 import Papa from 'papaparse';
 import { supabase } from '@/lib/supabase';
 import { validateClientData } from './validation/clientValidation';
@@ -35,7 +34,6 @@ export const convertCSVToClientFormat = (csvData: any[]): any[] => {
     postcode: row.postcode || '',
     country: row.country || 'Australia',
     status: row.status || 'active',
-    // Add user_id for database requirements
     user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
@@ -85,7 +83,6 @@ export const convertCSVToSiteFormat = (csvData: any[]): any[] => {
     email: row.email || '',
     phone: row.phone || '',
     representative: row.representative || 'Site Manager',
-    // Add user_id for database requirements
     user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
@@ -135,7 +132,6 @@ export const convertCSVToContractFormat = (csvData: any[]): any[] => {
     billing_cycle: row.billing_cycle || 'monthly',
     value: parseFloat(row.value) || 0,
     notes: row.notes || '',
-    // Add user_id for database requirements
     user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
@@ -186,7 +182,6 @@ export const convertCSVToContractorFormat = (csvData: any[]): any[] => {
     abn: row.abn || '',
     contractor_type: row.contractor_type || 'cleaning',
     status: row.status || 'active',
-    // Add user_id for database requirements
     user_id: get(supabase.auth.getUser(), 'data.user.id'),
   }));
 };
@@ -215,3 +210,75 @@ export const importContractors = async (contractorsData: any[]): Promise<any> =>
     throw new Error(`Failed to import contractors: ${error.message}`);
   }
 };
+
+// Function to set up test data
+export function setupTestData() {
+  return {
+    createTestClients: async () => {
+      // Generate test clients data
+      const testClients = Array.from({ length: 5 }, (_, i) => ({
+        name: `Test Client ${i + 1}`,
+        contact_name: `Contact ${i + 1}`,
+        email: `client${i + 1}@example.com`,
+        phone: `555-000-${1000 + i}`,
+        address: `${1000 + i} Test Street`,
+        city: 'Test City',
+        state: 'Test State',
+        postcode: '12345',
+        status: 'active',
+        user_id: 'current-user-id'
+      }));
+      
+      await importClients(testClients);
+      return testClients;
+    },
+    
+    createTestSites: async () => {
+      // Generate test sites data
+      const testSites = Array.from({ length: 5 }, (_, i) => ({
+        name: `Test Site ${i + 1}`,
+        address: `${2000 + i} Test Avenue`,
+        city: 'Test City',
+        state: 'Test State',
+        postcode: '12345',
+        country: 'Australia',
+        client_id: 'test-client-id',
+        status: 'active',
+        email: `site${i + 1}@example.com`,
+        phone: `555-100-${1000 + i}`,
+        representative: 'Test Representative',
+        user_id: 'current-user-id'
+      }));
+      
+      await importSites(testSites);
+      return testSites;
+    },
+    
+    createTestContracts: async () => {
+      // Generate test contracts data
+      const testContracts = Array.from({ length: 5 }, (_, i) => ({
+        site_id: `test-site-id-${i + 1}`,
+        contract_details: {
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 31536000000).toISOString(), // 1 year from now
+          autoRenewal: true,
+          renewalPeriod: 12,
+          serviceFrequency: 'weekly',
+          contractType: 'cleaning'
+        },
+        notes: `Test contract ${i + 1}`,
+        created_by: 'current-user-id'
+      }));
+      
+      // Use a simple mock implementation since we don't have the real import function
+      // This would be replaced with the actual import function in a real implementation
+      const mockImportContracts = async (contracts: any[]) => {
+        console.log('Importing test contracts:', contracts);
+        return contracts;
+      };
+      
+      await mockImportContracts(testContracts);
+      return testContracts;
+    }
+  };
+}

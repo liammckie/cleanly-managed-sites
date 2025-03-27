@@ -1,45 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSite } from '@/hooks/useSite';
-import { useSiteUpdate } from '@/hooks/useSiteUpdate';
-import { toast } from 'sonner';
-import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
 
 export default function SiteEdit() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { site, isLoading, refetch } = useSite(siteId);
-  const { updateSiteMutation } = useSiteUpdate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (data: any) => {
-    if (!siteId) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      const result = await updateSiteMutation.mutateAsync({
-        id: siteId,
-        data: {
-          ...data,
-          postal_code: data.postalCode || data.postal_code,
-        }
-      });
-      
-      toast.success("Site updated successfully");
-      await refetch();
-      navigate(`/sites/${siteId}`);
-    } catch (error: any) {
-      console.error("Error updating site:", error);
-      toast.error(`Failed to update site: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const { site, isLoading, error, refetch } = useSite(siteId);
   
   if (isLoading) {
     return (

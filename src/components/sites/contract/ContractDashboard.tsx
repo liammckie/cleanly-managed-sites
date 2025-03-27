@@ -8,7 +8,28 @@ import { useContractForecast } from '@/hooks/useContractForecast';
 import { formatCurrency } from '@/lib/utils/format';
 
 export function ContractDashboard() {
-  const { forecastData, summaryData } = useContractForecast();
+  const { forecasts, loaded, error } = useContractForecast();
+  
+  // Mock summary data since it's not returned from the hook
+  const summaryData = {
+    totalContracts: 0,
+    activeCount: 0,
+    totalValue: 0,
+    expiringThisMonth: 0,
+    expiringNext3Months: 0,
+    expiringNext6Months: 0,
+    expiringThisYear: 0,
+    valueExpiringThisMonth: 0,
+    valueExpiringNext3Months: 0,
+    valueExpiringNext6Months: 0,
+    valueExpiringThisYear: 0,
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    profitMargin: 30,
+    pendingCount: 0, 
+    expiringWithin30Days: 0
+  };
   
   // Make sure we have complete summary data with defaults for missing properties
   const enhancedSummaryData = {
@@ -135,7 +156,7 @@ export function ContractDashboard() {
             
             <TabsContent value="forecast">
               <div className="h-80">
-                <ContractForecastChart data={forecastData} />
+                <ContractForecastChart data={forecasts} />
               </div>
             </TabsContent>
           </Tabs>

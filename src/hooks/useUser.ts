@@ -1,24 +1,26 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { usersApi } from '@/lib/api/users/index'; 
-import { SystemUser } from '@/lib/types';
+import { usersApi } from '@/lib/api/users';
+import { SystemUser } from '@/lib/types/users';
 
-export const useUser = (userId?: string) => {
-  const {
-    data: user,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['user', userId],
-    queryFn: () => userId ? usersApi.getUserById(userId) : null,
-    enabled: !!userId
+export function useUser(userId: string) {
+  const userQuery = useQuery({
+    queryKey: ['users', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      return await usersApi.getUserById(userId);
+    },
+    enabled: !!userId,
+    meta: {
+      errorMessage: 'Failed to fetch user'
+    }
   });
 
   return {
-    user: user as SystemUser | null,
-    isLoading,
-    error,
-    refetch
+    user: userQuery.data as SystemUser | null,
+    isLoading: userQuery.isLoading,
+    isError: userQuery.isError,
+    error: userQuery.error,
+    refetch: userQuery.refetch
   };
-};
+}

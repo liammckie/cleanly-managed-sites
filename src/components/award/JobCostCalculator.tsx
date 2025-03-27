@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PayCondition } from '@/lib/award/types';
 import { awardData } from '@/lib/award/awardData';
-import { EmploymentType } from '@/types/common';
+import { EmploymentType, EmployeeLevel } from '@/types/common';
 
 const payConditionLabels: Record<string, string> = {
   base: 'Base Rate',
@@ -20,7 +21,7 @@ const payConditionLabels: Record<string, string> = {
 
 export function JobCostCalculator() {
   const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
-  const [level, setLevel] = useState<number>(1);
+  const [level, setLevel] = useState<EmployeeLevel>(1);
   const [hours, setHours] = useState<Partial<Record<PayCondition, number>>>({
     base: 38,
     saturday: 0,
@@ -79,7 +80,7 @@ export function JobCostCalculator() {
                 <label className="block mb-1">Employee Level</label>
                 <select 
                   value={level}
-                  onChange={(e) => setLevel(Number(e.target.value))}
+                  onChange={(e) => setLevel(Number(e.target.value) as EmployeeLevel)}
                   className="w-full px-3 py-2 border rounded"
                 >
                   {Object.keys(awardData.employeeLevelRates).map(lvl => (

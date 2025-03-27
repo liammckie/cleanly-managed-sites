@@ -1,88 +1,99 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
+import { SystemUser } from '@/lib/types/users';
+import { 
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Eye } from 'lucide-react';
-import { SystemUser } from '@/lib/types/users';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserStatusBadge } from './UserStatusBadge';
+import { formatDate } from '@/lib/utils/format';
+import { PencilIcon, Trash2Icon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface UserTableProps {
   users: SystemUser[];
-  onDeleteClick: (user: SystemUser) => void;
+  onDelete?: (userId: string) => void;
 }
 
-export function UserTable({ users, onDeleteClick }: UserTableProps) {
-  const navigate = useNavigate();
-
-  const handleViewUser = (userId: string) => {
-    navigate(`/users/${userId}`);
-  };
-
-  const handleEditUser = (userId: string) => {
-    navigate(`/users/${userId}/edit`);
+export function UserTable({ users, onDelete }: UserTableProps) {
+  const getInitials = (user: SystemUser) => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+    }
+    if (user.full_name) {
+      const parts = user.full_name.split(' ');
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+      }
+      return parts[0].charAt(0).toUpperCase();
+    }
+    return user.email.charAt(0).toUpperCase();
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.full_name}</TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{user.role?.name || 'N/A'}</TableCell>
-            <TableCell>
-              <span className={`px-2 py-1 rounded text-xs ${
-                user.status === 'active' ? 'bg-green-100 text-green-800' :
-                user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {user.status}
-              </span>
-            </TableCell>
-            <TableCell>
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleViewUser(user.id)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEditUser(user.id)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteClick(user)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>User</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Last Login</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={user.avatar_url || undefined} />
+                    <AvatarFallback>{getInitials(user)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{user.full_name}</p>
+                    <p className="text-muted-foreground text-sm">{user.title}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.role?.name || '-'}</TableCell>
+              <TableCell>
+                <UserStatusBadge status={user.status} />
+              </TableCell>
+              <TableCell>
+                {user.last_login ? formatDate(user.last_login) : 'Never'}
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/users/${user.id}`}>
+                      <PencilIcon className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  {onDelete && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => onDelete(user.id)}
+                    >
+                      <Trash2Icon className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

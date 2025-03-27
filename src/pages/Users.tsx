@@ -1,114 +1,108 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUsers } from '@/hooks/useUsers';
+import { Sidebar } from '@/components/ui/layout/Sidebar';
+import { Navbar } from '@/components/ui/layout/Navbar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DashboardLayout } from '@/components/ui/layout/DashboardLayout';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { NewUserDialog } from '@/components/users/NewUserDialog';
+import { PlusIcon, SearchIcon } from 'lucide-react';
 import { UserTable } from '@/components/users/UserTable';
-import { UserRole } from '@/lib/types';
+import { NewUserDialog } from '@/components/users/NewUserDialog';
+import { SystemUser } from '@/lib/types/users';
 
 const Users = () => {
-  const { users, isLoading, error } = useUsers();
-  const navigate = useNavigate();
+  const { users, isLoading, error, refetch } = useUsers();
+  const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string | UserRole | null>(null);
-  
-  // Extract unique roles from users
-  const uniqueRoles = users && users.length > 0
-    ? Array.from(new Set(users.map(user => 
-        user.role?.name || 'No Role'
-      )))
-    : [];
 
-  // Filter users based on search term and role filter
-  const filteredUsers = users && users.length > 0
-    ? users.filter(user => {
-        // Search filter
-        const matchesSearch = searchTerm === '' || 
-          (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (user.role?.name && user.role.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        // Role filter
-        const matchesRole = !roleFilter || 
-          (typeof roleFilter === 'string' 
-            ? user.role?.name === roleFilter 
-            : user.role?.id === roleFilter.id);
-        
-        return matchesSearch && matchesRole;
-      })
-    : [];
+  // Filter users based on search query
+  const filteredUsers = users ? users.filter((user: SystemUser) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.full_name?.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.title?.toLowerCase().includes(query) ||
+      user.role?.name?.toLowerCase().includes(query)
+    );
+  }) : [];
 
-  return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Users</h1>
-          
-          <Button onClick={() => setIsDialogOpen(true)}>
-            Add New User
-          </Button>
-        </div>
-        
-        <div className="bg-card rounded-lg shadow mb-6">
-          <div className="p-4 border-b">
-            <h2 className="text-lg font-medium">Filters</h2>
-          </div>
-          
-          <div className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-1">Search</label>
-                <Input
-                  placeholder="Search by name or email"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="w-full md:w-1/4">
-                <label className="block text-sm font-medium mb-1">Role</label>
-                <select 
-                  className="w-full p-2 border rounded"
-                  value={typeof roleFilter === 'string' ? roleFilter : ''}
-                  onChange={(e) => setRoleFilter(e.target.value || null)}
-                >
-                  <option value="">All Roles</option>
-                  {uniqueRoles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  if (error) {
+    return (
+      <SidebarProvider>
+        <div className="flex h-screen">
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <Navbar />
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="text-center py-8 text-destructive">
+                <h3 className="text-xl font-semibold">Error Loading Users</h3>
+                <p>{error.message || 'An unexpected error occurred'}</p>
+                <Button onClick={() => refetch()} className="mt-4">
+                  Try Again
+                </Button>
               </div>
             </div>
           </div>
         </div>
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <LoadingSpinner size="lg" />
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Navbar />
+          <div className="flex-1 overflow-y-auto p-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-2xl font-bold">Users</CardTitle>
+                <Button onClick={() => setIsDialogOpen(true)}>
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Add User
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 relative">
+                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search users..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                  />
+                </div>
+
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <LoadingSpinner />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchQuery ? 'No users match your search criteria' : 'No users found'}
+                  </div>
+                ) : (
+                  <UserTable users={filteredUsers} />
+                )}
+              </CardContent>
+            </Card>
           </div>
-        ) : error ? (
-          <div className="text-center text-destructive">
-            <h3 className="text-xl font-semibold mb-2">Error Loading Users</h3>
-            <p>{error.message || 'Unable to load users'}</p>
-          </div>
-        ) : (
-          <UserTable 
-            users={filteredUsers} 
-            onUserClick={(userId) => navigate(`/users/${userId}`)}
-          />
-        )}
+        </div>
       </div>
-      
+
       <NewUserDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
       />
-    </DashboardLayout>
+    </SidebarProvider>
   );
 };
 

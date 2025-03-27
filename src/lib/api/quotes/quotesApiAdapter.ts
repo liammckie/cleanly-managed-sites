@@ -1,12 +1,9 @@
 
 import { supabase } from '@/lib/supabase';
 import { Quote } from '@/types/models';
-import { convertToDbQuote } from './utils/quoteDbTypeAdapter';
 import { get } from 'lodash';
 
-/**
- * Converts a frontend quote to the database format
- */
+// Directly adapt the quote to API format without using external functions
 export const adaptQuoteToApi = (quoteData: Partial<Quote>) => {
   // Map camelCase properties to snake_case for the API
   return {
@@ -65,6 +62,7 @@ export const adaptQuoteToFrontend = (dbQuote: any): Quote => {
     overhead_profile: dbQuote.overhead_profile,
     contractLength: dbQuote.contract_length,
     contractLengthUnit: dbQuote.contract_length_unit,
+    user_id: dbQuote.user_id
   } as Quote;
   
   // Add shifts if they exist
