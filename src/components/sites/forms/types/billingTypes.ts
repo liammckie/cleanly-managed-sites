@@ -1,4 +1,6 @@
 
+import { SiteStatus } from '@/types/common';
+
 export interface BillingAddress {
   line1: string;
   line2?: string;
@@ -12,65 +14,74 @@ export interface BillingContact {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  role: string;
+  phone?: string;
   position: string;
-  isPrimary?: boolean;
 }
 
 export interface BillingLine {
   id: string;
   description: string;
   amount: number;
-  frequency: string;
-  weeklyAmount: number;
-  monthlyAmount: number;
-  annualAmount: number;
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'annually';
   isRecurring: boolean;
   onHold: boolean;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
 }
 
 export interface BillingDetails {
+  // Address
   billingAddress: BillingAddress;
-  billingLines: BillingLine[];
   useClientInfo: boolean;
+  
+  // Billing method and contacts
   billingMethod: string;
   paymentTerms: string;
+  billingLines: BillingLine[];
+  contacts: BillingContact[];
+  
+  // Invoice preferences
+  invoiceFrequency: string;
+  invoiceDay?: string;
   invoiceEmail: string;
-  billingCycle: string;
-  billingContacts: BillingContact[];
-  contractorInvoiceFrequency?: string;
   
-  // Additional properties for compatibility
-  billingCity?: string;
-  billingState?: string;
-  billingPostcode?: string;
-  billingEmail?: string;
-  contacts?: BillingContact[];
-  totalMonthlyAmount?: number;
-  totalWeeklyAmount?: number;
-  totalAnnualAmount?: number;
+  // Purchase order
+  purchaseOrderRequired: boolean;
+  purchaseOrderNumber?: string;
+  clientPO?: string;
+  clientReference?: string;
   
-  // Service delivery related
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
+  // Revenue & cost info
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  
+  // Xero integration
+  xeroAccountId?: string;
+  xeroContactId?: string;
+  
+  // Service delivery
+  serviceType?: string;
+  deliveryMethod?: string;
+  
+  // Contractor payment info
   weeklyContractorCost?: number;
   monthlyContractorCost?: number;
-  annualContractorCost?: number;
-  contractorCostFrequency?: string;
+  contractorInvoiceFrequency?: string;
   
-  // Invoice related
-  invoiceFrequency?: string;
-  invoiceDay?: string;
-  invoiceMethod?: string;
-  invoiceEmail?: string;
-  invoiceAddressLine1?: string;
-  invoiceAddressLine2?: string;
-  invoiceCity?: string;
-  invoiceState?: string;
-  invoicePostalCode?: string;
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  accountNumber?: string;
+  // Additional fields for BillingDetailsSummary
   rate?: string;
+  billingFrequency?: string;
+  
+  // Additional fields used in other components
+  accountNumber?: string;
+  
+  // Totals
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  
+  // Budget
+  weeklyBudget?: number;
 }

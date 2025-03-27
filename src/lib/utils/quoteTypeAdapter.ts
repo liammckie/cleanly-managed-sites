@@ -1,55 +1,65 @@
-import { Quote, QuoteShift, QuoteSubcontractor } from '@/lib/types/quotes';
-import { adaptQuoteData } from './adapters';
+import { Quote, QuoteShift } from '@/lib/types/quotes';
 
-// Adapt models to quotes function - converts DB models to Quote objects
-export function adaptModelsToQuotes(data: any[]): Quote[] {
-  if (!data || !Array.isArray(data)) return [];
-  
-  return data.map(item => {
-    return {
-      id: item.id || '',
-      name: item.name || '',
-      title: item.title || '',
-      client_name: item.client_name || '',
-      clientName: item.client_name || '',
-      site_name: item.site_name || '',
-      siteName: item.site_name || '',
-      status: item.status || 'draft',
-      overhead_percentage: item.overhead_percentage || 0,
-      overheadPercentage: item.overhead_percentage || 0,
-      margin_percentage: item.margin_percentage || 0,
-      marginPercentage: item.margin_percentage || 0,
-      total_price: item.total_price || 0,
-      totalPrice: item.total_price || 0,
-      labor_cost: item.labor_cost || 0,
-      laborCost: item.labor_cost || 0,
-      supplies_cost: item.supplies_cost || 0,
-      suppliesCost: item.supplies_cost || 0,
-      equipment_cost: item.equipment_cost || 0,
-      equipmentCost: item.equipment_cost || 0,
-      subcontractor_cost: item.subcontractor_cost || 0,
-      subcontractorCost: item.subcontractor_cost || 0,
-      created_at: item.created_at || '',
-      createdAt: item.created_at || '',
-      updated_at: item.updated_at || '',
-      updatedAt: item.updated_at || '',
-      quote_number: item.quote_number || '',
-      quoteNumber: item.quote_number || '',
-      valid_until: item.valid_until || '',
-      validUntil: item.valid_until || '',
-      client_id: item.client_id || '',
-      clientId: item.client_id || '',
-      site_id: item.site_id || '',
-      siteId: item.site_id || '',
-      notes: item.notes || '',
-      description: item.description || '',
-      // Any other properties needed
-    };
-  });
+// Updated adaptQuoteData function
+export function adaptQuoteData(quote: any): Quote {
+  return {
+    ...quote,
+    // Ensure all properties match the expected format in the Quote interface
+    id: quote.id,
+    name: quote.name || '',
+    title: quote.title || '',
+    client_name: quote.clientName || quote.client_name || '',
+    clientName: quote.clientName || quote.client_name || '',
+    site_name: quote.siteName || quote.site_name || '',
+    siteName: quote.siteName || quote.site_name || '',
+    status: quote.status || 'draft',
+    overhead_percentage: quote.overheadPercentage || quote.overhead_percentage || 15,
+    margin_percentage: quote.marginPercentage || quote.margin_percentage || 20,
+    total_price: quote.totalPrice || quote.total_price || 0,
+    labor_cost: quote.laborCost || quote.labor_cost || 0,
+    supplies_cost: quote.suppliesCost || quote.supplies_cost || 0,
+    equipment_cost: quote.equipmentCost || quote.equipment_cost || 0,
+    subcontractor_cost: quote.subcontractorCost || quote.subcontractor_cost || 0,
+    created_at: quote.createdAt || quote.created_at || new Date().toISOString(),
+    updated_at: quote.updatedAt || quote.updated_at || new Date().toISOString(),
+    notes: quote.notes || '',
+    
+    // These fields are used by components but not always required by the API
+    overheadPercentage: quote.overhead_percentage || quote.overheadPercentage || 15,
+    marginPercentage: quote.margin_percentage || quote.marginPercentage || 20,
+    totalPrice: quote.total_price || quote.totalPrice || 0,
+    laborCost: quote.labor_cost || quote.laborCost || 0,
+    subcontractorCost: quote.subcontractor_cost || quote.subcontractorCost || 0,
+    createdAt: quote.created_at || quote.createdAt || new Date().toISOString(),
+    updatedAt: quote.updated_at || quote.updatedAt || new Date().toISOString(),
+    
+    // Optional fields with safe defaults
+    shifts: quote.shifts || [],
+    subcontractors: quote.subcontractors || [],
+  };
 }
 
-// Adapt a single quote object for API use
-export function adaptQuote(quote: Quote): any {
+// Adapt shift data between different formats
+export function adaptShiftData(shift: any): QuoteShift {
+  return {
+    id: shift.id || '',
+    quoteId: shift.quoteId || shift.quote_id || '',
+    day: shift.day || 'monday',
+    startTime: shift.startTime || shift.start_time || '09:00',
+    endTime: shift.endTime || shift.end_time || '17:00',
+    breakDuration: shift.breakDuration || shift.break_duration || 30,
+    numberOfCleaners: shift.numberOfCleaners || shift.number_of_cleaners || 1,
+    employmentType: shift.employmentType || shift.employment_type || 'casual',
+    level: shift.level || 1,
+    allowances: shift.allowances || [],
+    estimatedCost: shift.estimatedCost || shift.estimated_cost || 0,
+    location: shift.location || '',
+    notes: shift.notes || ''
+  };
+}
+
+// Convert between API and UI formats
+export function convertQuoteForApi(quote: Quote): any {
   return {
     id: quote.id,
     name: quote.name,
@@ -65,79 +75,48 @@ export function adaptQuote(quote: Quote): any {
     equipment_cost: quote.equipment_cost || quote.equipmentCost,
     subcontractor_cost: quote.subcontractor_cost || quote.subcontractorCost,
     notes: quote.notes,
-    description: quote.description,
     client_id: quote.client_id || quote.clientId,
     site_id: quote.site_id || quote.siteId,
-    valid_until: quote.valid_until || quote.validUntil,
-    quote_number: quote.quote_number || quote.quoteNumber
+    start_date: quote.start_date || quote.startDate,
+    end_date: quote.end_date || quote.endDate,
+    expiry_date: quote.expiry_date || quote.expiryDate,
+    // Other fields follow the same pattern
   };
 }
 
-// Convert API data to Quote objects
-export function adaptQuoteData(data: any): Quote {
-  if (!data) return {} as Quote;
-  
+// Convert from API format to UI format
+export function convertQuoteFromApi(apiQuote: any): Quote {
   return {
-    id: data.id || '',
-    name: data.name || '',
-    title: data.title || '',
-    client_name: data.client_name || '',
-    clientName: data.client_name || '',
-    site_name: data.site_name || '',
-    siteName: data.site_name || '',
-    status: data.status || 'draft',
-    overhead_percentage: data.overhead_percentage || 0,
-    overheadPercentage: data.overhead_percentage || 0,
-    margin_percentage: data.margin_percentage || 0,
-    marginPercentage: data.margin_percentage || 0,
-    total_price: data.total_price || 0,
-    totalPrice: data.total_price || 0,
-    labor_cost: data.labor_cost || 0,
-    laborCost: data.labor_cost || 0,
-    supplies_cost: data.supplies_cost || 0,
-    suppliesCost: data.supplies_cost || 0,
-    equipment_cost: data.equipment_cost || 0,
-    equipmentCost: data.equipment_cost || 0,
-    subcontractor_cost: data.subcontractor_cost || 0,
-    subcontractorCost: data.subcontractor_cost || 0,
-    created_at: data.created_at || '',
-    createdAt: data.created_at || '',
-    updated_at: data.updated_at || '',
-    updatedAt: data.updated_at || '',
-    quote_number: data.quote_number || '',
-    quoteNumber: data.quote_number || '',
-    valid_until: data.valid_until || '',
-    validUntil: data.valid_until || '',
-    client_id: data.client_id || '',
-    clientId: data.client_id || '',
-    site_id: data.site_id || '',
-    siteId: data.site_id || '',
-    notes: data.notes || '',
-    description: data.description || '',
-    clientContact: data.client_contact || '',
-    clientEmail: data.client_email || '',
-    clientPhone: data.client_phone || '',
-    siteAddress: data.site_address || '',
-    frequency: data.frequency || '',
-    scope: data.scope || '',
-    terms: data.terms || '',
-    overhead_cost: data.overhead_cost || 0,
-    overheadCost: data.overhead_cost || 0,
-    total_cost: data.total_cost || 0,
-    totalCost: data.total_cost || 0,
-    margin_amount: data.margin_amount || 0,
-    marginAmount: data.margin_amount || 0,
-    startDate: data.start_date || '',
-    start_date: data.start_date || '',
-    endDate: data.end_date || '',
-    end_date: data.end_date || '',
-    expiryDate: data.expiry_date || '',
-    expiry_date: data.expiry_date || '',
-    contractLength: data.contract_length || 0,
-    contractLengthUnit: data.contract_length_unit || 'months',
-    overheadProfile: data.overhead_profile || '',
-    userId: data.user_id || '',
-    createdBy: data.created_by || '',
-    created_by: data.created_by || ''
+    id: apiQuote.id,
+    name: apiQuote.name,
+    title: apiQuote.title,
+    client_name: apiQuote.client_name,
+    clientName: apiQuote.client_name,
+    site_name: apiQuote.site_name,
+    siteName: apiQuote.site_name,
+    description: apiQuote.description,
+    status: apiQuote.status,
+    overhead_percentage: apiQuote.overhead_percentage,
+    overheadPercentage: apiQuote.overhead_percentage,
+    margin_percentage: apiQuote.margin_percentage,
+    marginPercentage: apiQuote.margin_percentage,
+    total_price: apiQuote.total_price,
+    totalPrice: apiQuote.total_price,
+    labor_cost: apiQuote.labor_cost,
+    laborCost: apiQuote.labor_cost,
+    supplies_cost: apiQuote.supplies_cost,
+    suppliesCost: apiQuote.supplies_cost,
+    equipment_cost: apiQuote.equipment_cost,
+    equipmentCost: apiQuote.equipment_cost,
+    subcontractor_cost: apiQuote.subcontractor_cost,
+    subcontractorCost: apiQuote.subcontractor_cost,
+    created_at: apiQuote.created_at,
+    createdAt: apiQuote.created_at,
+    updated_at: apiQuote.updated_at,
+    updatedAt: apiQuote.updated_at,
+    notes: apiQuote.notes || '',
+    shifts: apiQuote.shifts || [],
+    subcontractors: apiQuote.subcontractors || [],
+    // Include all other properties needed by the UI
   };
 }

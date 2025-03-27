@@ -1,261 +1,110 @@
 
-import { AwardData, PayCondition, RateDefinition, EmployeeLevel, EmployeeLevelRates, AwardSettings } from './types';
+import { AwardData, AwardSettings, EmployeeLevel, EmployeeLevelRates, PayCondition, RateDefinition } from './types';
 
-// Define rate multipliers for different pay conditions
-const penalties: Record<PayCondition, RateDefinition> = {
-  'base': { percentage: 100, description: 'Base rate' },
-  'standard': { percentage: 100, description: 'Standard rate' },
-  'weekday': { percentage: 100, description: 'Normal weekday rate' },
-  'monday': { percentage: 100, description: 'Monday rate' },
-  'tuesday': { percentage: 100, description: 'Tuesday rate' },
-  'wednesday': { percentage: 100, description: 'Wednesday rate' },
-  'thursday': { percentage: 100, description: 'Thursday rate' },
-  'friday': { percentage: 100, description: 'Friday rate' },
-  'shift-early-late': { percentage: 115, description: 'Early morning or late evening shift' },
-  'saturday': { percentage: 150, description: 'Saturday rate' },
-  'sunday': { percentage: 200, description: 'Sunday rate' },
-  'public_holiday': { percentage: 250, description: 'Public holiday rate' },
-  'early_morning': { percentage: 115, description: 'Early morning 4am-6am rate' },
-  'evening': { percentage: 115, description: 'Evening 7pm-12am rate' },
-  'night': { percentage: 130, description: 'Night 12am-6am rate' },
-  'overnight': { percentage: 130, description: 'Overnight rate' },
-  'overtime-first-2-hours': { percentage: 150, description: 'First 2 hours of overtime' },
-  'overtime-after-2-hours': { percentage: 200, description: 'After 2 hours of overtime' },
-  'overtime-sunday': { percentage: 200, description: 'Sunday overtime' },
-  'overtime-public-holiday': { percentage: 250, description: 'Public holiday overtime' }
+// Define condition rates with the updated RateDefinition interface
+const conditionRates: Record<PayCondition, RateDefinition> = {
+  'base': { id: 'base', percentage: 100, description: 'Base Rate' },
+  'standard': { id: 'standard', percentage: 100, description: 'Standard Rate' },
+  'weekday': { id: 'weekday', percentage: 100, description: 'Weekday Rate' },
+  'monday': { id: 'monday', percentage: 100, description: 'Monday Rate' },
+  'tuesday': { id: 'tuesday', percentage: 100, description: 'Tuesday Rate' },
+  'wednesday': { id: 'wednesday', percentage: 100, description: 'Wednesday Rate' },
+  'thursday': { id: 'thursday', percentage: 100, description: 'Thursday Rate' },
+  'friday': { id: 'friday', percentage: 100, description: 'Friday Rate' },
+  'shift-early-late': { id: 'shift-early-late', percentage: 110, description: 'Early/Late Shift' },
+  'saturday': { id: 'saturday', percentage: 125, description: 'Saturday Rate' },
+  'sunday': { id: 'sunday', percentage: 150, description: 'Sunday Rate' },
+  'public_holiday': { id: 'public_holiday', percentage: 200, description: 'Public Holiday Rate' },
+  'early_morning': { id: 'early_morning', percentage: 115, description: 'Early Morning Rate' },
+  'evening': { id: 'evening', percentage: 115, description: 'Evening Rate' },
+  'night': { id: 'night', percentage: 130, description: 'Night Rate' },
+  'overnight': { id: 'overnight', percentage: 130, description: 'Overnight Rate' },
+  'overtime-first-2-hours': { id: 'overtime-first-2-hours', percentage: 150, description: 'Overtime (First 2 Hours)' },
+  'overtime-after-2-hours': { id: 'overtime-after-2-hours', percentage: 200, description: 'Overtime (After 2 Hours)' },
+  'overtime-sunday': { id: 'overtime-sunday', percentage: 200, description: 'Overtime (Sunday)' },
+  'overtime-public-holiday': { id: 'overtime-public-holiday', percentage: 250, description: 'Overtime (Public Holiday)' }
 };
 
-// Base rates for each level
-const baseRates: Record<EmployeeLevel, number> = {
-  1: 22.46,
-  2: 23.41,
-  3: 24.35,
-  4: 25.56,
-  5: 26.76,
-  6: 27.51,
-  7: 28.47,
-  8: 29.57,
-  9: 30.03
+// Define level rates - only include valid EmployeeLevel values (1-5)
+const levelRates: Record<EmployeeLevel, number> = {
+  1: 22.04,
+  2: 23.28,
+  3: 24.54,
+  4: 25.80,
+  5: 27.15
 };
 
-// Generate employee level rates based on base rates and penalties
-const generateLevelRates = (baseRate: number): EmployeeLevelRates => {
-  const loading: Record<PayCondition, number> = {} as Record<PayCondition, number>;
-  
-  Object.entries(penalties).forEach(([key, penalty]) => {
-    loading[key as PayCondition] = baseRate * (penalty.percentage / 100);
-  });
-  
-  return {
-    base: baseRate,
-    loading
-  };
+// Define employee level rates with the EmployeeLevelRates interface
+const employeeLevelRates: Record<EmployeeLevel, EmployeeLevelRates> = {
+  1: {
+    base: 22.04,
+    fullTime: 22.04,
+    partTime: 22.04,
+    casual: 27.55
+  },
+  2: {
+    base: 23.28,
+    fullTime: 23.28,
+    partTime: 23.28,
+    casual: 29.10
+  },
+  3: {
+    base: 24.54,
+    fullTime: 24.54,
+    partTime: 24.54,
+    casual: 30.68
+  },
+  4: {
+    base: 25.80,
+    fullTime: 25.80,
+    partTime: 25.80,
+    casual: 32.25
+  },
+  5: {
+    base: 27.15,
+    fullTime: 27.15,
+    partTime: 27.15,
+    casual: 33.94
+  }
 };
 
-// Generate rates for all levels
-const generateRates = (): Record<EmployeeLevel, EmployeeLevelRates> => {
-  const rates: Partial<Record<EmployeeLevel, EmployeeLevelRates>> = {};
-  
-  Object.entries(baseRates).forEach(([level, baseRate]) => {
-    rates[Number(level) as EmployeeLevel] = generateLevelRates(baseRate);
-  });
-  
-  return rates as Record<EmployeeLevel, EmployeeLevelRates>;
-};
-
-// Load allowances
-const allowances = {
-  meal: { amount: 15.94, unit: 'per meal break' },
-  travel: { amount: 0.92, unit: 'per km' },
-  uniform: { amount: 1.73, unit: 'per day' },
-  laundry: { amount: 0.45, unit: 'per day' },
-  other: { amount: 0, unit: 'custom' }
-};
-
-// Export default award settings
-export const defaultAwardSettings: AwardSettings = {
-  useModernAward: true,
+// Award settings with additional properties
+const settings: AwardSettings = {
+  minimumShiftHours: 3,
+  casualMinimumHours: 2,
+  dailyMaxHours: 10,
+  weeklyMaxHours: 38,
+  breakThresholdHours: 5,
+  allowances: {
+    meal: 12.97,
+    travel: 0.90,
+    laundry: 1.23,
+    uniform: 3.55,
+    firstAid: 9.30
+  },
   usePenalties: true,
-  includeAllowances: true,
-  awardVersion: '2023-07-01',
-  customRates: false,
-  baseRateMultiplier: 1,
+  baseRateMultiplier: 1.0,
   overheadPercentageDefault: 15,
-  marginPercentageDefault: 20,
-  lastUpdated: '2023-07-01',
-  baseRates,
-  loadingRates: penalties as any,
-  allowances
+  marginPercentageDefault: 20
 };
 
-// Export the complete award data
+// Penalties with the proper RateDefinition interface
+const penalties: RateDefinition[] = [
+  { id: 'p1', percentage: 125, description: 'Saturday', dayType: 'saturday' },
+  { id: 'p2', percentage: 150, description: 'Sunday', dayType: 'sunday' },
+  { id: 'p3', percentage: 250, description: 'Public Holiday', dayType: 'public_holiday' }
+];
+
+// Final award data export
 export const awardData: AwardData = {
-  settings: defaultAwardSettings,
-  rates: generateRates(),
-  penalties,
-  // Add these properties to fix the build errors
-  employeeLevelRates: generateRates(),
-  conditionRates: penalties
+  levels: levelRates,
+  penalties: penalties,
+  employeeLevelRates: employeeLevelRates,
+  conditionRates: conditionRates,
+  settings: settings
 };
 
-// Export cleaned up award data for components
-export const cleaningServicesAward = {
-  levels: [
-    {
-      level: 1,
-      employmentType: 'full_time',
-      hourlyRate: baseRates[1],
-      rates: {
-        weekday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        saturday: { 
-          rate: baseRates[1] * 1.5, 
-          multiplier: 1.5 
-        },
-        sunday: { 
-          rate: baseRates[1] * 2.0, 
-          multiplier: 2.0 
-        },
-        'public_holiday': { 
-          rate: baseRates[1] * 2.5, 
-          multiplier: 2.5 
-        },
-        // Add support for other conditions
-        standard: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        base: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        monday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        tuesday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        wednesday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        thursday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        },
-        friday: { 
-          rate: baseRates[1], 
-          multiplier: 1.0 
-        }
-      }
-    },
-    {
-      level: 2,
-      employmentType: 'full_time',
-      hourlyRate: baseRates[2],
-      rates: {
-        weekday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        saturday: { 
-          rate: baseRates[2] * 1.5, 
-          multiplier: 1.5 
-        },
-        sunday: { 
-          rate: baseRates[2] * 2.0, 
-          multiplier: 2.0 
-        },
-        'public_holiday': { 
-          rate: baseRates[2] * 2.5, 
-          multiplier: 2.5 
-        },
-        // Add support for other conditions
-        standard: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        base: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        monday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        tuesday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        wednesday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        thursday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        },
-        friday: { 
-          rate: baseRates[2], 
-          multiplier: 1.0 
-        }
-      }
-    },
-    {
-      level: 3,
-      employmentType: 'full_time',
-      hourlyRate: baseRates[3],
-      rates: {
-        weekday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        saturday: { 
-          rate: baseRates[3] * 1.5, 
-          multiplier: 1.5 
-        },
-        sunday: { 
-          rate: baseRates[3] * 2.0, 
-          multiplier: 2.0 
-        },
-        'public_holiday': { 
-          rate: baseRates[3] * 2.5, 
-          multiplier: 2.5 
-        },
-        // Add support for other conditions
-        standard: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        base: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        monday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        tuesday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        wednesday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        thursday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        },
-        friday: { 
-          rate: baseRates[3], 
-          multiplier: 1.0 
-        }
-      }
-    }
-  ]
-};
+// Export a convenience function to get current award data
+export function getAwardData(): AwardData {
+  return awardData;
+}

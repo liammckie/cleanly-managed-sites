@@ -14,6 +14,7 @@ export function QuoteStatusBadge({ status }: QuoteStatusBadgeProps) {
     case 'sent':
       return <Badge variant="secondary">Sent</Badge>;
     case 'approved':
+    case 'accepted':
       return <Badge variant="success">Approved</Badge>;
     case 'rejected':
       return <Badge variant="destructive">Rejected</Badge>;

@@ -1,163 +1,225 @@
 
+import { parseCSV, convertCSVToClientFormat, convertCSVToContractorFormat, convertCSVToSiteFormat, convertCSVToContractFormat } from './csvParser';
+import { validateClientData, validateContractorData, validateSiteData, validateContractData } from './validation';
 import { supabase } from '@/lib/supabase';
-import { parseCSV, convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat, convertCSVToContractorFormat } from './csvParser';
-import { parseJsonToCsv, downloadCsv } from './csvExporter';
-import { validateClientData, validateSiteData, validateContractorData } from './validation';
-import { ClientRecord, SiteRecord, ContractorRecord } from '@/lib/types';
-import { toast } from 'sonner';
+import { ClientRecord, ContractorRecord, SiteRecord } from '@/lib/types';
+import { Json } from '@/lib/types';
 
-export async function parseImportedFile(file: File): Promise<any[]> {
-  try {
-    const data = await parseCSV(file);
-    return data;
-  } catch (error) {
-    console.error('Error parsing file:', error);
-    throw error;
-  }
-}
+export type ValidationResult = {
+  valid: boolean;
+  data: any[];
+  errors: string[];
+  warnings: string[];
+};
 
-export async function importDataFromFile(file: File, type: 'clients' | 'sites' | 'contractors'): Promise<any[]> {
-  if (!file) throw new Error('No file provided');
-  
+/**
+ * Handle unified import for various entity types
+ */
+export async function handleUnifiedImport(file: File, entityType: string, options: { mode: string } | string = 'incremental') {
   try {
-    // Read the file and parse it
-    const parsedData = await parseCSV(file);
+    const csvContent = await file.text();
+    const parsedData = await parseCSV(csvContent);
     
-    // Validate the data based on type
-    let validatedData: any[] = [];
-    
-    switch (type) {
+    // Determine validation and import function based on entity type
+    switch (entityType) {
       case 'clients':
-        validatedData = validateClientData(parsedData);
-        break;
+        const clientData = convertCSVToClientFormat(parsedData);
+        const validatedClientData = validateClientData(clientData);
+        
+        if (validatedClientData.valid) {
+          return await importClients(validatedClientData.data);
+        }
+        return validatedClientData;
+        
       case 'sites':
-        validatedData = validateSiteData(parsedData);
-        break;
+        const siteData = convertCSVToSiteFormat(parsedData);
+        const validatedSiteData = validateSiteData(siteData);
+        
+        if (validatedSiteData.valid) {
+          return await importSites(validatedSiteData.data);
+        }
+        return validatedSiteData;
+        
       case 'contractors':
-        validatedData = validateContractorData(parsedData);
-        break;
+        const contractorData = convertCSVToContractorFormat(parsedData);
+        const validatedContractorData = validateContractorData(contractorData);
+        
+        if (validatedContractorData.valid) {
+          return await importContractors(validatedContractorData.data);
+        }
+        return validatedContractorData;
+        
+      case 'contracts':
+        const contractData = convertCSVToContractFormat(parsedData);
+        const validatedContractData = validateContractData(contractData);
+        
+        if (validatedContractData.valid) {
+          return await importContracts(validatedContractData.data);
+        }
+        return validatedContractData;
+        
+      default:
+        return {
+          valid: false,
+          data: [],
+          errors: [`Unsupported entity type: ${entityType}`],
+          warnings: []
+        };
     }
-    
-    return validatedData;
   } catch (error) {
-    console.error(`Error importing ${type}:`, error);
-    throw error;
+    console.error('Import error:', error);
+    return {
+      valid: false,
+      data: [],
+      errors: [`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      warnings: []
+    };
   }
 }
 
-export async function importClients(data: any[]): Promise<void> {
-  if (!data || data.length === 0) return;
-  
-  const clientsToImport = convertCSVToClientFormat(data);
-  
+/**
+ * Import clients from validated data
+ */
+export async function importClients(clientsData: Partial<ClientRecord>[]) {
   try {
-    // Add user_id to each record
-    const user = await supabase.auth.getUser();
-    const recordsWithUserId = clientsToImport.map(record => ({
-      ...record,
-      user_id: user.data?.user?.id || 'system',
-      contact_name: record.contact_name || 'Unknown',
-      name: record.name || 'Unnamed Client'
+    // Add user_id to each client
+    const dataWithUserIds = clientsData.map(client => ({
+      ...client,
+      user_id: supabase.auth.getUser()?.data?.user?.id
     }));
     
-    const { error } = await supabase
-      .from('clients')
-      .insert(recordsWithUserId);
+    const { data, error } = await supabase.from('clients').insert(dataWithUserIds);
     
     if (error) {
-      throw new Error(error.message);
+      return {
+        valid: false,
+        data: [],
+        errors: [error.message],
+        warnings: []
+      };
     }
     
-    toast.success(`Successfully imported ${data.length} clients`);
+    return {
+      valid: true,
+      data: data || [],
+      errors: [],
+      warnings: []
+    };
   } catch (error) {
-    console.error(`Error saving clients:`, error);
-    toast.error(`Failed to save imported clients: ${(error as Error).message}`);
-    throw error;
+    console.error('Client import error:', error);
+    return {
+      valid: false,
+      data: [],
+      errors: [`Client import failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      warnings: []
+    };
   }
 }
 
-export async function importSites(data: any[]): Promise<void> {
-  if (!data || data.length === 0) return;
-  
-  const sitesToImport = convertCSVToSiteFormat(data);
-  
+/**
+ * Import sites from validated data
+ */
+export async function importSites(sitesData: Partial<SiteRecord>[]) {
   try {
-    // Add user_id to each record
-    const user = await supabase.auth.getUser();
-    const recordsWithUserId = sitesToImport.map(record => ({
-      ...record,
-      user_id: user.data?.user?.id || 'system',
-      representative: record.representative || 'Unknown',
-      name: record.name || 'Unnamed Site',
-      address: record.address || 'No Address',
-      city: record.city || 'Unknown',
-      state: record.state || 'Unknown',
-      postcode: record.postcode || 'Unknown',
-      client_id: record.client_id
+    // Add user_id to each site
+    const dataWithUserIds = sitesData.map(site => ({
+      ...site,
+      user_id: supabase.auth.getUser()?.data?.user?.id,
+      representative: 'Imported',
     }));
     
-    const { error } = await supabase
-      .from('sites')
-      .insert(recordsWithUserId);
+    const { data, error } = await supabase.from('sites').insert(dataWithUserIds);
     
     if (error) {
-      throw new Error(error.message);
+      return {
+        valid: false,
+        data: [],
+        errors: [error.message],
+        warnings: []
+      };
     }
     
-    toast.success(`Successfully imported ${data.length} sites`);
+    return {
+      valid: true,
+      data: data || [],
+      errors: [],
+      warnings: []
+    };
   } catch (error) {
-    console.error(`Error saving sites:`, error);
-    toast.error(`Failed to save imported sites: ${(error as Error).message}`);
-    throw error;
+    console.error('Site import error:', error);
+    return {
+      valid: false,
+      data: [],
+      errors: [`Site import failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      warnings: []
+    };
   }
 }
 
-export async function importContractors(data: any[]): Promise<void> {
-  if (!data || data.length === 0) return;
-  
-  const contractorsToImport = convertCSVToContractorFormat(data);
-  
+/**
+ * Import contractors from validated data
+ */
+export async function importContractors(contractorsData: Partial<ContractorRecord>[]) {
   try {
-    // Add user_id to each record
-    const user = await supabase.auth.getUser();
-    const recordsWithUserId = contractorsToImport.map(record => ({
-      ...record,
-      user_id: user.data?.user?.id || 'system',
-      business_name: record.business_name || 'Unknown Company',
-      contact_name: record.contact_name || 'Unknown Contact',
-      contractor_type: record.contractor_type || 'general'
+    // Add user_id to each contractor
+    const dataWithUserIds = contractorsData.map(contractor => ({
+      ...contractor,
+      user_id: supabase.auth.getUser()?.data?.user?.id,
+      contractor_type: contractor.contractor_type || 'general'
     }));
     
-    const { error } = await supabase
-      .from('contractors')
-      .insert(recordsWithUserId);
+    const { data, error } = await supabase.from('contractors').insert(dataWithUserIds);
     
     if (error) {
-      throw new Error(error.message);
+      return {
+        valid: false,
+        data: [],
+        errors: [error.message],
+        warnings: []
+      };
     }
     
-    toast.success(`Successfully imported ${data.length} contractors`);
+    return {
+      valid: true,
+      data: data || [],
+      errors: [],
+      warnings: []
+    };
   } catch (error) {
-    console.error(`Error saving contractors:`, error);
-    toast.error(`Failed to save imported contractors: ${(error as Error).message}`);
-    throw error;
+    console.error('Contractor import error:', error);
+    return {
+      valid: false,
+      data: [],
+      errors: [`Contractor import failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      warnings: []
+    };
   }
 }
 
-export async function importContracts(data: any[]): Promise<void> {
-  // Implementation for contract imports would go here
-  toast.info('Contract import functionality is not fully implemented yet');
-  return Promise.resolve();
+/**
+ * Import contracts from validated data
+ */
+export async function importContracts(contractsData: any[]) {
+  try {
+    // Process contract data - this would need to be implemented
+    // based on the structure of the contract data
+    
+    return {
+      valid: true,
+      data: [],
+      errors: [],
+      warnings: ['Contract import not fully implemented yet']
+    };
+  } catch (error) {
+    console.error('Contract import error:', error);
+    return {
+      valid: false,
+      data: [],
+      errors: [`Contract import failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      warnings: []
+    };
+  }
 }
 
-export function setupTestData(): Promise<void> {
-  // This is a placeholder for test data setup
-  console.log("Setting up test data...");
-  return Promise.resolve();
-}
-
-export function handleUnifiedImport(file: File, options: any): Promise<boolean> {
-  // Placeholder for unified import
-  console.log(`Handling unified import with options:`, options);
-  return Promise.resolve(true);
-}
+// Export for use in hooks
+export { parseCSV, convertCSVToClientFormat, convertCSVToContractorFormat, convertCSVToSiteFormat, convertCSVToContractFormat };

@@ -2,58 +2,56 @@
 import { Json } from '@/lib/types';
 
 /**
- * Check if the value is a valid JSON object
+ * Safely parse a JSON string into a typed object
+ * @param jsonString The JSON string to parse
+ * @returns The parsed object or null if parsing fails
  */
-export function isJsonObject(value: any): value is { [key: string]: any } {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/**
- * Safely access a Json value as a JSON object
- * If the value is not a valid JSON object, returns the default value
- */
-export function asJsonObject<T = any>(value: Json | undefined | null, defaultValue: T): T {
-  if (!value) return defaultValue;
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      return isJsonObject(parsed) ? parsed : defaultValue;
-    } catch {
-      return defaultValue;
-    }
+export function parseJson<T>(jsonString: string | null | undefined): T | null {
+  if (!jsonString) return null;
+  
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error('Failed to parse JSON:', error);
+    return null;
   }
-  return isJsonObject(value) ? value : defaultValue;
 }
 
 /**
- * Safely access a property from a Json value
+ * Safely converts a JSON object to a specific type
  */
-export function getJsonProperty<T = any>(json: Json | undefined | null, key: string, defaultValue: T): T {
-  const obj = asJsonObject(json, {});
-  return (obj[key] as T) ?? defaultValue;
+export function convertJsonToType<T>(jsonData: Json): T {
+  if (typeof jsonData === 'object' && jsonData !== null) {
+    return jsonData as unknown as T;
+  }
+  return {} as T;
 }
 
 /**
- * Convert an unknown value to a string
+ * Converts a JSON object or string to a string representation
  */
-export function safeString(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  return String(value);
+export function jsonToString(json: Json | null | undefined): string {
+  if (json === null || json === undefined) return '';
+  if (typeof json === 'string') return json;
+  
+  try {
+    return JSON.stringify(json, null, 2);
+  } catch (error) {
+    console.error('Error stringifying JSON:', error);
+    return '';
+  }
 }
 
 /**
- * Convert an unknown value to a number
+ * Safely access a property from a JSON object
  */
-export function safeNumber(value: unknown): number {
-  if (value === null || value === undefined) return 0;
-  const num = Number(value);
-  return isNaN(num) ? 0 : num;
-}
-
-/**
- * Convert an unknown value to a boolean
- */
-export function safeBoolean(value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  return Boolean(value);
+export function getJsonProperty<T>(json: Json | null | undefined, key: string, defaultValue: T): T {
+  if (!json || typeof json !== 'object' || json === null || Array.isArray(json)) {
+    return defaultValue;
+  }
+  
+  const typedJson = json as {[key: string]: any};
+  return (key in typedJson && typedJson[key] !== undefined && typedJson[key] !== null)
+    ? typedJson[key] as T
+    : defaultValue;
 }

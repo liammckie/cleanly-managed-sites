@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -12,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Quote } from '@/lib/award/types';
+import { Quote } from '@/lib/types/quotes';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Calendar, DollarSign, User, Building2, FileText, Copy, Eye, Edit, Trash2, Clock, Plus } from 'lucide-react';
 
@@ -29,8 +30,8 @@ export function QuoteList({ quotes, searchTerm, isLoading }: QuoteListProps) {
     const term = searchTerm.toLowerCase();
     return (
       quote.name.toLowerCase().includes(term) ||
-      (quote.clientName && quote.clientName.toLowerCase().includes(term)) ||
-      (quote.siteName && quote.siteName.toLowerCase().includes(term)) ||
+      (quote.client_name && quote.client_name.toLowerCase().includes(term)) ||
+      (quote.site_name && quote.site_name.toLowerCase().includes(term)) ||
       quote.status.toLowerCase().includes(term)
     );
   });
@@ -42,7 +43,8 @@ export function QuoteList({ quotes, searchTerm, isLoading }: QuoteListProps) {
       case 'sent':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800">Sent</Badge>;
       case 'accepted':
-        return <Badge variant="outline" className="bg-green-100 text-green-800">Accepted</Badge>;
+      case 'approved':
+        return <Badge variant="outline" className="bg-green-100 text-green-800">Approved</Badge>;
       case 'rejected':
         return <Badge variant="outline" className="bg-red-100 text-red-800">Rejected</Badge>;
       case 'expired':
@@ -109,25 +111,25 @@ export function QuoteList({ quotes, searchTerm, isLoading }: QuoteListProps) {
             </div>
             <CardDescription className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {format(new Date(quote.createdAt), 'MMM d, yyyy')}
+              {format(new Date(quote.created_at), 'MMM d, yyyy')}
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-3 text-sm">
             <div className="grid grid-cols-2 gap-y-2">
-              {quote.clientName && (
+              {quote.client_name && (
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <User className="h-3 w-3" />
-                  <span className="truncate" title={quote.clientName}>
-                    {quote.clientName}
+                  <span className="truncate" title={quote.client_name}>
+                    {quote.client_name}
                   </span>
                 </div>
               )}
               
-              {quote.siteName && (
+              {quote.site_name && (
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Building2 className="h-3 w-3" />
-                  <span className="truncate" title={quote.siteName}>
-                    {quote.siteName}
+                  <span className="truncate" title={quote.site_name}>
+                    {quote.site_name}
                   </span>
                 </div>
               )}
@@ -141,7 +143,7 @@ export function QuoteList({ quotes, searchTerm, isLoading }: QuoteListProps) {
               
               <div className="flex items-center gap-1 text-muted-foreground">
                 <DollarSign className="h-3 w-3" />
-                <span>${quote.totalPrice.toFixed(2)}/month</span>
+                <span>${quote.total_price.toFixed(2)}/month</span>
               </div>
             </div>
             
@@ -149,11 +151,11 @@ export function QuoteList({ quotes, searchTerm, isLoading }: QuoteListProps) {
             
             <div className="mt-1 flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
-                {quote.shifts.length} shift{quote.shifts.length !== 1 ? 's' : ''}
-                {quote.subcontractors.length > 0 && 
-                  `, ${quote.subcontractors.length} subcontractor${quote.subcontractors.length !== 1 ? 's' : ''}`}
+                {quote.shifts?.length || 0} shift{(quote.shifts?.length || 0) !== 1 ? 's' : ''}
+                {(quote.subcontractors?.length || 0) > 0 && 
+                  `, ${quote.subcontractors?.length || 0} subcontractor${(quote.subcontractors?.length || 0) !== 1 ? 's' : ''}`}
               </div>
-              <div className="text-muted-foreground">{quote.marginPercentage}% margin</div>
+              <div className="text-muted-foreground">{quote.margin_percentage}% margin</div>
             </div>
           </CardContent>
           <CardFooter className="pt-0 flex justify-between">

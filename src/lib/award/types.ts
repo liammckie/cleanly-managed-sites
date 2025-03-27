@@ -3,6 +3,28 @@ export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 export type EmploymentType = 'full_time' | 'part_time' | 'casual';
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'public_holiday';
 
+export type PayCondition = 
+  | 'base'
+  | 'standard'
+  | 'weekday'
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'shift-early-late'
+  | 'saturday'
+  | 'sunday'
+  | 'public_holiday'
+  | 'early_morning'
+  | 'evening'
+  | 'night'
+  | 'overnight'
+  | 'overtime-first-2-hours'
+  | 'overtime-after-2-hours'
+  | 'overtime-sunday'
+  | 'overtime-public-holiday';
+
 export interface RateDefinition {
   id: string;
   percentage: number;
@@ -18,7 +40,6 @@ export interface EmployeeLevelRates {
   fullTime: number;
   partTime: number;
   casual: number;
-  loading?: number;
 }
 
 export interface AwardSettings {
@@ -29,13 +50,27 @@ export interface AwardSettings {
   breakThresholdHours: number;
   allowances: Record<string, number>;
   usePenalties?: boolean;
+  baseRateMultiplier?: number;
+  overheadPercentageDefault?: number;
+  marginPercentageDefault?: number;
+  lastUpdated?: string;
 }
 
 export interface AwardData {
   levels: Record<EmployeeLevel, number>;
   penalties: RateDefinition[];
-  rates?: Record<EmployeeLevel, EmployeeLevelRates>;
+  employeeLevelRates?: Record<EmployeeLevel, EmployeeLevelRates>;
+  conditionRates?: Record<PayCondition, RateDefinition>;
   settings: AwardSettings;
+  rates?: any;
+}
+
+export interface JobCostCalculationInput {
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  hours: Record<PayCondition, number>;
+  overheadPercentage: number;
+  marginPercentage: number;
 }
 
 export interface CostCalculationResult {
@@ -49,7 +84,7 @@ export interface CostCalculationResult {
   totalCostBeforeMargin: number;
   items: any[];
   
-  // Additional required properties
+  // Required properties
   laborHours: number;
   breakdownByDay: any;
   byTimeOfDay: any;
@@ -57,72 +92,17 @@ export interface CostCalculationResult {
   finalPrice: number;
 }
 
-export interface QuoteShift {
-  id: string;
-  quoteId?: string;
-  day: Day;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
-  allowances: string[];
-  estimatedCost: number;
-  location?: string;
-  notes?: string;
-}
-
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once';
-
-export interface QuoteSubcontractor {
-  id: string;
-  quoteId?: string;
-  name: string;
-  description: string;
-  cost: number;
-  frequency: Frequency;
+// Export Subcontractor interface for award/utils.ts
+export interface Subcontractor {
+  id?: string;
+  business_name: string;
+  contact_name: string;
   email?: string;
   phone?: string;
-  service?: string;
-  notes?: string;
-}
-
-export interface Quote {
-  id: string;
-  name: string;
-  client_name: string;
-  site_name?: string;
-  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending';
-  overhead_percentage: number;
-  margin_percentage: number;
-  total_price: number;
-  labor_cost: number;
-  supplies_cost?: number;
-  equipment_cost?: number;
-  subcontractor_cost: number;
-  created_at: string;
-  updated_at: string;
-  title?: string;
-  description?: string;
-  clientContact?: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  siteAddress?: string;
-  frequency?: string;
-  scope?: string;
-  terms?: string;
-  notes: string;
-  overheadCost: number;
-  totalCost: number;
-  marginAmount: number;
-  startDate?: string;
-  endDate?: string;
-  expiryDate?: string;
-  contractLength?: number;
-  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
-  clientId?: string;
-  siteId?: string;
-  shifts?: QuoteShift[];
-  subcontractors?: QuoteSubcontractor[];
+  is_flat_rate?: boolean;
+  monthly_cost?: number;
+  services?: string[];
+  customServices?: string;
+  contractor_id?: string;
+  name?: string;
 }

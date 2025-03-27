@@ -55,3 +55,4 @@ export interface ContractForecast {
   cost: number;
   profit: number;
 }
+

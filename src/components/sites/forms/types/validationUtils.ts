@@ -45,3 +45,35 @@ export function validateBasicInfo(formData: Partial<SiteFormData>): FormValidati
 
   return errors;
 }
+
+export function validateContacts(formData: Partial<SiteFormData>): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  
+  if (!formData.contacts || formData.contacts.length === 0) {
+    errors.contacts = 'At least one contact is required';
+  }
+  
+  return errors;
+}
+
+export function validateContractDetails(formData: Partial<SiteFormData>): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  
+  if (!formData.contract_details?.startDate) {
+    errors.contractStartDate = 'Contract start date is required';
+  }
+  
+  return errors;
+}
+
+export function validateSiteForm(formData: Partial<SiteFormData>): FormValidationErrors {
+  const basicErrors = validateBasicInfo(formData);
+  const contactErrors = validateContacts(formData);
+  const contractErrors = validateContractDetails(formData);
+  
+  return {
+    ...basicErrors,
+    ...contactErrors,
+    ...contractErrors
+  };
+}

@@ -1,5 +1,5 @@
 
-import { Json } from './index';
+import { Json } from '@/lib/types';
 
 export interface ContractData {
   id: string;
@@ -7,9 +7,9 @@ export interface ContractData {
   site_name: string;
   client_id: string;
   client_name: string;
-  status: string;
   monthly_revenue: number;
   contract_details: {
+    [key: string]: any;
     contractNumber?: string;
     startDate?: string;
     endDate?: string;
@@ -23,28 +23,12 @@ export interface ContractData {
     contractLengthUnit?: string;
     serviceFrequency?: string;
     serviceDeliveryMethod?: string;
-    [key: string]: any;
   };
-  
-  // For compatibility with old components
-  client?: {
-    id: string;
-    name: string;
-  };
-  site?: {
-    id: string;
-    name: string;
-  };
-  value?: number;
-  startDate?: string;
-  endDate?: string;
+  status: string;
+  is_primary: boolean;
 }
 
 export interface ContractSummaryData {
-  totalCount: number;
-  activeCount: number;
-  pendingCount: number;
-  expiringCount: number;
   expiringThisMonth: number;
   expiringNext3Months: number;
   expiringNext6Months: number;
@@ -53,12 +37,21 @@ export interface ContractSummaryData {
   valueExpiringNext3Months: number;
   valueExpiringNext6Months: number;
   valueExpiringThisYear: number;
+  activeCount: number;
   totalValue: number;
-  activeValue: number;
-  averageValue: number;
+  
+  // Added missing properties
+  totalContracts: number;
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  avgContractValue: number;
   profitMargin: number;
+  totalCount?: number;
 }
 
 export interface GroupedContracts {
-  [category: string]: ContractData[];
+  activeContracts: ContractData[];
+  expiringContracts: ContractData[];
+  expiredContracts: ContractData[];
 }
