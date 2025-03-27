@@ -1,4 +1,3 @@
-
 /**
  * Types for contract-related data in the site form
  */
@@ -71,15 +70,7 @@ export interface ContractForecast {
   revenue: number;
   cost: number;
   profit: number;
-  value?: number;
   startDate?: string;
   endDate?: string;
-  contractStartDate?: Date;
-  contractEndDate?: Date;
-  billingAmount?: number;
-  billingFrequency?: string;
-  upcomingRenewal?: Date;
-  noticeDate?: Date;
-  renewalLeadDays?: number;
-  status?: 'active' | 'ending' | 'pending-renewal' | 'expired';
+  value?: number;
 }

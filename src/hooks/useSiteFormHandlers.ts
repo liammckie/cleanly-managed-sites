@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteStatus } from '@/types/common';
@@ -24,27 +23,15 @@ export function useSiteFormHandlers(initialFormData: SiteFormData) {
     }));
   }, []);
 
-  const handleStatusChange = useCallback((status: SiteStatus) => {
-    // Normalize status values to ensure compatibility
-    let normalizedStatus: SiteStatus;
-    
-    // Fixed comparison to use the correct dash format for "on-hold" 
-    if (status === "on_hold") {
-      normalizedStatus = "on-hold";
-    } else {
-      normalizedStatus = status;
-    }
-    
+  const handleStatusChange = (status: SiteStatus) => {
     setFormData(prev => ({
       ...prev,
-      status: normalizedStatus
+      status
     }));
-  }, []);
+  };
 
-  // Handle nested object changes with type safety
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
     setFormData(prev => {
-      // Ensure we have an object to spread
       const sectionData = prev[section] as Record<string, any> || {};
       
       return {
@@ -56,11 +43,9 @@ export function useSiteFormHandlers(initialFormData: SiteFormData) {
       };
     });
   };
-  
-  // Handle doubly nested object changes with type safety
+
   const handleDoubleNestedChange = (section: keyof SiteFormData, subsection: string, field: string, value: any) => {
     setFormData(prev => {
-      // Ensure we have objects to spread at both levels
       const sectionData = prev[section] as Record<string, any> || {};
       const subsectionData = sectionData[subsection] as Record<string, any> || {};
       

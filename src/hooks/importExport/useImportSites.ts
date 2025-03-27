@@ -3,17 +3,13 @@ import { toast } from 'sonner';
 import { SiteRecord } from '@/lib/types';
 import { 
   parseCSV, 
-  importSites, 
-  convertCSVToSiteFormat 
+  convertCSVToSiteFormat, 
+  importSites 
 } from '@/lib/import-export/parseImportedFile';
 
 export function useImportSites() {
-  const handleImportSites = async (data: any[], fileType: 'json' | 'csv' = 'json') => {
+  const handleImportSites = async (data: any[]): Promise<void> => {
     try {
-      if (fileType === 'csv') {
-        data = convertCSVToSiteFormat(data);
-      }
-      
       await importSites(data);
       toast.success(`${data.length} sites imported successfully`);
     } catch (error: any) {
@@ -22,10 +18,11 @@ export function useImportSites() {
     }
   };
 
-  const handleCSVImportSites = async (file: File) => {
+  const handleCSVImportSites = async (file: File): Promise<void> => {
     try {
-      const parsedData = await parseCSV(file);
-      await handleImportSites(parsedData, 'csv');
+      const csvData = await parseCSV(file);
+      const sites = convertCSVToSiteFormat(csvData);
+      await handleImportSites(sites);
     } catch (error: any) {
       console.error(`Error importing sites from CSV:`, error);
       toast.error(`Failed to import sites: ${error.message}`);

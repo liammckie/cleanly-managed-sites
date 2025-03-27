@@ -1,6 +1,3 @@
-
-// Let's update the StatusBadge component in the Users page to use proper variants
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsers } from '@/hooks/useUsers';
@@ -29,15 +26,13 @@ export default function Users() {
     return <div className="text-red-500">Error: {error.message}</div>;
   }
   
-  const filteredUsers = users?.filter(user => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.full_name.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower) ||
-      user.phone?.toLowerCase().includes(searchLower) ||
-      user.title?.toLowerCase().includes(searchLower)
-    );
-  }) || [];
+  const filteredUsers = Array.isArray(users) 
+    ? users.filter(user => 
+        searchTerm === '' || 
+        user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
   
   const getInitials = (name: string) => {
     if (!name) return 'U';

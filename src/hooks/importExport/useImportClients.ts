@@ -2,19 +2,14 @@
 import { toast } from 'sonner';
 import { ClientRecord } from '@/lib/types';
 import { 
-  parseImportedFile, 
-  importClients, 
-  convertCSVToClientFormat 
-} from '@/lib/import-export/importOperations';
-import { parseCSV } from '@/lib/import-export/parseImportedFile';
+  parseCSV, 
+  convertCSVToClientFormat, 
+  importClients 
+} from '@/lib/import-export/parseImportedFile';
 
 export function useImportClients() {
-  const handleImportClients = async (data: any[], fileType: 'json' | 'csv' = 'json') => {
+  const handleImportClients = async (data: any[]): Promise<void> => {
     try {
-      if (fileType === 'csv') {
-        data = convertCSVToClientFormat(data);
-      }
-      
       await importClients(data);
       toast.success(`${data.length} clients imported successfully`);
     } catch (error: any) {
@@ -23,10 +18,11 @@ export function useImportClients() {
     }
   };
 
-  const handleCSVImportClients = async (file: File) => {
+  const handleCSVImportClients = async (file: File): Promise<void> => {
     try {
-      const parsedData = await parseCSV(file);
-      await handleImportClients(parsedData, 'csv');
+      const csvData = await parseCSV(file);
+      const clients = convertCSVToClientFormat(csvData);
+      await handleImportClients(clients);
     } catch (error: any) {
       console.error(`Error importing clients from CSV:`, error);
       toast.error(`Failed to import clients: ${error.message}`);

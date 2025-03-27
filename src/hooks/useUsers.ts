@@ -1,63 +1,45 @@
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { usersApi, SystemUserInsert } from '@/lib/api/users';
-import { SystemUser } from '@/lib/types/users';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersApi, SystemUserInsert } from '@/lib/api/users/index';
+import { SystemUser } from '@/lib/types';
 
-export function useUsers() {
+export const useUsers = () => {
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading, isError, error, refetch } = useQuery({
+  // Get all users
+  const {
+    data: users,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
     queryKey: ['users'],
-    queryFn: usersApi.getUsers,
+    queryFn: () => usersApi.getUsers(),
   });
 
-  const { mutateAsync: createUser } = useMutation({
-    mutationFn: (userData: Partial<SystemUser>) => 
-      usersApi.createUser(userData as SystemUserInsert),
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: (userData: SystemUserInsert) => usersApi.createUser(userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User created successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create user: ${error.message}`);
     },
   });
 
-  const { mutateAsync: deleteUser } = useMutation({
-    mutationFn: (userId: string) => usersApi.deleteUser(userId),
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SystemUser> }) => 
+      usersApi.updateUser(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User deleted successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete user: ${error.message}`);
     },
   });
 
   return {
     users,
     isLoading,
-    isError,
     error,
-    createUser,
-    deleteUser,
     refetch,
+    createUserMutation,
+    updateUserMutation
   };
-}
-
-export function useCreateUser() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (userData: Partial<SystemUser>) => 
-      usersApi.createUser(userData as SystemUserInsert),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User created successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create user: ${error.message}`);
-    },
-  });
-}
+};

@@ -14,22 +14,6 @@ const EditSite = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { site, isLoading, error } = useSite(id);
-  const { updateSiteMutation } = useSiteUpdate();
-  
-  // Handle form submission
-  const handleSubmit = async (data: any) => {
-    try {
-      await updateSiteMutation.mutateAsync({
-        id: id!,
-        data
-      });
-      toast.success("Site updated successfully");
-      navigate(`/sites/${id}`);
-    } catch (error) {
-      console.error("Error updating site:", error);
-      toast.error("Failed to update site");
-    }
-  };
   
   return (
     <SidebarProvider>
@@ -50,12 +34,7 @@ const EditSite = () => {
                 <p>{error.message || 'Unable to load site details'}</p>
               </div>
             ) : site ? (
-              <EditSiteForm 
-                initialData={site}
-                siteId={id!} 
-                isLoading={false}
-                onSubmit={handleSubmit}
-              />
+              <EditSiteForm />
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>

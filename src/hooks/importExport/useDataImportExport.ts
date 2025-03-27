@@ -10,7 +10,7 @@ export function useDataImportExport() {
   const unifiedImport = useUnifiedImport();
   
   const handleCSVImportContracts = (file: File) => {
-    return contractsImport.handleImportCSV(file);
+    return contractsImport.handleCSVImportContracts(file);
   };
   
   const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental') => {

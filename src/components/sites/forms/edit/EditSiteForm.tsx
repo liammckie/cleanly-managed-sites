@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -69,7 +70,7 @@ export function EditSiteForm() {
         state: site.state || '',
         postalCode: site.postal_code || site.postcode || '',
         country: site.country || '',
-        status: site.status || 'active' as SiteStatus,
+        status: (site.status || 'active') as SiteStatus,
       });
     }
   }, [site, form]);
@@ -81,29 +82,29 @@ export function EditSiteForm() {
     setIsSubmitting(true);
     
     try {
-      const updatedFormData = {
-        id: site?.id,
-        name: form.getValues().name,
-        address: form.getValues().address,
-        city: form.getValues().city,
-        state: form.getValues().state,
-        postal_code: form.getValues().postalCode,
-        country: form.getValues().country,
-        status: form.getValues().status,
+      // Create a properly typed siteFormData
+      const formValues = form.getValues();
+      const updatedFormData: SiteFormData = {
+        name: formValues.name,
+        address: formValues.address,
+        city: formValues.city,
+        state: formValues.state,
+        postalCode: formValues.postalCode,
+        country: formValues.country,
+        status: formValues.status as SiteStatus,
         client_id: site?.client_id,
         client_name: site?.client_name,
-        user_id: site?.user_id,
-        created_at: site?.created_at,
-        updated_at: new Date().toISOString(),
+        contacts: site?.contacts || [],
+        notes: site?.notes || '',
         contract_details: site?.contract_details || {},
-        billing_details: site?.billing_details || {},
-        job_specifications: site?.job_specifications || {},
+        billingDetails: site?.billing_details || {},
+        jobSpecifications: site?.job_specifications || {},
       };
       
-      const validationResult = validateSiteForm(updatedFormData as SiteFormData);
+      const validationResult = validateSiteForm(updatedFormData);
       
       if (!validationResult.isValid) {
-        setErrors(validationResult.errors);
+        setErrors(validationResult.errors || []);
         setIsSubmitting(false);
         return;
       }

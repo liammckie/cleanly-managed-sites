@@ -7,29 +7,11 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
-import { useSiteUpdate } from '@/hooks/useSiteUpdate';
-import { toast } from 'sonner';
 
 const SiteEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { site, isLoading, error } = useSite(id);
-  const { updateSiteMutation } = useSiteUpdate();
-
-  // Handle form submission
-  const handleSubmit = async (data: any) => {
-    try {
-      await updateSiteMutation.mutateAsync({
-        id: id!,
-        data
-      });
-      toast.success("Site updated successfully");
-      navigate(`/sites/${id}`);
-    } catch (error) {
-      console.error("Error updating site:", error);
-      toast.error("Failed to update site");
-    }
-  };
 
   return (
     <DashboardLayout>
@@ -61,12 +43,7 @@ const SiteEdit = () => {
           </div>
         ) : site ? (
           <div className="max-w-5xl mx-auto">
-            <EditSiteForm 
-              initialData={site}
-              siteId={id!} 
-              isLoading={false}
-              onSubmit={handleSubmit}
-            />
+            <EditSiteForm />
           </div>
         ) : (
           <div className="text-center">
