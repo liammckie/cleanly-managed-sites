@@ -1,15 +1,16 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { usersApi } from '@/lib/api/users';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { SystemUserRole, SystemUserInsert } from '@/lib/types/users';
+import { UserRole, SystemUserInsert } from '@/lib/types/users';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface NewUserDialogProps {
   open: boolean;
@@ -47,7 +48,24 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
   const onSubmit = async (data: SystemUserInsert) => {
     setIsLoading(true);
     try {
-      await usersApi.createUser(data);
+      // Create the user profile
+      const { error } = await supabase
+        .from('user_profiles')
+        .insert({
+          email: data.email,
+          full_name: `${data.firstName} ${data.lastName}`,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          title: data.title,
+          role_id: data.role_id,
+          status: data.status || 'active'
+        });
+
+      if (error) {
+        throw error;
+      }
+      
       toast({
         title: 'Success',
         description: 'User created successfully',
@@ -55,11 +73,11 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
       reset();
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create user',
+        description: `Failed to create user: ${error.message}`,
         variant: 'destructive',
       });
     } finally {
@@ -118,7 +136,7 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
                     Loading...
                   </SelectItem>
                 ) : (
-                  roles?.map((role: SystemUserRole) => (
+                  roles?.map((role: UserRole) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.name}
                     </SelectItem>
@@ -133,16 +151,16 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
             </Label>
             <Input id="password" className="col-span-3" type="password" {...register('password')} />
           </div>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create
+            </Button>
+          </div>
         </form>
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

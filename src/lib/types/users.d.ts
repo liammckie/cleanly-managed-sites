@@ -1,6 +1,8 @@
 
 import { Json } from '@/types/common';
 
+export type UserStatus = "active" | "pending" | "inactive";
+
 export interface SystemUser {
   id: string;
   email: string;
@@ -9,9 +11,9 @@ export interface SystemUser {
   last_name?: string;
   phone?: string;
   title?: string;
-  status: string;
+  status: UserStatus;
   role_id?: string;
-  avatarUrl?: string;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
   last_login?: string;
@@ -37,10 +39,10 @@ export interface SystemUserInsert {
   email: string;
   firstName: string;
   lastName: string;
-  full_name: string;
+  full_name?: string;
   phone?: string;
   title?: string;
   role_id: string;
-  status?: string;
+  status?: UserStatus;
   password?: string;
 }

@@ -9,17 +9,18 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { SystemUser } from '@/lib/types';
+import { SystemUser } from '@/lib/types/users';
 import { formatDate } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-interface UsersListProps {
+export interface UsersListProps {
   users: SystemUser[];
   isLoading: boolean;
-  onUserClick: (userId: string) => void;
+  refresh?: boolean;
+  onUserClick?: (userId: string) => void;
 }
 
-export function UsersList({ users, isLoading, onUserClick }: UsersListProps) {
+export function UsersList({ users, isLoading, onUserClick, refresh }: UsersListProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -32,7 +33,7 @@ export function UsersList({ users, isLoading, onUserClick }: UsersListProps) {
     );
   }
 
-  if (users.length === 0) {
+  if (users?.length === 0) {
     return (
       <div className="text-center p-8 border rounded-md bg-muted/10">
         <p className="text-muted-foreground">No users found</p>
@@ -53,11 +54,11 @@ export function UsersList({ users, isLoading, onUserClick }: UsersListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
+          {users?.map((user) => (
             <TableRow 
               key={user.id}
               className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onUserClick(user.id)}
+              onClick={() => onUserClick && onUserClick(user.id)}
             >
               <TableCell>
                 <div className="flex items-center gap-3">
@@ -72,7 +73,7 @@ export function UsersList({ users, isLoading, onUserClick }: UsersListProps) {
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant="outline">{user.role.name}</Badge>
+                <Badge variant="outline">{user.role_id}</Badge>
               </TableCell>
               <TableCell>
                 <Badge 

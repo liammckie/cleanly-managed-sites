@@ -1,56 +1,82 @@
 
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 export async function setupTestData(): Promise<{ success: boolean; message: string }> {
   try {
-    // Create a test client
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .insert({
-        name: 'Test Company Inc.',
-        contact_name: 'John Doe',
-        email: 'john@testcompany.com',
-        phone: '555-123-4567',
-        address: '123 Test Street',
-        city: 'Test City',
-        state: 'TS',
-        postcode: '12345',
-        status: 'active',
-        notes: 'This is a test client created for demonstration purposes.'
-      })
-      .select()
-      .single();
-
-    if (clientError) {
-      throw clientError;
+    // Get the current user ID for user_id fields
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    if (!userId) {
+      return { success: false, message: 'You must be logged in to create test data' };
     }
 
-    // Create test sites for the client
-    const testSites = [
+    // Create test clients
+    const testClients = [
       {
-        name: 'Main Office',
-        client_id: client.id,
-        address: '123 Main Street',
-        city: 'Test City',
-        state: 'TS',
-        postcode: '12345',
+        name: 'Acme Corporation',
+        contact_name: 'John Doe',
+        email: 'john@acme.com',
+        phone: '555-1234',
+        address: '123 Main St',
+        city: 'New York',
+        state: 'NY',
+        postcode: '10001',
         status: 'active',
-        monthly_revenue: 5000,
-        representative: 'Jane Smith'
+        notes: 'Large corporate client',
+        user_id: userId
       },
       {
-        name: 'Warehouse',
-        client_id: client.id,
-        address: '456 Storage Ave',
-        city: 'Test City',
-        state: 'TS',
-        postcode: '12345',
+        name: 'TechStart Inc',
+        contact_name: 'Jane Smith',
+        email: 'jane@techstart.com',
+        phone: '555-5678',
+        address: '456 Tech Blvd',
+        city: 'San Francisco',
+        state: 'CA',
+        postcode: '94107',
         status: 'active',
-        monthly_revenue: 3500,
-        representative: 'Bob Johnson'
+        notes: 'Tech startup client',
+        user_id: userId
+      },
+      {
+        name: 'Global Services Ltd',
+        contact_name: 'Robert Johnson',
+        email: 'robert@globalservices.com',
+        phone: '555-9012',
+        address: '789 Global Ave',
+        city: 'Chicago',
+        state: 'IL',
+        postcode: '60601',
+        status: 'active',
+        notes: 'International client',
+        user_id: userId
       }
     ];
+
+    const { data: clients, error: clientsError } = await supabase
+      .from('clients')
+      .insert(testClients)
+      .select();
+
+    if (clientsError) {
+      console.error('Error creating test clients:', clientsError);
+      return { success: false, message: `Failed to create test clients: ${clientsError.message}` };
+    }
+
+    // Create test sites using the client IDs
+    const testSites = clients.map((client, index) => ({
+      name: `${client.name} HQ`,
+      client_id: client.id,
+      address: `${index + 100} Business Park`,
+      city: client.city,
+      state: client.state,
+      postcode: client.postcode,
+      status: 'active',
+      monthly_revenue: 5000 + (index * 1000),
+      representative: client.contact_name,
+      user_id: userId
+    }));
 
     const { data: sites, error: sitesError } = await supabase
       .from('sites')
@@ -58,97 +84,59 @@ export async function setupTestData(): Promise<{ success: boolean; message: stri
       .select();
 
     if (sitesError) {
-      throw sitesError;
+      console.error('Error creating test sites:', sitesError);
+      return { success: false, message: `Failed to create test sites: ${sitesError.message}` };
     }
 
     // Create test contractors
     const testContractors = [
       {
-        business_name: 'Clean Team Services',
-        contact_name: 'Mike Wilson',
-        email: 'mike@cleanteam.com',
-        phone: '555-987-6543',
-        address: '789 Cleaner St',
-        city: 'Test City',
-        state: 'TS',
-        postcode: '12345',
+        business_name: 'ABC Cleaning',
+        contact_name: 'Alan Brown',
+        email: 'alan@abccleaning.com',
+        phone: '555-2468',
+        address: '321 Clean St',
+        city: 'Boston',
+        state: 'MA',
+        postcode: '02108',
         contractor_type: 'cleaning',
         status: 'active',
         hourly_rate: 35,
-        day_rate: 280
+        day_rate: 280,
+        user_id: userId
       },
       {
-        business_name: 'Security Pros',
-        contact_name: 'Sarah Adams',
-        email: 'sarah@securitypros.com',
-        phone: '555-456-7890',
-        address: '321 Security Blvd',
-        city: 'Test City',
-        state: 'TS',
-        postcode: '12345',
-        contractor_type: 'security',
+        business_name: 'XYZ Maintenance',
+        contact_name: 'Sarah Wilson',
+        email: 'sarah@xyzmaintenance.com',
+        phone: '555-1357',
+        address: '654 Fix Ave',
+        city: 'Denver',
+        state: 'CO',
+        postcode: '80202',
+        contractor_type: 'maintenance',
         status: 'active',
-        hourly_rate: 40,
-        day_rate: 320
+        hourly_rate: 45,
+        day_rate: 350,
+        user_id: userId
       }
     ];
 
-    const { data: contractors, error: contractorsError } = await supabase
+    const { error: contractorsError } = await supabase
       .from('contractors')
-      .insert(testContractors)
-      .select();
+      .insert(testContractors);
 
     if (contractorsError) {
-      throw contractorsError;
-    }
-
-    // Create test contracts
-    if (sites && sites.length > 0) {
-      const testContracts = sites.map(site => ({
-        site_id: site.id,
-        contract_type: 'service',
-        value: site.monthly_revenue * 12,
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-        billing_cycle: 'monthly',
-        auto_renew: true,
-        termination_period: '60 days',
-        renewal_terms: 'Automatic renewal for 12 months',
-        notes: `Test contract for ${site.name}`
-      }));
-
-      const { error: contractsError } = await supabase
-        .from('site_additional_contracts')
-        .insert(testContracts);
-
-      if (contractsError) {
-        throw contractsError;
-      }
+      console.error('Error creating test contractors:', contractorsError);
+      return { success: false, message: `Failed to create test contractors: ${contractorsError.message}` };
     }
 
     return { 
       success: true, 
-      message: 'Test data created successfully! Added 1 client, 2 sites, 2 contractors, and associated contracts.' 
+      message: `Successfully created ${testClients.length} clients, ${testSites.length} sites, and ${testContractors.length} contractors.` 
     };
   } catch (error: any) {
-    console.error('Error creating test data:', error);
-    return { 
-      success: false, 
-      message: `Failed to create test data: ${error.message}` 
-    };
-  }
-}
-
-export async function createTestData(): Promise<void> {
-  try {
-    const result = await setupTestData();
-    if (result.success) {
-      toast.success(result.message);
-    } else {
-      toast.error(result.message);
-    }
-  } catch (error: any) {
-    console.error('Error creating test data:', error);
-    toast.error(`Failed to create test data: ${error.message}`);
+    console.error('Error setting up test data:', error);
+    return { success: false, message: `Failed to set up test data: ${error.message}` };
   }
 }
