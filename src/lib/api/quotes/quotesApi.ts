@@ -57,7 +57,7 @@ export const fetchQuote = async (quoteId: string): Promise<Quote> => {
 export const createQuote = async (quoteData: Partial<Quote>): Promise<Quote> => {
   try {
     // Convert from frontend format to API format
-    const apiData = adaptQuoteToApi(quoteData as Partial<QuoteDTO>);
+    const apiData = adaptQuoteToApi(quoteData);
     
     const { data, error } = await supabase
       .from('quotes')
@@ -81,7 +81,7 @@ export const createQuote = async (quoteData: Partial<Quote>): Promise<Quote> => 
 export const updateQuote = async (quoteId: string, quoteData: Partial<Quote>): Promise<Quote> => {
   try {
     // Convert from frontend format to API format
-    const apiData = adaptQuoteToApi(quoteData as Partial<QuoteDTO>);
+    const apiData = adaptQuoteToApi(quoteData);
     
     const { data, error } = await supabase
       .from('quotes')
