@@ -34,9 +34,8 @@ export function CreateSiteForm() {
     updateSubcontractor,
     removeSubcontractor,
     
-    // Create wrapper functions to handle the type mismatch
-    addReplenishableStock: () => addReplenishable('stock'),
-    addReplenishableSupplies: () => addReplenishable('supplies'),
+    // Use the addReplenishable function directly
+    addReplenishable,
     updateReplenishable,
     removeReplenishable,
     
@@ -53,6 +52,10 @@ export function CreateSiteForm() {
       navigate(`/sites/${siteId}`);
     }
   });
+
+  // Create wrapper functions outside the destructuring
+  const addReplenishableStock = () => addReplenishable('stock');
+  const addReplenishableSupplies = () => addReplenishable('supplies');
 
   return (
     <Card>
