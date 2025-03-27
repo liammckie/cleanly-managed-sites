@@ -12,15 +12,20 @@ import { siteFormSchema } from '@/lib/validation/siteSchema';
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   return {
     name: formData.name,
-    client_id: formData.clientId,
+    client_id: formData.client_id || formData.clientId, // Use either property
     address: formData.address,
     city: formData.city,
     state: formData.state,
-    postcode: formData.postalCode,
+    postcode: formData.postalCode || formData.postcode, // Use either property
     status: formData.status === 'lost' ? 'inactive' : formData.status,
-    contract_details: formData.contractDetails,
+    // Convert contract details to match DTO
+    contract_details: formData.contractDetails || formData.contract_details,
     billing_details: formData.billingDetails,
-    // other fields...
+    email: formData.email,
+    phone: formData.phone,
+    representative: formData.representative,
+    custom_id: formData.customId,
+    notes: formData.notes
   };
 };
 

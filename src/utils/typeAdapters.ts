@@ -62,6 +62,7 @@ export function adaptUserRole(dbRole: any): UserRoleDTO {
   };
 }
 
+// Add alias for adaptUserRoleToDb as adaptUserRoleToApi
 export function adaptUserRoleToDb(role: UserRoleDTO): any {
   // Convert permissions Record<string, boolean> to array
   const permissionsArray = Object.entries(role.permissions)
@@ -77,6 +78,8 @@ export function adaptUserRoleToDb(role: UserRoleDTO): any {
     updated_at: role.updated_at
   };
 }
+// Add alias for adaptUserRoleToDb
+export const adaptUserRoleToApi = adaptUserRoleToDb;
 
 // Contract Details Adapters
 export function adaptContractDetails(dbContract: any): ContractDetailsDTO {
@@ -91,7 +94,7 @@ export function adaptContractDetails(dbContract: any): ContractDetailsDTO {
     contractLength: dbContract.contract_length,
     contractLengthUnit: dbContract.contract_length_unit,
     contractType: dbContract.contract_type,
-    renewalPeriod: dbContract.renewal_period,
+    renewalPeriod: dbContract.renewal_period ? String(dbContract.renewal_period) : undefined,
     renewalNoticeDays: dbContract.renewal_notice,
     noticeUnit: dbContract.notice_unit,
     serviceFrequency: dbContract.service_frequency,
@@ -139,6 +142,15 @@ export function adaptBillingDetails(dbBilling: any): BillingDetailsDTO {
     };
   }
   
+  // Ensure billingLines is always an array
+  const billingLines = Array.isArray(dbBilling.billingLines) 
+    ? dbBilling.billingLines.map((line: any) => ({
+        ...line,
+        isRecurring: line.isRecurring ?? true,
+        onHold: line.onHold ?? false
+      }))
+    : [];
+  
   return {
     billingAddress: dbBilling.billingAddress || {
       street: '',
@@ -147,11 +159,11 @@ export function adaptBillingDetails(dbBilling: any): BillingDetailsDTO {
       postcode: '',
       country: 'Australia'
     },
-    useClientInfo: dbBilling.useClientInfo || false,
+    useClientInfo: dbBilling.useClientInfo ?? false,
     billingMethod: dbBilling.billingMethod || '',
     paymentTerms: dbBilling.paymentTerms || '',
     billingEmail: dbBilling.billingEmail || '',
-    billingLines: dbBilling.billingLines || [],
+    billingLines: billingLines,
     serviceType: dbBilling.serviceType || '',
     deliveryMethod: dbBilling.deliveryMethod || '',
     serviceDeliveryType: dbBilling.serviceDeliveryType || 'direct',
@@ -171,6 +183,23 @@ export function adaptBillingDetailsToDb(billingDetails: BillingDetailsDTO): any 
   return billingDetails;
 }
 
+// Address adapter for use by components
+export function adaptAddress(address: any): { 
+  street: string; 
+  city: string; 
+  state: string; 
+  postcode: string; 
+  country: string; 
+} {
+  return {
+    street: address?.street || '',
+    city: address?.city || '',
+    state: address?.state || '',
+    postcode: address?.postcode || '',
+    country: address?.country || 'Australia'
+  };
+}
+
 // Quote Adapters
 export function adaptQuote(dbQuote: any): QuoteDTO {
   return {
@@ -180,7 +209,7 @@ export function adaptQuote(dbQuote: any): QuoteDTO {
     description: dbQuote.description,
     clientName: dbQuote.client_name,
     siteName: dbQuote.site_name,
-    status: dbQuote.status,
+    status: dbQuote.status || 'draft',
     laborCost: dbQuote.labor_cost || 0,
     overheadPercentage: dbQuote.overhead_percentage || 0,
     marginPercentage: dbQuote.margin_percentage || 0,
@@ -202,7 +231,7 @@ export function adaptQuote(dbQuote: any): QuoteDTO {
   };
 }
 
-export function adaptQuoteToApi(quote: QuoteDTO): any {
+export function adaptQuoteToApi(quote: Partial<QuoteDTO>): any {
   return {
     id: quote.id,
     name: quote.name,

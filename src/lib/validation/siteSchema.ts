@@ -3,10 +3,10 @@ import { z } from 'zod';
 
 // Schema for billing address
 export const billingAddressSchema = z.object({
-  street: z.string(),
-  city: z.string(),
-  state: z.string(),
-  postcode: z.string(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postcode: z.string().optional(),
   country: z.string().default('Australia'),
 });
 
@@ -16,8 +16,8 @@ export const billingLineSchema = z.object({
   description: z.string().min(1, { message: 'Description is required' }),
   amount: z.number().nonnegative({ message: 'Amount must be a positive number' }),
   frequency: z.enum(['weekly', 'monthly', 'quarterly', 'annually']),
-  isRecurring: z.boolean().optional().default(true),
-  onHold: z.boolean().optional().default(false),
+  isRecurring: z.boolean().default(true),
+  onHold: z.boolean().default(false),
   weeklyAmount: z.number().optional(),
   monthlyAmount: z.number().optional(),
   annualAmount: z.number().optional(),
@@ -27,10 +27,10 @@ export const billingLineSchema = z.object({
 export const billingDetailsSchema = z.object({
   billingAddress: billingAddressSchema.optional(),
   useClientInfo: z.boolean().default(false),
-  billingMethod: z.string(),
-  paymentTerms: z.string(),
-  billingEmail: z.string().email().or(z.literal('')),
-  billingLines: z.array(billingLineSchema).optional(),
+  billingMethod: z.string().optional(),
+  paymentTerms: z.string().optional(),
+  billingEmail: z.string().email().optional().or(z.literal('')),
+  billingLines: z.array(billingLineSchema).default([]),
   serviceType: z.string().optional(),
   deliveryMethod: z.string().optional(),
   serviceDeliveryType: z.enum(['direct', 'contractor']).optional().default('direct'),
@@ -54,7 +54,7 @@ export const contractDetailsSchema = z.object({
   contractLength: z.number().optional(),
   contractLengthUnit: z.string().optional(),
   contractType: z.string().optional(),
-  renewalPeriod: z.string().optional(),
+  renewalPeriod: z.string().optional(), // Changed from number to string to match DTO
   renewalNoticeDays: z.number().optional(),
   noticeUnit: z.string().optional(),
   serviceFrequency: z.string().optional(),
@@ -114,7 +114,7 @@ export const siteFormSchema = z.object({
   postalCode: z.string().min(1, { message: 'Postal code is required' }),
   postcode: z.string().optional(), // Alias for postalCode
   country: z.string().default('Australia'),
-  client_id: z.string().uuid({ message: 'Client is required' }),
+  client_id: z.string().uuid({ message: 'Client is required' }).optional(),
   clientId: z.string().uuid().optional(), // Alias for client_id
   client_name: z.string().optional(),
   status: z.enum(['active', 'pending', 'inactive', 'lost', 'on-hold']),
@@ -122,7 +122,7 @@ export const siteFormSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   representative: z.string().optional(),
   customId: z.string().optional(),
-  contacts: z.array(siteContactSchema).min(1, { message: 'At least one contact is required' }),
+  contacts: z.array(siteContactSchema).optional().default([]),
   primary_contact: z.object({
     name: z.string(),
     email: z.string().email().optional().or(z.literal('')),
@@ -132,7 +132,7 @@ export const siteFormSchema = z.object({
   contract_details: contractDetailsSchema.optional(),
   contractDetails: contractDetailsSchema.optional(), // Alias for contract_details
   useClientInfo: z.boolean().optional(),
-  billingDetails: billingDetailsSchema.optional(),
+  billingDetails: billingDetailsSchema.optional().default({}),
   additionalContracts: z.array(contractDetailsSchema).optional(),
   subcontractors: z.array(z.any()).optional(),
   hasSubcontractors: z.boolean().optional(),

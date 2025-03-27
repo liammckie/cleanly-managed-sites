@@ -1,51 +1,23 @@
 
-export type SiteStatus = 'active' | 'pending' | 'inactive' | 'on-hold' | 'lost';
+// Common enums and types used throughout the application
 
-export interface ValidationMessage {
-  field: string;
-  message: string;
-  row?: number;
-  value?: any;
-}
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationMessage[];
-  warnings: ValidationMessage[];
-  data: any[];
-}
-
-export interface EnhancedValidationResult {
-  isValid: boolean;
-  errors: ValidationMessage[];
-  warnings: ValidationMessage[];
-  data: any[];
-}
-
-// Define employment types with consistent format (underscores instead of hyphens)
 export type EmploymentType = 'full_time' | 'part_time' | 'casual';
 
-// Define employee levels
 export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 
-// Define days of the week
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday';
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
 
-// Define unified day type for backward compatibility
-export type UnifiedDay = Day;
+export type BillingFrequency = 'weekly' | 'monthly' | 'quarterly' | 'annually';
 
-// Define frequency types
-export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
+export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'submitted' | 'approved' | 'accepted' | 'declined' | 'rejected' | 'expired';
 
-// Define billing frequency as an alias to Frequency for consistency
-export type BillingFrequency = Frequency;
+export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
 
-// Define quote status types to include 'sent' and 'approved'
-export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'approved' | 'accepted' | 'rejected' | 'expired';
-
-// Define JSON value types
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-export type JsonValue = Json;
-
-// Define UserStatus for user management
 export type UserStatus = 'active' | 'pending' | 'inactive';
+
+// Helper function to validate enum values
+export function isValidEnumValue<T extends string>(value: string, enumValues: readonly T[]): value is T {
+  return (enumValues as readonly string[]).includes(value);
+}

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { BillingContact } from '@/components/sites/forms/types/billingTypes';
 import { v4 as uuidv4 } from 'uuid';
-import { adaptBillingDetails } from '@/utils/typeAdapters';
 
 export function useSiteFormBillingContacts(
   formData: SiteFormData,
@@ -18,48 +17,55 @@ export function useSiteFormBillingContacts(
       id: uuidv4()
     };
     
-    // Use adaptBillingDetails to ensure proper type compatibility
-    const updatedBillingDetails = adaptBillingDetails({
-      ...formData.billingDetails,
-      contacts: [...(formData.billingDetails?.contacts || []), newContact]
+    // Safely update billingDetails.contacts
+    setFormData((prev) => {
+      const prevBillingDetails = prev.billingDetails || {};
+      const prevContacts = prevBillingDetails.contacts || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...prevBillingDetails,
+          contacts: [...prevContacts, newContact]
+        }
+      };
     });
-    
-    setFormData((prev) => ({
-      ...prev,
-      billingDetails: updatedBillingDetails
-    }));
     
     setIsAddingContact(false);
   };
 
   const handleUpdateContact = (contactId: string, updatedContact: BillingContact) => {
-    // Use adaptBillingDetails to ensure proper type compatibility
-    const updatedBillingDetails = adaptBillingDetails({
-      ...formData.billingDetails,
-      contacts: (formData.billingDetails?.contacts || []).map(contact => 
-        contact.id === contactId ? { ...contact, ...updatedContact } : contact
-      )
+    setFormData((prev) => {
+      const prevBillingDetails = prev.billingDetails || {};
+      const prevContacts = prevBillingDetails.contacts || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...prevBillingDetails,
+          contacts: prevContacts.map(contact => 
+            contact.id === contactId ? { ...contact, ...updatedContact } : contact
+          )
+        }
+      };
     });
-    
-    setFormData((prev) => ({
-      ...prev,
-      billingDetails: updatedBillingDetails
-    }));
     
     setEditingContactId(null);
   };
 
   const handleDeleteContact = (contactId: string) => {
-    // Use adaptBillingDetails to ensure proper type compatibility
-    const updatedBillingDetails = adaptBillingDetails({
-      ...formData.billingDetails,
-      contacts: (formData.billingDetails?.contacts || []).filter(contact => contact.id !== contactId)
+    setFormData((prev) => {
+      const prevBillingDetails = prev.billingDetails || {};
+      const prevContacts = prevBillingDetails.contacts || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...prevBillingDetails,
+          contacts: prevContacts.filter(contact => contact.id !== contactId)
+        }
+      };
     });
-    
-    setFormData((prev) => ({
-      ...prev,
-      billingDetails: updatedBillingDetails
-    }));
   };
 
   return {

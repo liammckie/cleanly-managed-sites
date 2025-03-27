@@ -34,16 +34,7 @@ export function BillingDetailsStepWrapper({
       postcode: '',
       country: 'Australia'
     },
-    serviceDeliveryType: 'direct',
-    weeklyBudget: 0,
-    weeklyContractorCost: 0,
-    monthlyContractorCost: 0,
-    contractorCostFrequency: '',
-    contractorInvoiceFrequency: '',
-    serviceType: '',
-    deliveryMethod: '',
-    rate: '',
-    xeroContactId: ''
+    serviceDeliveryType: 'direct'
   };
   
   // Merge the default values with any existing billing details

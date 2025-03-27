@@ -5,6 +5,7 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { v4 as uuidv4 } from 'uuid';
 import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
+import { BillingLine } from '@/components/sites/forms/types/billingTypes';
 import { SiteStatus } from '@/types/common';
 
 export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
@@ -16,6 +17,11 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
         ...data,
         ...initialData,
         contractDetails: initialData.contractDetails || initialData.contract_details || data.contractDetails,
+        billingDetails: {
+          ...(data.billingDetails || {}),
+          ...(initialData.billingDetails || {}),
+          billingLines: initialData.billingDetails?.billingLines || []
+        }
       };
     }
     return getInitialFormData();
@@ -32,6 +38,11 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
         ...baseData,
         ...initialData,
         contractDetails: initialData.contractDetails || initialData.contract_details || baseData.contractDetails,
+        billingDetails: {
+          ...(baseData.billingDetails || {}),
+          ...(initialData.billingDetails || {}),
+          billingLines: initialData.billingDetails?.billingLines || []
+        }
       };
       
       setFormData(newData);
@@ -47,13 +58,17 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   };
   
   const handleNestedChange = (section: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section as keyof SiteFormData] as Record<string, any> || {}),
-        [field]: value
-      }
-    }));
+    setFormData(prev => {
+      const sectionData = prev[section as keyof SiteFormData] as Record<string, any> || {};
+      
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [field]: value
+        }
+      };
+    });
   };
   
   const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
@@ -75,24 +90,25 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   };
   
   const addBillingLine = () => {
-    const newBillingLine = {
+    const newBillingLine: BillingLine = {
       id: uuidv4(),
       description: '',
       amount: 0,
       isRecurring: true,
       onHold: false,
-      frequency: 'monthly' as 'weekly' | 'monthly' | 'quarterly' | 'annually'
+      frequency: 'monthly'
     };
     
     setFormData(prev => {
-      const billingDetails = prev.billingDetails || {};
-      const billingLines = billingDetails.billingLines || [];
+      const prevBillingDetails = prev.billingDetails || {};
+      
+      const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {
         ...prev,
         billingDetails: {
-          ...billingDetails,
-          billingLines: [...billingLines, newBillingLine]
+          ...prevBillingDetails,
+          billingLines: [...prevBillingLines, newBillingLine]
         }
       };
     });
@@ -100,14 +116,15 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const updateBillingLine = (id: string, field: string, value: any) => {
     setFormData(prev => {
-      const billingDetails = prev.billingDetails || {};
-      const billingLines = billingDetails.billingLines || [];
+      const prevBillingDetails = prev.billingDetails || {};
+      
+      const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {
         ...prev,
         billingDetails: {
-          ...billingDetails,
-          billingLines: billingLines.map(line => 
+          ...prevBillingDetails,
+          billingLines: prevBillingLines.map(line => 
             line.id === id ? { ...line, [field]: value } : line
           )
         }
@@ -117,14 +134,15 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   const removeBillingLine = (id: string) => {
     setFormData(prev => {
-      const billingDetails = prev.billingDetails || {};
-      const billingLines = billingDetails.billingLines || [];
+      const prevBillingDetails = prev.billingDetails || {};
+      
+      const prevBillingLines = prevBillingDetails.billingLines || [];
       
       return {
         ...prev,
         billingDetails: {
-          ...billingDetails,
-          billingLines: billingLines.filter(line => line.id !== id)
+          ...prevBillingDetails,
+          billingLines: prevBillingLines.filter(line => line.id !== id)
         }
       };
     });
