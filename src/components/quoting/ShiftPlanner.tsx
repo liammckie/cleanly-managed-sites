@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus } from 'lucide-react';
-import { QuoteShift } from '@/types/models';
+import { QuoteShift, FrontendQuoteShift } from '@/types/models';
 import { ShiftPlannerProps } from './types';
 import { ShiftList } from './ShiftList';
 import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
+import { adaptQuoteShift } from '@/utils/quoteAdapters';
 
 export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({ 
   shifts = [], 
@@ -20,7 +21,7 @@ export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({
   onRemoveShift
 }) => {
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<Partial<QuoteShift>>({
+  const [formData, setFormData] = useState<Partial<FrontendQuoteShift>>({
     day: 'monday' as Day,
     startTime: '09:00',
     endTime: '17:00',
@@ -46,7 +47,7 @@ export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({
     const hourlyRate = (formData.level || 1) * 25; // Simple calculation, should be replaced with actual award rates
     const estimatedCost = hours * hourlyRate * (formData.numberOfCleaners || 1);
     
-    const newShiftData: Partial<QuoteShift> = {
+    const newShiftData: Partial<FrontendQuoteShift> = {
       ...formData,
       quoteId: quoteId || '',
       estimatedCost
@@ -55,7 +56,8 @@ export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({
     if (onAddShift) {
       onAddShift(newShiftData);
     } else if (onShiftsChange) {
-      const newShift: QuoteShift = {
+      // Convert to a unified QuoteShift using the adapter
+      const newShift = adaptQuoteShift({
         id: uuidv4(),
         quoteId: quoteId || '',
         day: formData.day as Day,
@@ -69,7 +71,7 @@ export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({
         notes: formData.notes || '',
         allowances: formData.allowances || [],
         estimatedCost
-      };
+      });
       
       onShiftsChange([...shifts, newShift]);
     }
@@ -267,14 +269,20 @@ export const ShiftPlanner: React.FC<ShiftPlannerProps> = ({
         </Card>
       )}
 
-      <ShiftList shifts={shifts} onRemoveShift={handleRemoveShift} />
+      <ShiftList shifts={shifts as any} onRemoveShift={handleRemoveShift} />
       
       {shifts.length > 0 && (
         <div className="mt-4 p-4 border rounded-md bg-muted/30">
           <div className="flex justify-between items-center">
             <p className="font-medium">Total Shift Cost:</p>
             <p className="font-bold">
-              ${shifts.reduce((sum, shift) => sum + (shift.estimatedCost || 0), 0).toFixed(2)}
+              ${shifts.reduce((sum, shift) => {
+                // Handle both camelCase and snake_case properties
+                const cost = 'estimatedCost' in shift 
+                  ? (shift.estimatedCost || 0) 
+                  : (shift.estimated_cost || 0);
+                return sum + cost;
+              }, 0).toFixed(2)}
             </p>
           </div>
         </div>

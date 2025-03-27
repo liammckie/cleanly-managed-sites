@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +14,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useOverheadProfiles } from '@/hooks/quotes/useOverheadProfiles';
 import { Quote } from '@/types/models';
 import { dbToOverheadProfile } from '@/utils/typeAdapters';
+import { adaptOverheadProfile } from '@/utils/quoteAdapters';
 
 interface OverheadProfile {
   id: string;
@@ -22,7 +22,6 @@ interface OverheadProfile {
   laborPercentage: number;
 }
 
-// The component handles both creation and editing of quotes
 export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialData?: any }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,12 +29,10 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
   const { updateQuote, isUpdating } = useQuoteUpdate();
   const { data: rawOverheadProfiles = [], isLoading: isLoadingProfiles } = useOverheadProfiles();
   
-  // Convert raw overhead profiles to the expected format
   const overheadProfiles = React.useMemo(() => {
-    return rawOverheadProfiles.map(profile => dbToOverheadProfile(profile));
+    return rawOverheadProfiles.map(profile => adaptOverheadProfile(profile));
   }, [rawOverheadProfiles]);
   
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     clientName: '',
@@ -63,7 +60,6 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
   const [shifts, setShifts] = useState(initialData?.shifts || []);
   const [subcontractors, setSubcontractors] = useState(initialData?.subcontractors || []);
   
-  // Update form when initialData changes (for edits)
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -99,34 +95,29 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
     }
   }, [initialData]);
   
-  // Field change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Handle shifts update
   const handleShiftsChange = (newShifts: any[]) => {
     setShifts(newShifts);
   };
   
-  // Handle subcontractors update
   const handleSubcontractorsChange = (newSubcontractors: any[]) => {
     setSubcontractors(newSubcontractors);
   };
   
-  // Handle overhead profile selection
   const handleOverheadProfileSelect = (profileId: string) => {
     if (!profileId) {
       setFormData(prev => ({ 
         ...prev, 
         overheadProfile: '',
-        overheadPercentage: 15 // Default
+        overheadPercentage: 15
       }));
       return;
     }
     
-    // Find selected profile
     const profile = overheadProfiles.find(p => p.id === profileId);
     if (profile) {
       setFormData(prev => ({ 
@@ -137,18 +128,15 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
     }
   };
   
-  // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      // Prepare data for submission
       const quoteData = {
         ...formData,
         shifts,
         subcontractors,
-        // Add missing required fields
-        laborCost: 0, // Will be calculated on the server
+        laborCost: 0,
         suppliesCost: 0,
         equipmentCost: 0,
         subcontractorCost: 0,
@@ -157,9 +145,7 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
         totalPrice: 0,
       };
       
-      // Create or update quote based on whether we have a quoteId
       if (quoteId) {
-        // Update
         const updatedQuote = await updateQuote({
           ...quoteData,
           id: quoteId
@@ -172,10 +158,8 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
         
         navigate(`/quotes/${quoteId}`);
       } else {
-        // Create
         try {
           const result: any = await new Promise((resolve) => {
-            // Call createQuote and pass the callback to handle the result
             createQuote(quoteData as Quote, {
               onSuccess: (data) => {
                 resolve(data);
@@ -194,7 +178,6 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
             });
             navigate(`/quotes/${result.id}`);
           } else {
-            // If result doesn't have id, just navigate to quotes list
             toast({
               title: "Quote Created",
               description: "The quote has been successfully created.",
@@ -220,7 +203,6 @@ export function QuoteForm({ quoteId, initialData }: { quoteId?: string; initialD
     }
   };
   
-  // Formatted list of overhead profiles for select dropdown
   const formattedProfiles = overheadProfiles.map((profile) => ({
     value: profile.id,
     label: profile.name,

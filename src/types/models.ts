@@ -3,7 +3,7 @@ import { Day, EmploymentType, EmployeeLevel, Frequency, BillingFrequency, QuoteS
 
 export interface Quote {
   id: string;
-  name: string;
+  name?: string;
   clientName: string;
   siteName?: string;
   status: QuoteStatus;
@@ -18,6 +18,8 @@ export interface Quote {
   subcontractors?: QuoteSubcontractor[];
   
   // Additional fields used in components
+  title?: string;
+  description?: string;
   marginAmount?: number;
   overheadCost?: number;
   totalCost?: number;
@@ -94,6 +96,7 @@ export interface SystemUser {
   territories?: string[];
   status: "active" | "pending" | "inactive";
   role_id?: string;
+  role?: UserRole;  // Added role property
   created_at?: string;
   updated_at?: string;
   last_login?: string;
@@ -220,7 +223,7 @@ export interface SiteFormData {
 // Frontend version of QuoteShift with required fields for component use
 export interface FrontendQuoteShift {
   id: string;
-  quoteId: string;
+  quoteId?: string;  // Changed from required to optional for compatibility
   day: Day;
   startTime: string;
   endTime: string;
@@ -240,6 +243,7 @@ export interface DbOverheadProfile {
   name: string;
   description?: string;
   labor_percentage: number;
+  laborPercentage?: number; // Add camelCase alias
   created_at: string;
   updated_at: string;
   user_id?: string;
@@ -261,3 +265,6 @@ export interface ImportOptions {
   validateOnly?: boolean;
   skipValidation?: boolean;
 }
+
+// Add missing SiteStatus definition
+export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';

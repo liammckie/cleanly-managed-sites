@@ -23,6 +23,10 @@ export interface ContractData {
   client_name?: string;
   monthly_revenue?: number;
   contract_details?: any;
+  
+  // For backward compatibility
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface ContractSummaryData {
@@ -50,6 +54,10 @@ export interface ContractSummaryData {
   totalCost: number;
   totalProfit: number;
   profitMargin: number;
+  
+  // Additional metrics
+  avgContractValue: number;
+  renewalRate?: number;
 }
 
 export interface GroupedContracts {
@@ -61,4 +69,9 @@ export interface ContractForecast {
   endDate: string;
   value: number;
   id: string;
+  // Added fields to match component requirements
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
 }

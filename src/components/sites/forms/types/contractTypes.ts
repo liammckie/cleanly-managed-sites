@@ -4,7 +4,7 @@ export interface ContractTerm {
   title: string;
   content: string;
   description?: string;
-  // Fields used by UI components
+  // Additional fields used by UI components
   name?: string;
   startDate?: string;
   endDate?: string;
@@ -59,4 +59,10 @@ export interface ContractForecast {
   endDate: string;
   value: number;
   id: string;
+  
+  // Additional properties needed for ContractForecast in some components
+  month?: string;
+  revenue?: number;
+  cost?: number;
+  profit?: number;
 }
