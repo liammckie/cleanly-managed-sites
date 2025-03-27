@@ -6,15 +6,17 @@ import { useForm } from 'react-hook-form';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface EditSiteFormProps {
+// Updated interface to include site prop
+export interface EditSiteFormProps {
   initialData: Partial<SiteFormData>;
   siteId: string;
   onSubmit: (data: SiteFormData) => void;
   isLoading: boolean;
+  site?: any; // Add the site property since it's being used
 }
 
 // Changed from default export to named export
-export const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubmit, isLoading }) => {
+export const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubmit, isLoading, site }) => {
   const [formData, setFormData] = useState<SiteFormData>({
     name: '',
     address: '',
@@ -253,7 +255,7 @@ export const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId,
                 <div>
                   <label className="block text-sm font-medium mb-1">Billing Notes</label>
                   <textarea
-                    {...form.register('billingDetails.notes')}
+                    {...form.register('billingDetails.notes')} // Changed from "billingDetails.notes" to match BillingDetails interface
                     className="w-full p-2 border rounded"
                     rows={4}
                   ></textarea>

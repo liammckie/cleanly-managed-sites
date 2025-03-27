@@ -39,6 +39,9 @@ export interface BillingDetails {
   billingEmail: string;
   contacts: BillingContact[];
   
+  // Add billingLines property
+  billingLines?: BillingLine[];
+  
   // Additional fields used in components
   billingCity?: string;
   billingState?: string;
@@ -71,9 +74,6 @@ export interface BillingDetails {
   serviceDeliveryType?: string;
   weeklyBudget?: number;
   
-  // Billing lines
-  billingLines?: BillingLine[];
-  
   // Xero integration
   xeroContactId?: string;
   
@@ -81,4 +81,7 @@ export interface BillingDetails {
   totalWeeklyAmount?: number;
   totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
+  
+  // For notes referenced in EditSiteForm.tsx
+  notes?: string;
 }

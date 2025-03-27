@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
 import { QuoteShift } from '@/types/models';
-import { adaptDay, UnifiedDay } from '@/utils/typeAdapters';
+import { UnifiedDay } from '@/types/common';
+import { adaptDay } from '@/utils/typeAdapters';
 
 interface ShiftSchedulerProps {
   onAddShift: (shift: Partial<QuoteShift>) => void;
@@ -26,13 +26,13 @@ export function ShiftScheduler({ onAddShift, existingShifts = [] }: ShiftSchedul
 
   const handleAddShift = () => {
     // Create a new shift object with the current form values
-    const newShift = {
-      day: adaptDay(day),
-      employmentType,
-      startTime,
-      endTime,
-      breakDuration,
-      numberOfCleaners,
+    const newShift: Partial<QuoteShift> = {
+      day: day as Day,
+      employment_type: employmentType,
+      start_time: startTime,
+      end_time: endTime,
+      break_duration: breakDuration,
+      number_of_cleaners: numberOfCleaners,
       level,
       location,
       notes,

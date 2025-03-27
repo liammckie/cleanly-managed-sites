@@ -6,12 +6,12 @@ export type UserStatus = 'active' | 'pending' | 'inactive';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
 
 // Common day and time types
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'weekend' | 'public_holiday';
 export type TimeFormat = '12h' | '24h';
 
 // Employee types
 export type EmploymentType = 'casual' | 'part_time' | 'full_time' | 'contractor';
-export type EmployeeLevel = 1 | 2 | 3;
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 9;
 
 // Frequency types
 export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';

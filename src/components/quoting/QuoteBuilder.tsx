@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Quote, QuoteShift, QuoteSubcontractor } from '@/types/models';
 import { useForm } from 'react-hook-form';
@@ -38,11 +39,11 @@ export default function QuoteBuilder() {
     // Use clientName instead of client_name
     clientName: '',
     status: 'draft',
-    total_price: 0,
-    labor_cost: 0,
-    subcontractor_cost: 0,
-    margin_percentage: 20,
-    overhead_percentage: 15
+    totalPrice: 0,    // Changed from total_price to totalPrice
+    laborCost: 0,
+    subcontractorCost: 0,
+    marginPercentage: 20,
+    overheadPercentage: 15
   });
 
   const [shifts, setShifts] = useState<QuoteShift[]>([]);

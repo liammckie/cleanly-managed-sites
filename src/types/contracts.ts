@@ -27,6 +27,9 @@ export interface ContractData {
   // For backward compatibility
   start_date?: string;
   end_date?: string;
+  
+  // Add the is_primary field that was referenced in contractAdapter.ts
+  is_primary?: boolean;
 }
 
 export interface ContractSummaryData {
@@ -56,7 +59,7 @@ export interface ContractSummaryData {
   profitMargin: number;
   
   // Additional metrics
-  avgContractValue: number;
+  avgContractValue?: number;
   renewalRate?: number;
   expiringCount?: number;
 }

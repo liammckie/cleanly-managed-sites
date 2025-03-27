@@ -1,11 +1,10 @@
 
 export interface ContractTerm {
   id?: string;
-  title: string;
-  content: string;
-  description?: string;
-  // Additional fields used by UI components
+  title?: string;
+  content?: string;
   name?: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
   renewalTerms?: string;

@@ -2,13 +2,13 @@
 import React from 'react';
 import { BasicInformationStep } from './steps/BasicInformationStep';
 import { ContactsStep } from './steps';
-import { JobSpecificationsStep } from './steps/JobSpecificationsStep';
 import { ContractDetailsStep } from './steps/ContractDetailsStep';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { ReplenishablesStep } from './steps/ReplenishablesStep';
 import { SubcontractorsStep } from './steps/SubcontractorsStep';
-import { PeriodicalsStep } from './steps/PeriodicalsStep';
 import { SiteFormData } from './types/siteFormData';
+import { JobSpecificationsStepWrapper } from './steps/JobSpecificationsStepWrapper';
+import { PeriodicalsStepWrapper } from './steps/PeriodicalsStepWrapper';
 
 export interface StepConfig {
   id: string;
@@ -109,7 +109,7 @@ export const getSiteFormSteps = (
     title: 'Job Specifications',
     description: 'Define the job specifications for this site',
     component: (
-      <JobSpecificationsStep
+      <JobSpecificationsStepWrapper
         formData={formData}
         handleNestedChange={handleNestedChange}
       />
@@ -120,8 +120,9 @@ export const getSiteFormSteps = (
     title: 'Periodical Services',
     description: 'Set up periodical services for this site',
     component: (
-      <PeriodicalsStep
+      <PeriodicalsStepWrapper
         formData={formData}
+        handleNestedChange={handleNestedChange}
         handleDoubleNestedChange={handleDoubleNestedChange}
       />
     )

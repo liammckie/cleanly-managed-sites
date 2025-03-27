@@ -30,7 +30,10 @@ export function useContractForecast() {
     totalRevenue: 0,
     totalCost: 0,
     totalProfit: 0,
-    profitMargin: 0
+    profitMargin: 0,
+    avgContractValue: 0, // Added this field
+    renewalRate: 0, // Added with default value
+    expiringCount: 0 // Added with default value
   };
   
   const isLoadingSummary = false;
@@ -113,6 +116,12 @@ export function useContractForecast() {
     // Calculate additional metrics if needed
     summary.totalCount = contracts.length;
     summary.activeCount = contracts.filter(c => c.status === 'active').length;
+    
+    // Calculate average contract value
+    if (contracts.length > 0) {
+      const totalValue = contracts.reduce((sum, contract) => sum + (contract.value || 0), 0);
+      summary.avgContractValue = totalValue / contracts.length;
+    }
     
     return summary;
   };
