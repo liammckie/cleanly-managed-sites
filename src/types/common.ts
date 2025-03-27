@@ -1,30 +1,46 @@
 
-// Common type definitions used across the application
+// Common type definitions for the application
 
-// Day of the week
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'weekend';
-
-// Employment types
-export type EmploymentType = 'full-time' | 'part-time' | 'casual';
-
-// Employee levels
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
-
-// Frequency of payments, services, etc.
-export type Frequency = 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
-
-// Billing frequency
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
-
-// Quote status
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'accepted' | 'pending';
-
-// Site status
+// Site status types
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
 
-// JSON value type definition
-export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-export type Json = JsonValue;
+// Day of the week types for scheduling
+export type Day = 
+  | 'monday' 
+  | 'tuesday' 
+  | 'wednesday' 
+  | 'thursday' 
+  | 'friday' 
+  | 'saturday' 
+  | 'sunday'
+  | 'weekday'
+  | 'public_holiday';
 
-// User status
-export type UserStatus = 'active' | 'pending' | 'inactive';
+// Additional compatible day type for components
+export type UnifiedDay = Day;
+
+// Employment types
+export type EmploymentType = 'casual' | 'part-time' | 'full-time';
+
+// Employee level types
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+
+// Frequency types for billing/scheduling
+export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+
+// Quote status types
+export type QuoteStatus = 
+  | 'draft' 
+  | 'sent' 
+  | 'approved' 
+  | 'accepted' 
+  | 'rejected' 
+  | 'expired' 
+  | 'pending';
+
+// JSON type for type safety
+export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type JsonValue = Json;
+
+// For backward compatibility
+export type BillingFrequency = Frequency;

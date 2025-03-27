@@ -2,6 +2,7 @@
 import React from 'react';
 import { JobSpecificationsStep } from './JobSpecificationsStep';
 import { adaptJobSpecifications } from '@/utils/typeAdapters';
+import { JobSpecificationsStepProps } from './interfaces';
 
 interface JobSpecificationsStepWrapperProps {
   formData: any;
@@ -22,7 +23,7 @@ export function JobSpecificationsStepWrapper({
     jobSpecifications
   };
   
-  const jobSpecsProps = {
+  const jobSpecsProps: JobSpecificationsStepProps = {
     formData: wrappedFormData,
     handleNestedChange
   };

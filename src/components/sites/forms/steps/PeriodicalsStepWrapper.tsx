@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { PeriodicalsStep } from './PeriodicalsStep';
+import { PeriodicalsStepProps } from './interfaces';
 
 interface PeriodicalsStepWrapperProps {
   formData: any;
@@ -21,11 +22,10 @@ export function PeriodicalsStepWrapper({
     periodicals
   };
   
-  return (
-    <PeriodicalsStep 
-      formData={wrappedFormData}
-      handleNestedChange={handleNestedChange}
-      handleDoubleNestedChange={handleDoubleNestedChange}
-    />
-  );
+  const periodicalsProps: PeriodicalsStepProps = {
+    formData: wrappedFormData,
+    handleDoubleNestedChange
+  };
+  
+  return <PeriodicalsStep {...periodicalsProps} />;
 }

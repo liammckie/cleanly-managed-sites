@@ -1,103 +1,195 @@
 
-import { SiteStatus, QuoteStatus } from '@/types/common';
-import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { BillingAddress, BillingDetails } from "@/components/sites/forms/types/billingTypes";
+import { ContractDetails } from "@/components/sites/forms/types/contractTypes";
+import { Day, EmploymentType, Frequency, QuoteStatus } from "@/types/common";
+import { Quote, QuoteShift, QuoteSubcontractor } from "@/types/models";
+import { DbOverheadProfile } from "@/types/models";
 
-// Adapter for job specifications
-export function adaptJobSpecifications(jobSpecifications: any = {}) {
-  return {
-    daysPerWeek: jobSpecifications.daysPerWeek || 0,
-    hoursPerDay: jobSpecifications.hoursPerDay || 0,
-    directEmployees: jobSpecifications.directEmployees || 0,
-    notes: jobSpecifications.notes || '',
-    cleaningFrequency: jobSpecifications.cleaningFrequency || '',
-    customFrequency: jobSpecifications.customFrequency || '',
-    serviceDays: jobSpecifications.serviceDays || '',
-    serviceTime: jobSpecifications.serviceTime || '',
-    estimatedHours: jobSpecifications.estimatedHours || '',
-    equipmentRequired: jobSpecifications.equipmentRequired || '',
-    scopeNotes: jobSpecifications.scopeNotes || '',
-    weeklyContractorCost: jobSpecifications.weeklyContractorCost || 0,
-    monthlyContractorCost: jobSpecifications.monthlyContractorCost || 0,
-    annualContractorCost: jobSpecifications.annualContractorCost || 0,
-  };
-}
+// Day adapters
+export const adaptDay = (day: string): Day => {
+  const normalizedDay = day.toLowerCase().trim();
+  
+  if (
+    normalizedDay === 'monday' ||
+    normalizedDay === 'tuesday' ||
+    normalizedDay === 'wednesday' ||
+    normalizedDay === 'thursday' ||
+    normalizedDay === 'friday' ||
+    normalizedDay === 'saturday' ||
+    normalizedDay === 'sunday' ||
+    normalizedDay === 'weekday' ||
+    normalizedDay === 'public_holiday'
+  ) {
+    return normalizedDay as Day;
+  }
+  
+  // Default fallback
+  return 'monday';
+};
 
-// Create an adapter function for quotes
-export function adaptQuote(quote: any = {}) {
-  return {
-    id: quote.id || '',
-    name: quote.name || '',
-    clientName: quote.client_name || quote.clientName || '',
-    status: (quote.status || 'draft') as QuoteStatus,
-    totalPrice: quote.total_price || quote.totalPrice || 0,
-    createdAt: quote.created_at || quote.createdAt || new Date().toISOString(),
-    expiryDate: quote.expiry_date || quote.expiryDate || '',
-    suppliesCost: quote.supplies_cost || quote.suppliesCost || 0,
-    equipmentCost: quote.equipment_cost || quote.equipmentCost || 0,
-    quoteNumber: quote.quote_number || quote.quoteNumber || '',
-    validUntil: quote.valid_until || quote.validUntil || '',
-    clientId: quote.client_id || quote.clientId || '',
-    siteId: quote.site_id || quote.siteId || '',
-    overheadCost: quote.overhead_cost || quote.overheadCost || 0,
-    totalCost: quote.total_cost || quote.totalCost || 0,
-    marginAmount: quote.margin_amount || quote.marginAmount || 0,
-    startDate: quote.start_date || quote.startDate || '',
-    endDate: quote.end_date || quote.endDate || ''
-  };
-}
+// Employment type adapters
+export const adaptEmploymentType = (type: string): EmploymentType => {
+  const normalizedType = type.toLowerCase().trim().replace('_', '-');
+  
+  if (normalizedType === 'casual' || normalizedType === 'part-time' || normalizedType === 'full-time') {
+    return normalizedType as EmploymentType;
+  }
+  
+  // Default fallback
+  return 'casual';
+};
 
-// Create adapter for billing details
-export function adaptBillingDetails(billingDetails: any = {}): BillingDetails {
+// Quote adapters
+export const adaptQuote = (data: any): Quote => {
+  if (!data) return {} as Quote;
+  
   return {
-    billingAddress: billingDetails.billingAddress || {},
-    useClientInfo: billingDetails.useClientInfo || false,
-    billingMethod: billingDetails.billingMethod || 'email',
-    paymentTerms: billingDetails.paymentTerms || 'net30',
-    billingEmail: billingDetails.billingEmail || '',
-    billingLines: billingDetails.billingLines || [],
-    contacts: billingDetails.contacts || [],
-    notes: billingDetails.notes || ''
+    id: data.id,
+    name: data.name || '',
+    clientName: data.client_name || '',
+    status: (data.status || 'draft') as QuoteStatus,
+    totalPrice: data.total_price || 0,
+    laborCost: data.labor_cost || 0,
+    overheadPercentage: data.overhead_percentage || 15,
+    marginPercentage: data.margin_percentage || 20,
+    subcontractorCost: data.subcontractor_cost || 0,
+    createdAt: data.created_at || '',
+    updatedAt: data.updated_at || '',
+    
+    // Optional fields with their aliases
+    title: data.title,
+    description: data.description,
+    suppliesCost: data.supplies_cost || 0,
+    equipmentCost: data.equipment_cost || 0,
+    quoteNumber: data.quote_number || '',
+    validUntil: data.valid_until || '',
+    clientId: data.client_id,
+    siteId: data.site_id,
+    overheadCost: data.overhead_cost || 0,
+    totalCost: data.total_cost || 0,
+    marginAmount: data.margin_amount || 0,
+    startDate: data.start_date || '',
+    endDate: data.end_date || '',
+    expiryDate: data.expiry_date || '',
+    contractLength: data.contract_length,
+    contractLengthUnit: data.contract_length_unit,
+    
+    // Include shifts and subcontractors if available
+    shifts: data.shifts ? data.shifts.map(adaptShift) : [],
+    subcontractors: data.subcontractors ? data.subcontractors.map(adaptSubcontractor) : []
   };
-}
+};
 
-// Create adapter for contract details
-export function adaptContractDetails(contractDetails: any = {}): ContractDetails {
+export const adaptShift = (data: any): QuoteShift => {
   return {
-    id: contractDetails.id,
-    startDate: contractDetails.startDate || '',
-    endDate: contractDetails.endDate || '',
-    contractLength: contractDetails.contractLength || 0,
-    contractLengthUnit: contractDetails.contractLengthUnit || 'months',
-    autoRenewal: contractDetails.autoRenewal || false,
-    renewalPeriod: contractDetails.renewalPeriod || 0,
-    renewalNotice: contractDetails.renewalNotice || 0,
-    noticeUnit: contractDetails.noticeUnit || 'days',
-    serviceFrequency: contractDetails.serviceFrequency || '',
-    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod || '',
-    contractNumber: contractDetails.contractNumber || '',
-    renewalTerms: contractDetails.renewalTerms || '',
-    terminationPeriod: contractDetails.terminationPeriod || '',
-    contractType: contractDetails.contractType || 'cleaning',
-    value: contractDetails.value || 0,
-    billingCycle: contractDetails.billingCycle || 'monthly',
-    notes: contractDetails.notes || '',
-    terms: contractDetails.terms || []
+    id: data.id,
+    quote_id: data.quote_id,
+    day: adaptDay(data.day),
+    start_time: data.start_time,
+    end_time: data.end_time,
+    break_duration: data.break_duration || 0,
+    number_of_cleaners: data.number_of_cleaners || 1,
+    employment_type: adaptEmploymentType(data.employment_type),
+    level: data.level || 1,
+    allowances: data.allowances || [],
+    estimated_cost: data.estimated_cost || 0,
+    location: data.location || '',
+    notes: data.notes || '',
+    
+    // Add camelCase aliases
+    quoteId: data.quote_id,
+    startTime: data.start_time,
+    endTime: data.end_time,
+    breakDuration: data.break_duration || 0,
+    numberOfCleaners: data.number_of_cleaners || 1,
+    employmentType: adaptEmploymentType(data.employment_type),
+    estimatedCost: data.estimated_cost || 0
   };
-}
+};
 
-// Overhead profile adapter
-export function dbToOverheadProfile(profile: any) {
+export const adaptSubcontractor = (data: any): QuoteSubcontractor => {
   return {
-    id: profile.id || '',
-    name: profile.name || '',
-    description: profile.description || '',
-    basePercentage: profile.base_percentage || profile.basePercentage || 0,
-    additionalFees: profile.additional_fees?.map((fee: any) => ({
-      id: fee.id || crypto.randomUUID(),
-      name: fee.name || '',
-      percentage: fee.percentage || 0,
-      isEnabled: fee.is_enabled !== undefined ? fee.is_enabled : true
-    })) || []
+    id: data.id,
+    quote_id: data.quote_id,
+    name: data.name || '',
+    description: data.description || '',
+    cost: data.cost || 0,
+    frequency: (data.frequency || 'monthly') as Frequency,
+    email: data.email || '',
+    phone: data.phone || '',
+    notes: data.notes || '',
+    
+    // Additional fields used in the UI
+    service: data.service || '',
+    services: data.services || [],
+    customServices: data.custom_services || '',
+    monthlyCost: data.monthly_cost || 0,
+    isFlatRate: data.is_flat_rate !== false,
+    
+    // Camel case alias
+    quoteId: data.quote_id
   };
-}
+};
+
+export const adaptModelsToQuotes = (models: any[]): Quote[] => {
+  return models.map(adaptQuote);
+};
+
+export const adaptJobSpecifications = (data: any): any => {
+  if (!data) return {};
+  
+  return {
+    daysPerWeek: data.daysPerWeek || data.days_per_week || 5,
+    hoursPerDay: data.hoursPerDay || data.hours_per_day || 8,
+    directEmployees: data.directEmployees || data.direct_employees || 0,
+    notes: data.notes || '',
+    cleaningFrequency: data.cleaningFrequency || data.cleaning_frequency || 'daily',
+    customFrequency: data.customFrequency || data.custom_frequency || '',
+    serviceDays: data.serviceDays || data.service_days || '',
+    serviceTime: data.serviceTime || data.service_time || '',
+    estimatedHours: data.estimatedHours || data.estimated_hours || '',
+    equipmentRequired: data.equipmentRequired || data.equipment_required || '',
+    scopeNotes: data.scopeNotes || data.scope_notes || '',
+    weeklyContractorCost: data.weeklyContractorCost || data.weekly_contractor_cost || 0,
+    monthlyContractorCost: data.monthlyContractorCost || data.monthly_contractor_cost || 0,
+    annualContractorCost: data.annualContractorCost || data.annual_contractor_cost || 0
+  };
+};
+
+export const dbToOverheadProfile = (data: any): DbOverheadProfile => {
+  return {
+    id: data.id,
+    name: data.name || 'Default Profile',
+    description: data.description || '',
+    labor_percentage: data.labor_percentage || 15,
+    laborPercentage: data.labor_percentage || 15,
+    created_at: data.created_at || new Date().toISOString(),
+    updated_at: data.updated_at || new Date().toISOString(),
+    user_id: data.user_id
+  };
+};
+
+// Address adaptation
+export const adaptAddress = (address: string | BillingAddress): BillingAddress => {
+  if (typeof address === 'string') {
+    return {
+      street: address,
+      city: '',
+      state: '',
+      postcode: '',
+      country: ''
+    };
+  }
+  return address;
+};
+
+// ContractDetails adaptation to ensure required fields
+export const adaptContractDetails = (details: ContractDetails): ContractDetails => {
+  return {
+    startDate: details.startDate || '',
+    endDate: details.endDate || '',
+    ...details,
+    // Ensure the terms array exists
+    terms: details.terms || []
+  };
+};

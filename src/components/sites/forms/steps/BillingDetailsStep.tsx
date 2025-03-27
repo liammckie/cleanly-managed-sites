@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -141,11 +140,11 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="billingAddress.postalCode">Postal Code</Label>
+                <Label htmlFor="billingAddress.postcode">Postal Code</Label>
                 <Input 
-                  id="billingAddress.postalCode"
-                  value={(billingDetails.billingAddress?.postalCode || '')}
-                  onChange={(e) => handleDoubleNestedChange('billingDetails', 'billingAddress', 'postalCode', e.target.value)}
+                  id="billingAddress.postcode"
+                  value={(billingDetails.billingAddress?.postcode || '')}
+                  onChange={(e) => handleDoubleNestedChange('billingDetails', 'billingAddress', 'postcode', e.target.value)}
                   placeholder="Postal Code"
                 />
               </div>

@@ -1,11 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
+import { Day, EmployeeLevel, EmploymentType, UnifiedDay } from '@/types/common';
 import { QuoteShift } from '@/types/models';
-import { UnifiedDay } from '@/types/common';
-import { adaptDay } from '@/utils/typeAdapters';
+import { adaptEmploymentType } from '@/utils/typeAdapters';
 
 interface ShiftSchedulerProps {
   onAddShift: (shift: Partial<QuoteShift>) => void;
@@ -80,8 +80,8 @@ export function ShiftScheduler({ onAddShift, existingShifts = [] }: ShiftSchedul
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="casual">Casual</SelectItem>
-              <SelectItem value="part_time">Part Time</SelectItem>
-              <SelectItem value="full_time">Full Time</SelectItem>
+              <SelectItem value="part-time">Part Time</SelectItem>
+              <SelectItem value="full-time">Full Time</SelectItem>
             </SelectContent>
           </Select>
         </div>

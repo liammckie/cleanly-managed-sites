@@ -1,15 +1,29 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchQuotes } from '@/lib/api/quotes';
 import { Quote } from '@/types/models';
-import { adaptQuote } from '@/utils/typeAdapters';
+import { queryClient } from '@/lib/react-query';
+import { ensureCompleteQuotes } from './useQuoteAdapter';
+import { fetchQuotes } from '@/lib/api/quotes/quotesApi';
 
 export function useQuotes() {
-  return useQuery<Quote[]>({
+  const query = useQuery({
     queryKey: ['quotes'],
     queryFn: async () => {
-      const data = await fetchQuotes();
-      return data.map(quote => adaptQuote(quote));
-    },
+      try {
+        const quotes = await fetchQuotes();
+        // Ensure all quotes have the required properties
+        return ensureCompleteQuotes(quotes);
+      } catch (error) {
+        console.error('Error fetching quotes:', error);
+        return [];
+      }
+    }
   });
+
+  return {
+    quotes: query.data || [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error
+  };
 }

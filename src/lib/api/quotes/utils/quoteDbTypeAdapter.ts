@@ -1,129 +1,62 @@
-import { Day, QuoteStatus, EmployeeLevel, EmploymentType, Frequency } from '@/types/common';
 
-// Convert string status to QuoteStatus enum
-export function toQuoteStatus(status: string): QuoteStatus {
-  switch (status) {
-    case 'draft':
-    case 'sent':
-    case 'approved':
-    case 'rejected':
-    case 'expired':
-    case 'pending':
-    case 'accepted':
-      return status as QuoteStatus;
-    default:
-      return 'draft';
-  }
-}
+import { Day, EmploymentType, Frequency } from '@/types/common';
 
-// Convert string day to Day enum
-export function toDay(day: string): Day {
-  switch (day) {
-    case 'monday':
-    case 'tuesday':
-    case 'wednesday':
-    case 'thursday':
-    case 'friday':
-    case 'saturday':
-    case 'sunday':
-    case 'weekday':
-    case 'public_holiday':
-      return day as Day;
-    default:
-      return 'monday';
-  }
-}
-
-// Convert string employment type to EmploymentType enum
-export function toEmploymentType(type: string): EmploymentType {
-  switch (type) {
-    case 'part_time':
-    case 'full_time':
+// Adapter for employment type conversion between database and frontend
+export const dbToFrontendEmploymentType = (dbType: string): EmploymentType => {
+  switch (dbType) {
     case 'casual':
-    case 'contractor':
-      return type as EmploymentType;
-    case 'partTime':
+      return 'casual';
+    case 'part_time':
+    case 'part-time':
+      return 'part-time';
+    case 'full_time':  
+    case 'full-time':  
+      return 'full-time';
+    default:
+      return 'casual'; // Default fallback
+  }
+};
+
+// Adapter for employment type conversion between frontend and database
+export const frontendToDbEmploymentType = (frontendType: EmploymentType): string => {
+  switch (frontendType) {
+    case 'casual':
+      return 'casual';
+    case 'part-time':
       return 'part_time';
-    case 'fullTime':
+    case 'full-time':
       return 'full_time';
     default:
-      return 'casual';
+      return 'casual'; // Default fallback
   }
-}
+};
 
-// Convert string employee level to EmployeeLevel enum
-export function toEmployeeLevel(level: string | number): EmployeeLevel {
-  if (typeof level === 'number') {
-    if (level >= 1 && level <= 8) {
-      return level as EmployeeLevel;
-    }
-    return 1;
+// Adapter for day conversion
+export const dbToFrontendDay = (dbDay: string): Day => {
+  // Convert db day format to frontend enum format
+  if (dbDay.toLowerCase() === 'public_holiday' || 
+      dbDay.toLowerCase() === 'weekday' || 
+      ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].includes(dbDay.toLowerCase())) {
+    return dbDay.toLowerCase() as Day;
   }
   
-  // If it's a string, try parsing as number
-  const numLevel = parseInt(level, 10);
-  if (!isNaN(numLevel) && numLevel >= 1 && numLevel <= 8) {
-    return numLevel as EmployeeLevel;
+  return 'monday'; // Default fallback
+};
+
+// Adapter for frequency conversion
+export const dbToFrontendFrequency = (dbFrequency: string): Frequency => {
+  const normalizedFrequency = dbFrequency.toLowerCase();
+  
+  if ([
+    'weekly', 
+    'fortnightly', 
+    'monthly', 
+    'quarterly', 
+    'annually', 
+    'one-time'
+  ].includes(normalizedFrequency)) {
+    return normalizedFrequency as Frequency;
   }
   
-  return 1;
-}
-
-// Convert string frequency to Frequency enum
-export function toFrequency(frequency: string): Frequency {
-  switch (frequency) {
-    case 'daily':
-    case 'weekly':
-    case 'fortnightly':
-    case 'monthly':
-    case 'quarterly':
-    case 'yearly':
-    case 'annually':
-    case 'once':
-    case 'one-time':
-    case 'one_time':
-    case 'per_event':
-      return frequency as Frequency;
-    default:
-      return 'monthly';
-  }
-}
-
-// Convert contract length unit string to accepted values
-export function toContractLengthUnit(unit: string): 'days' | 'weeks' | 'months' | 'years' {
-  switch (unit) {
-    case 'days':
-    case 'weeks':
-    case 'months':
-    case 'years':
-      return unit as 'days' | 'weeks' | 'months' | 'years';
-    default:
-      return 'months';
-  }
-}
-
-export function mapEmploymentTypeToDatabase(type: EmploymentType): string {
-  switch (type) {
-    case 'part-time':
-      return 'part-time';
-    case 'casual':
-      return 'casual';
-    case 'full-time':
-    default:
-      return 'full-time';
-  }
-}
-
-export function mapEmploymentTypeFromDatabase(type: string): EmploymentType {
-  switch (type) {
-    case 'part_time':
-    case 'part-time':
-      return 'part-time';
-    case 'casual':
-      return 'casual';
-    case 'full_time':
-    case 'full-time':
-    default:
-      return 'full-time';
-  }
-}
+  return 'monthly'; // Default fallback
+};
