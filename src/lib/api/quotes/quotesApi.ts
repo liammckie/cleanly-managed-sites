@@ -86,3 +86,20 @@ export const updateQuote = async (quoteId: string, quoteData: Partial<Quote>): P
     throw error;
   }
 };
+
+// Delete a quote
+export const deleteQuoteMutation = async (quoteId: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', quoteId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  } catch (error) {
+    console.error(`Error deleting quote ${quoteId}:`, error);
+    throw error;
+  }
+};
