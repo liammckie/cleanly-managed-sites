@@ -1,75 +1,68 @@
 
 import { supabase } from '@/lib/supabase';
 import { ContractorRecord } from './types';
-import { validateContractorData } from './validation';
+import { validateContractorData } from './validation/contractorValidation';
 
-export const importContractors = async (contractors: any[]): Promise<void> => {
+export const importContractors = async (contractors: any[]): Promise<{
+  success: boolean;
+  count: number;
+  errors?: any[];
+}> => {
   try {
     console.log(`Starting contractor import with ${contractors.length} records`);
     
     // Validate contractor data
     const validationResult = validateContractorData(contractors);
     
-    if (!validationResult.isValid) {
+    if (!validationResult.valid) {
       console.error('Contractor validation errors:', validationResult.errors);
-      throw new Error(`Contractor validation failed with ${validationResult.errors.length} errors`);
+      return {
+        success: false,
+        count: 0,
+        errors: validationResult.errors,
+      };
     }
     
-    if (validationResult.warnings.length > 0) {
+    if (validationResult.warnings && validationResult.warnings.length > 0) {
       console.warn('Contractor validation warnings:', validationResult.warnings);
     }
     
-    const validContractors = validationResult.data as ContractorRecord[];
+    const validContractors = validationResult.data || [];
     console.log(`Validated ${validContractors.length} contractors`);
     
-    // Process each contractor
-    for (const contractor of validContractors) {
-      const { action = 'create', id, ...contractorData } = contractor as any;
-      
-      if (action === 'delete' && id) {
-        // Delete existing contractor
-        const { error: deleteError } = await supabase
-          .from('contractors')
-          .delete()
-          .eq('id', id);
-        
-        if (deleteError) {
-          console.error(`Error deleting contractor ${id}:`, deleteError);
-          throw deleteError;
-        }
-        
-        console.log(`Deleted contractor ${id}`);
-      } else if (action === 'update' && id) {
-        // Update existing contractor
-        const { error: updateError } = await supabase
-          .from('contractors')
-          .update(contractorData)
-          .eq('id', id);
-        
-        if (updateError) {
-          console.error(`Error updating contractor ${id}:`, updateError);
-          throw updateError;
-        }
-        
-        console.log(`Updated contractor ${id}`);
-      } else {
-        // Create new contractor
-        const { error: insertError } = await supabase
-          .from('contractors')
-          .insert(contractorData);
-        
-        if (insertError) {
-          console.error('Error inserting contractor:', insertError);
-          throw insertError;
-        }
-        
-        console.log(`Created new contractor: ${contractorData.business_name}`);
-      }
+    if (validContractors.length === 0) {
+      return {
+        success: true,
+        count: 0
+      };
+    }
+    
+    // Insert contractors
+    const { data, error } = await supabase
+      .from('contractors')
+      .insert(validContractors)
+      .select();
+    
+    if (error) {
+      console.error('Error inserting contractors:', error);
+      return {
+        success: false,
+        count: 0,
+        errors: [{ message: error.message }]
+      };
     }
     
     console.log('Contractor import completed successfully');
+    return {
+      success: true,
+      count: data?.length || validContractors.length
+    };
   } catch (error) {
     console.error('Error during contractor import:', error);
-    throw error;
+    return {
+      success: false,
+      count: 0,
+      errors: [{ message: (error as Error).message }]
+    };
   }
 };

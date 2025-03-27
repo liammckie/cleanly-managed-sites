@@ -1,11 +1,5 @@
 
-import { 
-  ValidationMessage, 
-  ValidationResult, 
-  EnhancedValidationResult, 
-  ValidationError,
-  LegacyValidationResult
-} from '@/types/common';
+import { ValidationError } from '@/types/common';
 
 export interface ImportOptions {
   mapping?: Record<string, string>;
@@ -32,12 +26,29 @@ export interface ExportOptions {
 // Define the DataType for csvGenerator
 export type DataType = 'client' | 'site' | 'contractor' | 'invoice' | 'contract';
 
+// Forward exports from validation types
+export type { 
+  ValidationError,
+  ValidationMessage,
+  ValidationResult,
+  ValidationOptions 
+} from './validation/types';
+
+// Legacy validation structure - to maintain compatibility
+export interface LegacyValidationResult<T = unknown> {
+  isValid: boolean;
+  data?: T;
+  errors?: ValidationError[];
+  warnings?: ValidationError[];
+}
+
 // Add cross-mapping functions to help with legacy code
 export function legacyToNewValidationResult<T>(legacy: LegacyValidationResult<T>): ValidationResult<T> {
   return {
     valid: legacy.isValid,
     data: legacy.data,
-    errors: legacy.errors
+    errors: legacy.errors,
+    warnings: legacy.warnings
   };
 }
 
@@ -46,7 +57,7 @@ export function newToLegacyValidationResult<T>(result: ValidationResult<T>): Leg
     isValid: result.valid,
     data: result.data,
     errors: result.errors,
-    warnings: (result as EnhancedValidationResult<T>).warnings
+    warnings: (result as any).warnings
   };
 }
 
@@ -91,4 +102,14 @@ export interface InvoiceRecord {
   due_date?: string;
   status: string;
   notes?: string;
+  line_items?: InvoiceLineItem[];
+}
+
+export interface InvoiceLineItem {
+  id?: string;
+  invoice_id?: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_type?: string;
 }

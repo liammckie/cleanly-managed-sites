@@ -1,13 +1,14 @@
 
 import Papa from 'papaparse';
-import { DataType } from './types';
+
+export type DataType = 'client' | 'site' | 'contractor' | 'invoice' | 'contract' | 'unified';
 
 export function generateCSV(data: any[], type: DataType): string {
   // Handle special processing for certain data types
   let processedData = data;
   
   // For contracts, we need to stringify the contract_details field
-  if (type === 'contracts') {
+  if (type === 'contract') {
     processedData = data.map(item => ({
       ...item,
       contract_details: typeof item.contract_details === 'object'
@@ -24,7 +25,7 @@ export function generateTemplateCSV(type: DataType): string {
   let examples: Record<string, string>[] = [];
   
   switch (type) {
-    case 'clients':
+    case 'client':
       headers = ['name', 'email', 'phone', 'address', 'city', 'state', 'postcode', 'status', 'notes'];
       examples = [{
         name: 'Example Company',
@@ -39,7 +40,7 @@ export function generateTemplateCSV(type: DataType): string {
       }];
       break;
       
-    case 'sites':
+    case 'site':
       headers = ['name', 'client_id', 'address', 'city', 'state', 'postcode', 'status', 'email', 'phone', 'notes'];
       examples = [{
         name: 'Example Site',
@@ -55,7 +56,7 @@ export function generateTemplateCSV(type: DataType): string {
       }];
       break;
       
-    case 'contracts':
+    case 'contract':
       headers = ['site_id', 'contract_details', 'notes', 'created_by'];
       examples = [{
         site_id: 'site_123',
@@ -111,6 +112,38 @@ export function generateTemplateCSV(type: DataType): string {
           notes: 'Example contract'
         }
       ];
+      break;
+      
+    case 'contractor':
+      headers = ['business_name', 'contact_name', 'contractor_type', 'email', 'phone', 'address', 'city', 'state', 'postcode', 'abn', 'status', 'notes'];
+      examples = [{
+        business_name: 'Example Contractor',
+        contact_name: 'John Doe',
+        contractor_type: 'general',
+        email: 'contractor@example.com',
+        phone: '555-9876',
+        address: '789 Contractor Lane',
+        city: 'Sydney',
+        state: 'NSW',
+        postcode: '2000',
+        abn: '12345678901',
+        status: 'active',
+        notes: 'Example contractor'
+      }];
+      break;
+      
+    case 'invoice':
+      headers = ['invoice_number', 'client_id', 'site_id', 'amount', 'invoice_date', 'due_date', 'status', 'notes'];
+      examples = [{
+        invoice_number: 'INV-001',
+        client_id: 'client_123',
+        site_id: 'site_123',
+        amount: '1000.00',
+        invoice_date: '2023-05-01',
+        due_date: '2023-05-15',
+        status: 'draft',
+        notes: 'Example invoice'
+      }];
       break;
   }
   

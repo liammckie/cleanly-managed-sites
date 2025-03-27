@@ -5,43 +5,81 @@ import { validateSiteData } from './validation/siteValidation';
 import { checkExistingItems } from './validation/commonValidation';
 
 // Import sites
-export const importSites = async (sites: Partial<SiteRecord>[]): Promise<void> => {
-  // Validate site data
-  const { isValid, errors, data: validData } = validateSiteData(sites);
-  
-  if (!isValid) {
-    console.error('Invalid site data:', errors);
-    throw new Error(`Invalid site data. Please check your import file. ${errors.map(e => e.message).join(', ')}`);
-  }
-  
-  // Check for existing sites by ID to avoid duplicates
-  const sitesWithIds = validData.filter(site => site.id);
-  const existingIds = await checkExistingItems('sites', sitesWithIds.map(site => site.id as string));
-  
-  const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id as string));
-  const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id as string));
-  
-  // Insert new sites
-  if (sitesToInsert.length > 0) {
-    const { error: insertError } = await supabase
-      .from('sites')
-      .insert(sitesToInsert);
+export const importSites = async (sites: Partial<SiteRecord>[]): Promise<{
+  success: boolean;
+  count: number;
+  errors?: any[];
+}> => {
+  try {
+    // Validate site data
+    const validationResult = validateSiteData(sites);
     
-    if (insertError) {
-      console.error('Error inserting sites:', insertError);
-      throw new Error(`Failed to import sites: ${insertError.message}`);
+    if (!validationResult.valid) {
+      console.error('Invalid site data:', validationResult.errors);
+      return {
+        success: false,
+        count: 0,
+        errors: validationResult.errors
+      };
     }
-  }
-  
-  // Update existing sites
-  for (const site of sitesToUpdate) {
-    const { error: updateError } = await supabase
-      .from('sites')
-      .update(site)
-      .eq('id', site.id);
     
-    if (updateError) {
-      console.error(`Error updating site ${site.id}:`, updateError);
+    const validData = validationResult.data || [];
+    
+    // Check for existing sites by ID to avoid duplicates
+    const sitesWithIds = validData.filter(site => site.id);
+    const existingIds = sitesWithIds.length > 0 ? 
+      await checkExistingItems('sites', sitesWithIds.map(site => site.id as string)) : 
+      [];
+    
+    const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id as string));
+    const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id as string));
+    
+    let insertCount = 0;
+    let updateCount = 0;
+    
+    // Insert new sites
+    if (sitesToInsert.length > 0) {
+      const { data, error: insertError } = await supabase
+        .from('sites')
+        .insert(sitesToInsert)
+        .select();
+      
+      if (insertError) {
+        console.error('Error inserting sites:', insertError);
+        return {
+          success: false,
+          count: 0,
+          errors: [{ message: insertError.message }]
+        };
+      }
+      
+      insertCount = data?.length || 0;
     }
+    
+    // Update existing sites
+    for (const site of sitesToUpdate) {
+      const { error: updateError } = await supabase
+        .from('sites')
+        .update(site)
+        .eq('id', site.id);
+      
+      if (updateError) {
+        console.error(`Error updating site ${site.id}:`, updateError);
+      } else {
+        updateCount++;
+      }
+    }
+    
+    return {
+      success: true,
+      count: insertCount + updateCount
+    };
+  } catch (error) {
+    console.error('Error importing sites:', error);
+    return {
+      success: false,
+      count: 0,
+      errors: [{ message: (error as Error).message }]
+    };
   }
 };

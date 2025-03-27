@@ -1,4 +1,6 @@
 
+// Re-export all validation functions and types
+export * from './types';
 export * from './commonValidation';
 export * from './clientValidation';
 export * from './siteValidation';

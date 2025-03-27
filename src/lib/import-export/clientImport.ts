@@ -1,7 +1,11 @@
 
 import { validateClientData } from './validation/clientValidation';
-import { LegacyValidationResult, newToLegacyValidationResult, ClientImportItem } from './types';
-import { ValidationResult } from '@/types/common';
+import { 
+  LegacyValidationResult, 
+  newToLegacyValidationResult, 
+  ClientImportItem,
+  ValidationResult
+} from './types';
 
 export function processClientImport(data: any[]): { 
   validItems: ClientImportItem[], 

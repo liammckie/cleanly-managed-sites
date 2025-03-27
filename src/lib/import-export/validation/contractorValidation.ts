@@ -1,91 +1,121 @@
 
-import { ValidationResult, ValidationMessage } from './types';
+import { ValidationResult, ValidationMessage, ValidationError } from '../types';
+import { ContractorRecord } from '../types';
 
 /**
  * Validates contractor data for importing
  * @param contractorData The contractor data to validate
  * @returns Validation result with success flag and error messages
  */
-export function validateContractorData(contractorData: any[]): ValidationResult {
+export function validateContractorData(contractorData: any[]): ValidationResult<Partial<ContractorRecord>[]> {
   const messages: ValidationMessage[] = [];
-  let isValid = true;
+  const errors: ValidationError[] = [];
+  const warnings: ValidationError[] = [];
+  let valid = true;
   
   if (!Array.isArray(contractorData)) {
+    const error = {
+      path: 'data',
+      message: 'Contractor data must be an array'
+    };
+    errors.push(error);
     messages.push({
       type: 'error',
       field: 'data',
       message: 'Contractor data must be an array'
     });
-    return { valid: false, messages };
+    return { valid: false, errors, warnings, messages };
   }
   
+  const validData: Partial<ContractorRecord>[] = [];
+  
   contractorData.forEach((contractor, index) => {
+    const validContractor: Partial<ContractorRecord> = {};
+    
     // Required fields
     if (!contractor.business_name) {
+      valid = false;
+      const error = {
+        path: `[${index}].business_name`,
+        message: `Row ${index + 1}: Business name is required`
+      };
+      errors.push(error);
       messages.push({
         type: 'error',
         field: 'business_name',
         message: `Row ${index + 1}: Business name is required`
       });
-      isValid = false;
+    } else {
+      validContractor.business_name = contractor.business_name;
     }
     
     if (!contractor.contact_name) {
+      valid = false;
+      const error = {
+        path: `[${index}].contact_name`,
+        message: `Row ${index + 1}: Contact name is required`
+      };
+      errors.push(error);
       messages.push({
         type: 'error',
         field: 'contact_name',
         message: `Row ${index + 1}: Contact name is required`
       });
-      isValid = false;
+    } else {
+      validContractor.contact_name = contractor.contact_name;
+    }
+    
+    if (!contractor.contractor_type) {
+      valid = false;
+      const error = {
+        path: `[${index}].contractor_type`,
+        message: `Row ${index + 1}: Contractor type is required`
+      };
+      errors.push(error);
+      messages.push({
+        type: 'error',
+        field: 'contractor_type',
+        message: `Row ${index + 1}: Contractor type is required`
+      });
+    } else {
+      validContractor.contractor_type = contractor.contractor_type;
     }
     
     // Email validation
     if (contractor.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contractor.email)) {
+      valid = false;
+      const error = {
+        path: `[${index}].email`,
+        message: `Row ${index + 1}: Invalid email format`
+      };
+      errors.push(error);
       messages.push({
         type: 'error',
         field: 'email',
         message: `Row ${index + 1}: Invalid email format`
       });
-      isValid = false;
+    } else {
+      validContractor.email = contractor.email;
     }
     
-    // Phone format validation
-    if (contractor.phone && !/^\+?[0-9\s()-]{8,}$/.test(contractor.phone)) {
-      messages.push({
-        type: 'warning',
-        field: 'phone',
-        message: `Row ${index + 1}: Phone number format may be invalid`
-      });
-    }
+    // Copy other fields
+    validContractor.id = contractor.id;
+    validContractor.phone = contractor.phone;
+    validContractor.address = contractor.address;
+    validContractor.city = contractor.city;
+    validContractor.state = contractor.state;
+    validContractor.postcode = contractor.postcode;
+    validContractor.abn = contractor.abn;
+    validContractor.status = contractor.status || 'active';
+    validContractor.specialty = Array.isArray(contractor.specialty) ? contractor.specialty : 
+      (contractor.specialty ? [contractor.specialty] : undefined);
+    validContractor.notes = contractor.notes;
     
-    // ABN validation
-    if (contractor.abn && !/^\d{11}$/.test(contractor.abn.replace(/\s/g, ''))) {
-      messages.push({
-        type: 'warning',
-        field: 'abn',
-        message: `Row ${index + 1}: ABN format may be invalid`
-      });
-    }
-    
-    // Status validation
-    if (contractor.status && !['active', 'inactive', 'pending'].includes(contractor.status)) {
-      messages.push({
-        type: 'warning',
-        field: 'status',
-        message: `Row ${index + 1}: Invalid status, will default to 'active'`
-      });
-    }
-    
-    // Rate validation
-    if (contractor.hourly_rate && (isNaN(Number(contractor.hourly_rate)) || Number(contractor.hourly_rate) < 0)) {
-      messages.push({
-        type: 'error',
-        field: 'hourly_rate',
-        message: `Row ${index + 1}: Hourly rate must be a positive number`
-      });
-      isValid = false;
+    // Add to valid data if all required fields are present
+    if (validContractor.business_name && validContractor.contact_name && validContractor.contractor_type) {
+      validData.push(validContractor);
     }
   });
   
-  return { valid: isValid, messages };
+  return { valid, data: validData, errors, warnings, messages };
 }
