@@ -7,7 +7,7 @@ import { adaptContract, adaptContracts } from '../contracts/contractAdapter';
 /**
  * Fetch contracts for a specific site
  */
-export async function fetchContractsForSite(siteId: string): Promise<ContractData[]> {
+async function fetchContractsForSite(siteId: string): Promise<ContractData[]> {
   try {
     const { data, error } = await supabase
       .from('sites')
@@ -37,7 +37,7 @@ export async function fetchContractsForSite(siteId: string): Promise<ContractDat
 /**
  * Fetch all contracts
  */
-export async function fetchAllContracts(): Promise<ContractData[]> {
+async function fetchAllContracts(): Promise<ContractData[]> {
   try {
     const { data, error } = await supabase
       .from('sites')
@@ -62,3 +62,63 @@ export async function fetchAllContracts(): Promise<ContractData[]> {
     throw error;
   }
 }
+
+/**
+ * Create a new contract
+ */
+async function createContract(contractData: Partial<ContractData>): Promise<ContractData> {
+  try {
+    // Implementation will depend on how contracts are actually stored
+    // This is a placeholder
+    throw new Error("Not implemented yet");
+  } catch (error) {
+    console.error('Error creating contract:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update a contract
+ */
+async function updateContract(id: string, contractData: Partial<ContractData>): Promise<ContractData> {
+  try {
+    // Implementation will depend on how contracts are actually stored
+    // This is a placeholder
+    throw new Error("Not implemented yet");
+  } catch (error) {
+    console.error('Error updating contract:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a contract
+ */
+async function deleteContract(id: string): Promise<void> {
+  try {
+    // Implementation will depend on how contracts are actually stored
+    // This is a placeholder
+    throw new Error("Not implemented yet");
+  } catch (error) {
+    console.error('Error deleting contract:', error);
+    throw error;
+  }
+}
+
+// Export the combined API object
+export const contractsApi = {
+  getContracts: fetchAllContracts,
+  getContractsForSite: fetchContractsForSite,
+  createContract,
+  updateContract,
+  deleteContract
+};
+
+// Also export individual functions for specific use cases
+export {
+  fetchContractsForSite,
+  fetchAllContracts,
+  createContract,
+  updateContract,
+  deleteContract
+};

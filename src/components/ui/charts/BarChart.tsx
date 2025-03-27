@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bar, BarChart as ReChartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface BarChartProps {
   data: any[];
@@ -8,7 +8,7 @@ interface BarChartProps {
   yField: string;
   title?: string;
   valueFormatter?: (value: number) => string;
-  color?: string;
+  height?: number | string;
 }
 
 export function BarChart({ 
@@ -16,58 +16,27 @@ export function BarChart({
   xField, 
   yField, 
   title, 
-  valueFormatter = (value) => value.toString(),
-  color = "#4f46e5" 
+  valueFormatter = (value) => `${value}`,
+  height = '100%'
 }: BarChartProps) {
   if (!data || data.length === 0) {
-    return <div className="flex items-center justify-center h-full">No data available</div>;
+    return (
+      <div className="flex items-center justify-center h-full w-full text-gray-500">
+        No data available
+      </div>
+    );
   }
 
   return (
-    <div className="w-full h-full">
-      {title && <h3 className="text-sm font-medium mb-2">{title}</h3>}
-      <ResponsiveContainer width="100%" height="100%">
-        <ReChartsBar
-          data={data}
-          margin={{
-            top: 5,
-            right: 10,
-            left: 0,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis 
-            dataKey={xField} 
-            axisLine={false}
-            tickLine={false}
-            tickMargin={8}
-            fontSize={12}
-            tick={{ fill: '#888' }}
-          />
-          <YAxis 
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={valueFormatter}
-            fontSize={12}
-            tick={{ fill: '#888' }}
-          />
-          <Tooltip 
-            formatter={(value: number) => valueFormatter(value)}
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            }}
-          />
-          <Bar 
-            dataKey={yField} 
-            radius={[4, 4, 0, 0]} 
-            fill={color} 
-          />
-        </ReChartsBar>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height={height}>
+      <RechartsBarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey={xField} />
+        <YAxis tickFormatter={(value) => valueFormatter(value)} />
+        <Tooltip formatter={(value) => valueFormatter(value as number)} />
+        {title && <Legend />}
+        <Bar dataKey={yField} name={title || yField} fill="#4f46e5" />
+      </RechartsBarChart>
+    </ResponsiveContainer>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contractsApi } from '@/lib/api/sites/contractsApi';
-import { ContractData, ContractSummaryData, GroupedContracts } from '@/lib/types/contracts';
+import { ContractData, ContractSummaryData, GroupedContracts } from '@/types/contracts';
 import { addMonths, isAfter, isBefore } from 'date-fns';
 
 export function useContracts() {
@@ -9,43 +9,59 @@ export function useContracts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [metrics, setMetrics] = useState<ContractSummaryData>({
-    // Expiration counts
-    expiringThisMonth: 0,
-    expiringNext3Months: 0,
-    expiringNext6Months: 0,
-    expiringThisYear: 0,
-    
-    // Expiration values
-    valueExpiringThisMonth: 0,
-    valueExpiringNext3Months: 0,
-    valueExpiringNext6Months: 0,
-    valueExpiringThisYear: 0,
-    
-    // Overall contract data
-    totalContracts: 0,
     totalValue: 0,
-    
-    // Financial metrics
+    expiringWithin30Days: 0,
+    renewalRate: 0,
+    totalCount: 0,
+    expiringCount: 0,
+    expiredCount: 0,
+    activeCount: 0,
+    avgContractValue: 0,
     totalRevenue: 0,
     totalCost: 0,
-    totalProfit: 0,
-    avgContractValue: 0,
-    profitMargin: 0,
-    
-    // Additional metrics
-    activeCount: 0
+    totalProfit: 0
   });
+  
   const [groupedContracts, setGroupedContracts] = useState<GroupedContracts>({
     activeContracts: [],
     expiringContracts: [],
     expiredContracts: []
   });
 
-  const { data: contracts, refetch, createContract, updateContract, deleteContract, isCreating, isUpdating, isDeleting } = useQuery({
+  const queryClient = useQueryClient();
+
+  // Use React Query to fetch contracts
+  const contractsQuery = useQuery({
     queryKey: ['contracts'],
     queryFn: contractsApi.getContracts,
-    onSuccess: (contracts) => {
-      setContractData(contracts);
+  });
+
+  const createContractMutation = useMutation({
+    mutationFn: contractsApi.createContract,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+
+  const updateContractMutation = useMutation({
+    mutationFn: (params: { id: string, data: Partial<ContractData> }) => 
+      contractsApi.updateContract(params.id, params.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+
+  const deleteContractMutation = useMutation({
+    mutationFn: contractsApi.deleteContract,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    }
+  });
+
+  // Process contracts when they are loaded
+  useEffect(() => {
+    if (contractsQuery.data) {
+      setContractData(contractsQuery.data);
       
       const active: ContractData[] = [];
       const expiring: ContractData[] = [];
@@ -53,7 +69,7 @@ export function useContracts() {
       const today = new Date();
       const threeMonthsLater = addMonths(today, 3);
       
-      contracts.forEach(contract => {
+      contractsQuery.data.forEach(contract => {
         let endDate: Date | null = null;
         
         // Safely extract contract details
@@ -86,15 +102,15 @@ export function useContracts() {
       });
       
       // Update metrics
-      calculateMetrics(contracts);
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err : new Error('Failed to fetch contracts'));
-    },
-    onSettled: () => {
-      setIsLoading(false);
+      calculateMetrics(contractsQuery.data);
     }
-  });
+    
+    if (contractsQuery.isError) {
+      setError(contractsQuery.error as Error);
+    }
+    
+    setIsLoading(contractsQuery.isLoading);
+  }, [contractsQuery.data, contractsQuery.isError, contractsQuery.error, contractsQuery.isLoading]);
 
   const calculateMetrics = (contracts: ContractData[]) => {
     if (!contracts || !Array.isArray(contracts)) {
@@ -195,12 +211,13 @@ export function useContracts() {
     error,
     metrics,
     groupedContracts,
-    refetch,
-    createContract,
-    updateContract,
-    deleteContract,
-    isCreating,
-    isUpdating,
-    isDeleting
+    refetch: contractsQuery.refetch,
+    createContract: createContractMutation.mutateAsync,
+    updateContract: (id: string, data: Partial<ContractData>) => 
+      updateContractMutation.mutateAsync({ id, data }),
+    deleteContract: deleteContractMutation.mutateAsync,
+    isCreating: createContractMutation.isPending,
+    isUpdating: updateContractMutation.isPending,
+    isDeleting: deleteContractMutation.isPending
   };
 }
