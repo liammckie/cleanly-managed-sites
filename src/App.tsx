@@ -26,6 +26,9 @@ import { ErrorBoundary } from './components/ui/error-boundary/ErrorBoundary';
 import { Toaster } from 'sonner';
 import Contracts from './pages/Contracts';
 import CreateWorkOrder from './pages/CreateWorkOrder';
+import Integrations from './pages/Integrations';
+import ImportExport from './pages/ImportExport';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -138,6 +141,21 @@ function App() {
         <Route path="/contracts" element={
           <ProtectedRoute>
             <Contracts />
+          </ProtectedRoute>
+        } />
+        <Route path="/integrations" element={
+          <ProtectedRoute>
+            <Integrations />
+          </ProtectedRoute>
+        } />
+        <Route path="/import-export" element={
+          <ProtectedRoute>
+            <ImportExport />
+          </ProtectedRoute>
+        } />
+        <Route path="/users" element={
+          <ProtectedRoute>
+            <Users />
           </ProtectedRoute>
         } />
         <Route path="*" element={<GlobalErrorPage statusCode="404" message="Page not found" />} />

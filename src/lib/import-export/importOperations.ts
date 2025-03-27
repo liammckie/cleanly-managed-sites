@@ -8,7 +8,7 @@ export async function importData<T extends Record<string, any>>(tableName: strin
     throw new Error('No data to import');
   }
   
-  // Use explicit type casting for the table name
+  // Use any to bypass the type checking for table name
   const { error } = await supabase
     .from(tableName as any)
     .insert(data);

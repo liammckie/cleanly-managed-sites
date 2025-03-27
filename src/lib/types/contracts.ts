@@ -36,10 +36,13 @@ export interface ContractData {
 }
 
 export interface ContractSummaryData {
-  totalCount: number;
+  totalContracts: number;
   activeCount: number;
   pendingCount: number;
   totalValue: number;
+  
+  // Add totalCount for backward compatibility
+  totalCount: number;
   
   // Add missing fields for expiry metrics
   expiringWithin30Days: number;
@@ -59,7 +62,6 @@ export interface ContractSummaryData {
   totalCost: number;
   totalProfit: number;
   profitMargin: number;
-  totalContracts: number;
 }
 
 export interface GroupedContracts {

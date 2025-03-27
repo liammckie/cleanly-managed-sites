@@ -1,174 +1,61 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContractForecastChart } from './ContractForecastChart';
-import { BarChart } from '@/components/ui/charts/BarChart';
-import { ContractMetricsList } from './ContractMetricsList';
-import { useContractForecast } from '@/hooks/useContractForecast';
-import { formatCurrency } from '@/lib/utils/format';
+import { ContractSummaryData } from '@/lib/types/contracts';
+import { format } from 'date-fns';
 
-export function ContractDashboard() {
-  const { forecasts, loaded, error } = useContractForecast();
-  
-  // Create summary data since it's not returned from the hook
-  const summaryData = {
-    totalContracts: 0,
-    activeCount: 0,
-    totalValue: 0,
-    expiringThisMonth: 0,
-    expiringNext3Months: 0,
-    expiringNext6Months: 0,
-    expiringThisYear: 0,
-    valueExpiringThisMonth: 0,
-    valueExpiringNext3Months: 0,
-    valueExpiringNext6Months: 0,
-    valueExpiringThisYear: 0,
-    totalRevenue: 0,
-    totalCost: 0,
-    totalProfit: 0,
-    profitMargin: 30,
-    pendingCount: 0, 
-    expiringWithin30Days: 0
-  };
-  
-  // Make sure we have complete summary data with defaults for missing properties
-  const enhancedSummaryData = {
-    totalContracts: summaryData?.totalContracts || 0,
-    activeCount: summaryData?.activeCount || 0,
-    totalValue: summaryData?.totalValue || 0,
-    
-    // Set defaults for expiry metrics if they don't exist
-    expiringThisMonth: summaryData?.expiringThisMonth || 0,
-    expiringNext3Months: summaryData?.expiringNext3Months || 0,
-    expiringThisYear: summaryData?.expiringThisYear || 0,
-    
-    // Set defaults for value expiry metrics if they don't exist
-    valueExpiringThisMonth: summaryData?.valueExpiringThisMonth || 0,
-    valueExpiringNext3Months: summaryData?.valueExpiringNext3Months || 0,
-    valueExpiringNext6Months: summaryData?.valueExpiringNext6Months || 0,
-    valueExpiringThisYear: summaryData?.valueExpiringThisYear || 0,
-    
-    // Other metrics
-    totalRevenue: summaryData?.totalValue || 0,
-    totalCost: summaryData?.totalValue ? summaryData.totalValue * 0.7 : 0,
-    totalProfit: summaryData?.totalValue ? summaryData.totalValue * 0.3 : 0,
-    avgContractValue: summaryData?.activeCount && summaryData.totalValue 
-      ? summaryData.totalValue / summaryData.activeCount
-      : 0,
-    profitMargin: summaryData?.profitMargin || 30,
-    pendingCount: summaryData?.pendingCount || 0, 
-    expiringWithin30Days: summaryData?.expiringWithin30Days || 0
-  };
-  
-  const chartData = [
-    { name: 'This Month', value: enhancedSummaryData.expiringThisMonth },
-    { name: '3 Months', value: enhancedSummaryData.expiringNext3Months },
-    { name: '6 Months', value: enhancedSummaryData.expiringNext6Months },
-    { name: '12 Months', value: enhancedSummaryData.expiringThisYear },
+interface ContractDashboardProps {
+  summaryData: ContractSummaryData;
+}
+
+export const ContractDashboard: React.FC<ContractDashboardProps> = ({ summaryData }) => {
+  const metrics = [
+    {
+      title: "Active Contracts",
+      value: summaryData.activeCount,
+      change: ((summaryData.activeCount / summaryData.totalContracts) * 100).toFixed(0) + "%",
+      changeType: "increase"
+    },
+    {
+      title: "Pending Contracts",
+      value: summaryData.pendingCount,
+      change: ((summaryData.pendingCount / summaryData.totalContracts) * 100).toFixed(0) + "%",
+      changeType: "increase"
+    },
+    {
+      title: "Total Contract Value",
+      value: summaryData.totalValue,
+      change: "+12%",
+      changeType: "increase"
+    },
+    {
+      title: "Expiring Soon",
+      value: summaryData.expiringWithin30Days,
+      change: "-5%",
+      changeType: "decrease"
+    }
   ];
 
-  const valueChartData = [
-    { name: 'This Month', value: enhancedSummaryData.valueExpiringThisMonth },
-    { name: '3 Months', value: enhancedSummaryData.valueExpiringNext3Months },
-    { name: '6 Months', value: enhancedSummaryData.valueExpiringNext6Months },
-    { name: '12 Months', value: enhancedSummaryData.valueExpiringThisYear },
+  const forecastData = [
+    { month: format(new Date(), 'MMM'), revenue: 5000, cost: 3000, profit: 2000 },
+    { month: format(new Date(new Date().setMonth(new Date().getMonth() + 1)), 'MMM'), revenue: 6000, cost: 3500, profit: 2500 },
+    { month: format(new Date(new Date().setMonth(new Date().getMonth() + 2)), 'MMM'), revenue: 7000, cost: 4000, profit: 3000 },
   ];
-
-  const overviewMetrics = [
-    { label: 'Total Contracts', value: enhancedSummaryData.totalContracts.toString() },
-    { label: 'Active Contracts', value: enhancedSummaryData.activeCount.toString() },
-    { label: 'Total Value', value: formatCurrency(enhancedSummaryData.totalValue) },
-    { label: 'Avg Contract Value', value: formatCurrency(enhancedSummaryData.avgContractValue) },
-  ];
-
-  const expiryMetrics = [
-    { label: 'Expiring This Month', value: enhancedSummaryData.expiringThisMonth.toString() },
-    { label: 'Expiring in 3 Months', value: enhancedSummaryData.expiringNext3Months.toString() },
-    { label: 'Expiring in 6 Months', value: enhancedSummaryData.expiringNext6Months.toString() },
-    { label: 'Expiring This Year', value: enhancedSummaryData.expiringThisYear.toString() },
-  ];
-
-  const valueMetrics = [
-    { label: 'Value Expiring This Month', value: formatCurrency(enhancedSummaryData.valueExpiringThisMonth) },
-    { label: 'Value Expiring in 3 Months', value: formatCurrency(enhancedSummaryData.valueExpiringNext3Months) },
-    { label: 'Value Expiring in 6 Months', value: formatCurrency(enhancedSummaryData.valueExpiringNext6Months) },
-    { label: 'Value Expiring This Year', value: formatCurrency(enhancedSummaryData.valueExpiringThisYear) },
-  ];
-
-  // Convert forecasts to match the required ContractForecast type with cost and profit properties
-  const enhancedForecasts = forecasts.map(forecast => ({
-    ...forecast,
-    cost: typeof forecast.revenue === 'number' ? forecast.revenue * 0.7 : 0,
-    profit: typeof forecast.revenue === 'number' ? forecast.revenue * 0.3 : 0,
-    month: forecast.month || ''
-  }));
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Contract Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="summary">
-            <TabsList className="mb-4">
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="expiry">Expiry Metrics</TabsTrigger>
-              <TabsTrigger value="value">Value at Risk</TabsTrigger>
-              <TabsTrigger value="forecast">Forecast</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="summary">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ContractMetricsList metrics={overviewMetrics} />
-                <div className="h-60">
-                  <BarChart 
-                    data={chartData} 
-                    xField="name" 
-                    yField="value" 
-                    title="Expiry Count" 
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="expiry">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ContractMetricsList metrics={expiryMetrics} />
-                <div className="h-60">
-                  <BarChart 
-                    data={chartData} 
-                    xField="name" 
-                    yField="value" 
-                    title="Expiry Count" 
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="value">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ContractMetricsList metrics={valueMetrics} />
-                <div className="h-60">
-                  <BarChart 
-                    data={valueChartData} 
-                    xField="name" 
-                    yField="value" 
-                    title="Value at Risk" 
-                    valueFormatter={(value) => formatCurrency(value)}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="forecast">
-              <div className="h-80">
-                <ContractForecastChart data={enhancedForecasts} />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {metrics.map((metric, index) => (
+        <Card key={index}>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{metric.value}</div>
+            <div className={`text-sm ${metric.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}`}>
+              {metric.change}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
-}
+};
