@@ -6,7 +6,7 @@
  * across the application to ensure consistency between front-end and API types.
  */
 
-import { QuoteStatus, SiteStatus, EmploymentType, EmployeeLevel } from '@/types/common';
+import { QuoteStatus, SiteStatus, EmploymentType, EmployeeLevel, UserStatus } from '@/types/common';
 
 // Map frontend employment types to database employment types
 export const employmentTypeMap: Record<string, EmploymentType> = {
@@ -49,4 +49,26 @@ export const validateSiteStatus = (status: string): SiteStatus => {
     return status as SiteStatus;
   }
   return 'active'; // Default to active if invalid
+};
+
+// Ensure user status is valid
+export const validateUserStatus = (status: string): UserStatus => {
+  if (['active', 'pending', 'inactive'].includes(status)) {
+    return status as UserStatus;
+  }
+  return 'active'; // Default to active if invalid
+};
+
+// Frontend to database field mapping for quotes
+export const quoteFieldMapping: Record<string, string> = {
+  'userId': 'user_id',
+  'overheadProfile': 'overhead_profile',
+  'created_by': 'created_by'
+};
+
+// Database to frontend field mapping for quotes
+export const dbToFrontendQuoteField: Record<string, string> = {
+  'user_id': 'userId',
+  'overhead_profile': 'overheadProfile',
+  'created_by': 'created_by'
 };

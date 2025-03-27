@@ -1,8 +1,8 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/lib/react-query';
 import { usersApi, SystemUserInsert } from '@/lib/api/users';
 import { SystemUser } from '@/lib/types/users';
+import { queryClient } from '@/lib/tanstack-query';
 
 export function useUsers() {
   const usersQuery = useQuery({

@@ -1,11 +1,8 @@
 
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { 
-  parseCSV, 
-  convertCSVToClientFormat, 
-  importClients 
-} from '@/lib/import-export/importOperations';
+import { parseCSV, importClients } from '@/lib/import-export';
+import { convertCSVToClientFormat } from '@/lib/import-export/fileFormatConversion';
 
 export function useImportClients() {
   const [isImporting, setIsImporting] = useState(false);
@@ -40,13 +37,11 @@ export function useImportClients() {
       const clients = convertCSVToClientFormat(csvData);
       await handleImportClients(clients);
     } catch (error: any) {
-      console.error(`Error importing clients from CSV:`, error);
-      toast.error(`Failed to import clients: ${error.message}`);
+      toast.error(`Failed to import clients from CSV: ${error.message}`);
       setImportResults({
         success: false,
         error: error.message
       });
-      throw error;
     } finally {
       setIsImporting(false);
     }
@@ -56,6 +51,6 @@ export function useImportClients() {
     isImporting,
     importResults,
     handleImportClients,
-    handleCSVImportClients,
+    handleCSVImportClients
   };
 }

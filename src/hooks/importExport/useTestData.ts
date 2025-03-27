@@ -1,105 +1,103 @@
 
-import { useState } from 'react';
 import { toast } from 'sonner';
-import { setupTestData } from '@/lib/import-export/importOperations';
+import { useState } from 'react';
+import { setupTestData } from '@/lib/import-export';
 
 export function useTestData() {
   const [isCreating, setIsCreating] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  
-  const testDataOperations = setupTestData();
-  
-  const createTestClients = async () => {
+  const [creationResult, setCreationResult] = useState<any>(null);
+
+  const createTestData = async (): Promise<void> => {
     try {
       setIsCreating(true);
-      const data = await testDataOperations.createTestClients();
-      setResults({
-        success: true,
-        count: data.length,
-        message: `${data.length} test clients created`
-      });
-      return data;
+      const result = await setupTestData();
+      
+      if (result.success) {
+        toast.success('Test data created successfully');
+        setCreationResult({
+          success: true,
+          message: 'Test data created successfully',
+          clients: result.clients,
+          sites: result.sites
+        });
+      } else {
+        toast.error(`Failed to create test data: ${result.error}`);
+        setCreationResult({
+          success: false,
+          error: result.error
+        });
+      }
     } catch (error: any) {
-      setResults({
+      toast.error(`Failed to create test data: ${error.message}`);
+      setCreationResult({
         success: false,
         error: error.message
       });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const createTestClients = async (): Promise<void> => {
+    try {
+      setIsCreating(true);
+      const result = await setupTestData();
+      
+      if (result.createTestClients) {
+        const clients = await result.createTestClients();
+        toast.success(`${clients.length} test clients created successfully`);
+      } else {
+        toast.error('Failed to create test clients');
+      }
+    } catch (error: any) {
       toast.error(`Failed to create test clients: ${error.message}`);
     } finally {
       setIsCreating(false);
     }
   };
-  
-  const createTestSites = async () => {
+
+  const createTestSites = async (): Promise<void> => {
     try {
       setIsCreating(true);
-      const data = await testDataOperations.createTestSites();
-      setResults({
-        success: true,
-        count: data.length,
-        message: `${data.length} test sites created`
-      });
-      return data;
+      const result = await setupTestData();
+      
+      if (result.createTestSites) {
+        const sites = await result.createTestSites();
+        toast.success(`${sites.length} test sites created successfully`);
+      } else {
+        toast.error('Failed to create test sites');
+      }
     } catch (error: any) {
-      setResults({
-        success: false,
-        error: error.message
-      });
       toast.error(`Failed to create test sites: ${error.message}`);
     } finally {
       setIsCreating(false);
     }
   };
-  
-  const createTestContracts = async () => {
+
+  const createTestContracts = async (): Promise<void> => {
     try {
       setIsCreating(true);
-      const data = await testDataOperations.createTestContracts();
-      setResults({
-        success: true,
-        count: data.length,
-        message: `${data.length} test contracts created`
-      });
-      return data;
+      const result = await setupTestData();
+      
+      if (result.createTestContracts) {
+        const contracts = await result.createTestContracts();
+        toast.success(`${contracts.length} test contracts created successfully`);
+      } else {
+        toast.error('Failed to create test contracts');
+      }
     } catch (error: any) {
-      setResults({
-        success: false,
-        error: error.message
-      });
       toast.error(`Failed to create test contracts: ${error.message}`);
     } finally {
       setIsCreating(false);
     }
   };
-  
-  const createAllTestData = async () => {
-    try {
-      setIsCreating(true);
-      await createTestClients();
-      await createTestSites();
-      await createTestContracts();
-      toast.success("All test data created successfully");
-      setResults({
-        success: true,
-        message: "All test data created successfully"
-      });
-    } catch (error: any) {
-      setResults({
-        success: false,
-        error: error.message
-      });
-      toast.error(`Failed to create all test data: ${error.message}`);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-  
+
   return {
     isCreating,
-    results,
+    creationResult,
+    createTestData,
     createTestClients,
     createTestSites,
-    createTestContracts,
-    createAllTestData
+    createTestContracts
   };
 }

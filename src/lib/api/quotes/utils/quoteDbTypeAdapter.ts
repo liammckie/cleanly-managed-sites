@@ -1,156 +1,84 @@
-import { Day, EmploymentType, Frequency } from '@/types/common';
 
-// Adapter for employment type conversion between database and frontend
-export const dbToFrontendEmploymentType = (dbType: string): EmploymentType => {
-  switch (dbType) {
-    case 'casual':
-      return 'casual';
-    case 'part_time':
-    case 'part-time':
-      return 'part_time';
-    case 'full_time':  
-    case 'full-time':  
-      return 'full_time';
-    default:
-      return 'casual'; // Default fallback
-  }
-};
+import { QuoteStatus } from '@/types/common';
 
-// Adapter for employment type conversion between frontend and database
-export const frontendToDbEmploymentType = (frontendType: EmploymentType): string => {
-  switch (frontendType) {
-    case 'casual':
-      return 'casual';
-    case 'part_time':
-      return 'part_time';
-    case 'full_time':
-      return 'full_time';
-    default:
-      return 'casual'; // Default fallback
-  }
-};
+export interface Quote {
+  id: string;
+  name: string;
+  client_name?: string;
+  site_name?: string;
+  status: QuoteStatus;
+  total_price: number;
+  total_cost: number;
+  margin_amount: number;
+  margin_percentage: number;
+  overhead_cost: number;
+  overhead_percentage: number;
+  labor_cost: number;
+  subcontractor_cost: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  userId?: string;
+  overheadProfile?: string;
+  start_date?: string;
+  end_date?: string;
+  expiry_date?: string;
+  contract_length?: number;
+  contract_length_unit?: string;
+}
 
-// Adapter for day conversion
-export const dbToFrontendDay = (dbDay: string): Day => {
-  // Convert db day format to frontend enum format
-  if (dbDay.toLowerCase() === 'public_holiday' || 
-      dbDay.toLowerCase() === 'weekday' || 
-      ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].includes(dbDay.toLowerCase())) {
-    return dbDay.toLowerCase() as Day;
-  }
-  
-  return 'monday'; // Default fallback
-};
-
-// Adapter for frequency conversion
-export const dbToFrontendFrequency = (dbFrequency: string): Frequency => {
-  const normalizedFrequency = dbFrequency.toLowerCase();
-  
-  if ([
-    'weekly', 
-    'fortnightly', 
-    'monthly', 
-    'quarterly', 
-    'annually', 
-    'once'
-  ].includes(normalizedFrequency)) {
-    return normalizedFrequency as Frequency;
-  }
-  
-  return 'monthly'; // Default fallback
-};
-
-// Convert frontend quote model to database model
-export const mapToDbQuote = (quoteData: any) => {
+export const convertToDbQuote = (quote: Partial<Quote>) => {
   return {
-    name: quoteData.name,
-    client_name: quoteData.clientName || quoteData.client_name,
-    site_name: quoteData.siteName || quoteData.site_name,
-    status: quoteData.status || 'draft',
-    total_price: quoteData.totalPrice || quoteData.total_price || 0,
-    labor_cost: quoteData.laborCost || quoteData.labor_cost || 0,
-    overhead_percentage: quoteData.overheadPercentage || quoteData.overhead_percentage || 15,
-    margin_percentage: quoteData.marginPercentage || quoteData.margin_percentage || 20,
-    subcontractor_cost: quoteData.subcontractorCost || quoteData.subcontractor_cost || 0,
-    overhead_cost: quoteData.overheadCost || quoteData.overhead_cost || 0,
-    margin_amount: quoteData.marginAmount || quoteData.margin_amount || 0,
-    total_cost: quoteData.totalCost || quoteData.total_cost || 0,
-    start_date: quoteData.startDate || quoteData.start_date,
-    end_date: quoteData.endDate || quoteData.end_date,
-    expiry_date: quoteData.expiryDate || quoteData.expiry_date,
-    notes: quoteData.notes,
-    created_by: quoteData.created_by,
-    user_id: quoteData.user_id,
-    contract_length: quoteData.contractLength || quoteData.contract_length,
-    contract_length_unit: quoteData.contractLengthUnit || quoteData.contract_length_unit,
+    ...(quote.name !== undefined && { name: quote.name }),
+    ...(quote.client_name !== undefined && { client_name: quote.client_name }),
+    ...(quote.site_name !== undefined && { site_name: quote.site_name }),
+    ...(quote.status !== undefined && { status: quote.status }),
+    ...(quote.total_price !== undefined && { total_price: quote.total_price }),
+    ...(quote.total_cost !== undefined && { total_cost: quote.total_cost }),
+    ...(quote.margin_amount !== undefined && { margin_amount: quote.margin_amount }),
+    ...(quote.margin_percentage !== undefined && { margin_percentage: quote.margin_percentage }),
+    ...(quote.overhead_cost !== undefined && { overhead_cost: quote.overhead_cost }),
+    ...(quote.overhead_percentage !== undefined && { overhead_percentage: quote.overhead_percentage }),
+    ...(quote.labor_cost !== undefined && { labor_cost: quote.labor_cost }),
+    ...(quote.subcontractor_cost !== undefined && { subcontractor_cost: quote.subcontractor_cost }),
+    ...(quote.notes !== undefined && { notes: quote.notes }),
+    ...(quote.created_by !== undefined && { created_by: quote.created_by }),
+    ...(quote.userId !== undefined && { user_id: quote.userId }),
+    ...(quote.overheadProfile !== undefined && { overhead_profile: quote.overheadProfile }),
+    ...(quote.start_date !== undefined && { start_date: quote.start_date }),
+    ...(quote.end_date !== undefined && { end_date: quote.end_date }),
+    ...(quote.expiry_date !== undefined && { expiry_date: quote.expiry_date }),
+    ...(quote.contract_length !== undefined && { contract_length: quote.contract_length }),
+    ...(quote.contract_length_unit !== undefined && { contract_length_unit: quote.contract_length_unit })
   };
 };
 
-// Convert database quote model to frontend model
-export const mapFromDbQuote = (dbQuote: any) => {
-  if (!dbQuote) return null;
-  
+export const convertDbToQuote = (dbQuote: any): Quote => {
   return {
     id: dbQuote.id,
     name: dbQuote.name,
-    clientName: dbQuote.client_name,
-    siteName: dbQuote.site_name,
-    status: dbQuote.status,
-    totalPrice: dbQuote.total_price || 0,
-    laborCost: dbQuote.labor_cost || 0,
-    overheadPercentage: dbQuote.overhead_percentage || 15,
-    marginPercentage: dbQuote.margin_percentage || 20,
-    subcontractorCost: dbQuote.subcontractor_cost || 0,
-    overheadCost: dbQuote.overhead_cost || 0,
-    marginAmount: dbQuote.margin_amount || 0,
-    totalCost: dbQuote.total_cost || 0,
-    startDate: dbQuote.start_date,
-    endDate: dbQuote.end_date,
-    expiryDate: dbQuote.expiry_date,
+    client_name: dbQuote.client_name,
+    site_name: dbQuote.site_name,
+    status: dbQuote.status as QuoteStatus,
+    total_price: dbQuote.total_price,
+    total_cost: dbQuote.total_cost,
+    margin_amount: dbQuote.margin_amount,
+    margin_percentage: dbQuote.margin_percentage,
+    overhead_cost: dbQuote.overhead_cost,
+    overhead_percentage: dbQuote.overhead_percentage,
+    labor_cost: dbQuote.labor_cost,
+    subcontractor_cost: dbQuote.subcontractor_cost,
     notes: dbQuote.notes,
+    created_at: dbQuote.created_at,
+    updated_at: dbQuote.updated_at,
     created_by: dbQuote.created_by,
-    createdAt: dbQuote.created_at,
-    updatedAt: dbQuote.updated_at,
-    contractLength: dbQuote.contract_length,
-    contractLengthUnit: dbQuote.contract_length_unit,
-  };
-};
-
-// Convert database shift to frontend shift
-export const mapDbShiftToFrontend = (dbShift: any) => {
-  if (!dbShift) return null;
-  
-  return {
-    id: dbShift.id,
-    quoteId: dbShift.quote_id,
-    day: dbToFrontendDay(dbShift.day),
-    startTime: dbShift.start_time,
-    endTime: dbShift.end_time,
-    breakDuration: dbShift.break_duration,
-    numberOfCleaners: dbShift.number_of_cleaners,
-    employmentType: dbToFrontendEmploymentType(dbShift.employment_type),
-    level: dbShift.level,
-    allowances: dbShift.allowances || [],
-    estimatedCost: dbShift.estimated_cost || 0,
-    location: dbShift.location || '',
-    notes: dbShift.notes || '',
-  };
-};
-
-// Convert frontend shift to database shift
-export const mapFrontendShiftToDb = (shift: any) => {
-  return {
-    quote_id: shift.quoteId || shift.quote_id,
-    day: shift.day,
-    start_time: shift.startTime || shift.start_time,
-    end_time: shift.endTime || shift.end_time,
-    break_duration: shift.breakDuration || shift.break_duration,
-    number_of_cleaners: shift.numberOfCleaners || shift.number_of_cleaners,
-    employment_type: frontendToDbEmploymentType(shift.employmentType || shift.employment_type),
-    level: shift.level,
-    allowances: shift.allowances || [],
-    estimated_cost: shift.estimatedCost || shift.estimated_cost || 0,
-    location: shift.location || '',
-    notes: shift.notes || '',
+    userId: dbQuote.user_id,
+    overheadProfile: dbQuote.overhead_profile,
+    start_date: dbQuote.start_date,
+    end_date: dbQuote.end_date,
+    expiry_date: dbQuote.expiry_date,
+    contract_length: dbQuote.contract_length,
+    contract_length_unit: dbQuote.contract_length_unit
   };
 };

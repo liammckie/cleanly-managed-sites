@@ -1,3 +1,4 @@
+
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'on-hold' | 'lost';
 
 export interface ValidationMessage {
@@ -45,3 +46,6 @@ export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'approved' | 'accepted'
 // Define JSON value types
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 export type JsonValue = Json;
+
+// Define UserStatus for user management
+export type UserStatus = 'active' | 'pending' | 'inactive';
