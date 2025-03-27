@@ -1,140 +1,136 @@
 
-import { supabase } from '@/lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
-
-export async function setupTestData(): Promise<boolean> {
-  try {
-    // Get the current user ID
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('You must be logged in to create test data');
-    }
-
-    const userId = user.id;
-    
-    // Create test clients
-    const { data: clientsData, error: clientsError } = await supabase
-      .from('clients')
-      .insert([
-        {
-          name: 'Acme Corporation',
-          contact_name: 'John Doe',
-          email: 'john@acme.com',
-          phone: '555-123-4567',
-          address: '123 Main St',
-          city: 'Anytown',
-          state: 'CA',
-          postcode: '12345',
-          status: 'active',
-          notes: 'This is a test client',
-          user_id: userId
+/**
+ * Generates test data for development and testing
+ * @returns Object with test data for different entity types
+ */
+export function setupTestData() {
+  return {
+    clients: [
+      {
+        name: 'Test Client 1',
+        contact_name: 'John Doe',
+        email: 'john@example.com',
+        phone: '0412345678',
+        address: '123 Test St',
+        city: 'Sydney',
+        state: 'NSW',
+        postcode: '2000',
+        status: 'active',
+        notes: 'Test client for development'
+      },
+      {
+        name: 'Test Client 2',
+        contact_name: 'Jane Smith',
+        email: 'jane@example.com',
+        phone: '0487654321',
+        address: '456 Demo Ave',
+        city: 'Melbourne',
+        state: 'VIC',
+        postcode: '3000',
+        status: 'pending',
+        notes: 'Another test client'
+      }
+    ],
+    sites: [
+      {
+        name: 'Test Site 1',
+        client_id: '<REPLACE_WITH_REAL_CLIENT_ID>',
+        address: '123 Site St',
+        city: 'Sydney',
+        state: 'NSW',
+        postcode: '2000',
+        status: 'active',
+        email: 'site1@example.com',
+        phone: '0412345678',
+        representative: 'Site Manager',
+        monthly_revenue: 5000,
+        monthly_cost: 3000
+      },
+      {
+        name: 'Test Site 2',
+        client_id: '<REPLACE_WITH_REAL_CLIENT_ID>',
+        address: '456 Venue Rd',
+        city: 'Melbourne',
+        state: 'VIC',
+        postcode: '3000',
+        status: 'pending',
+        email: 'site2@example.com',
+        phone: '0487654321',
+        representative: 'Site Supervisor',
+        monthly_revenue: 7500,
+        monthly_cost: 4500
+      }
+    ],
+    contractors: [
+      {
+        business_name: 'Test Contractor 1',
+        contact_name: 'Bob Builder',
+        email: 'bob@example.com',
+        phone: '0412345678',
+        address: '123 Contractor St',
+        city: 'Sydney',
+        state: 'NSW',
+        postcode: '2000',
+        abn: '12345678901',
+        contractor_type: 'company',
+        status: 'active',
+        specialty: ['Cleaning', 'Maintenance'],
+        notes: 'Test contractor'
+      },
+      {
+        business_name: 'Test Contractor 2',
+        contact_name: 'Alice Cleaner',
+        email: 'alice@example.com',
+        phone: '0487654321',
+        address: '456 Service Rd',
+        city: 'Melbourne',
+        state: 'VIC',
+        postcode: '3000',
+        abn: '10987654321',
+        contractor_type: 'individual',
+        status: 'active',
+        specialty: ['Cleaning'],
+        notes: 'Another test contractor'
+      }
+    ],
+    contracts: [
+      {
+        site_id: '<REPLACE_WITH_REAL_SITE_ID>',
+        contract_details: {
+          contractNumber: 'CNT-001',
+          startDate: '2023-01-01',
+          endDate: '2023-12-31',
+          autoRenewal: true,
+          renewalPeriod: '12',
+          renewalNoticeDays: 30,
+          value: 60000
         },
-        {
-          name: 'Globex Corporation',
-          contact_name: 'Jane Smith',
-          email: 'jane@globex.com',
-          phone: '555-987-6543',
-          address: '456 Elm St',
-          city: 'Springfield',
-          state: 'IL',
-          postcode: '67890',
-          status: 'active',
-          notes: 'Another test client',
-          user_id: userId
-        }
-      ])
-      .select();
-    
-    if (clientsError) {
-      console.error('Error creating test clients:', clientsError);
-      throw clientsError;
-    }
-    
-    // Create test sites for each client
-    const sitesData = [];
-    for (const client of clientsData || []) {
-      sitesData.push(
-        {
-          name: `${client.name} Headquarters`,
-          client_id: client.id,
-          address: '789 Oak St',
-          city: 'Los Angeles',
-          state: 'CA',
-          postcode: '90001',
-          status: 'active',
-          monthly_revenue: 5000,
-          representative: 'Test Rep',
-          user_id: userId
-        },
-        {
-          name: `${client.name} Branch Office`,
-          client_id: client.id,
-          address: '101 Pine St',
-          city: 'San Francisco',
-          state: 'CA',
-          postcode: '94101',
-          status: 'active',
-          monthly_revenue: 3000,
-          representative: 'Test Rep',
-          user_id: userId
-        }
-      );
-    }
-    
-    const { error: sitesError } = await supabase
-      .from('sites')
-      .insert(sitesData);
-    
-    if (sitesError) {
-      console.error('Error creating test sites:', sitesError);
-      throw sitesError;
-    }
-    
-    // Create test contractors
-    const { error: contractorsError } = await supabase
-      .from('contractors')
-      .insert([
-        {
-          business_name: 'ABC Contractors',
-          contact_name: 'Bob Builder',
-          email: 'bob@abccontractors.com',
-          phone: '555-111-2222',
-          address: '222 Contractor Ave',
-          city: 'Builder City',
-          state: 'TX',
-          postcode: '75001',
-          contractor_type: 'general',
-          status: 'active',
-          hourly_rate: 85,
-          day_rate: 600,
-          user_id: userId
-        },
-        {
-          business_name: 'XYZ Maintenance',
-          contact_name: 'Mike Fixer',
-          email: 'mike@xyzmaintenance.com',
-          phone: '555-333-4444',
-          address: '333 Maintenance Blvd',
-          city: 'Fixington',
-          state: 'FL',
-          postcode: '33101',
-          contractor_type: 'specialized',
-          status: 'active',
-          hourly_rate: 95,
-          day_rate: 700,
-          user_id: userId
-        }
-      ]);
-    
-    if (contractorsError) {
-      console.error('Error creating test contractors:', contractorsError);
-      throw contractorsError;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error setting up test data:', error);
-    return false;
-  }
+        notes: 'Test contract'
+      }
+    ],
+    invoices: [
+      {
+        invoice_number: 'INV-001',
+        client_id: '<REPLACE_WITH_REAL_CLIENT_ID>',
+        site_id: '<REPLACE_WITH_REAL_SITE_ID>',
+        amount: 5000,
+        invoice_date: '2023-03-01',
+        due_date: '2023-03-31',
+        status: 'sent',
+        notes: 'Test invoice',
+        line_items: [
+          {
+            description: 'Monthly cleaning service',
+            quantity: 1,
+            unit_price: 4000
+          },
+          {
+            description: 'Extra services',
+            quantity: 2,
+            unit_price: 500
+          }
+        ]
+      }
+    ]
+  };
 }

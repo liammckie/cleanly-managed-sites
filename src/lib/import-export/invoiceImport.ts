@@ -1,187 +1,115 @@
 
 import { supabase } from '@/lib/supabase';
-import { InvoiceRecord, InvoiceLineItem } from './types';
+import { InvoiceRecord } from './types';
 import { validateInvoiceData } from './validation/invoiceValidation';
-import { ValidationResult } from './types';
 
-// Import invoices
-export const importInvoices = async (invoices: Partial<InvoiceRecord>[]): Promise<void> => {
+export const importInvoices = async (invoices: any[]): Promise<{
+  success: boolean;
+  count: number;
+  errors?: any[];
+}> => {
   try {
     console.log(`Starting invoice import with ${invoices.length} records`);
     
     // Validate invoice data
-    const validationResult: ValidationResult<Partial<InvoiceRecord>[]> = validateInvoiceData(invoices);
+    const validationResult = validateInvoiceData(invoices);
     
     if (!validationResult.valid) {
-      const errorMessages = validationResult.errors?.map(e => e.message).join(', ');
-      console.error('Invoice validation errors:', errorMessages);
-      throw new Error(`Invoice validation failed: ${errorMessages}`);
+      console.error('Invoice validation errors:', validationResult.errors);
+      return {
+        success: false,
+        count: 0,
+        errors: validationResult.errors
+      };
+    }
+    
+    if (validationResult.warnings && validationResult.warnings.length > 0) {
+      console.warn('Invoice validation warnings:', validationResult.warnings);
     }
     
     const validInvoices = validationResult.data || [];
     console.log(`Validated ${validInvoices.length} invoices`);
     
-    // Check for existing invoices by ID to avoid duplicates
-    const invoicesWithIds = validInvoices.filter(invoice => invoice.id);
-    const existingIds = invoicesWithIds.length > 0 ? 
-      await checkExistingInvoices(invoicesWithIds.map(invoice => invoice.id as string)) : 
-      [];
+    if (validInvoices.length === 0) {
+      return {
+        success: true,
+        count: 0
+      };
+    }
     
-    const invoicesToInsert = validInvoices.filter(invoice => !invoice.id || !existingIds.includes(invoice.id as string));
-    const invoicesToUpdate = validInvoices.filter(invoice => invoice.id && existingIds.includes(invoice.id as string));
+    // Process invoices and line items
+    const processedInvoices = [];
+    const lineItems = [];
     
-    // Process invoice insertions
-    await processInvoiceInsertions(invoicesToInsert);
-    
-    // Process invoice updates
-    await processInvoiceUpdates(invoicesToUpdate);
-    
-    console.log('Invoice import completed successfully');
-  } catch (error) {
-    console.error('Error during invoice import:', error);
-    throw error;
-  }
-};
-
-// Helper function to check existing invoices
-const checkExistingInvoices = async (ids: string[]): Promise<string[]> => {
-  if (ids.length === 0) return [];
-  
-  try {
-    const { data } = await supabase
-      .from('invoices')
-      .select('id')
-      .in('id', ids);
-    
-    return data?.map(item => item.id) || [];
-  } catch (error) {
-    console.error('Error checking existing invoices:', error);
-    return [];
-  }
-};
-
-// Helper function to process invoice insertions
-const processInvoiceInsertions = async (invoices: Partial<InvoiceRecord>[]): Promise<void> => {
-  if (invoices.length === 0) return;
-  
-  try {
-    // Separate line items from invoices
-    const processedInvoices = invoices.map(({ line_items, ...invoiceData }) => invoiceData);
+    for (const invoice of validInvoices) {
+      const invoiceLineItems = invoice.line_items || [];
+      delete invoice.line_items; // Remove line_items before inserting invoice
+      
+      processedInvoices.push(invoice);
+      
+      // Prepare line items for insertion after invoices
+      if (invoiceLineItems.length > 0) {
+        invoiceLineItems.forEach((lineItem: any) => {
+          lineItems.push({
+            ...lineItem,
+            // We'll update this later once we have invoice IDs
+            invoice_id: invoice.id || ''
+          });
+        });
+      }
+    }
     
     // Insert invoices
-    const { data: insertedInvoices, error: insertError } = await supabase
+    const { data: insertedInvoices, error: invoiceError } = await supabase
       .from('invoices')
       .insert(processedInvoices)
-      .select('id, invoice_number');
+      .select();
     
-    if (insertError) {
-      console.error('Error inserting invoices:', insertError);
-      throw insertError;
+    if (invoiceError) {
+      console.error('Error inserting invoices:', invoiceError);
+      return {
+        success: false,
+        count: 0,
+        errors: [{ message: invoiceError.message }]
+      };
     }
     
-    console.log(`Inserted ${insertedInvoices?.length || 0} invoices`);
+    let lineItemCount = 0;
     
-    // Process line items if they exist
-    if (insertedInvoices) {
-      for (let i = 0; i < invoices.length; i++) {
-        const invoice = invoices[i];
-        const insertedInvoice = insertedInvoices[i];
-        
-        if (invoice.line_items && Array.isArray(invoice.line_items) && invoice.line_items.length > 0 && insertedInvoice) {
-          await processInvoiceLineItems(insertedInvoice.id, invoice.line_items);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error processing invoice insertions:', error);
-    throw error;
-  }
-};
-
-// Helper function to process invoice updates
-const processInvoiceUpdates = async (invoices: Partial<InvoiceRecord>[]): Promise<void> => {
-  if (invoices.length === 0) return;
-  
-  try {
-    for (const invoice of invoices) {
-      const { line_items, ...invoiceData } = invoice;
-      const { error: updateError } = await supabase
-        .from('invoices')
-        .update(invoiceData)
-        .eq('id', invoice.id as string);
+    // Insert line items if any
+    if (lineItems.length > 0 && insertedInvoices) {
+      // Map line items to inserted invoices
+      const updatedLineItems = lineItems.map((lineItem: any, index: number) => {
+        const invoiceIndex = Math.floor(index / lineItems.length * insertedInvoices.length);
+        return {
+          ...lineItem,
+          invoice_id: insertedInvoices[invoiceIndex].id
+        };
+      });
       
-      if (updateError) {
-        console.error(`Error updating invoice ${invoice.id}:`, updateError);
-        continue;
-      }
-      
-      console.log(`Updated invoice ${invoice.id}`);
-      
-      // Process line items if they exist
-      if (line_items && Array.isArray(line_items) && line_items.length > 0) {
-        await processInvoiceLineItems(invoice.id as string, line_items);
-      }
-    }
-  } catch (error) {
-    console.error('Error processing invoice updates:', error);
-    throw error;
-  }
-};
-
-// Helper function to process invoice line items
-const processInvoiceLineItems = async (invoiceId: string, lineItems: InvoiceLineItem[]): Promise<void> => {
-  if (lineItems.length === 0) return;
-  
-  try {
-    // First, get existing line items for this invoice
-    const { data: existingLineItems, error: fetchError } = await supabase
-      .from('invoice_line_items')
-      .select('id')
-      .eq('invoice_id', invoiceId);
-    
-    if (fetchError) {
-      console.error(`Error fetching line items for invoice ${invoiceId}:`, fetchError);
-      return;
-    }
-    
-    const existingIds = existingLineItems?.map(item => item.id) || [];
-    
-    // Filter items to insert vs update
-    const itemsToInsert = lineItems.filter(item => !item.id || !existingIds.includes(item.id as string));
-    const itemsToUpdate = lineItems.filter(item => item.id && existingIds.includes(item.id as string));
-    
-    // Insert new items
-    if (itemsToInsert.length > 0) {
-      const preparedItems = itemsToInsert.map(item => ({
-        ...item,
-        invoice_id: invoiceId
-      }));
-      
-      const { error: insertError } = await supabase
+      const { data: insertedLineItems, error: lineItemError } = await supabase
         .from('invoice_line_items')
-        .insert(preparedItems);
+        .insert(updatedLineItems)
+        .select();
       
-      if (insertError) {
-        console.error(`Error inserting line items for invoice ${invoiceId}:`, insertError);
+      if (lineItemError) {
+        console.error('Error inserting invoice line items:', lineItemError);
       } else {
-        console.log(`Inserted ${itemsToInsert.length} line items for invoice ${invoiceId}`);
+        lineItemCount = insertedLineItems?.length || 0;
       }
     }
     
-    // Update existing items
-    for (const item of itemsToUpdate) {
-      const { error: updateError } = await supabase
-        .from('invoice_line_items')
-        .update(item)
-        .eq('id', item.id as string);
-      
-      if (updateError) {
-        console.error(`Error updating line item ${item.id}:`, updateError);
-      } else {
-        console.log(`Updated line item ${item.id}`);
-      }
-    }
+    console.log(`Invoice import completed successfully: ${insertedInvoices?.length || 0} invoices, ${lineItemCount} line items`);
+    return {
+      success: true,
+      count: insertedInvoices?.length || 0
+    };
   } catch (error) {
-    console.error(`Error processing line items for invoice ${invoiceId}:`, error);
+    console.error('Error during invoice import:', error);
+    return {
+      success: false,
+      count: 0,
+      errors: [{ message: (error as Error).message }]
+    };
   }
 };

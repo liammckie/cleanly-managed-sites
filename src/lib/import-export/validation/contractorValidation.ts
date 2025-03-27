@@ -1,121 +1,54 @@
 
-import { ValidationResult, ValidationMessage, ValidationError } from '../types';
+import { validateGenericData, validateEmail } from './commonValidation';
+import { ValidationError, ValidationResult } from './types';
 import { ContractorRecord } from '../types';
 
 /**
- * Validates contractor data for importing
- * @param contractorData The contractor data to validate
- * @returns Validation result with success flag and error messages
+ * Validates contractor data for import
+ * @param data The contractor data to validate
+ * @returns A validation result
  */
-export function validateContractorData(contractorData: any[]): ValidationResult<Partial<ContractorRecord>[]> {
-  const messages: ValidationMessage[] = [];
-  const errors: ValidationError[] = [];
-  const warnings: ValidationError[] = [];
-  let valid = true;
+export function validateContractorData(data: any[]): ValidationResult<ContractorRecord[]> {
+  const requiredFields = ['business_name', 'contact_name', 'contractor_type'];
   
-  if (!Array.isArray(contractorData)) {
-    const error = {
-      path: 'data',
-      message: 'Contractor data must be an array'
-    };
-    errors.push(error);
-    messages.push({
-      type: 'error',
-      field: 'data',
-      message: 'Contractor data must be an array'
-    });
-    return { valid: false, errors, warnings, messages };
-  }
-  
-  const validData: Partial<ContractorRecord>[] = [];
-  
-  contractorData.forEach((contractor, index) => {
-    const validContractor: Partial<ContractorRecord> = {};
-    
-    // Required fields
-    if (!contractor.business_name) {
-      valid = false;
-      const error = {
-        path: `[${index}].business_name`,
-        message: `Row ${index + 1}: Business name is required`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'business_name',
-        message: `Row ${index + 1}: Business name is required`
-      });
-    } else {
-      validContractor.business_name = contractor.business_name;
+  return validateGenericData<ContractorRecord>(
+    data,
+    requiredFields,
+    (item, index) => {
+      const errors: ValidationError[] = [];
+      
+      // Validate email if present
+      const emailError = validateEmail(item.email, 'email', index);
+      if (emailError) errors.push(emailError);
+      
+      // Status validation
+      if (item.status && !['active', 'inactive', 'pending'].includes(item.status)) {
+        errors.push({
+          path: 'status',
+          message: 'Status must be one of: active, inactive, pending',
+          row: index,
+          value: item.status
+        });
+      }
+      
+      // Validate specialty is an array if present
+      if (item.specialty && !Array.isArray(item.specialty)) {
+        // Try to convert from string
+        try {
+          if (typeof item.specialty === 'string') {
+            item.specialty = JSON.parse(item.specialty);
+          }
+        } catch (e) {
+          errors.push({
+            path: 'specialty',
+            message: 'Specialty must be an array',
+            row: index,
+            value: item.specialty
+          });
+        }
+      }
+      
+      return errors;
     }
-    
-    if (!contractor.contact_name) {
-      valid = false;
-      const error = {
-        path: `[${index}].contact_name`,
-        message: `Row ${index + 1}: Contact name is required`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'contact_name',
-        message: `Row ${index + 1}: Contact name is required`
-      });
-    } else {
-      validContractor.contact_name = contractor.contact_name;
-    }
-    
-    if (!contractor.contractor_type) {
-      valid = false;
-      const error = {
-        path: `[${index}].contractor_type`,
-        message: `Row ${index + 1}: Contractor type is required`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'contractor_type',
-        message: `Row ${index + 1}: Contractor type is required`
-      });
-    } else {
-      validContractor.contractor_type = contractor.contractor_type;
-    }
-    
-    // Email validation
-    if (contractor.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contractor.email)) {
-      valid = false;
-      const error = {
-        path: `[${index}].email`,
-        message: `Row ${index + 1}: Invalid email format`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'email',
-        message: `Row ${index + 1}: Invalid email format`
-      });
-    } else {
-      validContractor.email = contractor.email;
-    }
-    
-    // Copy other fields
-    validContractor.id = contractor.id;
-    validContractor.phone = contractor.phone;
-    validContractor.address = contractor.address;
-    validContractor.city = contractor.city;
-    validContractor.state = contractor.state;
-    validContractor.postcode = contractor.postcode;
-    validContractor.abn = contractor.abn;
-    validContractor.status = contractor.status || 'active';
-    validContractor.specialty = Array.isArray(contractor.specialty) ? contractor.specialty : 
-      (contractor.specialty ? [contractor.specialty] : undefined);
-    validContractor.notes = contractor.notes;
-    
-    // Add to valid data if all required fields are present
-    if (validContractor.business_name && validContractor.contact_name && validContractor.contractor_type) {
-      validData.push(validContractor);
-    }
-  });
-  
-  return { valid, data: validData, errors, warnings, messages };
+  );
 }

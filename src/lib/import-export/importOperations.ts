@@ -1,231 +1,146 @@
 
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { 
   validateClientData, 
   validateSiteData, 
-  validateContractData, 
   validateContractorData, 
+  validateContractData,
   validateInvoiceData
 } from './validation';
-
-import {
-  ClientImportItem,
-  ContractorRecord
+import { 
+  ImportOptions, 
+  ImportResult, 
+  DataType 
 } from './types';
 
-import { SiteRecord } from '@/lib/types';
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-
-// Define valid table names to improve type safety
-type ValidTableName = 'clients' | 'contractors' | 'sites' | 'site_contract_history' | 'invoices';
-
-// Base functions for importing data
-export async function importData<T extends Record<string, any>>(
-  tableName: ValidTableName, 
-  data: T[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  if (!data || data.length === 0) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: 'No data to import' }]
-    };
-  }
-  
+/**
+ * Generic import function that can handle different entity types
+ * @param data The data to import
+ * @param type The type of data (client, site, etc.)
+ * @param options Import options
+ * @returns Import result
+ */
+export async function importData<T>(
+  data: any[],
+  type: DataType,
+  options: ImportOptions = {}
+): Promise<ImportResult> {
   try {
-    // Get the current user ID
-    const { data: { user } } = await supabase.auth.getUser();
+    // Validate the data based on type
+    let validationResult: any;
     
-    if (!user) {
+    switch (type) {
+      case 'client':
+        validationResult = validateClientData(data);
+        break;
+      case 'site':
+        validationResult = validateSiteData(data);
+        break;
+      case 'contractor':
+        validationResult = validateContractorData(data);
+        break;
+      case 'contract':
+        validationResult = validateContractData(data);
+        break;
+      case 'invoice':
+        validationResult = validateInvoiceData(data);
+        break;
+      default:
+        return {
+          success: false,
+          message: `Unsupported data type: ${type}`,
+          count: 0
+        };
+    }
+    
+    if (!validationResult.valid) {
       return {
         success: false,
+        message: `Validation failed for ${type} import`,
         count: 0,
-        errors: [{ message: 'You must be logged in to import data' }]
+        failures: validationResult.errors
       };
     }
     
-    // Add user_id to each record
-    const dataWithUserId = data.map(item => ({
-      ...item,
-      user_id: user.id
-    }));
+    // If dry run, return success without inserting
+    if (options.dryRun) {
+      return {
+        success: true,
+        message: `Dry run completed for ${type} import`,
+        count: validationResult.data?.length || 0,
+        data: validationResult.data
+      };
+    }
     
-    // Use explicit table name with type assertion
+    // Insert the data into the database
+    const table = getTableNameForType(type);
     const { data: insertedData, error } = await supabase
-      .from(tableName)
-      .insert(dataWithUserId as any)
+      .from(table)
+      .insert(validationResult.data)
       .select();
     
     if (error) {
-      console.error(`Error importing data to ${tableName}:`, error);
+      console.error(`Error importing ${type}:`, error);
       return {
         success: false,
+        message: error.message,
         count: 0,
-        errors: [{ message: error.message }]
+        failures: [{ message: error.message }]
       };
     }
     
     return {
       success: true,
-      count: insertedData?.length || dataWithUserId.length
+      message: `Successfully imported ${insertedData?.length || 0} ${type}(s)`,
+      count: insertedData?.length || 0,
+      data: insertedData
     };
-    
   } catch (error) {
-    console.error(`Error importing data to ${tableName}:`, error);
+    console.error(`Error during ${type} import:`, error);
     return {
       success: false,
+      message: (error as Error).message,
       count: 0,
-      errors: [{ message: (error as Error).message }]
+      failures: [{ message: (error as Error).message }]
     };
   }
 }
 
-// Specific import functions
-export async function importClients(
-  clientsData: any[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  try {
-    // Validate the data
-    const validation = validateClientData(clientsData);
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors
-      };
-    }
-    
-    const validClients = validation.data || [];
-    return importData('clients', validClients);
-  } catch (error) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
-    };
+/**
+ * Gets the table name for a data type
+ * @param type The data type
+ * @returns The table name
+ */
+function getTableNameForType(type: DataType): string {
+  switch (type) {
+    case 'client':
+      return 'clients';
+    case 'site':
+      return 'sites';
+    case 'contractor':
+      return 'contractors';
+    case 'contract':
+      return 'site_contract_history';
+    case 'invoice':
+      return 'invoices';
+    default:
+      throw new Error(`Unsupported data type: ${type}`);
   }
 }
 
-export async function importContractors(
-  contractorsData: any[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  try {
-    // Validate the data
-    const validation = validateContractorData(contractorsData);
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors
-      };
-    }
-    
-    const validContractors = validation.data || [];
-    return importData('contractors', validContractors);
-  } catch (error) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
-    };
-  }
-}
+// Specific import functions for different entity types
+export const importClients = (data: any[], options?: ImportOptions) => 
+  importData(data, 'client', options);
 
-export async function importSites(
-  sitesData: any[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  try {
-    // Validate the data
-    const validation = validateSiteData(sitesData);
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors
-      };
-    }
-    
-    const validSites = validation.data || [];
-    return importData('sites', validSites);
-  } catch (error) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
-    };
-  }
-}
+export const importSites = (data: any[], options?: ImportOptions) => 
+  importData(data, 'site', options);
 
-export async function importContracts(
-  contractsData: any[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  try {
-    // Validate the data
-    const validation = validateContractData(contractsData);
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors
-      };
-    }
-    
-    const validContracts = validation.data || [];
-    return importData('site_contract_history', validContracts);
-  } catch (error) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
-    };
-  }
-}
+export const importContractors = (data: any[], options?: ImportOptions) => 
+  importData(data, 'contractor', options);
 
-export async function importInvoices(
-  invoicesData: any[]
-): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> {
-  try {
-    // Validate the data
-    const validation = validateInvoiceData(invoicesData);
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors
-      };
-    }
-    
-    const validInvoices = validation.data || [];
-    return importData('invoices', validInvoices);
-  } catch (error) {
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
-    };
-  }
-}
+export const importContracts = (data: any[], options?: ImportOptions) => 
+  importData(data, 'contract', options);
+
+export const importInvoices = (data: any[], options?: ImportOptions) => 
+  importData(data, 'invoice', options);

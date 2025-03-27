@@ -1,97 +1,69 @@
 
-import { ValidationResult, ValidationMessage, ValidationError } from '../types';
+import { validateGenericData, validateDateFormat } from './commonValidation';
+import { ValidationError, ValidationResult } from './types';
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
 /**
- * Validates contract data for importing
- * @param contractsData The contract data to validate
- * @returns Validation result with success flag and error messages
+ * Validates contract data for import
+ * @param data The contract data to validate
+ * @returns A validation result
  */
-export function validateContractData(contractsData: any[]): ValidationResult<Partial<ContractHistoryEntry>[]> {
-  const messages: ValidationMessage[] = [];
-  const errors: ValidationError[] = [];
-  const warnings: ValidationError[] = [];
-  let valid = true;
+export function validateContractData(data: any[]): ValidationResult<Partial<ContractHistoryEntry>[]> {
+  const requiredFields = ['site_id'];
   
-  if (!Array.isArray(contractsData)) {
-    const error = {
-      path: 'data',
-      message: 'Contract data must be an array'
-    };
-    errors.push(error);
-    messages.push({
-      type: 'error',
-      field: 'data',
-      message: 'Contract data must be an array'
-    });
-    return { valid: false, errors, warnings, messages };
-  }
-  
-  const validData: Partial<ContractHistoryEntry>[] = [];
-  
-  contractsData.forEach((contract, index) => {
-    const validContract: Partial<ContractHistoryEntry> = {};
-    
-    // Required fields
-    if (!contract.site_id) {
-      valid = false;
-      const error = {
-        path: `[${index}].site_id`,
-        message: `Row ${index + 1}: Site ID is required`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'site_id',
-        message: `Row ${index + 1}: Site ID is required`
-      });
-    } else {
-      validContract.site_id = contract.site_id;
-    }
-    
-    // Contract details validation
-    if (typeof contract.contract_details === 'string') {
-      try {
-        validContract.contract_details = JSON.parse(contract.contract_details);
-      } catch (e) {
-        valid = false;
-        const error = {
-          path: `[${index}].contract_details`,
-          message: `Row ${index + 1}: Invalid contract details JSON format`
-        };
-        errors.push(error);
-        messages.push({
-          type: 'error',
-          field: 'contract_details',
-          message: `Row ${index + 1}: Invalid contract details JSON format`
+  return validateGenericData<Partial<ContractHistoryEntry>>(
+    data,
+    requiredFields,
+    (item, index) => {
+      const errors: ValidationError[] = [];
+      
+      // Ensure contract_details exists and is an object
+      if (!item.contract_details) {
+        errors.push({
+          path: 'contract_details',
+          message: 'Contract details are required',
+          row: index
         });
+      } else if (typeof item.contract_details === 'string') {
+        // Try to parse if it's a string
+        try {
+          item.contract_details = JSON.parse(item.contract_details);
+        } catch (e) {
+          errors.push({
+            path: 'contract_details',
+            message: 'Contract details must be valid JSON',
+            row: index,
+            value: item.contract_details
+          });
+        }
       }
-    } else if (typeof contract.contract_details === 'object') {
-      validContract.contract_details = contract.contract_details;
-    } else {
-      valid = false;
-      const error = {
-        path: `[${index}].contract_details`,
-        message: `Row ${index + 1}: Contract details are required`
-      };
-      errors.push(error);
-      messages.push({
-        type: 'error',
-        field: 'contract_details',
-        message: `Row ${index + 1}: Contract details are required`
-      });
+      
+      // Validate contract dates if they exist
+      if (item.contract_details && typeof item.contract_details === 'object') {
+        const contract = item.contract_details;
+        
+        if (contract.startDate) {
+          const startDateError = validateDateFormat(contract.startDate, 'startDate', index);
+          if (startDateError) errors.push(startDateError);
+        }
+        
+        if (contract.endDate) {
+          const endDateError = validateDateFormat(contract.endDate, 'endDate', index);
+          if (endDateError) errors.push(endDateError);
+          
+          // Check that end date is after start date
+          if (contract.startDate && contract.endDate && new Date(contract.endDate) <= new Date(contract.startDate)) {
+            errors.push({
+              path: 'endDate',
+              message: 'End date must be after start date',
+              row: index,
+              value: contract.endDate
+            });
+          }
+        }
+      }
+      
+      return errors;
     }
-    
-    // Copy other fields
-    validContract.notes = contract.notes;
-    validContract.created_by = contract.created_by;
-    validContract.version_number = contract.version_number ? Number(contract.version_number) : undefined;
-    
-    // Add to valid data if all required fields are present
-    if (validContract.site_id && validContract.contract_details) {
-      validData.push(validContract);
-    }
-  });
-  
-  return { valid, data: validData, errors, warnings, messages };
+  );
 }

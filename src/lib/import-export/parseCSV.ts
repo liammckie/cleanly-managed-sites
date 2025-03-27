@@ -1,64 +1,96 @@
 
 /**
- * Parse CSV data into an array of objects
- * 
- * @param input - CSV string or File object
- * @returns Array of objects representing CSV rows
+ * Parses a CSV string into an array of objects
+ * @param csvString The CSV string to parse
+ * @param hasHeader Whether the CSV has a header row
+ * @returns Array of objects
  */
-export const parseCSV = async (input: string | File): Promise<any[]> => {
-  try {
-    let csvText: string;
-    
-    // Handle both string and File inputs
-    if (typeof input === 'string') {
-      csvText = input;
-    } else if (input instanceof File) {
-      csvText = await readFileAsText(input);
-    } else {
-      throw new Error('Invalid input type. Expected string or File.');
-    }
-    
-    // Split the CSV text into lines
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim());
-    
-    // Get the headers from the first line
-    const headers = lines[0].split(',').map(header => header.trim());
-    
-    // Parse the data rows
-    const results = [];
-    for (let i = 1; i < lines.length; i++) {
-      const currentLine = lines[i].split(',').map(value => value.trim());
-      
-      // Skip empty lines
-      if (currentLine.length === 1 && currentLine[0] === '') continue;
-      
-      // Create an object for the current row
-      const obj: Record<string, any> = {};
-      for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = currentLine[j];
-      }
-      
-      results.push(obj);
-    }
-    
-    return results;
-  } catch (error) {
-    console.error('Error parsing CSV:', error);
-    throw error;
+export function parseCSV(csvString: string, hasHeader: boolean = true): any[] {
+  if (!csvString) {
+    return [];
   }
-};
+  
+  // Split the CSV into rows
+  const rows = csvString.split(/\r?\n/).filter(row => row.trim() !== '');
+  
+  if (rows.length === 0) {
+    return [];
+  }
+  
+  // Get headers (from first row if hasHeader, or generate default headers)
+  const headers = hasHeader
+    ? parseCSVRow(rows[0])
+    : Array.from({ length: parseCSVRow(rows[0]).length }, (_, i) => `field${i + 1}`);
+  
+  // Parse data rows
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  
+  return dataRows.map(row => {
+    const values = parseCSVRow(row);
+    const obj: Record<string, any> = {};
+    
+    // Map each value to its header
+    headers.forEach((header, index) => {
+      if (index < values.length) {
+        const value = values[index];
+        
+        // Try to parse numbers and JSON
+        if (value === '') {
+          obj[header] = null;
+        } else if (!isNaN(Number(value)) && !value.startsWith('0') && value.trim() !== '') {
+          obj[header] = Number(value);
+        } else if ((value.startsWith('{') && value.endsWith('}')) || 
+                 (value.startsWith('[') && value.endsWith(']'))) {
+          try {
+            obj[header] = JSON.parse(value);
+          } catch (e) {
+            obj[header] = value;
+          }
+        } else {
+          obj[header] = value;
+        }
+      }
+    });
+    
+    return obj;
+  });
+}
 
 /**
- * Read a File object as text
- * 
- * @param file - File object to read
- * @returns Promise resolving to file contents as string
+ * Parses a single CSV row, respecting quoted values
+ * @param row The CSV row to parse
+ * @returns Array of values
  */
-const readFileAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
-  });
-};
+function parseCSVRow(row: string): string[] {
+  const result: string[] = [];
+  let inQuotes = false;
+  let currentValue = '';
+  
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    const nextChar = i < row.length - 1 ? row[i + 1] : '';
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote within quotes
+        currentValue += '"';
+        i++; // Skip the next quote
+      } else {
+        // Toggle quotes state
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // End of field
+      result.push(currentValue);
+      currentValue = '';
+    } else {
+      // Normal character
+      currentValue += char;
+    }
+  }
+  
+  // Add the last value
+  result.push(currentValue);
+  
+  return result;
+}

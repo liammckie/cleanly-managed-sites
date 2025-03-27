@@ -1,5 +1,7 @@
 
-// src/lib/import-export/validation/types.ts - Defines validation types
+/**
+ * Standardized validation types for the import-export module
+ */
 
 export interface ValidationError {
   path: string;

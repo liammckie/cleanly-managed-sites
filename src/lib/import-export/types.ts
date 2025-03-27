@@ -1,5 +1,11 @@
 
-import { ValidationError } from '@/types/common';
+// Re-export validation types for easier access
+export type { 
+  ValidationError,
+  ValidationMessage,
+  ValidationResult,
+  ValidationOptions 
+} from './validation/types';
 
 export interface ImportOptions {
   mapping?: Record<string, string>;
@@ -25,14 +31,6 @@ export interface ExportOptions {
 
 // Define the DataType for csvGenerator
 export type DataType = 'client' | 'site' | 'contractor' | 'invoice' | 'contract';
-
-// Forward exports from validation types
-export type { 
-  ValidationError,
-  ValidationMessage,
-  ValidationResult,
-  ValidationOptions 
-} from './validation/types';
 
 // Legacy validation structure - to maintain compatibility
 export interface LegacyValidationResult<T = unknown> {
