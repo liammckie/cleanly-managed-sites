@@ -1,18 +1,22 @@
-
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useCreateRole } from '@/hooks/useUserRoles';
+import React, { useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
+import { useForm } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import {
   Form,
   FormControl,
@@ -21,84 +25,111 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import { PERMISSIONS, PermissionId, PermissionsMap } from '@/types/permissions';
-
-// Group permissions by category
-const dataPermissions = PERMISSIONS.filter(p => p.category === 'data');
-const managementPermissions = PERMISSIONS.filter(p => p.category === 'management');
-const adminPermissions = PERMISSIONS.filter(p => p.category === 'admin');
-
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'Role name must be at least 2 characters' }),
-  description: z.string().optional(),
-  permissions: z.array(z.string()).min(1, { message: 'Select at least one permission' }),
-});
-
-type FormData = z.infer<typeof formSchema>;
+} from "@/components/ui/form"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useCreateRole } from '@/hooks/useUserRoles';
 
 interface NewRoleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: () => void;
 }
 
-export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {
-  const { createRole, isLoading } = useCreateRole();
+const permissionOptions = [
+  "clients.read",
+  "clients.write",
+  "sites.read",
+  "sites.write",
+  "contractors.read",
+  "contractors.write",
+  "users.read",
+  "users.write",
+  "roles.read",
+  "roles.write",
+  "quotes.read",
+  "quotes.write",
+  "workorders.read",
+  "workorders.write",
+  "billing.read",
+  "billing.write",
+  "reports.read",
+  "reports.write",
+];
 
-  const form = useForm<FormData>({
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Role name must be at least 2 characters.",
+  }),
+  description: z.string().optional(),
+});
+
+interface FormValues {
+  name: string;
+  description?: string;
+}
+
+const NewRoleDialog = ({ isOpen, onClose, onSave }: NewRoleDialogProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+  const { createRole } = useCreateRole();
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      permissions: [],
+      name: "",
+      description: "",
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const handlePermissionChange = (permission: string, checked: boolean) => {
+    setSelectedPermissions(prev => {
+      const newPermissions = { ...prev };
+      if (checked) {
+        newPermissions[permission] = true;
+      } else {
+        delete newPermissions[permission];
+      }
+      return newPermissions;
+    });
+  };
+
+  const handleSubmit = async (data: FormValues) => {
     try {
-      // Convert string array to PermissionsMap
-      const permissionsMap: PermissionsMap = {} as PermissionsMap;
+      setIsLoading(true);
       
-      // Initialize all permissions to false
-      PERMISSIONS.forEach(permission => {
-        permissionsMap[permission.id as PermissionId] = false;
-      });
-      
-      // Set selected permissions to true
-      data.permissions.forEach(permissionId => {
-        permissionsMap[permissionId as PermissionId] = true;
-      });
+      // Convert the permissions map to an array of strings
+      const permissionsArray = Object.keys(selectedPermissions);
       
       await createRole({
         name: data.name,
-        permissions: permissionsMap,
         description: data.description,
+        permissions: permissionsArray // This is correctly typed now
       });
       
       toast.success('Role created successfully');
-      form.reset();
-      onOpenChange(false);
-    } catch (error: any) {
-      toast.error(`Failed to create role: ${error.message}`);
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('Error creating role:', error);
+      toast.error('Failed to create role');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Create New Role</DialogTitle>
-          <DialogDescription>
-            Define a new role with specific permissions.
-          </DialogDescription>
-        </DialogHeader>
-        
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Create New Role</AlertDialogTitle>
+          <AlertDialogDescription>
+            Define a new user role with specific permissions.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -106,13 +137,12 @@ export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {
                 <FormItem>
                   <FormLabel>Role Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Site Manager" {...field} />
+                    <Input placeholder="Admin" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
             <FormField
               control={form.control}
               name="description"
@@ -120,169 +150,45 @@ export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe the purpose of this role..."
-                      {...field}
-                      value={field.value || ''}
-                    />
+                    <Input placeholder="Description" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Optional. Helps users understand the purpose of this role.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
             <div>
               <FormLabel>Permissions</FormLabel>
-              <FormDescription className="mb-4">
-                Select the permissions that this role should have.
+              <FormDescription>
+                Select permissions for this role.
               </FormDescription>
-              
-              <div className="space-y-4 max-h-60 overflow-y-auto p-2 border rounded-md">
-                <div className="space-y-2">
-                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Data Management</h3>
-                  {dataPermissions.map((permission) => (
-                    <FormField
-                      key={permission.id}
-                      control={form.control}
-                      name="permissions"
-                      render={({ field }) => (
-                        <FormItem
-                          key={permission.id}
-                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(permission.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  field.onChange([...field.value, permission.id]);
-                                } else {
-                                  field.onChange(
-                                    field.value.filter((p) => p !== permission.id)
-                                  );
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              {permission.label}
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+              <ScrollArea className="rounded-md border p-4 h-48">
+                <div className="grid gap-2">
+                  {permissionOptions.map((permission) => (
+                    <div key={permission} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={permission}
+                        checked={!!selectedPermissions[permission]}
+                        onCheckedChange={(checked) => handlePermissionChange(permission, !!checked)}
+                      />
+                      <Label htmlFor={permission} className="capitalize">
+                        {permission}
+                      </Label>
+                    </div>
                   ))}
                 </div>
-                
-                <div className="space-y-2 mt-4">
-                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Management</h3>
-                  {managementPermissions.map((permission) => (
-                    <FormField
-                      key={permission.id}
-                      control={form.control}
-                      name="permissions"
-                      render={({ field }) => (
-                        <FormItem
-                          key={permission.id}
-                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(permission.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  field.onChange([...field.value, permission.id]);
-                                } else {
-                                  field.onChange(
-                                    field.value.filter((p) => p !== permission.id)
-                                  );
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              {permission.label}
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  <h3 className="font-medium text-sm text-muted-foreground mb-2">Admin</h3>
-                  {adminPermissions.map((permission) => (
-                    <FormField
-                      key={permission.id}
-                      control={form.control}
-                      name="permissions"
-                      render={({ field }) => (
-                        <FormItem
-                          key={permission.id}
-                          className="flex flex-row items-start space-x-3 space-y-0 py-1"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(permission.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  field.onChange([...field.value, permission.id]);
-                                } else {
-                                  field.onChange(
-                                    field.value.filter((p) => p !== permission.id)
-                                  );
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-normal cursor-pointer">
-                              {permission.label}
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-              {form.formState.errors.permissions && (
-                <FormMessage>
-                  {form.formState.errors.permissions.message}
-                </FormMessage>
-              )}
+              </ScrollArea>
             </div>
-            
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Creating...' : 'Create Role'}
+                {isLoading ? "Creating..." : "Create"}
               </Button>
-            </DialogFooter>
+            </AlertDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
-}
+};
+
+export default NewRoleDialog;

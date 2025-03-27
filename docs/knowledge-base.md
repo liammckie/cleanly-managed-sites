@@ -16,6 +16,13 @@ This is a business management application focused on cleaning service management
   - React Hook Form for form management
   - Zod for validation
 
+## Recent Progress Updates
+
+- **Fixed TypeScript Errors**: Resolved type issues in UserRoles, ImportExport hooks, and API functions
+- **Improved Data Import/Export**: Enhanced CSV parsing to handle File objects
+- **Refactored Site APIs**: Organized site-related API functions for better maintainability
+- **Enhanced User Role Management**: Fixed user count tracking and permission handling
+
 ## Key Domain Concepts
 
 ### 1. Clients
@@ -136,90 +143,11 @@ Billing features include:
 - On-hold functionality
 - Credit management
 
-## Data Types and Structures
+## Architecture and Code Organization
 
-### JSON Fields
+### API Structure
 
-The application makes extensive use of JSON fields in the database to store structured data. These include:
-- `contract_details`: Contract-related information
-- `job_specifications`: Job-related details
-- `security_details`: Security information for sites
-- `billing_details`: Billing configuration
-- `periodicals`: Recurring service schedules
-- `replenishables`: Supply management
-
-### User Role Structures
-
-User roles are structured with:
-- Role name and description
-- Array of permission strings
-- User count association
-- Version tracking with timestamps
-
-### Helper Functions
-
-Several utility functions have been implemented to safely work with JSON data:
-- `getJsonProperty`: Safely access nested properties
-- `safeParseJson`: Parse JSON strings with fallbacks
-- `hasJsonProperty`: Check for property existence
-- `asJsonObject`: Type-safe conversion to objects
-
-## Version History
-
-The system tracks version history for several entity types:
-- Contractor version history
-- Site contract history
-- Quote version comparison
-- User role modifications
-
-## Business Rules
-
-### Billing Variations
-
-Billing variations follow these rules:
-- Must have an effective date
-- Can affect client billing, contractor payment, or both
-- May extend contract terms
-- Require reason documentation
-- Create contract history entries
-
-### Award Rate Calculations
-
-The award rate calculator follows cleaning service award rules:
-- Different rates for different employment types
-- Penalty rates for non-standard hours
-- Allowances for special circumstances
-- Level-based pay scales
-
-### User Management
-
-User management follows these patterns:
-- Users must have assigned roles
-- Roles determine access to system features
-- Admin roles have management capabilities
-- User statistics are tracked for audit purposes
-
-## Key Components
-
-### Form Management
-
-The application uses a consistent pattern for forms:
-- Form data abstraction with TypeScript interfaces
-- Multi-step forms with progress tracking
-- Validation schema with Zod
-- Form submission handling with optimistic updates
-
-### Tabs and Cards
-
-UI organization follows these patterns:
-- Entity details displayed in cards
-- Related information in tabbed interfaces
-- Action buttons in consistent locations
-- Status indicators with consistent color coding
-
-## API Structure
-
-The API is structured by domain entity:
+The API is organized by domain entity:
 - `/clients` - Client management
 - `/sites` - Site management
 - `/contacts` - Contact management
@@ -228,22 +156,21 @@ The API is structured by domain entity:
 - `/workorders` - Work order management
 - `/users` - User and role management
 
-Each entity typically supports:
-- Get all entities
-- Get entity by ID
-- Create entity
-- Update entity
-- Delete entity
-- Specialized operations (e.g., set primary contact)
+### Component Structure
 
-## Import/Export System
+UI components follow a domain-driven structure:
+- `/components/clients` - Client-related components
+- `/components/sites` - Site-related components
+- `/components/users` - User management components
+- `/components/ui` - Shared UI components
 
-The import/export system includes:
-- CSV parsing with validation
-- Import workflows for different entity types
-- Test data generation for development
-- User interface for import and export operations
-- Format conversion utilities
+### Hook Organization
+
+Custom hooks are structured to match their domain:
+- `useClients` - Client data management
+- `useSites` - Site data management
+- `useUserRoles` - User role management
+- Various import/export hooks for data operations
 
 ## Best Practices
 
@@ -257,3 +184,10 @@ The import/export system includes:
 8. **Validation**: Use Zod for validation schemas.
 9. **Database Usage**: Follow Supabase best practices.
 10. **Modularity**: Create focused components and utilities.
+
+## Known Issues and Fixes
+
+1. **Type Errors**: Fixed issues with UserRole interface and permission handling.
+2. **CSV Parsing**: Enhanced to handle both string and File inputs.
+3. **API Structure**: Improved organization of site-related API functions.
+4. **User Count Tracking**: Fixed user count tracking in user role management.

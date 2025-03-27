@@ -1,9 +1,8 @@
-
 import { supabase } from '@/lib/supabase';
-import { SystemUser, UserRole, UserStatus, SystemUserInsert } from '@/lib/types/users';
+import { UserRole, SystemUser, SystemUserInsert } from '@/lib/types/users';
+import { Json } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define a local type for user inserts
 interface UserInsertData {
   email: string;
   firstName: string;
@@ -43,7 +42,7 @@ export const getUsers = async (): Promise<SystemUser[]> => {
       last_login: user.last_login,
       custom_id: user.custom_id,
       notes: user.notes,
-      territories: user.territories || [], // Ensure it's an array
+      territories: user.territories || [],
       daily_summary: user.daily_summary
     }));
   } catch (error) {
@@ -56,7 +55,6 @@ export const createUser = async (userData: UserInsertData): Promise<SystemUser> 
   try {
     const userId = uuidv4();
     
-    // Create the user profile
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .insert({
@@ -211,59 +209,63 @@ export const getUserRoles = async (): Promise<UserRole[]> => {
       .order('name');
 
     if (error) {
+      console.error('Error fetching user roles:', error);
       throw error;
     }
-
-    // Convert permissions from Json to string[]
+    
     return data.map(role => ({
       id: role.id,
       name: role.name,
-      description: role.description,
+      description: role.description || '',
       permissions: Array.isArray(role.permissions) 
-        ? role.permissions.map(p => String(p))
+        ? role.permissions.map(p => String(p)) 
         : typeof role.permissions === 'object' && role.permissions !== null
-          ? Object.keys(role.permissions).map(k => String(k))
+          ? Object.keys(role.permissions)
           : [],
       created_at: role.created_at,
       updated_at: role.updated_at
     }));
   } catch (error) {
-    console.error('Error fetching user roles:', error);
+    console.error('Error in getUserRoles:', error);
     throw error;
   }
 };
 
-export const createUserRole = async (roleData: Omit<UserRole, 'id' | 'created_at' | 'updated_at'>): Promise<UserRole> => {
+export const createRole = async (roleData: { 
+  name: string; 
+  permissions: string[]; 
+  description?: string 
+}): Promise<UserRole> => {
   try {
     const { data, error } = await supabase
       .from('user_roles')
       .insert({
         name: roleData.name,
-        description: roleData.description,
+        description: roleData.description || '',
         permissions: roleData.permissions
       })
       .select()
       .single();
-
+      
     if (error) {
-      console.error('Error creating user role:', error);
+      console.error('Error creating role:', error);
       throw error;
     }
-
+    
     return {
       id: data.id,
       name: data.name,
-      description: data.description,
+      description: data.description || '',
       permissions: Array.isArray(data.permissions) 
-        ? data.permissions.map(p => String(p))
+        ? data.permissions.map(p => String(p)) 
         : typeof data.permissions === 'object' && data.permissions !== null
-          ? Object.keys(data.permissions).map(k => String(k))
+          ? Object.keys(data.permissions)
           : [],
       created_at: data.created_at,
       updated_at: data.updated_at
     };
   } catch (error) {
-    console.error('Error creating user role:', error);
+    console.error('Error in createRole:', error);
     throw error;
   }
 };
@@ -285,11 +287,11 @@ export const updateUserRole = async (id: string, roleData: Partial<UserRole>): P
     return {
       id: data.id,
       name: data.name,
-      description: data.description,
+      description: data.description || '',
       permissions: Array.isArray(data.permissions) 
-        ? data.permissions.map(p => String(p))
+        ? data.permissions.map(p => String(p)) 
         : typeof data.permissions === 'object' && data.permissions !== null
-          ? Object.keys(data.permissions).map(k => String(k))
+          ? Object.keys(data.permissions)
           : [],
       created_at: data.created_at,
       updated_at: data.updated_at

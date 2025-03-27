@@ -1,47 +1,48 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { parseCSV, importSites } from '@/lib/import-export';
-import { convertCSVToSiteFormat } from '@/lib/import-export/fileFormatConversion';
+import { importSites as importSitesApi } from '@/lib/import-export';
+import { parseCSV } from '@/lib/import-export';
 
 export function useImportSites() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResults, setImportResults] = useState<any>(null);
 
-  const handleImportSites = async (data: any[]): Promise<void> => {
+  // Handle import from raw data
+  const handleImportSites = async (data: any[]) => {
     try {
       setIsImporting(true);
-      await importSites(data);
-      toast.success(`${data.length} sites imported successfully`);
-      setImportResults({
-        success: true,
-        count: data.length,
-        message: `${data.length} sites imported successfully`
-      });
-    } catch (error: any) {
-      toast.error(`Failed to import sites: ${error.message}`);
-      setImportResults({
-        success: false,
-        error: error.message
-      });
+      setImportResults(null);
+      
+      const results = await importSitesApi(data);
+      setImportResults(results);
+      return results;
+    } catch (error) {
+      console.error('Error importing sites:', error);
+      setImportResults({ error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     } finally {
       setIsImporting(false);
     }
   };
 
-  const handleCSVImportSites = async (file: File): Promise<void> => {
+  // Handle import from CSV file
+  const handleCSVImportSites = async (file: File) => {
     try {
       setIsImporting(true);
-      const csvData = await parseCSV(file);
-      const sites = convertCSVToSiteFormat(csvData);
-      await handleImportSites(sites);
-    } catch (error: any) {
-      toast.error(`Failed to import sites from CSV: ${error.message}`);
-      setImportResults({
-        success: false,
-        error: error.message
-      });
+      setImportResults(null);
+      
+      const parsedData = await parseCSV(file);
+      if (!parsedData || !Array.isArray(parsedData)) {
+        throw new Error('Invalid CSV data format');
+      }
+      
+      const results = await importSitesApi(parsedData);
+      setImportResults(results);
+      return results;
+    } catch (error) {
+      console.error('Error importing sites from CSV:', error);
+      setImportResults({ error: error instanceof Error ? error.message : 'Unknown error' });
+      throw error;
     } finally {
       setIsImporting(false);
     }
@@ -51,6 +52,9 @@ export function useImportSites() {
     isImporting,
     importResults,
     handleImportSites,
-    handleCSVImportSites
+    handleCSVImportSites,
+    // For backward compatibility
+    importSites: handleImportSites,
+    result: importResults
   };
 }

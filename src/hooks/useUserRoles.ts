@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { UserRole } from '@/lib/types/users';
@@ -19,43 +18,29 @@ export function useUserRoles() {
         throw error;
       }
 
-      // Get user counts for each role - we need to do this as a separate query
-      const { data: userCounts, error: countError } = await supabase
+      // Get user counts for each role
+      const roleCounts: Record<string, number> = {};
+      
+      // Count users by role
+      const { data: userProfiles, error: countError } = await supabase
         .from('user_profiles')
-        .select('role_id, count')
-        .is('role_id', 'not.null')
-        .then(async (res) => {
-          if (res.error) throw res.error;
-          
-          // Group by role_id and count occurrences
-          const counts: Record<string, number> = {};
-          
-          // Get the counts by executing a separate query
-          const { data: countData, error: countErr } = await supabase
-            .from('user_profiles')
-            .select('role_id')
-            .is('role_id', 'not.null');
-            
-          if (countErr) throw countErr;
-          
-          // Count occurrences of each role_id
-          for (const row of countData || []) {
-            if (row.role_id) {
-              counts[row.role_id] = (counts[row.role_id] || 0) + 1;
-            }
-          }
-          
-          return { data: counts, error: null };
-        });
-
+        .select('role_id');
+      
       if (countError) {
         console.error('Error fetching role user counts:', countError);
+      } else if (userProfiles) {
+        // Count occurrences of each role_id
+        for (const profile of userProfiles) {
+          if (profile.role_id) {
+            roleCounts[profile.role_id] = (roleCounts[profile.role_id] || 0) + 1;
+          }
+        }
       }
 
       // Convert permissions from Json to string[]
       return data.map(role => {
         // Find count for this role
-        const userCount = userCounts?.[role.id] || 0;
+        const userCount = roleCounts[role.id] || 0;
         
         return {
           id: role.id,

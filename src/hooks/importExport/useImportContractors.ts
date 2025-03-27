@@ -1,47 +1,48 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { parseCSV, importContractors } from '@/lib/import-export';
-import { convertCSVToContractorFormat } from '@/lib/import-export/fileFormatConversion';
+import { importContractors as importContractorsApi } from '@/lib/import-export';
+import { parseCSV } from '@/lib/import-export';
 
 export function useImportContractors() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResults, setImportResults] = useState<any>(null);
 
-  const handleImportContractors = async (data: any[]): Promise<void> => {
+  // Handle import from raw data
+  const handleImportContractors = async (data: any[]) => {
     try {
       setIsImporting(true);
-      await importContractors(data);
-      toast.success(`${data.length} contractors imported successfully`);
-      setImportResults({
-        success: true,
-        count: data.length,
-        message: `${data.length} contractors imported successfully`
-      });
-    } catch (error: any) {
-      toast.error(`Failed to import contractors: ${error.message}`);
-      setImportResults({
-        success: false,
-        error: error.message
-      });
+      setImportResults(null);
+      
+      const results = await importContractorsApi(data);
+      setImportResults(results);
+      return results;
+    } catch (error) {
+      console.error('Error importing contractors:', error);
+      setImportResults({ error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     } finally {
       setIsImporting(false);
     }
   };
 
-  const handleCSVImportContractors = async (file: File): Promise<void> => {
+  // Handle import from CSV file
+  const handleCSVImportContractors = async (file: File) => {
     try {
       setIsImporting(true);
-      const csvData = await parseCSV(file);
-      const contractors = convertCSVToContractorFormat(csvData);
-      await handleImportContractors(contractors);
-    } catch (error: any) {
-      toast.error(`Failed to import contractors from CSV: ${error.message}`);
-      setImportResults({
-        success: false,
-        error: error.message
-      });
+      setImportResults(null);
+      
+      const parsedData = await parseCSV(file);
+      if (!parsedData || !Array.isArray(parsedData)) {
+        throw new Error('Invalid CSV data format');
+      }
+      
+      const results = await importContractorsApi(parsedData);
+      setImportResults(results);
+      return results;
+    } catch (error) {
+      console.error('Error importing contractors from CSV:', error);
+      setImportResults({ error: error instanceof Error ? error.message : 'Unknown error' });
+      throw error;
     } finally {
       setIsImporting(false);
     }
@@ -51,6 +52,9 @@ export function useImportContractors() {
     isImporting,
     importResults,
     handleImportContractors,
-    handleCSVImportContractors
+    handleCSVImportContractors,
+    // For backward compatibility
+    importContractors: handleImportContractors,
+    result: importResults
   };
 }
