@@ -39,6 +39,16 @@ export interface GroupedContracts {
 }
 
 /**
+ * Contract forecast data by month
+ */
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+}
+
+/**
  * Summary data for contract expirations and values
  */
 export interface ContractSummaryData {
@@ -57,7 +67,7 @@ export interface ContractSummaryData {
   // Overall contract data
   totalContracts: number;
   totalValue: number;
-  activeCount: number;  // Added missing property
+  activeCount: number;  // Added for compatibility
   
   // Financial metrics
   totalRevenue: number;
@@ -65,16 +75,6 @@ export interface ContractSummaryData {
   totalProfit: number;
   avgContractValue: number;
   profitMargin: number;
-}
-
-/**
- * Contract forecast data by month
- */
-export interface ContractForecast {
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
 }
 
 /**

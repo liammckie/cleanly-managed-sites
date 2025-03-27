@@ -9,6 +9,7 @@ export interface BillingContact {
   email: string;
   phone: string;
   position: string;
+  role?: string; // Added for compatibility with existing code
 }
 
 export interface BillingAddress {
@@ -53,4 +54,40 @@ export interface BillingDetails {
   notes?: string;
   contractorPaymentTerms?: string;
   contractorInvoiceFrequency?: string;
+  
+  // Additional properties used in UI components
+  contacts?: BillingContact[];
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  billingEmail?: string;
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  rate?: number;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  invoiceMethod?: string;
+  accountNumber?: string;
+  
+  // Service delivery properties
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  serviceType?: string;
+  deliveryMethod?: string;
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
 }

@@ -31,6 +31,12 @@ export interface ContractDetails {
   terms?: ContractTerm[];
   additionalContracts?: any[];
   contractType?: string;
+  
+  // Additional properties used in components
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
+  id?: string; // Used in additionalContractsApi
 }
 
 export interface ContractHistoryEntry {

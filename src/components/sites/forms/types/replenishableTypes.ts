@@ -10,6 +10,7 @@ export interface ReplenishableItem {
   reorderLevel: number;
   unit: string;
   isStockItem?: boolean;
+  description?: string; // Added for compatibility
 }
 
 export interface ReplenishableSupplies {
@@ -18,6 +19,8 @@ export interface ReplenishableSupplies {
   quantity: number;
   reorderLevel: number;
   unit: string;
+  isStockItem?: boolean; // Added for compatibility
+  description?: string; // Added for compatibility
 }
 
 export interface ReplenishableStock {

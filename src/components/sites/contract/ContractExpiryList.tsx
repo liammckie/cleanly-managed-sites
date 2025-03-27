@@ -6,6 +6,7 @@ import { CalendarIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { SiteRecord } from '@/lib/types';
+import { asJsonObject } from '@/lib/utils/json';
 
 interface ContractExpiryListProps {
   sites: SiteRecord[];
@@ -38,9 +39,14 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
 
   // Filter out sites with valid contract end dates and sort by closeness to expiration
   const sitesWithExpirations = sites
-    .filter(site => site.contract_details?.endDate)
+    .filter(site => {
+      // Parse contract_details from JSON to object if needed
+      const contractDetails = asJsonObject(site.contract_details, {});
+      return contractDetails && contractDetails.endDate;
+    })
     .map(site => {
-      const endDateStr = site.contract_details?.endDate as string;
+      const contractDetails = asJsonObject(site.contract_details, {});
+      const endDateStr = contractDetails.endDate as string;
       const endDate = new Date(endDateStr);
       const daysUntilExpiry = differenceInDays(endDate, new Date());
       

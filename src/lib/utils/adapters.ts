@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for adapting data between different formats and systems
  */
@@ -60,3 +59,13 @@ export const adaptDateFormat = (date: string, format: 'iso' | 'display' = 'iso')
     return date; // Return as is if any error
   }
 };
+
+import { QuoteRecord } from '@/lib/types';
+
+export function adaptQuoteData(quote: QuoteRecord) {
+  // Default implementation to adapt quote data structure
+  return {
+    ...quote,
+    // Add any needed transformations here
+  };
+}

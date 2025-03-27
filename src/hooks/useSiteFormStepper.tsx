@@ -1,106 +1,126 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { Button } from '@/components/ui/button';
-import { getSiteFormSteps } from '@/components/sites/forms/siteFormConfig';
+import { FormValidationErrors } from '@/components/sites/forms/types/validationUtils';
 
-type Props = {
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-  formData: SiteFormData;
-  handleChange: (field: keyof SiteFormData, value: any) => void;
-  handleNestedChange: (section: string, field: string, value: any) => void;
-  handleArrayChange: (field: string, values: any[]) => void;
-  handleArrayUpdate: (field: string, index: number, value: any) => void;
-  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
-  addArrayItem: (field: string) => void;
-  removeArrayItem: (field: string, index: number) => void;
-  addSubcontractor: () => void;
-  updateSubcontractor: (index: number, field: string, value: any) => void;
-  removeSubcontractor: (index: number) => void;
-  addReplenishable: () => void;
-  updateReplenishable: (index: number, field: string, value: any) => void;
-  removeReplenishable: (index: number) => void;
-  addBillingLine: () => void;
-  updateBillingLine: (id: string, field: string, value: any) => void;
-  removeBillingLine: (id: string) => void;
-  addContractTerm: () => void;
-  updateContractTerm: (index: number, field: string, value: any) => void;
-  removeContractTerm: (index: number) => void;
-  addAdditionalContract: () => void;
-  updateAdditionalContract: (index: number, field: string, value: any) => void;
-  removeAdditionalContract: (index: number) => void;
-  handleFileUpload: (field: string, file: File) => void;
-  handleFileRemove: (field: string, fileName: string) => void;
-  errors: Record<string, string>;
+export const useSiteFormStepper = (
+  formData: SiteFormData,
+  errors: FormValidationErrors
+) => {
+  const steps = [
+    {
+      id: 'basic-info',
+      title: 'Basic Info',
+      description: 'Site details and location',
+      isComplete: () => isBasicInfoComplete(formData, errors),
+    },
+    {
+      id: 'contacts',
+      title: 'Contacts',
+      description: 'Site contacts and roles',
+      isComplete: () => isContactsComplete(formData, errors),
+    },
+    {
+      id: 'contract',
+      title: 'Contract',
+      description: 'Contract details and terms',
+      isComplete: () => isContractComplete(formData, errors),
+    },
+    {
+      id: 'billing',
+      title: 'Billing',
+      description: 'Billing details and methods',
+      isComplete: () => isBillingComplete(formData, errors),
+    },
+    {
+      id: 'subcontractors',
+      title: 'Subcontractors',
+      description: 'Subcontractor information',
+      isComplete: () => isSubcontractorsComplete(formData, errors),
+    },
+    {
+      id: 'replenishables',
+      title: 'Replenishables',
+      description: 'Stock and supplies',
+      isComplete: () => isReplenishablesComplete(formData, errors),
+    },
+    {
+      id: 'review',
+      title: 'Review',
+      description: 'Review and submit',
+      isComplete: () => true,
+    },
+  ];
+  
+  return { steps };
 };
 
-export const useSiteFormStepper = (props: Props) => {
-  const steps = getSiteFormSteps(
-    props.formData,
-    props.handleChange,
-    props.handleNestedChange,
-    props.handleArrayChange,
-    props.handleArrayUpdate,
-    props.handleDoubleNestedChange,
-    props.addArrayItem,
-    props.removeArrayItem,
-    props.addSubcontractor,
-    props.updateSubcontractor,
-    props.removeSubcontractor,
-    props.addReplenishable,
-    props.updateReplenishable,
-    props.removeReplenishable,
-    props.addBillingLine,
-    props.updateBillingLine,
-    props.removeBillingLine,
-    props.addContractTerm,
-    props.updateContractTerm,
-    props.removeContractTerm,
-    props.addAdditionalContract,
-    props.updateAdditionalContract,
-    props.removeAdditionalContract,
-    props.handleFileUpload,
-    props.handleFileRemove,
-    props.errors
+// Helper functions to check completion status for each step
+function isBasicInfoComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  const requiredFields = ['name', 'client_id', 'address', 'city', 'state', 'postalCode', 'country'];
+  const hasAllRequiredFields = requiredFields.every(field => 
+    formData[field as keyof SiteFormData] !== undefined && 
+    formData[field as keyof SiteFormData] !== ''
   );
-
-  const NextButton = () => (
-    <Button 
-      onClick={() => props.setCurrentStep(props.currentStep + 1)}
-      disabled={props.currentStep >= steps.length - 1}
-    >
-      Next
-    </Button>
+  
+  // Check if there are any errors related to basic info
+  const hasBasicInfoErrors = Object.keys(errors).some(key => 
+    requiredFields.includes(key)
   );
+  
+  return hasAllRequiredFields && !hasBasicInfoErrors;
+}
 
-  const PreviousButton = () => (
-    <Button 
-      variant="outline"
-      onClick={() => props.setCurrentStep(props.currentStep - 1)}
-      disabled={props.currentStep <= 0}
-    >
-      Previous
-    </Button>
+function isContactsComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  const hasContacts = formData.contacts && formData.contacts.length > 0;
+  
+  // Check if there are any errors related to contacts
+  const hasContactErrors = Object.keys(errors).some(key => 
+    key.startsWith('contacts')
   );
+  
+  return hasContacts && !hasContactErrors;
+}
 
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center space-x-1 my-4">
-      {steps.map((_, index) => (
-        <div
-          key={index}
-          className={`h-2 w-2 rounded-full ${
-            index === props.currentStep ? "bg-primary" : "bg-gray-300"
-          }`}
-        />
-      ))}
-    </div>
+function isContractComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  const hasContract = formData.contract_details && 
+    formData.contract_details.startDate && 
+    formData.contract_details.endDate;
+  
+  // Check if there are any errors related to contract
+  const hasContractErrors = Object.keys(errors).some(key => 
+    key.startsWith('contract_details')
   );
+  
+  return hasContract && !hasContractErrors;
+}
 
-  return {
-    steps,
-    NextButton,
-    PreviousButton,
-    StepIndicator
-  };
-};
+function isBillingComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  // Simplified check - just making sure we have some billing details
+  const hasBillingDetails = formData.billingDetails !== undefined;
+  
+  // Check if there are any errors related to billing
+  const hasBillingErrors = Object.keys(errors).some(key => 
+    key.startsWith('billingDetails')
+  );
+  
+  return hasBillingDetails && !hasBillingErrors;
+}
+
+function isSubcontractorsComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  // No required subcontractors, so always consider complete if no errors
+  const hasSubcontractorErrors = Object.keys(errors).some(key => 
+    key.startsWith('subcontractors')
+  );
+  
+  return !hasSubcontractorErrors;
+}
+
+function isReplenishablesComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
+  // No required replenishables, so always consider complete if no errors
+  const hasReplenishableErrors = Object.keys(errors).some(key => 
+    key.startsWith('replenishables')
+  );
+  
+  return !hasReplenishableErrors;
+}
