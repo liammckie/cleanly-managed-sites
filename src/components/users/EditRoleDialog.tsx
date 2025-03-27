@@ -88,10 +88,13 @@ export function EditRoleDialog({ roleId, open, onOpenChange }: EditRoleDialogPro
         permissionsMap[permissionId as PermissionId] = true;
       });
       
-      await updateRole(roleId, {
-        name: data.name,
-        permissions: permissionsMap,
-        description: data.description,
+      await updateRole({
+        roleId,
+        data: {
+          name: data.name,
+          permissions: permissionsMap,
+          description: data.description,
+        }
       });
       
       toast.success('Role updated successfully');

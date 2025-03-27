@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { UserRole, UserStatus, SystemUserInsert } from '@/lib/types/users';
+import { UserRole, UserStatus } from '@/lib/types/users';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -24,7 +24,17 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
   const [isLoading, setIsLoading] = useState(false);
   const { roles, isLoading: rolesLoading } = useUserRoles();
   
-  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<SystemUserInsert>({
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<{
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    title?: string;
+    role_id: string;
+    status?: UserStatus;
+    password?: string;
+    full_name?: string;
+  }>({
     defaultValues: {
       email: '',
       firstName: '',
@@ -46,7 +56,7 @@ export function NewUserDialog({ open, onOpenChange, onSuccess }: NewUserDialogPr
     }
   }, [firstName, lastName, setValue]);
   
-  const onSubmit = async (data: SystemUserInsert) => {
+  const onSubmit = async (data: any) => {
     setIsLoading(true);
     try {
       const userId = uuidv4();

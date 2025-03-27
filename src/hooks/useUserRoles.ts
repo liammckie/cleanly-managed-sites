@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { UserRole } from '@/lib/types/users';
 import { v4 as uuidv4 } from 'uuid';
 import { queryClient } from '@/lib/tanstack-query';
+import { Json } from '@/lib/types';
 
 export function useUserRoles() {
   const rolesQuery = useQuery({
@@ -21,8 +22,8 @@ export function useUserRoles() {
       // Get user counts for each role
       const { data: userCounts, error: countError } = await supabase
         .from('user_profiles')
-        .select('role_id, count')
-        .group('role_id');
+        .select('role_id, count(*)')
+        .groupBy('role_id');
 
       if (countError) {
         console.error('Error fetching role user counts:', countError);
@@ -100,7 +101,11 @@ export function useRole(roleId?: string) {
 
 export function useCreateRole() {
   const createRoleMutation = useMutation({
-    mutationFn: async (roleData: { name: string; permissions: any; description?: string }) => {
+    mutationFn: async (roleData: { 
+      name: string; 
+      permissions: any; 
+      description?: string 
+    }) => {
       // Create a new role
       const { data, error } = await supabase
         .from('user_roles')
@@ -131,23 +136,30 @@ export function useCreateRole() {
 
 export function useUpdateRole() {
   const updateRoleMutation = useMutation({
-    mutationFn: async (
-      roleId: string, 
-      roleData: { name?: string; permissions?: any; description?: string }
-    ) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ 
+      roleId, 
+      data
+    }: { 
+      roleId: string;
+      data: { 
+        name?: string; 
+        permissions?: any; 
+        description?: string 
+      }
+    }) => {
+      const { data: responseData, error } = await supabase
         .from('user_roles')
         .update({
-          name: roleData.name,
-          description: roleData.description,
-          permissions: roleData.permissions
+          name: data.name,
+          description: data.description,
+          permissions: data.permissions
         })
         .eq('id', roleId)
         .select()
         .single();
         
       if (error) throw error;
-      return data;
+      return responseData;
     },
     onSuccess: () => {
       // Invalidate roles query to refetch

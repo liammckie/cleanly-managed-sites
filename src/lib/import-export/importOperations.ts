@@ -23,10 +23,10 @@ export async function importData<T extends Record<string, any>>(tableName: Valid
     user_id: user.id
   }));
   
-  // Use type assertion for table name
+  // Use explicit table name with type assertion
   const { error } = await supabase
-    .from(tableName)
-    .insert(dataWithUserId);
+    .from(tableName as any)
+    .insert(dataWithUserId as any);
   
   if (error) {
     console.error(`Error importing data to ${tableName}:`, error);

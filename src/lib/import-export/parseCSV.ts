@@ -1,44 +1,22 @@
 
-/**
- * Parse CSV file to JSON array
- */
-export const parseCSV = async (file: File): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = (event) => {
-      try {
-        const csv = event.target?.result as string;
-        if (!csv) {
-          reject(new Error('Failed to read file'));
-          return;
-        }
-        
-        // Simple CSV parsing
-        const lines = csv.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        
-        const result = lines.slice(1).filter(line => line.trim().length > 0).map(line => {
-          const values = line.split(',').map(value => value.trim());
-          const obj: Record<string, any> = {};
-          
-          headers.forEach((header, index) => {
-            obj[header] = values[index] || '';
-          });
-          
-          return obj;
-        });
-        
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      }
-    };
-    
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    
-    reader.readAsText(file);
-  });
-};
+import Papa from 'papaparse';
+
+export function parseCSV<T = any>(csvString: string): T[] {
+  try {
+    const result = Papa.parse(csvString, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+    });
+
+    if (result.errors && result.errors.length > 0) {
+      console.error('CSV parsing errors:', result.errors);
+      throw new Error(`Error parsing CSV: ${result.errors[0].message}`);
+    }
+
+    return result.data as T[];
+  } catch (error) {
+    console.error('Error parsing CSV:', error);
+    throw error;
+  }
+}

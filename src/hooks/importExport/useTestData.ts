@@ -4,35 +4,41 @@ import { setupTestData } from '@/lib/import-export';
 import { toast } from 'sonner';
 
 export function useTestData() {
-  const [isCreating, setIsCreating] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string }>({
+    success: false,
+    message: ''
+  });
 
-  const createTestData = async () => {
-    setIsCreating(true);
+  const generateTestData = async () => {
+    setIsGenerating(true);
     try {
-      const result = await setupTestData();
-      setResult(result);
+      const success = await setupTestData();
+      setResult({ 
+        success, 
+        message: success ? 'Test data created successfully' : 'Failed to create test data' 
+      });
       
-      if (result.success) {
-        toast.success(result.message);
+      if (success) {
+        toast.success('Test data generated successfully');
       } else {
-        toast.error(result.message);
+        toast.error('Failed to generate test data');
       }
-    } catch (error: any) {
-      console.error('Error creating test data:', error);
+    } catch (error) {
+      console.error('Error generating test data:', error);
       setResult({ 
         success: false, 
-        message: `Failed to create test data: ${error.message}` 
+        message: error instanceof Error ? error.message : 'An unknown error occurred' 
       });
-      toast.error(`Failed to create test data: ${error.message}`);
+      toast.error(`Error generating test data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setIsCreating(false);
+      setIsGenerating(false);
     }
   };
 
   return {
-    createTestData,
-    isCreating,
-    result
+    isGenerating,
+    result,
+    generateTestData
   };
 }

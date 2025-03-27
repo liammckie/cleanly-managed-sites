@@ -31,8 +31,8 @@ export const getUsers = async (): Promise<SystemUser[]> => {
       id: user.id,
       email: user.email,
       full_name: user.full_name,
-      first_name: user.first_name,
-      last_name: user.last_name,
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
       phone: user.phone || '',
       title: user.title || '',
       status: user.status as UserStatus,
@@ -94,7 +94,7 @@ export const createUser = async (userData: UserInsertData): Promise<SystemUser> 
       last_login: profile.last_login,
       custom_id: profile.custom_id,
       notes: profile.notes,
-      territories: profile.territories || [],
+      territories: Array.isArray(profile.territories) ? profile.territories : [],
       daily_summary: profile.daily_summary
     };
   } catch (error) {
@@ -133,7 +133,7 @@ export const updateUser = async (id: string, userData: Partial<SystemUser>): Pro
       last_login: data.last_login,
       custom_id: data.custom_id,
       notes: data.notes,
-      territories: data.territories || [],
+      territories: Array.isArray(data.territories) ? data.territories : [],
       daily_summary: data.daily_summary
     };
   } catch (error) {
