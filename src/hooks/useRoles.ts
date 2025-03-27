@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/lib/types/users';
+import { UserRole } from '@/types/models';
 import { toast } from 'sonner';
 
 export function useRoles() {
@@ -19,12 +19,14 @@ export function useRoles() {
         const permissions: Record<string, boolean> = {};
         
         if (typeof role.permissions === 'object' && role.permissions !== null) {
-          Object.keys(role.permissions).forEach(key => {
-            permissions[key] = Boolean(role.permissions[key]);
+          Object.entries(role.permissions).forEach(([key, value]) => {
+            permissions[key] = Boolean(value);
           });
         } else if (Array.isArray(role.permissions)) {
           role.permissions.forEach(perm => {
-            permissions[perm] = true;
+            if (typeof perm === 'string') {
+              permissions[perm] = true;
+            }
           });
         }
         

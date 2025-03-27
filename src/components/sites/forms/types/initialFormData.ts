@@ -27,7 +27,14 @@ export function getInitialFormData(): SiteFormData {
       billingLines: [],
       useClientInfo: false,
       billingMethod: '',
-      paymentTerms: ''
+      paymentTerms: '',
+      billingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        postcode: '',
+        country: 'Australia'
+      }
     }
   };
 }

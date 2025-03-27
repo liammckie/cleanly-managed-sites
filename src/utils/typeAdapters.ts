@@ -60,7 +60,14 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
       paymentTerms: '',
       billingEmail: '',
       contacts: [],
-      billingLines: []
+      billingLines: [],
+      serviceType: '',
+      deliveryMethod: '',
+      contractorCostFrequency: 'weekly',
+      weeklyContractorCost: 0,
+      monthlyContractorCost: 0,
+      contractorInvoiceFrequency: 'monthly',
+      serviceDeliveryType: 'direct'
     };
   }
 
@@ -95,7 +102,18 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
     accountNumber: billingDetailsFromApi.accountNumber || '',
     purchaseOrderRequired: billingDetailsFromApi.purchaseOrderRequired || false,
     purchaseOrderNumber: billingDetailsFromApi.purchaseOrderNumber || '',
-    billingLines: billingDetailsFromApi.billingLines || []
+    billingLines: billingDetailsFromApi.billingLines || [],
+    serviceType: billingDetailsFromApi.serviceType || '',
+    deliveryMethod: billingDetailsFromApi.deliveryMethod || '',
+    contractorCostFrequency: billingDetailsFromApi.contractorCostFrequency || 'weekly',
+    weeklyContractorCost: billingDetailsFromApi.weeklyContractorCost || 0,
+    monthlyContractorCost: billingDetailsFromApi.monthlyContractorCost || 0,
+    annualContractorCost: billingDetailsFromApi.annualContractorCost || 0,
+    contractorInvoiceFrequency: billingDetailsFromApi.contractorInvoiceFrequency || 'monthly',
+    serviceDeliveryType: billingDetailsFromApi.serviceDeliveryType || 'direct',
+    weeklyBudget: billingDetailsFromApi.weeklyBudget || 0,
+    xeroContactId: billingDetailsFromApi.xeroContactId || null,
+    rate: billingDetailsFromApi.rate || ''
   };
 }
 
@@ -112,3 +130,23 @@ export function adaptAddress(address: any): any {
 
 // Alias dbToOverheadProfile to adaptOverheadProfile for backwards compatibility
 export const adaptOverheadProfile = dbToOverheadProfile;
+
+// Add the missing adaptEmploymentType function
+export function adaptEmploymentType(type: string) {
+  const validTypes = ['fullTime', 'partTime', 'casual', 'contractor'];
+  return validTypes.includes(type) ? type : 'casual';
+}
+
+// Add adaptQuote function for backward compatibility with existing code
+export function adaptQuote(quote: any) {
+  return quote;
+}
+
+// Add adaptQuoteToFrontend and adaptQuoteToApi functions
+export function adaptQuoteToFrontend(quote: any) {
+  return quote;
+}
+
+export function adaptQuoteToApi(quote: any) {
+  return quote;
+}

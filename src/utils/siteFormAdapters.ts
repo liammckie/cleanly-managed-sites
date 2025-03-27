@@ -13,7 +13,9 @@ export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
     id: modelLine.id || crypto.randomUUID(),
     description: modelLine.description,
     amount: modelLine.amount,
-    frequency: modelLine.frequency || 'monthly',
+    frequency: modelLine.frequency === 'weekly' || modelLine.frequency === 'monthly' || 
+               modelLine.frequency === 'quarterly' || modelLine.frequency === 'annually' ? 
+               modelLine.frequency : 'monthly',
     isRecurring: modelLine.isRecurring !== undefined ? modelLine.isRecurring : true,
     onHold: modelLine.onHold !== undefined ? modelLine.onHold : false,
     // Add any other properties needed for UIBillingLine
@@ -45,7 +47,9 @@ export function adaptSiteFormData(modelData: ModelSiteFormData): UISiteFormData 
       billingLines: [],
       useClientInfo: false,
       billingMethod: '',
-      paymentTerms: ''
+      paymentTerms: '',
+      billingEmail: '',
+      contacts: []
     }
   };
 }
@@ -70,6 +74,9 @@ export function convertToModelSiteFormData(uiData: UISiteFormData): ModelSiteFor
     modelData.billingDetails = {
       ...uiData.billingDetails,
       // Add any conversion specific to billingDetails if needed
+      serviceDeliveryType: uiData.billingDetails.serviceDeliveryType === 'direct' || 
+                           uiData.billingDetails.serviceDeliveryType === 'contractor' ?
+                           uiData.billingDetails.serviceDeliveryType : 'direct'
     };
     
     // Convert billingAddress if it exists

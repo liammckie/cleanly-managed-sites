@@ -34,6 +34,7 @@ export interface BillingLine {
 }
 
 export interface BillingDetails {
+  // Base properties
   useClientInfo?: boolean;
   billingMethod?: string;
   paymentTerms?: string;
@@ -69,4 +70,15 @@ export interface BillingDetails {
   accountNumber?: string;
   purchaseOrderRequired?: boolean;
   purchaseOrderNumber?: string;
+  rate?: string;
+  
+  // Service delivery details
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  xeroContactId?: string;
 }

@@ -10,7 +10,7 @@ export const useSiteUpdate = () => {
   const queryClient = useQueryClient();
 
   const updateSiteMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<SiteRecord> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       try {
         console.log('Updating site:', id, data);
         return await sitesApi.updateSite(id, data);

@@ -1,3 +1,4 @@
+
 import { Day, EmploymentType, EmployeeLevel, Frequency, BillingFrequency, QuoteStatus } from './common';
 
 export interface Quote {
@@ -106,19 +107,26 @@ export interface UserRole {
   id: string;
   name: string;
   description?: string;
-  permissions: string[];
+  permissions: Record<string, boolean>;
   created_at?: string;
   updated_at?: string;
+  user_count?: number;
 }
 
 // Add BillingDetails for site form
 export interface BillingDetails {
-  billingAddress: BillingAddress;
+  billingAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
   useClientInfo: boolean;
   billingMethod: string;
   paymentTerms: string;
   billingEmail: string;
-  contacts: BillingContact[];
+  contacts?: BillingContact[];
   
   // Additional fields used in components
   billingCity?: string;
@@ -149,7 +157,7 @@ export interface BillingDetails {
   monthlyContractorCost?: number;
   annualContractorCost?: number;
   contractorInvoiceFrequency?: string;
-  serviceDeliveryType?: string;
+  serviceDeliveryType?: 'direct' | 'contractor';
   weeklyBudget?: number;
   
   // Billing lines for the form

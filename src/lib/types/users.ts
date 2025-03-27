@@ -1,29 +1,26 @@
 
-export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended' | 'deleted';
+import { UserRole } from '@/types/models';
 
-export interface SystemUserInsert {
-  id?: string;
+export interface SystemUser {
+  id: string;
   email: string;
-  password?: string;
   full_name: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
-  role_id?: string;
-  title?: string;
-  custom_id?: string;
-  notes?: string;
-  status?: UserStatus;
   avatar_url?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  note?: string;
+  notes?: string;
   territories?: string[];
-}
-
-export interface UserRole {
-  id: string;
-  name: string;
-  description?: string;
-  permissions: Record<string, boolean>;
+  status: "active" | "pending" | "inactive";
+  role_id?: string;
+  role?: UserRole;
   created_at?: string;
   updated_at?: string;
-  user_count?: number;
+  last_login?: string;
+  daily_summary?: boolean;
 }
+
+export type UserStatus = "active" | "pending" | "inactive";

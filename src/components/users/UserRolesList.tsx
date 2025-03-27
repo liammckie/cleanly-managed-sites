@@ -1,130 +1,65 @@
 
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from '@/components/ui/table';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRoles } from '@/hooks/useRoles';
+import { UserRoleCard } from './UserRoleCard';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { UserRole } from '@/lib/types/users';
-import NewRoleDialog from './NewRoleDialog';
-import EditRoleDialog from './EditRoleDialog';
+import { RefreshCw } from 'lucide-react';
 
 export function UserRolesList() {
-  const { roles, isLoading, error, refetchRoles } = useRoles();
-  const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
-  const [isEditRoleDialogOpen, setIsEditRoleDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  
-  const handleEditRole = (role: UserRole) => {
-    setSelectedRole(role);
-    setIsEditRoleDialogOpen(true);
+  const { roles, isLoading, isError, error, refetchRoles } = useRoles();
+
+  const handleRefresh = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    refetchRoles();
   };
-  
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center min-h-[200px]">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
-  
-  if (error) {
+
+  if (isError) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-4 text-red-500">
-            <p>Error loading roles: {error.message}</p>
-            <Button onClick={refetchRoles} className="mt-2">
-              Retry
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center p-6 text-destructive">
+        <p>Error loading roles:</p>
+        <p>{error?.message || 'Unknown error'}</p>
+        <Button onClick={handleRefresh} variant="outline" className="mt-4">
+          Try Again
+        </Button>
+      </div>
     );
   }
-  
+
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>User Roles</CardTitle>
-            <CardDescription>
-              Manage user roles and permissions
-            </CardDescription>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-xl">User Roles</CardTitle>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={handleRefresh}
+        >
+          <RefreshCw className="h-4 w-4" />
+          <span className="sr-only">Refresh roles</span>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {roles.length === 0 ? (
+          <p className="text-center text-muted-foreground p-4">No roles found</p>
+        ) : (
+          <div className="grid gap-4">
+            {roles.map((role) => (
+              <UserRoleCard key={role.id} role={role} />
+            ))}
           </div>
-          <Button onClick={() => setIsNewRoleDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Role
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Role Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roles && roles.length > 0 ? (
-                roles.map((role) => (
-                  <TableRow key={role.id}>
-                    <TableCell className="font-medium">{role.name}</TableCell>
-                    <TableCell>{role.description || '-'}</TableCell>
-                    <TableCell>{role.user_count || 0}</TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditRole(role)}
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                    No roles found. Create your first role to get started.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      {/* Role Dialogs */}
-      <NewRoleDialog 
-        isOpen={isNewRoleDialogOpen}
-        onClose={() => setIsNewRoleDialogOpen(false)}
-        onRoleCreated={refetchRoles}
-      />
-      
-      <EditRoleDialog 
-        isOpen={isEditRoleDialogOpen}
-        onClose={() => setIsEditRoleDialogOpen(false)}
-        role={selectedRole}
-        onRoleUpdated={refetchRoles}
-      />
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
