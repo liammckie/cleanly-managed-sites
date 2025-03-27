@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Quote } from '@/types/models';
-import { queryClient } from '@/lib/react-query';
 import { ensureCompleteQuotes } from './useQuoteAdapter';
 import { fetchQuotes } from '@/lib/api/quotes/quotesApi';
 

@@ -1,9 +1,8 @@
-
 import { BillingAddress, BillingDetails } from "@/components/sites/forms/types/billingTypes";
 import { ContractDetails } from "@/components/sites/forms/types/contractTypes";
 import { Day, EmploymentType, Frequency, QuoteStatus } from "@/types/common";
 import { Quote, QuoteShift, QuoteSubcontractor } from "@/types/models";
-import { DbOverheadProfile } from "@/types/models";
+import { DbOverheadProfile, OverheadProfile } from "@/lib/utils/typeAdapters";
 
 // Day adapters
 export const adaptDay = (day: string): Day => {
@@ -180,7 +179,62 @@ export const adaptAddress = (address: string | BillingAddress): BillingAddress =
       country: ''
     };
   }
-  return address;
+  return address || { street: '', city: '', state: '', postcode: '', country: '' };
+};
+
+// BillingDetails adaptation to ensure required fields
+export const adaptBillingDetails = (details: Partial<BillingDetails> = {}): BillingDetails => {
+  return {
+    // Base properties with defaults
+    billingAddress: adaptAddress(details.billingAddress || {}),
+    useClientInfo: details.useClientInfo || false,
+    billingMethod: details.billingMethod || '',
+    paymentTerms: details.paymentTerms || '',
+    billingEmail: details.billingEmail || '',
+    contacts: details.contacts || [],
+    notes: details.notes || '',
+    
+    // Revenue properties
+    billingLines: details.billingLines || [],
+    totalWeeklyAmount: details.totalWeeklyAmount || 0,
+    totalMonthlyAmount: details.totalMonthlyAmount || 0,
+    totalAnnualAmount: details.totalAnnualAmount || 0,
+    weeklyRevenue: details.weeklyRevenue || 0,
+    monthlyRevenue: details.monthlyRevenue || 0,
+    
+    // Invoice and address properties
+    billingCity: details.billingCity || '',
+    billingState: details.billingState || '',
+    billingPostcode: details.billingPostcode || '',
+    billingFrequency: details.billingFrequency || '',
+    invoiceFrequency: details.invoiceFrequency || '',
+    invoiceDay: details.invoiceDay || '',
+    invoiceMethod: details.invoiceMethod || '',
+    invoiceEmail: details.invoiceEmail || '',
+    invoiceAddressLine1: details.invoiceAddressLine1 || '',
+    invoiceAddressLine2: details.invoiceAddressLine2 || '',
+    invoiceCity: details.invoiceCity || '',
+    invoiceState: details.invoiceState || '',
+    invoicePostalCode: details.invoicePostalCode || '',
+    
+    // Payment properties
+    accountNumber: details.accountNumber || '',
+    purchaseOrderRequired: details.purchaseOrderRequired || false,
+    purchaseOrderNumber: details.purchaseOrderNumber || '',
+    rate: details.rate || '',
+    xeroContactId: details.xeroContactId || '',
+    
+    // Service delivery properties
+    serviceType: details.serviceType || '',
+    deliveryMethod: details.deliveryMethod || '',
+    contractorCostFrequency: details.contractorCostFrequency || '',
+    weeklyContractorCost: details.weeklyContractorCost || 0,
+    monthlyContractorCost: details.monthlyContractorCost || 0,
+    annualContractorCost: details.annualContractorCost || 0,
+    contractorInvoiceFrequency: details.contractorInvoiceFrequency || '',
+    serviceDeliveryType: details.serviceDeliveryType || '',
+    weeklyBudget: details.weeklyBudget || 0
+  };
 };
 
 // ContractDetails adaptation to ensure required fields
