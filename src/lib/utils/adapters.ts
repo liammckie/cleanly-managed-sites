@@ -1,71 +1,77 @@
+
+import { Json } from '@/lib/types';
+
 /**
- * Utility functions for adapting data between different formats and systems
+ * Type for quote records from the database
  */
+export interface QuoteRecord {
+  id: string;
+  name: string;
+  title?: string;
+  client_name: string;
+  site_name?: string;
+  description?: string;
+  status: string;
+  overhead_percentage: number;
+  margin_percentage: number;
+  total_price: number;
+  labor_cost: number;
+  supplies_cost?: number;
+  equipment_cost?: number;
+  subcontractor_cost: number;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
 
-export const adaptFrequencyFormat = (frequency: string): string => {
-  // Map from various frequency formats to standardized ones
-  const frequencyMap: Record<string, string> = {
-    'daily': 'daily',
-    'weekly': 'weekly',
-    'fortnightly': 'fortnightly',
-    'biweekly': 'fortnightly',
-    'monthly': 'monthly',
-    'quarterly': 'quarterly',
-    'biannually': 'biannually',
-    'semi-annually': 'biannually',
-    'annually': 'annually',
-    'yearly': 'annually',
-    'once': 'once',
-    'one-time': 'once'
-  };
-
-  return frequencyMap[frequency.toLowerCase()] || frequency;
-};
-
-export const adaptDayFormat = (day: string): string => {
-  // Map from various day formats to standardized ones
-  const dayMap: Record<string, string> = {
-    'mon': 'monday',
-    'tue': 'tuesday',
-    'wed': 'wednesday',
-    'thu': 'thursday',
-    'fri': 'friday',
-    'sat': 'saturday',
-    'sun': 'sunday',
-    'weekday': 'weekday',
-    'weekend': 'weekend',
-    'public_holiday': 'public_holiday'
-  };
-
-  return dayMap[day.toLowerCase()] || day;
-};
-
-export const adaptDateFormat = (date: string, format: 'iso' | 'display' = 'iso'): string => {
-  if (!date) return '';
-  
-  try {
-    const d = new Date(date);
-    
-    if (isNaN(d.getTime())) {
-      return date; // Return as is if not a valid date
-    }
-    
-    if (format === 'iso') {
-      return d.toISOString().split('T')[0]; // YYYY-MM-DD
-    } else {
-      return d.toLocaleDateString(); // Based on locale
-    }
-  } catch (e) {
-    return date; // Return as is if any error
-  }
-};
-
-import { QuoteRecord } from '@/lib/types';
-
-export function adaptQuoteData(quote: QuoteRecord) {
-  // Default implementation to adapt quote data structure
+/**
+ * Converts a database record to a quote entity for the frontend
+ */
+export function adaptQuoteData(data: QuoteRecord) {
   return {
-    ...quote,
-    // Add any needed transformations here
+    id: data.id,
+    name: data.name,
+    title: data.title,
+    clientName: data.client_name,
+    siteName: data.site_name,
+    description: data.description,
+    status: data.status,
+    overheadPercentage: data.overhead_percentage,
+    marginPercentage: data.margin_percentage,
+    totalPrice: data.total_price,
+    laborCost: data.labor_cost,
+    suppliesCost: data.supplies_cost,
+    equipmentCost: data.equipment_cost,
+    subcontractorCost: data.subcontractor_cost,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    clientId: data.client_id,
+    siteId: data.site_id,
+    // Additional fields can be added as needed
+  };
+}
+
+/**
+ * Prepares a quote entity for API submission
+ */
+export function prepareQuoteForApi(data: any) {
+  return {
+    id: data.id,
+    name: data.name,
+    title: data.title,
+    client_name: data.clientName || data.client_name,
+    site_name: data.siteName || data.site_name,
+    client_id: data.clientId || data.client_id,
+    site_id: data.siteId || data.site_id,
+    description: data.description,
+    status: data.status,
+    overhead_percentage: data.overheadPercentage || data.overhead_percentage,
+    margin_percentage: data.marginPercentage || data.margin_percentage,
+    total_price: data.totalPrice || data.total_price,
+    labor_cost: data.laborCost || data.labor_cost,
+    supplies_cost: data.suppliesCost || data.supplies_cost,
+    equipment_cost: data.equipmentCost || data.equipment_cost,
+    subcontractor_cost: data.subcontractorCost || data.subcontractor_cost,
+    // Additional fields can be added as needed
   };
 }

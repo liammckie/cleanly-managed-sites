@@ -40,7 +40,7 @@ export function ContractExpiryList({ sites, isLoading }: ContractExpiryListProps
   // Filter out sites with valid contract end dates and sort by closeness to expiration
   const sitesWithExpirations = sites
     .filter(site => {
-      // Parse contract_details from JSON to object if needed
+      // Parse contract_details as object
       const contractDetails = asJsonObject(site.contract_details, {});
       return contractDetails && contractDetails.endDate;
     })

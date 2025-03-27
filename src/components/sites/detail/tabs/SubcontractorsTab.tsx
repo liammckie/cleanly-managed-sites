@@ -1,91 +1,152 @@
 
 import React from 'react';
-import { SiteRecord } from '@/lib/api';
-import { Briefcase, DollarSign, CheckCircle } from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Banknote, Mail, Phone } from 'lucide-react';
 import { serviceOptions } from '@/components/sites/forms/types/subcontractorTypes';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Subcontractor } from '@/components/sites/forms/types/subcontractorTypes';
 
 interface SubcontractorsTabProps {
-  site: SiteRecord;
+  site?: any;
+  isLoading?: boolean;
 }
 
-export function SubcontractorsTab({ site }: SubcontractorsTabProps) {
+export function SubcontractorsTab({ site, isLoading }: SubcontractorsTabProps) {
+  // Get subcontractors from site data
+  const subcontractors = site?.subcontractors || [];
+  
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-full" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2].map((_, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-40 mb-1" />
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-2/3 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!subcontractors || subcontractors.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subcontractors</CardTitle>
+          <CardDescription>
+            No subcontractors are assigned to this site.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+  
+  const getServiceLabels = (services: string[] = []) => {
+    if (!services || services.length === 0) return 'General Services';
+    
+    return services.map(serviceId => {
+      const option = serviceOptions.find(opt => opt.value === serviceId);
+      return option?.label || serviceId;
+    }).join(', ');
+  };
+
+  const formatCurrency = (amount?: number) => {
+    if (amount === undefined || amount === null) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+  
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium flex items-center gap-2">
-        <Briefcase size={18} className="text-primary" />
-        Subcontractor Details
-      </h3>
-      
-      {(!site.subcontractors || site.subcontractors.length === 0) && (
-        <div className="text-center py-8 border border-dashed rounded-md">
-          <p className="text-muted-foreground">No subcontractors assigned to this site.</p>
-        </div>
-      )}
-      
-      {site.subcontractors?.map((subcontractor, index) => (
-        <Card key={index} className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>{subcontractor.business_name}</span>
-              {subcontractor.monthly_cost && (
-                <Badge variant="outline" className="flex items-center ml-2">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  {subcontractor.monthly_cost}/month
-                  {subcontractor.is_flat_rate ? ' (Flat Rate)' : ' (Hourly)'}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Contact Name</p>
-                <p>{subcontractor.contact_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p>{subcontractor.phone}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p>{subcontractor.email}</p>
-              </div>
-            </div>
-            
-            {(subcontractor.services?.length > 0 || subcontractor.custom_services) && (
-              <>
-                <Separator className="my-4" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Subcontractors</CardTitle>
+        <CardDescription>
+          Third-party service providers assigned to this site
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {subcontractors.map((subcontractor: Subcontractor) => (
+            <Card key={subcontractor.id || `sc-${Math.random()}`}>
+              <CardHeader>
+                <CardTitle className="text-lg">{subcontractor.business_name}</CardTitle>
+                <CardDescription>
+                  Contact: {subcontractor.contact_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2 flex-wrap">
+                  {subcontractor.services?.map((service: string) => {
+                    const serviceOption = serviceOptions.find(option => option.value === service);
+                    return (
+                      <Badge key={serviceOption?.value || service} variant="outline">
+                        {serviceOption?.label || service}
+                      </Badge>
+                    );
+                  })}
+                  {(!subcontractor.services || subcontractor.services.length === 0) && (
+                    <Badge variant="outline">General Services</Badge>
+                  )}
+                </div>
                 
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Services Provided</p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {subcontractor.services?.map(service => {
-                      const serviceOption = serviceOptions.find(s => s.id === service);
-                      return (
-                        <Badge key={service} variant="secondary" className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {serviceOption?.label || service}
-                        </Badge>
-                      );
-                    })}
+                {subcontractor.customServices && (
+                  <div className="text-sm">
+                    <span className="font-medium">Custom Services:</span> {subcontractor.customServices}
                   </div>
+                )}
+                
+                <div className="flex items-center gap-6">
+                  {subcontractor.email && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Mail className="h-3.5 w-3.5 opacity-70" />
+                      <span>{subcontractor.email}</span>
+                    </div>
+                  )}
                   
-                  {subcontractor.custom_services && (
-                    <div className="mt-2">
-                      <p className="text-sm text-muted-foreground">Additional Services</p>
-                      <p className="mt-1">{subcontractor.custom_services}</p>
+                  {subcontractor.phone && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Phone className="h-3.5 w-3.5 opacity-70" />
+                      <span>{subcontractor.phone}</span>
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                
+                <div className="flex items-center gap-1 text-sm">
+                  <Banknote className="h-3.5 w-3.5 opacity-70" />
+                  <span>
+                    <strong>Monthly Cost:</strong> {formatCurrency(subcontractor.monthly_cost)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

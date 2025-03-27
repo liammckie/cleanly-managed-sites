@@ -1,126 +1,137 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { validateBasicInfo } from '@/components/sites/forms/types/validationUtils';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { FormValidationErrors } from '@/components/sites/forms/types/validationUtils';
 
-export const useSiteFormStepper = (
-  formData: SiteFormData,
-  errors: FormValidationErrors
-) => {
-  const steps = [
+// Define the step type
+export type FormStep = 'basicInfo' | 'contacts' | 'billingDetails' | 'contractDetails' | 'subcontractors' | 'jobDetails' | 'replenishables' | 'review';
+
+// Define the step configuration
+interface StepConfig {
+  id: FormStep;
+  label: string;
+  description: string;
+  validateFn?: (formData: SiteFormData) => Record<string, string>;
+}
+
+export const useSiteFormStepper = (initialFormData: SiteFormData) => {
+  const [currentStep, setCurrentStep] = useState<FormStep>('basicInfo');
+  const [completedSteps, setCompletedSteps] = useState<Set<FormStep>>(new Set());
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Define step validation functions
+  const validateBasic = (formData: SiteFormData) => {
+    return validateBasicInfo(formData);
+  };
+
+  // Define all steps with their validation functions
+  const steps: StepConfig[] = [
     {
-      id: 'basic-info',
-      title: 'Basic Info',
-      description: 'Site details and location',
-      isComplete: () => isBasicInfoComplete(formData, errors),
+      id: 'basicInfo',
+      label: 'Basic Information',
+      description: 'Enter basic site details',
+      validateFn: validateBasic
     },
     {
       id: 'contacts',
-      title: 'Contacts',
-      description: 'Site contacts and roles',
-      isComplete: () => isContactsComplete(formData, errors),
+      label: 'Contacts',
+      description: 'Add site contacts',
+      validateFn: () => ({}) // No validation for contacts
     },
     {
-      id: 'contract',
-      title: 'Contract',
-      description: 'Contract details and terms',
-      isComplete: () => isContractComplete(formData, errors),
+      id: 'billingDetails',
+      label: 'Billing Details',
+      description: 'Configure billing settings',
+      validateFn: () => ({}) // No validation for billing
     },
     {
-      id: 'billing',
-      title: 'Billing',
-      description: 'Billing details and methods',
-      isComplete: () => isBillingComplete(formData, errors),
+      id: 'contractDetails',
+      label: 'Contract Details',
+      description: 'Contract information',
+      validateFn: () => ({}) // No validation for contracts
     },
     {
       id: 'subcontractors',
-      title: 'Subcontractors',
-      description: 'Subcontractor information',
-      isComplete: () => isSubcontractorsComplete(formData, errors),
+      label: 'Subcontractors',
+      description: 'Add third-party service providers',
+      validateFn: () => ({}) // No validation for subcontractors
+    },
+    {
+      id: 'jobDetails',
+      label: 'Job Details',
+      description: 'Specify job requirements',
+      validateFn: () => ({}) // No validation for job details
     },
     {
       id: 'replenishables',
-      title: 'Replenishables',
-      description: 'Stock and supplies',
-      isComplete: () => isReplenishablesComplete(formData, errors),
+      label: 'Replenishables',
+      description: 'Track items that need restocking',
+      validateFn: () => ({}) // No validation for replenishables
     },
     {
       id: 'review',
-      title: 'Review',
-      description: 'Review and submit',
-      isComplete: () => true,
-    },
+      label: 'Review & Submit',
+      description: 'Review all information',
+      validateFn: () => ({}) // No validation for review
+    }
   ];
-  
-  return { steps };
+
+  const getStepIndex = (step: FormStep) => {
+    return steps.findIndex(s => s.id === step);
+  };
+
+  const goToStep = useCallback((step: FormStep) => {
+    setCurrentStep(step);
+  }, []);
+
+  const goToNextStep = useCallback((formData: SiteFormData) => {
+    const currentIndex = getStepIndex(currentStep);
+    const currentStepConfig = steps[currentIndex];
+    
+    // Validate the current step if a validation function exists
+    if (currentStepConfig.validateFn) {
+      const errors = currentStepConfig.validateFn(formData);
+      setValidationErrors(errors);
+      
+      // If there are errors, don't proceed
+      if (Object.keys(errors).length > 0) {
+        return false;
+      }
+    }
+    
+    // Mark current step as completed
+    const newCompletedSteps = new Set(completedSteps);
+    newCompletedSteps.add(currentStep);
+    setCompletedSteps(newCompletedSteps);
+    
+    // Go to next step if it exists
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1].id);
+      return true;
+    }
+    
+    return false;
+  }, [currentStep, completedSteps, steps]);
+
+  const goToPreviousStep = useCallback(() => {
+    const currentIndex = getStepIndex(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1].id);
+      return true;
+    }
+    return false;
+  }, [currentStep, steps]);
+
+  return {
+    currentStep,
+    completedSteps,
+    validationErrors,
+    steps,
+    goToStep,
+    goToNextStep,
+    goToPreviousStep,
+    setValidationErrors
+  };
 };
 
-// Helper functions to check completion status for each step
-function isBasicInfoComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  const requiredFields = ['name', 'client_id', 'address', 'city', 'state', 'postalCode', 'country'];
-  const hasAllRequiredFields = requiredFields.every(field => 
-    formData[field as keyof SiteFormData] !== undefined && 
-    formData[field as keyof SiteFormData] !== ''
-  );
-  
-  // Check if there are any errors related to basic info
-  const hasBasicInfoErrors = Object.keys(errors).some(key => 
-    requiredFields.includes(key)
-  );
-  
-  return hasAllRequiredFields && !hasBasicInfoErrors;
-}
-
-function isContactsComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  const hasContacts = formData.contacts && formData.contacts.length > 0;
-  
-  // Check if there are any errors related to contacts
-  const hasContactErrors = Object.keys(errors).some(key => 
-    key.startsWith('contacts')
-  );
-  
-  return hasContacts && !hasContactErrors;
-}
-
-function isContractComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  const hasContract = formData.contract_details && 
-    formData.contract_details.startDate && 
-    formData.contract_details.endDate;
-  
-  // Check if there are any errors related to contract
-  const hasContractErrors = Object.keys(errors).some(key => 
-    key.startsWith('contract_details')
-  );
-  
-  return hasContract && !hasContractErrors;
-}
-
-function isBillingComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  // Simplified check - just making sure we have some billing details
-  const hasBillingDetails = formData.billingDetails !== undefined;
-  
-  // Check if there are any errors related to billing
-  const hasBillingErrors = Object.keys(errors).some(key => 
-    key.startsWith('billingDetails')
-  );
-  
-  return hasBillingDetails && !hasBillingErrors;
-}
-
-function isSubcontractorsComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  // No required subcontractors, so always consider complete if no errors
-  const hasSubcontractorErrors = Object.keys(errors).some(key => 
-    key.startsWith('subcontractors')
-  );
-  
-  return !hasSubcontractorErrors;
-}
-
-function isReplenishablesComplete(formData: SiteFormData, errors: FormValidationErrors): boolean {
-  // No required replenishables, so always consider complete if no errors
-  const hasReplenishableErrors = Object.keys(errors).some(key => 
-    key.startsWith('replenishables')
-  );
-  
-  return !hasReplenishableErrors;
-}
+export default useSiteFormStepper;

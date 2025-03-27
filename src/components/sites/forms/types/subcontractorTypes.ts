@@ -10,17 +10,18 @@ export interface Subcontractor {
   services?: string[];
   customServices?: string;
   contractor_id?: string;
+  name?: string; // Added for compatibility
 }
 
 // Service options for subcontractors
 export const serviceOptions = [
-  { value: 'cleaning', label: 'Cleaning' },
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'security', label: 'Security' },
-  { value: 'landscaping', label: 'Landscaping' },
-  { value: 'pest_control', label: 'Pest Control' },
-  { value: 'waste_management', label: 'Waste Management' },
-  { value: 'other', label: 'Other' }
+  { value: 'cleaning', label: 'Cleaning', id: 'cleaning' },
+  { value: 'maintenance', label: 'Maintenance', id: 'maintenance' },
+  { value: 'security', label: 'Security', id: 'security' },
+  { value: 'landscaping', label: 'Landscaping', id: 'landscaping' },
+  { value: 'pest_control', label: 'Pest Control', id: 'pest_control' },
+  { value: 'waste_management', label: 'Waste Management', id: 'waste_management' },
+  { value: 'other', label: 'Other', id: 'other' }
 ];
 
 // Utility functions for subcontractor data

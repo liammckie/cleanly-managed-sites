@@ -1,56 +1,59 @@
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+import { Json } from '@/lib/types';
 
 /**
- * Helper function to safely access JSON properties, assuming a given structure
+ * Check if the value is a valid JSON object
  */
-export function jsonObjectGet<T>(jsonValue: Json | undefined, path: string, defaultValue: T): T {
-  if (!jsonValue || typeof jsonValue !== 'object' || Array.isArray(jsonValue)) {
-    return defaultValue;
-  }
-  
-  const pathParts = path.split('.');
-  let current: any = jsonValue;
-  
-  for (const part of pathParts) {
-    if (current === null || current === undefined || typeof current !== 'object') {
-      return defaultValue;
-    }
-    current = current[part];
-  }
-  
-  return current !== undefined ? current : defaultValue;
+export function isJsonObject(value: any): value is { [key: string]: any } {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
- * Safely converts a JSON value to a string
+ * Safely access a Json value as a JSON object
+ * If the value is not a valid JSON object, returns the default value
  */
-export function jsonToString(value: Json | undefined): string {
-  if (value === null || value === undefined) {
-    return '';
+export function asJsonObject<T = any>(value: Json | undefined | null, defaultValue: T): T {
+  if (!value) return defaultValue;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return isJsonObject(parsed) ? parsed : defaultValue;
+    } catch {
+      return defaultValue;
+    }
   }
+  return isJsonObject(value) ? value : defaultValue;
+}
+
+/**
+ * Safely access a property from a Json value
+ */
+export function getJsonProperty<T = any>(json: Json | undefined | null, key: string, defaultValue: T): T {
+  const obj = asJsonObject(json, {});
+  return (obj[key] as T) ?? defaultValue;
+}
+
+/**
+ * Convert an unknown value to a string
+ */
+export function safeString(value: unknown): string {
+  if (value === null || value === undefined) return '';
   return String(value);
 }
 
 /**
- * Tries to parse a JSON string into an object, returns a default if parsing fails
+ * Convert an unknown value to a number
  */
-export function parseJson<T>(jsonString: string | undefined, defaultValue: T): T {
-  if (!jsonString) return defaultValue;
-  try {
-    return JSON.parse(jsonString) as T;
-  } catch (e) {
-    console.error('Failed to parse JSON:', e);
-    return defaultValue;
-  }
+export function safeNumber(value: unknown): number {
+  if (value === null || value === undefined) return 0;
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
 }
 
 /**
- * Safely access a JSON object, returning the default if the value is not an object
+ * Convert an unknown value to a boolean
  */
-export function asJsonObject<T>(json: Json | undefined, defaultValue: T): T {
-  if (!json || typeof json !== 'object' || Array.isArray(json)) {
-    return defaultValue;
-  }
-  return json as unknown as T;
+export function safeBoolean(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  return Boolean(value);
 }

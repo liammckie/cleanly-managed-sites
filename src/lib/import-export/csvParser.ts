@@ -1,145 +1,97 @@
 
-import Papa from 'papaparse';
-import { ClientRecord, SiteRecord, ContractHistoryEntry, ContractorRecord } from '@/lib/types';
+import { ClientRecord, SiteRecord, ContractorRecord } from '@/lib/types';
+import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
-/**
- * Parse CSV data into an array of objects
- */
-export function parseCSV(csvData: string) {
-  if (!csvData) return [];
-  
-  const parsed = Papa.parse(csvData, {
-    header: true,
-    skipEmptyLines: true
+export async function parseCSV(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (!text) {
+          reject(new Error('Failed to read file'));
+          return;
+        }
+        
+        // Simple CSV parsing logic
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        const data = lines.slice(1)
+          .filter(line => line.trim().length > 0)
+          .map(line => {
+            const values = line.split(',').map(v => v.trim());
+            const row: Record<string, string> = {};
+            
+            headers.forEach((header, index) => {
+              row[header] = values[index] || '';
+            });
+            
+            return row;
+          });
+        
+        resolve(data);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
   });
-  
-  return parsed.data;
 }
 
-/**
- * Parse a unified import format into separate entity arrays
- */
-export function parseUnifiedImport(csvData: string) {
-  const rows = parseCSV(csvData);
-  
-  if (!rows || !rows.length) return {
-    clients: [],
-    sites: [],
-    contracts: [],
-    contractors: []
-  };
-  
-  const clients: Partial<ClientRecord>[] = [];
-  const sites: Partial<SiteRecord>[] = [];
-  const contracts: Partial<ContractHistoryEntry>[] = [];
-  const contractors: Partial<ContractorRecord>[] = [];
-  
-  // Process each row and sort into appropriate arrays
-  rows.forEach((row: any) => {
-    const type = row.type?.toLowerCase();
-    
-    if (type === 'client') {
-      clients.push({
-        name: row.name,
-        contact_name: row.contact_name,
-        email: row.email,
-        phone: row.phone,
-        address: row.address,
-        city: row.city,
-        state: row.state,
-        postcode: row.postcode || row.postal_code,
-        user_id: row.user_id
-      });
-    } else if (type === 'site') {
-      sites.push({
-        name: row.name,
-        address: row.address,
-        client_id: row.client_id,
-        client_name: row.client_name,
-        // Add other fields
-      });
-    } else if (type === 'contract') {
-      contracts.push({
-        site_id: row.site_id,
-        notes: row.notes,
-        // Add other fields
-      });
-    } else if (type === 'contractor') {
-      contractors.push({
-        business_name: row.business_name,
-        contact_name: row.contact_name,
-        email: row.email,
-        phone: row.phone,
-        // Add other fields
-      });
-    }
-  });
-  
-  return { clients, sites, contracts, contractors };
-}
-
-/**
- * Convert CSV data to client format
- */
-export function convertCSVToClientFormat(csvData: string): Partial<ClientRecord>[] {
-  const rows = parseCSV(csvData);
-  
-  return rows.map((row: any) => ({
-    name: row.name,
-    contact_name: row.contact_name || row.contact,
+export function convertCSVToClientFormat(data: any[]): Partial<ClientRecord>[] {
+  return data.map(row => ({
+    name: row.name || row.client_name,
+    contact_name: row.contact_name || row.contactName,
     email: row.email,
     phone: row.phone,
     address: row.address,
     city: row.city,
     state: row.state,
-    postcode: row.postcode || row.postal_code
+    postcode: row.postcode || row.postal_code,
+    notes: row.notes
   }));
 }
 
-/**
- * Convert CSV data to site format
- */
-export function convertCSVToSiteFormat(csvData: string): Partial<SiteRecord>[] {
-  const rows = parseCSV(csvData);
-  
-  return rows.map((row: any) => ({
-    name: row.name,
+export function convertCSVToSiteFormat(data: any[]): Partial<SiteRecord>[] {
+  return data.map(row => ({
+    name: row.name || row.site_name,
     address: row.address,
     city: row.city,
     state: row.state,
     postcode: row.postcode || row.postal_code,
     client_id: row.client_id,
-    client_name: row.client_name
+    client_name: row.client_name,
+    status: row.status || 'active',
+    representative: row.representative || row.rep_name,
+    notes: row.notes
   }));
 }
 
-/**
- * Convert CSV data to contract format
- */
-export function convertCSVToContractFormat(csvData: string): Partial<ContractHistoryEntry>[] {
-  const rows = parseCSV(csvData);
-  
-  return rows.map((row: any) => ({
+export function convertCSVToContractFormat(data: any[]): Partial<ContractHistoryEntry>[] {
+  return data.map(row => ({
     site_id: row.site_id,
-    notes: row.notes,
-    // Add contract specific fields
+    contract_details: {
+      contractNumber: row.contract_number,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      autoRenewal: row.auto_renewal === 'true',
+      contractType: row.contract_type || 'fixed_term'
+    },
+    notes: row.notes
   }));
 }
 
-/**
- * Convert CSV data to contractor format
- */
-export function convertCSVToContractorFormat(csvData: string): Partial<ContractorRecord>[] {
-  const rows = parseCSV(csvData);
-  
-  return rows.map((row: any) => ({
-    business_name: row.business_name || row.name,
-    contact_name: row.contact_name || row.contact,
+export function convertCSVToContractorFormat(data: any[]): Partial<ContractorRecord>[] {
+  return data.map(row => ({
+    business_name: row.business_name || row.company_name,
+    contact_name: row.contact_name || row.contactName,
     email: row.email,
     phone: row.phone,
     address: row.address,
-    city: row.city,
-    state: row.state,
-    postcode: row.postcode || row.postal_code
+    status: row.status || 'active',
+    contractor_type: row.contractor_type || row.type || 'general',
+    notes: row.notes
   }));
 }

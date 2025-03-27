@@ -15,24 +15,29 @@ export interface ClientSelectorProps {
   onClientChange: (clientId: string) => void;
   error?: string;
   label?: string;
+  selectedClientId?: string; // Added for compatibility
+  onClientSelect?: (clientId: string) => void; // Added for compatibility
 }
 
 export function ClientSelector({ 
   clientId, 
   onClientChange, 
   error, 
-  label = "Client" 
+  label = "Client",
+  selectedClientId,
+  onClientSelect
 }: ClientSelectorProps) {
   const { clients, isLoading } = useClients();
-  const [selectedId, setSelectedId] = useState(clientId || '');
+  const [selectedId, setSelectedId] = useState(clientId || selectedClientId || '');
 
   useEffect(() => {
-    setSelectedId(clientId || '');
-  }, [clientId]);
+    setSelectedId(clientId || selectedClientId || '');
+  }, [clientId, selectedClientId]);
 
   const handleChange = (value: string) => {
     setSelectedId(value);
     onClientChange(value);
+    if (onClientSelect) onClientSelect(value);
   };
 
   return (

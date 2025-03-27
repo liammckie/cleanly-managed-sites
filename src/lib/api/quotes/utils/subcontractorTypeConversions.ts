@@ -1,49 +1,33 @@
 
-import { Subcontractor } from '@/components/sites/forms/types/subcontractorTypes';
-import { QuoteSubcontractor } from '@/types/models';
-import { adaptFrequency } from '@/lib/utils/typeAdapters';
+import { QuoteSubcontractor } from '@/lib/types/quotes';
 
-/**
- * Convert a site subcontractor to a quote subcontractor format
- */
-export function convertToQuoteSubcontractor(sub: Subcontractor): QuoteSubcontractor {
+export function convertToQuoteSubcontractor(data: any): QuoteSubcontractor {
   return {
-    id: sub.id || crypto.randomUUID(),
-    quoteId: '', // Will be set when assigned to a quote
-    name: sub.business_name || '',
-    description: sub.customServices || '',
-    cost: typeof sub.monthly_cost === 'number' ? sub.monthly_cost : 0,
-    frequency: adaptFrequency('monthly') as any, // Explicitly adapt the frequency
-    email: sub.email || '',
-    phone: sub.phone || '',
-    services: Array.isArray(sub.services) ? sub.services : [],
-    notes: ''
+    id: data.id || '',
+    quoteId: data.quote_id || '',
+    name: data.name || '',
+    description: data.description || '', // Provide default for required field
+    cost: data.cost || 0,
+    frequency: data.frequency || 'monthly',
+    email: data.email,
+    phone: data.phone,
+    notes: data.notes,
+    services: data.services,
+    service: data.service
   };
 }
 
-/**
- * Convert multiple site subcontractors to quote subcontractors
- */
-export function convertSubcontractorsToQuoteFormat(
-  subcontractors: Subcontractor[]
-): QuoteSubcontractor[] {
-  if (!Array.isArray(subcontractors)) return [];
-  return subcontractors.map(convertToQuoteSubcontractor);
-}
-
-/**
- * Prepare a quote subcontractor for API submission
- */
 export function prepareQuoteSubcontractorForApi(subcontractor: QuoteSubcontractor): any {
   return {
     id: subcontractor.id,
     quote_id: subcontractor.quoteId,
     name: subcontractor.name,
-    description: subcontractor.description,
+    description: subcontractor.description || '',
     cost: subcontractor.cost,
     frequency: subcontractor.frequency,
     email: subcontractor.email,
     phone: subcontractor.phone,
-    services: subcontractor.services
+    notes: subcontractor.notes,
+    service: subcontractor.service
   };
 }

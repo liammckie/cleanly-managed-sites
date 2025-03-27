@@ -1,88 +1,104 @@
 
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { BillingContact } from '@/components/sites/forms/types/billingTypes';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
 export const useSiteFormBillingContacts = (
   formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>,
-  errors: Record<string, string>,
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
 ) => {
+  // Generate a new empty billing contact
+  const createEmptyContact = (): BillingContact => ({
+    id: uuidv4(),
+    name: '',
+    email: '',
+    phone: '',
+    role: '',
+    position: '',
+    isPrimary: false
+  });
+
   // Add a new billing contact
   const addBillingContact = () => {
-    // Create a new contact with default values
-    const newContact: BillingContact = {
-      id: crypto.randomUUID(),
-      name: '',
-      email: '',
-      phone: '',
-      role: '' 
-    };
-    
     setFormData(prev => {
-      const updatedContacts = [...(prev.billingDetails.contacts || []), newContact];
+      // Ensure billing details exists
+      const billingDetails = prev.billingDetails || {};
+      // Ensure contacts array exists
+      const contacts = billingDetails.contacts || [];
+      
       return {
         ...prev,
         billingDetails: {
-          ...prev.billingDetails,
+          ...billingDetails,
+          contacts: [...contacts, createEmptyContact()]
+        }
+      };
+    });
+  };
+
+  // Update a billing contact
+  const updateBillingContact = (id: string, field: keyof BillingContact, value: any) => {
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const contacts = billingDetails.contacts || [];
+      
+      const updatedContacts = contacts.map(contact =>
+        contact.id === id ? { ...contact, [field]: value } : contact
+      );
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
           contacts: updatedContacts
         }
       };
     });
   };
-  
+
   // Remove a billing contact
-  const removeBillingContact = (index: number) => {
-    const updatedContacts = [...(formData.billingDetails.contacts || [])];
-    updatedContacts.splice(index, 1);
-    
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        contacts: updatedContacts
-      }
-    }));
-    
-    // Remove any errors related to this contact
-    const updatedErrors = { ...errors };
-    Object.keys(updatedErrors).forEach(key => {
-      if (key.startsWith(`billingDetails.contacts[${index}]`)) {
-        delete updatedErrors[key];
-      }
+  const removeBillingContact = (id: string) => {
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const contacts = billingDetails.contacts || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          contacts: contacts.filter(contact => contact.id !== id)
+        }
+      };
     });
-    setErrors(updatedErrors);
   };
-  
-  // Update billing contact field
-  const updateBillingContact = (index: number, field: keyof BillingContact, value: string) => {
-    const updatedContacts = [...(formData.billingDetails.contacts || [])];
-    
-    updatedContacts[index] = {
-      ...updatedContacts[index],
-      [field]: value
-    };
-    
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        contacts: updatedContacts
-      }
-    }));
-    
-    // Clear error when field is filled
-    const errorKey = `billingDetails.contacts[${index}].${String(field)}`;
-    if (errors[errorKey] && value.trim()) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[errorKey];
-      setErrors(updatedErrors);
-    }
+
+  // Set a contact as primary
+  const setPrimaryContact = (id: string) => {
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const contacts = billingDetails.contacts || [];
+      
+      const updatedContacts = contacts.map(contact => ({
+        ...contact,
+        isPrimary: contact.id === id
+      }));
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          contacts: updatedContacts
+        }
+      };
+    });
   };
-  
+
   return {
     addBillingContact,
+    updateBillingContact,
     removeBillingContact,
-    updateBillingContact
+    setPrimaryContact,
+    createEmptyContact
   };
 };

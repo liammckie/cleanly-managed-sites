@@ -1,88 +1,64 @@
 
-import { Json } from '@/lib/utils/json';
+import { Json } from './index';
 
-/**
- * Contract data with information about the site and client
- */
 export interface ContractData {
   id: string;
   site_id: string;
   site_name: string;
   client_id: string;
   client_name: string;
-  contract_details: Json;
-  monthly_revenue: number;
   status: string;
-  is_primary: boolean;
+  monthly_revenue: number;
+  contract_details: {
+    contractNumber?: string;
+    startDate?: string;
+    endDate?: string;
+    autoRenewal?: boolean;
+    renewalPeriod?: number;
+    renewalNotice?: number;
+    noticeUnit?: string;
+    terminationPeriod?: string;
+    renewalTerms?: string;
+    contractLength?: number;
+    contractLengthUnit?: string;
+    serviceFrequency?: string;
+    serviceDeliveryMethod?: string;
+    [key: string]: any;
+  };
+  
+  // For compatibility with old components
+  client?: {
+    id: string;
+    name: string;
+  };
+  site?: {
+    id: string;
+    name: string;
+  };
+  value?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
-/**
- * Contract forecast item for expirations
- */
-export interface ContractForecastItem {
-  siteId: string;
-  siteName: string;
-  clientId: string;
-  clientName: string;
-  contractNumber: string;
-  endDate: string;
-  monthlyValue: number;
-  expiringIn: number;
-  isAdditionalContract?: boolean;
-}
-
-/**
- * Grouped contracts by client, type, etc.
- */
-export interface GroupedContracts {
-  [key: string]: ContractData[];
-}
-
-/**
- * Contract forecast data by month
- */
-export interface ContractForecast {
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
-}
-
-/**
- * Summary data for contract expirations and values
- */
 export interface ContractSummaryData {
-  // Expiration counts
+  totalCount: number;
+  activeCount: number;
+  pendingCount: number;
+  expiringCount: number;
   expiringThisMonth: number;
   expiringNext3Months: number;
   expiringNext6Months: number;
   expiringThisYear: number;
-  
-  // Expiration values
   valueExpiringThisMonth: number;
   valueExpiringNext3Months: number;
   valueExpiringNext6Months: number;
   valueExpiringThisYear: number;
-  
-  // Overall contract data
-  totalContracts: number;
   totalValue: number;
-  activeCount: number;  // Added for compatibility
-  
-  // Financial metrics
-  totalRevenue: number;
-  totalCost: number;
-  totalProfit: number;
-  avgContractValue: number;
+  activeValue: number;
+  averageValue: number;
   profitMargin: number;
 }
 
-/**
- * Contract summary metrics
- */
-export interface ContractSummary {
-  totalValue: number;
-  activeContracts: number;
-  expiringWithin30Days: number;
-  renewalRate: number;
+export interface GroupedContracts {
+  [category: string]: ContractData[];
 }
