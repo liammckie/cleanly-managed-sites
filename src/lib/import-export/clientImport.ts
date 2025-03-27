@@ -1,7 +1,7 @@
 
 import { validateClientData } from './validation/clientValidation';
-import { LegacyValidationResult } from './types';
-import { ClientImportItem } from '@/types/import-export';
+import { LegacyValidationResult, newToLegacyValidationResult, ClientImportItem } from './types';
+import { ValidationResult } from '@/types/common';
 
 export function processClientImport(data: any[]): { 
   validItems: ClientImportItem[], 
@@ -13,13 +13,16 @@ export function processClientImport(data: any[]): {
   const messages: string[] = [];
 
   for (const item of data) {
-    const result = validateClientData(item) as LegacyValidationResult<ClientImportItem>;
-    if (result.isValid && result.data) {
-      validItems.push(result.data);
+    const result = validateClientData(item) as ValidationResult<ClientImportItem>;
+    // Convert new validation result to legacy format for compatibility
+    const legacyResult = newToLegacyValidationResult(result);
+    
+    if (legacyResult.isValid && legacyResult.data) {
+      validItems.push(legacyResult.data);
     } else {
       invalidItems.push({
         item,
-        errors: result.errors
+        errors: legacyResult.errors
       });
     }
   }

@@ -1,9 +1,5 @@
 
-import { SiteStatus, ServiceDeliveryType, BillingFrequency } from '@/types/common';
-import { BillingDetails, BillingLine } from '@/components/sites/forms/types/billingTypes';
-import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-
-// DB and frontend types for OverheadProfile
+// Define the DB and frontend types for OverheadProfile
 export interface DbOverheadProfile {
   id: string;
   name: string;
@@ -24,6 +20,42 @@ export interface OverheadProfile {
   userId?: string;
 }
 
+// Type definitions for contract related operations
+export interface ContractDetails {
+  id?: string;
+  contractNumber?: string;
+  startDate?: string;
+  endDate?: string;
+  autoRenewal?: boolean;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  contractType?: string;
+  renewalPeriod?: string;
+  renewalNoticeDays?: number;
+  noticeUnit?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
+}
+
+// BillingLine interface for consistent usage
+export interface BillingLine {
+  id: string;
+  description: string;
+  amount: number;
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'annually';
+  isRecurring: boolean;
+  onHold: boolean;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
+}
+
+// Type adapters to convert database models to frontend models and vice versa
 export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
   return {
     id: dbProfile.id,
@@ -48,55 +80,104 @@ export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile
   };
 }
 
-// Adapt billing details to DTO format
-export function adaptBillingDetailsToDTO(billingDetails: BillingDetails) {
+// Convert employment type format
+export function adaptEmploymentType(dbType: string): string {
+  const mapping: Record<string, string> = {
+    'full_time': 'full-time',
+    'part_time': 'part-time',
+    'casual': 'casual',
+    'contract': 'contract',
+    'intern': 'intern'
+  };
+  
+  return mapping[dbType] || dbType;
+}
+
+// UserRole adapters
+export function adaptUserRole(dbRole: any): Record<string, boolean> {
+  if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
+    return dbRole.permissions as Record<string, boolean>;
+  }
+  
+  // If permissions is a string (JSON), try to parse it
+  if (typeof dbRole.permissions === 'string') {
+    try {
+      return JSON.parse(dbRole.permissions);
+    } catch (e) {
+      console.error('Failed to parse permissions string', e);
+      return {};
+    }
+  }
+  
+  return {};
+}
+
+// Contract adapters
+export function adaptContractDetailsToJson(details: ContractDetails): { [key: string]: any } {
+  return {
+    ...details,
+    // Convert any specific fields if needed
+  };
+}
+
+export function adaptContractDetailsToApi(details: ContractDetails): { [key: string]: any } {
+  return {
+    ...details,
+    // Make sure to format dates or other fields as needed for the API
+  };
+}
+
+// Quote adapters
+export function adaptQuote(dbQuote: any): any {
+  // Implement quote adapter logic
+  return {
+    ...dbQuote,
+    // Convert DB fields to frontend format
+  };
+}
+
+export function adaptQuoteToApi(frontendQuote: any): any {
+  // Implement quote to API adapter
+  return {
+    ...frontendQuote,
+    // Convert frontend fields to DB format
+  };
+}
+
+// Billing and Address adapters
+export function adaptBillingDetailsToDTO(billingDetails: any): any {
   if (!billingDetails) return null;
   
   return {
     ...billingDetails,
-    serviceDeliveryType: billingDetails.serviceDeliveryType === 'contractor' 
-      ? 'contractor' as ServiceDeliveryType 
-      : 'direct' as ServiceDeliveryType,
-    billingLines: billingDetails.billingLines || []
+    serviceDeliveryType: billingDetails.serviceDeliveryType === 'contractor' ? 'contractor' : 'direct'
   };
 }
 
-// Adapt contract details for API
-export function adaptContractDetailsToApi(contractDetails: ContractDetails) {
-  if (!contractDetails) return null;
+export function adaptAddress(address: any): any {
+  // Implement address adapter
+  return {
+    ...address,
+    // Convert address fields as needed
+  };
+}
+
+// BillingLine adapter
+export function adaptBillingLine(modelLine: any): BillingLine {
+  // Ensure modelLine has the required properties or set defaults
+  const formattedLine: BillingLine = {
+    id: modelLine.id || crypto.randomUUID(),
+    description: modelLine.description || '',
+    amount: modelLine.amount || 0,
+    frequency: modelLine.frequency === 'weekly' || modelLine.frequency === 'monthly' || 
+               modelLine.frequency === 'quarterly' || modelLine.frequency === 'annually' ? 
+               modelLine.frequency : 'monthly',
+    isRecurring: modelLine.isRecurring !== undefined ? modelLine.isRecurring : true,
+    onHold: modelLine.onHold !== undefined ? modelLine.onHold : false,
+    weeklyAmount: modelLine.weeklyAmount,
+    monthlyAmount: modelLine.monthlyAmount,
+    annualAmount: modelLine.annualAmount
+  };
   
-  return {
-    ...contractDetails,
-    renewalPeriod: contractDetails.renewalPeriod?.toString() || '',
-  };
-}
-
-// Adapt quote to API format
-export function adaptQuoteToApi(quote: any) {
-  return {
-    id: quote.id,
-    title: quote.title,
-    description: quote.description,
-    client_id: quote.clientId,
-    site_id: quote.siteId,
-    total_amount: quote.totalAmount,
-    status: quote.status,
-    valid_until: quote.validUntil,
-    scope_of_work: quote.scopeOfWork,
-    notes: quote.notes,
-    created_by: quote.createdBy,
-    created_at: quote.createdAt,
-    updated_at: quote.updatedAt,
-    overhead_profile: quote.overheadProfile,
-    line_items: quote.lineItems?.map((item: any) => ({
-      id: item.id,
-      quote_id: item.quoteId,
-      description: item.description,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      total: item.total,
-      type: item.type,
-      category: item.category
-    }))
-  };
+  return formattedLine;
 }

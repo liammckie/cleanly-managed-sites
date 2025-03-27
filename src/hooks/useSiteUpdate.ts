@@ -32,6 +32,7 @@ export function useSiteUpdate() {
     updateSite: mutation.mutate,
     isUpdating: mutation.isPending,
     error: mutation.error,
-    updateSiteMutation: mutation  // Keep this property for compatibility
+    // Add back updateSiteMutation for compatibility with existing code
+    updateSiteMutation: mutation  
   };
 }

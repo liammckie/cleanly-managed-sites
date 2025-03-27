@@ -2,6 +2,7 @@
 import React from 'react';
 import { BillingDetailsStep } from './steps/BillingDetailsStep';
 import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
+import { ServiceDeliveryType } from '@/types/common';
 
 interface BillingDetailsStepWrapperProps {
   formData: any;
@@ -21,7 +22,7 @@ export function BillingDetailsStepWrapper({
   const billingDetails = formData.billingDetails || {
     billingLines: [],
     useClientInfo: false,
-    serviceDeliveryType: 'direct',
+    serviceDeliveryType: 'direct' as ServiceDeliveryType,
     billingAddress: {
       street: '',
       city: '',

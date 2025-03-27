@@ -83,10 +83,51 @@ export type BillingFrequency =
 
 export type ServiceDeliveryType = 'direct' | 'contractor';
 
-// Fixed properties in ValidationResult to align with how it's being used
+// Fixed properties in LegacyValidationResult to align with how it's being used
 export interface LegacyValidationResult<T = unknown> {
   isValid: boolean;
   data?: T;
   errors?: ValidationError[];
   warnings?: ValidationError[];
+}
+
+// Added ContractForecast type for useContractForecast hook
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+  contractCount: number;
+}
+
+// Define UserRole properly
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
+}
+
+// Define UserProfile for consistent use
+export interface UserProfile {
+  id?: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  status: UserStatus;
+  role_id?: string;
+  title?: string;
+  phone?: string;
+  notes?: string;
+  custom_id?: string;
+  daily_summary?: boolean;
+  territories?: string[];
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
 }
