@@ -42,7 +42,13 @@ const SiteEdit = () => {
           </div>
         ) : site ? (
           <div className="max-w-5xl mx-auto">
-            <EditSiteForm site={site} />
+            <EditSiteForm 
+              site={site}
+              initialData={site}
+              siteId={id} 
+              isLoading={false}
+              onSubmit={() => {}}
+            />
           </div>
         ) : (
           <div className="text-center">

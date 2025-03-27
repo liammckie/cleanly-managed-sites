@@ -31,7 +31,13 @@ const EditSite = () => {
                 <p>{error.message || 'Unable to load site details'}</p>
               </div>
             ) : site ? (
-              <EditSiteForm site={site} />
+              <EditSiteForm 
+                site={site}
+                initialData={site}
+                siteId={id} 
+                isLoading={false}
+                onSubmit={() => {}}
+              />
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>

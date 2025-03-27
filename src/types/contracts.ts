@@ -35,7 +35,7 @@ export interface ContractSummaryData {
   pendingCount: number;
   totalValue: number;
   
-  // Add missing fields for metrics and totals (used in components)
+  // Add missing fields for metrics and totals
   totalContracts: number;
   expiringWithin30Days: number;
   expiringThisMonth: number;
@@ -58,6 +58,7 @@ export interface ContractSummaryData {
   // Additional metrics
   avgContractValue: number;
   renewalRate?: number;
+  expiringCount?: number;
 }
 
 export interface GroupedContracts {
@@ -69,7 +70,7 @@ export interface ContractForecast {
   endDate: string;
   value: number;
   id: string;
-  // Added fields to match component requirements
+  // Required fields to match the type
   month: string;
   revenue: number;
   cost: number;

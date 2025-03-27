@@ -1,20 +1,21 @@
 
-// Add or update this file with the QuoteStatus type
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | 'weekday' | 'public_holiday';
-export type EmploymentType = 'casual' | 'part_time' | 'full_time';
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+// Common status types
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
+export type ContractStatus = 'active' | 'pending' | 'expired' | 'cancelled' | 'renewal';
+export type UserStatus = 'active' | 'pending' | 'inactive';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly';
-export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once' | 'daily';
 
-// General JSON types
-export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-export type JsonObject = { [key: string]: JsonValue };
-export type Json = JsonValue;
+// Common day and time types
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type TimeFormat = '12h' | '24h';
 
-// Payment conditions type
-export type PayCondition = 'standard' | 'saturday' | 'sunday' | 'public_holiday' | 'overtime_1_5' | 'overtime_2';
+// Employee types
+export type EmploymentType = 'casual' | 'part_time' | 'full_time' | 'contractor';
+export type EmployeeLevel = 1 | 2 | 3;
 
-// Type for unified day format
-export type UnifiedDay = Day;
+// Frequency types
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+
+// JSON related types
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type JsonObject = { [key: string]: Json };

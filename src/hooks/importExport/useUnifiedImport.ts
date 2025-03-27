@@ -25,18 +25,18 @@ export function useUnifiedImport() {
     };
   };
   
-  const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental') => {
+  const handleUnifiedImportMode = async (file: File, options: { mode: 'full' | 'incremental' }) => {
     try {
       setIsImporting(true);
       const data = await parseUnifiedImportFile(file);
       
-      const options: ImportOptions = {
+      const importOptions: ImportOptions = {
         format: 'json',
         type: 'unified',
-        mode
+        mode: options.mode
       };
       
-      const result = await importData(data, options);
+      const result = await importData(data, importOptions);
       
       toast.success(`Import completed: ${result.imported || 0} records imported`);
       return result;

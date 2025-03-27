@@ -14,7 +14,7 @@ export function useDataImportExport() {
   };
   
   const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental') => {
-    return unifiedImport.handleUnifiedImport(file, { mode });
+    return unifiedImport.handleUnifiedImportMode(file, { mode });
   };
   
   return {

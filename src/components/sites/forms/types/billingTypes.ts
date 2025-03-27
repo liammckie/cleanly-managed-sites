@@ -23,6 +23,12 @@ export interface BillingLine {
   description: string;
   amount: number;
   frequency: string;
+  // Add missing properties
+  isRecurring?: boolean;
+  onHold?: boolean;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
 }
 
 export interface BillingDetails {
@@ -65,7 +71,7 @@ export interface BillingDetails {
   serviceDeliveryType?: string;
   weeklyBudget?: number;
   
-  // Billing lines for the form
+  // Billing lines
   billingLines?: BillingLine[];
   
   // Xero integration

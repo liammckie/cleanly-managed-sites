@@ -125,3 +125,5 @@ export const BillingLineItem: React.FC<BillingLineItemProps> = ({
     </div>
   );
 }
+
+export default BillingLineItem;

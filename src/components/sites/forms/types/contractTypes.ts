@@ -60,9 +60,9 @@ export interface ContractForecast {
   value: number;
   id: string;
   
-  // Additional properties needed for ContractForecast in some components
-  month?: string;
-  revenue?: number;
-  cost?: number;
-  profit?: number;
+  // Make these required to match the expected type
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
 }

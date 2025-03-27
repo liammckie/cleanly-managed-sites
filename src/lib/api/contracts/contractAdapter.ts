@@ -1,30 +1,31 @@
-
 import { ContractData } from '@/types/contracts';
-import { asJsonObject } from '@/lib/utils/json';
 
-/**
- * Adapts a raw site record into a contract data object
- */
-export function adaptContract(siteRecord: any): ContractData {
-  // Ensure contract_details is properly handled as an object
-  const contractDetails = asJsonObject(siteRecord.contract_details, {});
-
+export const adaptContractData = (data: any): ContractData => {
   return {
-    id: siteRecord.id,
-    site_id: siteRecord.site_id || siteRecord.id,
-    site_name: siteRecord.site_name || siteRecord.name,
-    client_id: siteRecord.client_id,
-    client_name: siteRecord.client_name,
-    monthly_revenue: Number(siteRecord.monthly_revenue) || 0,
-    contract_details: contractDetails,
-    status: siteRecord.status,
-    is_primary: siteRecord.is_primary === true
+    id: data.id || crypto.randomUUID(),
+    client: {
+      id: data.client_id || '',
+      name: data.client_name || '',
+    },
+    site: {
+      id: data.site_id || '',
+      name: data.site_name || '',
+    },
+    value: data.value || 0,
+    startDate: data.start_date || data.startDate || '',
+    endDate: data.end_date || data.endDate || '',
+    status: data.status || 'active',
+    
+    // Keep original fields for compatibility
+    site_id: data.site_id,
+    site_name: data.site_name,
+    client_id: data.client_id,
+    client_name: data.client_name,
+    monthly_revenue: data.monthly_revenue,
+    contract_details: data.contract_details,
+    
+    // Ensure backward compatibility
+    start_date: data.start_date || data.startDate,
+    end_date: data.end_date || data.endDate
   };
-}
-
-/**
- * Adapts an array of site records into contract data objects
- */
-export function adaptContracts(siteRecords: any[]): ContractData[] {
-  return siteRecords.map(adaptContract);
-}
+};
