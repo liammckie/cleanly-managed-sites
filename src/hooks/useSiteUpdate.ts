@@ -8,6 +8,20 @@ import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
 
 const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => {
+  // Convert numerical values to make sure they're consistent with expected types
+  const renewalPeriod = formData.contractDetails?.renewalPeriod 
+    ? String(formData.contractDetails.renewalPeriod) 
+    : undefined;
+  
+  // Create a compatible billingAddress object if it exists
+  const billingAddress = formData.billingDetails?.billingAddress ? {
+    street: formData.billingDetails.billingAddress.street || '',
+    city: formData.billingDetails.billingAddress.city || '',
+    state: formData.billingDetails.billingAddress.state || '',
+    postcode: formData.billingDetails.billingAddress.postcode || '',
+    country: formData.billingDetails.billingAddress.country || 'Australia'
+  } : undefined;
+
   return {
     name: formData.name,
     address: formData.address,
@@ -15,8 +29,20 @@ const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => 
     state: formData.state,
     postcode: formData.postalCode || formData.postcode, // Use either property
     status: formData.status === 'lost' ? 'inactive' : formData.status,
-    contract_details: formData.contractDetails || formData.contract_details,
-    billing_details: formData.billingDetails,
+    contract_details: formData.contractDetails 
+      ? {
+          ...formData.contractDetails,
+          renewalPeriod
+        }
+      : formData.contract_details,
+    billing_details: formData.billingDetails
+      ? {
+          ...formData.billingDetails,
+          billingAddress,
+          // Make sure billingLines exists
+          billingLines: formData.billingDetails.billingLines || []
+        }
+      : undefined,
     email: formData.email,
     phone: formData.phone,
     representative: formData.representative,
@@ -37,7 +63,7 @@ export function useSiteUpdate() {
           throw new Error('Invalid site data: ' + Object.values(validation.errors || {}).join(', '));
         }
         const updateData = adaptSiteFormToUpdateData(data as SiteFormData);
-        return await sitesApi.updateSite(id, updateData);
+        return await sitesApi.updateSite(id, updateData as any);
       } 
       // If it's already a DTO, just use it directly
       else {

@@ -1,12 +1,7 @@
 
-/**
- * Domain Transfer Objects (DTOs)
- * 
- * This file defines the stable contract between our UI components and API/database.
- * These types serve as a bridge between frontend forms and backend data structures.
- */
+import { Day, EmploymentType, EmployeeLevel, Frequency, BillingFrequency, QuoteStatus, SiteStatus, UserStatus } from './common';
 
-// User DTO Types
+// User DTO types
 export interface UserDTO {
   id: string;
   email: string;
@@ -19,7 +14,7 @@ export interface UserDTO {
   custom_id?: string;
   notes?: string;
   territories?: string[];
-  status: "active" | "pending" | "inactive";
+  status: UserStatus;
   role_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -37,7 +32,7 @@ export interface UserRoleDTO {
   user_count?: number;
 }
 
-// Site Related DTOs
+// Site DTO types
 export interface SiteDTO {
   id: string;
   name: string;
@@ -46,14 +41,14 @@ export interface SiteDTO {
   state: string;
   postcode: string;
   country: string;
-  client_id: string;
+  client_id?: string;
   client_name?: string;
-  status: "active" | "inactive" | "pending" | "on-hold" | "lost";
+  status: SiteStatus;
   representative?: string;
   contract_details?: ContractDetailsDTO;
   billing_details?: BillingDetailsDTO;
-  job_specifications?: JobSpecificationsDTO;
-  security_details?: SecurityDetailsDTO;
+  job_specifications?: any;
+  security_details?: any;
   monthly_revenue?: number;
   weekly_revenue?: number;
   annual_revenue?: number;
@@ -65,8 +60,21 @@ export interface SiteDTO {
   notes?: string;
   email?: string;
   phone?: string;
+  contacts?: ContactDTO[];
 }
 
+export interface ContactDTO {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  department?: string;
+  notes?: string;
+  is_primary?: boolean;
+}
+
+// Contract DTO types
 export interface ContractDetailsDTO {
   id?: string;
   contractNumber?: string;
@@ -88,6 +96,7 @@ export interface ContractDetailsDTO {
   notes?: string;
 }
 
+// Billing DTO types
 export interface BillingDetailsDTO {
   billingAddress?: {
     street: string;
@@ -96,30 +105,31 @@ export interface BillingDetailsDTO {
     postcode: string;
     country: string;
   };
-  useClientInfo: boolean;
-  billingMethod: string;
-  paymentTerms: string;
-  billingEmail: string;
-  
-  // Billing lines for the form
+  useClientInfo?: boolean;
+  billingMethod?: string;
+  paymentTerms?: string;
+  billingEmail?: string;
   billingLines?: BillingLineDTO[];
+  contacts?: BillingContactDTO[];
   
-  // Service delivery details
-  serviceType?: string;
-  deliveryMethod?: string;
+  // Optional fields used in components
   serviceDeliveryType?: 'direct' | 'contractor';
-  
-  // Contractor details
+  weeklyBudget?: number;
+  annualDirectCost?: number;
+  annualContractorCost?: number;
   contractorCostFrequency?: string;
   weeklyContractorCost?: number;
   monthlyContractorCost?: number;
-  annualContractorCost?: number;
   contractorInvoiceFrequency?: string;
   
-  // Budget details
-  weeklyBudget?: number;
-  
-  // Additional billing fields
+  // Additional properties that might be used
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
+  totalAnnualAmount?: number;
+  billingFrequency?: string;
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceMethod?: string;
   rate?: string;
   xeroContactId?: string;
 }
@@ -128,48 +138,37 @@ export interface BillingLineDTO {
   id: string;
   description: string;
   amount: number;
-  frequency: "weekly" | "monthly" | "quarterly" | "annually";
+  frequency?: BillingFrequency;
   isRecurring?: boolean;
   onHold?: boolean;
+  holdStartDate?: string;
+  holdEndDate?: string;
   weeklyAmount?: number;
   monthlyAmount?: number;
   annualAmount?: number;
+  creditAmount?: number | string;
+  creditDate?: string;
+  creditReason?: string;
 }
 
-export interface JobSpecificationsDTO {
-  daysPerWeek?: number;
-  hoursPerDay?: number;
-  directEmployees?: number;
-  notes?: string;
-  cleaningFrequency?: string;
-  customFrequency?: string;
-  serviceDays?: string;
-  serviceTime?: string;
-  estimatedHours?: string;
-  equipmentRequired?: string;
-  scopeNotes?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  annualContractorCost?: number;
+export interface BillingContactDTO {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  isPrimary?: boolean;
 }
 
-export interface SecurityDetailsDTO {
-  keyLocation?: string;
-  alarmCode?: string;
-  securityContact?: string;
-  specialAccess?: string;
-  notes?: string;
-}
-
-// Quote related DTOs
+// Quote DTO types
 export interface QuoteDTO {
   id: string;
-  title?: string;
   name?: string;
+  title?: string;
   description?: string;
   clientName: string;
   siteName?: string;
-  status: "draft" | "submitted" | "approved" | "declined" | "expired";
+  status: QuoteStatus;
   laborCost: number;
   overheadPercentage: number;
   marginPercentage: number;
@@ -190,6 +189,53 @@ export interface QuoteDTO {
   updatedAt: string;
 }
 
+export interface QuoteShiftDTO {
+  id: string;
+  quote_id?: string;
+  day: Day;
+  start_time: string;
+  end_time: string;
+  break_duration: number;
+  number_of_cleaners: number;
+  employment_type: EmploymentType;
+  level: EmployeeLevel;
+  allowances: string[];
+  estimated_cost: number;
+  location?: string;
+  notes?: string;
+}
+
+export interface QuoteSubcontractorDTO {
+  id: string;
+  quote_id?: string;
+  name: string;
+  description?: string;
+  cost: number;
+  frequency: Frequency;
+  email?: string;
+  phone?: string;
+  notes?: string;
+}
+
+// Business profile DTO type
+export interface BusinessProfileDTO {
+  id: string;
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  tax_id?: string;
+  logo_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Overhead profile DTO type
 export interface OverheadProfileDTO {
   id: string;
   name: string;

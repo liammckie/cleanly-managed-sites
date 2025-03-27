@@ -1,11 +1,9 @@
 
-import { ValidationMessage, EnhancedValidationResult } from '@/types/common';
+// Re-export the types from common that have been newly defined
+import { ValidationMessage, ValidationResult, EnhancedValidationResult } from '@/types/common';
 
-// Re-export the types from common
-export type { ValidationMessage, EnhancedValidationResult };
-
-// Alias ValidationResult to EnhancedValidationResult for backwards compatibility
-export type ValidationResult = EnhancedValidationResult;
+// Re-export the types
+export type { ValidationMessage, ValidationResult, EnhancedValidationResult };
 
 // Define additional types needed
 export type ExportFormat = 'json' | 'csv' | 'xlsx';

@@ -1,107 +1,164 @@
 
-import React, { useState } from 'react';
-import { useRoles } from '@/hooks/useRoles';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import NewRoleDialog from './NewRoleDialog';
-import EditRoleDialog from './EditRoleDialog';
-import { UserRole } from '@/lib/types/users';
+import { Badge } from '@/components/ui/badge';
+import { MoreHorizontal, Edit, Trash2, Plus, Shield } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
+import { UserRoleDTO } from '@/types/dto';
+import { EditRoleDialog } from './EditRoleDialog';
+import { DeleteRoleDialog } from './DeleteRoleDialog';
+import { CreateRoleDialog } from './CreateRoleDialog';
 
-function UserRolesList() {
-  const { roles, isLoading, refetch } = useRoles();
-  const [isNewRoleDialogOpen, setIsNewRoleDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  
-  const handleRefresh = () => {
-    refetch();
+interface UserRolesListProps {
+  roles: UserRoleDTO[];
+  onEdit: (role: UserRoleDTO) => void;
+  onDelete: (roleId: string) => void;
+  onCreate: (role: Omit<UserRoleDTO, 'id'>) => void;
+}
+
+export function UserRolesList({ roles, onEdit, onDelete, onCreate }: UserRolesListProps) {
+  const [editRoleDialogOpen, setEditRoleDialogOpen] = React.useState(false);
+  const [createRoleDialogOpen, setCreateRoleDialogOpen] = React.useState(false);
+  const [deleteRoleDialogOpen, setDeleteRoleDialogOpen] = React.useState(false);
+  const [selectedRoleId, setSelectedRoleId] = React.useState<string | null>(null);
+
+  const selectedRole = selectedRoleId 
+    ? roles.find(role => role.id === selectedRoleId) 
+    : null;
+
+  const handleOpenEditDialog = (roleId: string) => {
+    setSelectedRoleId(roleId);
+    setEditRoleDialogOpen(true);
   };
-  
-  const handleEditRole = (role: UserRole) => {
-    setSelectedRole(role);
-    setIsEditDialogOpen(true);
+
+  const handleOpenDeleteDialog = (roleId: string) => {
+    setSelectedRoleId(roleId);
+    setDeleteRoleDialogOpen(true);
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" />
+
+  const handleSaveRole = (updatedRole: UserRoleDTO) => {
+    onEdit(updatedRole);
+    setEditRoleDialogOpen(false);
+  };
+
+  const handleCreateRole = (newRole: Omit<UserRoleDTO, 'id'>) => {
+    onCreate(newRole);
+    setCreateRoleDialogOpen(false);
+  };
+
+  const handleDeleteRole = () => {
+    if (selectedRoleId) {
+      onDelete(selectedRoleId);
+      setDeleteRoleDialogOpen(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold tracking-tight">User Roles</h2>
+        <Button onClick={() => setCreateRoleDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Role
+        </Button>
       </div>
-    );
-  }
-  
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>User Roles</CardTitle>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleRefresh()}>
-            <RefreshCw size={16} className="mr-2" />
-            Refresh
-          </Button>
-          <Button variant="default" size="sm" onClick={() => setIsNewRoleDialogOpen(true)}>
-            <Plus size={16} className="mr-2" />
-            New Role
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {roles?.map((role) => (
-            <RoleCard
-              key={role.id}
-              role={role}
-              onEditClick={() => handleEditRole(role)}
-            />
-          ))}
-        </div>
-        
-        <NewRoleDialog
-          isOpen={isNewRoleDialogOpen}
-          onClose={() => setIsNewRoleDialogOpen(false)}
-          onRoleCreated={handleRefresh}
-        />
-        
-        <EditRoleDialog
-          isOpen={isEditDialogOpen}
-          onClose={() => setIsEditDialogOpen(false)}
-          role={selectedRole}
-          onRoleUpdated={handleRefresh}
-        />
-      </CardContent>
-    </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {roles.map((role) => (
+          <Card key={role.id} className="overflow-hidden">
+            <CardHeader className="bg-muted/50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    {role.name}
+                  </CardTitle>
+                  {role.description && (
+                    <CardDescription className="mt-1">{role.description}</CardDescription>
+                  )}
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleOpenEditDialog(role.id)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => handleOpenDeleteDialog(role.id)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Permissions:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(role.permissions)
+                      .filter(([_, hasPermission]) => hasPermission)
+                      .map(([permission]) => (
+                        <Badge key={permission} variant="outline">
+                          {permission}
+                        </Badge>
+                      ))}
+                    {Object.values(role.permissions).filter(Boolean).length === 0 && (
+                      <span className="text-muted-foreground text-sm">No permissions assigned</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="bg-muted/20 px-6 py-3">
+              <div className="text-sm text-muted-foreground">
+                {role.user_count !== undefined ? `${role.user_count} user${role.user_count !== 1 ? 's' : ''}` : 'No users'}
+              </div>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      {selectedRole && (
+        <>
+          <EditRoleDialog
+            role={selectedRole}
+            open={editRoleDialogOpen}
+            onOpenChange={setEditRoleDialogOpen}
+            onSave={handleSaveRole}
+          />
+          <DeleteRoleDialog
+            roleName={selectedRole.name}
+            open={deleteRoleDialogOpen}
+            onOpenChange={setDeleteRoleDialogOpen}
+            onDelete={handleDeleteRole}
+          />
+        </>
+      )}
+
+      <CreateRoleDialog
+        open={createRoleDialogOpen}
+        onOpenChange={setCreateRoleDialogOpen}
+        onSave={handleCreateRole}
+      />
+    </div>
   );
 }
-
-interface RoleCardProps {
-  role: UserRole;
-  onEditClick: () => void;
-}
-
-function RoleCard({ role, onEditClick }: RoleCardProps) {
-  const permissionCount = Object.entries(role.permissions).filter(([_, value]) => value === true).length;
-  
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col">
-          <h3 className="text-lg font-semibold">{role.name}</h3>
-          <p className="text-sm text-muted-foreground mb-2">{role.description || 'No description'}</p>
-          
-          <div className="flex justify-between items-center text-sm text-muted-foreground">
-            <span>{permissionCount} permissions</span>
-            <span>{role.user_count || 0} users</span>
-          </div>
-          
-          <Button variant="outline" size="sm" className="mt-4 w-full" onClick={onEditClick}>
-            Edit Role
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default UserRolesList;

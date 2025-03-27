@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { BillingDetails, BillingLine } from '@/components/sites/forms/types/billingTypes';
 import { v4 as uuidv4 } from 'uuid';
 import BillingLineItem from './billing/BillingLineItem';
 
@@ -34,7 +35,9 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
     addBillingLine();
   };
 
-  const billingDetails = formData.billingDetails || {};
+  // Ensure billingDetails exists and is properly typed
+  const billingDetails = formData.billingDetails || {} as BillingDetails;
+  // Ensure billingLines exists
   const billingLines = billingDetails.billingLines || [];
 
   return (

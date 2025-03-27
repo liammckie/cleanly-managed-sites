@@ -1,42 +1,34 @@
 
-import { JsonValue } from "@/types/common";
+import { JsonValue } from '@/types/common';
 
 /**
- * Safely access contract details fields from a JSON object
+ * Safely extract a value from a potentially undefined JSON object
  */
-export const getContractField = <T>(contractDetails: JsonValue | undefined | null, field: string, defaultValue: T): T => {
-  if (!contractDetails) return defaultValue;
+export function extractJsonValue<T>(json: JsonValue | undefined, path: string, defaultValue: T): T {
+  if (!json || typeof json !== 'object' || json === null) {
+    return defaultValue;
+  }
   
-  try {
-    if (typeof contractDetails === 'object' && contractDetails !== null && !Array.isArray(contractDetails)) {
-      const details = contractDetails as Record<string, any>;
-      return (details[field] !== undefined && details[field] !== null) ? details[field] : defaultValue;
+  const keys = path.split('.');
+  let current: any = json;
+  
+  for (const key of keys) {
+    if (current === null || typeof current !== 'object' || !(key in current)) {
+      return defaultValue;
     }
-  } catch (error) {
-    console.error(`Error accessing contract field ${field}:`, error);
+    current = current[key];
   }
   
-  return defaultValue;
-};
+  return (current as unknown as T) ?? defaultValue;
+}
 
 /**
- * Safely check if a contract is expiring soon
+ * Format a contract value for display
  */
-export const isContractExpiringSoon = (contractDetails: JsonValue | undefined | null, daysThreshold: number = 60): boolean => {
-  if (!contractDetails) return false;
-  
-  try {
-    const endDateStr = getContractField(contractDetails, 'endDate', '');
-    if (!endDateStr) return false;
-    
-    const endDate = new Date(endDateStr);
-    const now = new Date();
-    const diffTime = endDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays >= 0 && diffDays <= daysThreshold;
-  } catch (error) {
-    console.error('Error checking contract expiration:', error);
-    return false;
-  }
-};
+export function formatContractValue(value: number): string {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    minimumFractionDigits: 2
+  }).format(value);
+}

@@ -17,7 +17,7 @@ export function useSiteFormBillingContacts(
       id: uuidv4()
     };
     
-    // Safely update billingDetails.contacts
+    // Safely update billingDetails.contacts while preserving other properties
     setFormData((prev) => {
       const prevBillingDetails = prev.billingDetails || {};
       const prevContacts = prevBillingDetails.contacts || [];
@@ -26,6 +26,7 @@ export function useSiteFormBillingContacts(
         ...prev,
         billingDetails: {
           ...prevBillingDetails,
+          billingLines: prevBillingDetails.billingLines || [],
           contacts: [...prevContacts, newContact]
         }
       };
@@ -43,6 +44,7 @@ export function useSiteFormBillingContacts(
         ...prev,
         billingDetails: {
           ...prevBillingDetails,
+          billingLines: prevBillingDetails.billingLines || [],
           contacts: prevContacts.map(contact => 
             contact.id === contactId ? { ...contact, ...updatedContact } : contact
           )
@@ -62,6 +64,7 @@ export function useSiteFormBillingContacts(
         ...prev,
         billingDetails: {
           ...prevBillingDetails,
+          billingLines: prevBillingDetails.billingLines || [],
           contacts: prevContacts.filter(contact => contact.id !== contactId)
         }
       };

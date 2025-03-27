@@ -1,39 +1,32 @@
 
 import { Json } from '@/types/common';
 
-/**
- * Extract contract details from a JSON object with proper type casting
- */
-export function getContractDetail<T extends keyof any>(contractDetails: Json | null | undefined, field: T): any {
-  if (!contractDetails) {
-    return undefined;
-  }
+export function parseContractData(data: string | Json | null): any {
+  if (!data) return null;
   
-  if (typeof contractDetails === 'object' && !Array.isArray(contractDetails)) {
-    // @ts-ignore - This is a safe access with proper null checking
-    return contractDetails[field];
+  try {
+    if (typeof data === 'string') {
+      return JSON.parse(data);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error parsing contract data:', error);
+    return null;
   }
+}
+
+export function formatContractData(data: any): Json {
+  if (!data) return null;
   
-  return undefined;
-}
-
-/**
- * Get contract start date string
- */
-export function getContractStartDate(contractDetails: Json | null | undefined): string | undefined {
-  return getContractDetail(contractDetails, 'startDate');
-}
-
-/**
- * Get contract end date string
- */
-export function getContractEndDate(contractDetails: Json | null | undefined): string | undefined {
-  return getContractDetail(contractDetails, 'endDate');
-}
-
-/**
- * Get contract type
- */
-export function getContractType(contractDetails: Json | null | undefined): string | undefined {
-  return getContractDetail(contractDetails, 'contractType');
+  try {
+    if (typeof data === 'string') {
+      return JSON.parse(data) as Json;
+    }
+    
+    return data as Json;
+  } catch (error) {
+    console.error('Error formatting contract data:', error);
+    return null;
+  }
 }

@@ -80,8 +80,8 @@ export function ShiftScheduler({ onAddShift, existingShifts = [] }: ShiftSchedul
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="casual">Casual</SelectItem>
-              <SelectItem value="part-time">Part Time</SelectItem>
-              <SelectItem value="full-time">Full Time</SelectItem>
+              <SelectItem value="part_time">Part Time</SelectItem>
+              <SelectItem value="full_time">Full Time</SelectItem>
             </SelectContent>
           </Select>
         </div>
