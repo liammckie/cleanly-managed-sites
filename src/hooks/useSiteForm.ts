@@ -44,13 +44,13 @@ export const useSiteForm = ({ initialFormData, onSubmitSuccess }: UseSiteFormPro
   // Handle changes in nested objects
   const handleNestedChange = useCallback((section: keyof SiteFormData, field: string, value: any) => {
     setFormData(prev => {
-      // Safely create updated section object without using spread on undefined/null
-      const currentSection = prev[section] || {};
-      const updatedSection = { ...currentSection, [field]: value };
-      
+      const currentSection = prev[section] || {} as any;
       return {
         ...prev,
-        [section]: updatedSection
+        [section]: {
+          ...currentSection,
+          [field]: value
+        }
       };
     });
     
@@ -73,16 +73,17 @@ export const useSiteForm = ({ initialFormData, onSubmitSuccess }: UseSiteFormPro
     value: any
   ) => {
     setFormData(prev => {
-      // Safely create updated nested structure without using spread on undefined/null
-      const currentSection = prev[section] || {};
-      const currentSubsection = currentSection[subsection] || {};
-      const updatedSubsection = { ...currentSubsection, [field]: value };
+      const currentSection = prev[section] || {} as any;
+      const currentSubsection = currentSection[subsection] || {} as any;
       
       return {
         ...prev,
         [section]: {
           ...currentSection,
-          [subsection]: updatedSubsection
+          [subsection]: {
+            ...currentSubsection,
+            [field]: value
+          }
         }
       };
     });
@@ -125,7 +126,7 @@ export const useSiteForm = ({ initialFormData, onSubmitSuccess }: UseSiteFormPro
       email: siteData.email || '',
       representative: siteData.representative || '',
       customId: siteData.custom_id || '',
-      // Map other properties as needed
+      contacts: siteData.contacts || [],
       
       // Complex objects
       contract_details: siteData.contract_details || {},

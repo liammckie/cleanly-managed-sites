@@ -2,12 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { SiteFormData } from '../types/siteFormData';
-import { SiteRecord } from '@/lib/types';
-import { useSiteFormData } from './useSiteFormData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SiteFormStepper } from '../SiteFormStepper';
 import { BasicInformationStep } from '../steps/BasicInformationStep';
 import { ContactsStep } from '../steps/contacts/ContactsStep';
 import { BillingDetailsStepWrapper } from '../steps/BillingDetailsStepWrapper';
@@ -21,6 +18,7 @@ import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
 import { useSiteFormContractTerms } from '@/hooks/useSiteFormContractTerms';
 import { useSiteFormAdditionalContracts } from '@/hooks/useSiteFormAdditionalContracts';
 import { Loader2 } from 'lucide-react';
+import { SiteStatus } from '@/types/common';
 
 // Define the props interface for EditSiteForm
 export interface EditSiteFormProps {
@@ -36,15 +34,21 @@ export function EditSiteForm({
   isLoading, 
   onSubmit 
 }: EditSiteFormProps) {
-  const [formData, setFormData] = useState<SiteFormData>(initialData as SiteFormData);
+  const [formData, setFormData] = useState<SiteFormData>(initialData || {} as SiteFormData);
   const [activeTab, setActiveTab] = useState('basic-info');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
   const form = useForm<SiteFormData>({
     defaultValues: initialData || {}
   });
   
-  // Use the site form data hook to prepare data
-  useSiteFormData(initialData || {}, formData, setFormData, form);
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
   
   // Use billing lines hook
   const { 
@@ -81,19 +85,28 @@ export function EditSiteForm({
   };
   
   // Handle field changes
-  const handleChange = (field: keyof SiteFormData, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [field]: value
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handle status changes
+  const handleStatusChange = (status: SiteStatus) => {
+    setFormData(prev => ({
+      ...prev,
+      status
     }));
   };
   
   // Handle nested field changes
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
-    setFormData(prevData => {
-      const currentSection = prevData[section] || {};
+    setFormData(prev => {
+      const currentSection = prev[section] || {};
       return {
-        ...prevData,
+        ...prev,
         [section]: {
           ...currentSection,
           [field]: value
@@ -109,12 +122,12 @@ export function EditSiteForm({
     field: string, 
     value: any
   ) => {
-    setFormData(prevData => {
-      const currentSection = prevData[section] || {};
+    setFormData(prev => {
+      const currentSection = prev[section] || {};
       const currentSubsection = currentSection[subsection] || {};
       
       return {
-        ...prevData,
+        ...prev,
         [section]: {
           ...currentSection,
           [subsection]: {
@@ -128,14 +141,10 @@ export function EditSiteForm({
   
   // Handle client selection
   const handleClientChange = (clientId: string) => {
-    handleChange('client_id', clientId);
-    // Additional logic to fetch client data could go here
-  };
-  
-  // Create an adapter function for input events
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    handleChange(name as keyof SiteFormData, value);
+    setFormData(prev => ({
+      ...prev,
+      client_id: clientId
+    }));
   };
   
   return (
@@ -161,15 +170,18 @@ export function EditSiteForm({
             <TabsContent value="basic-info">
               <BasicInformationStep 
                 formData={formData} 
-                handleChange={handleInputChange} 
+                handleChange={handleChange}
                 handleClientChange={handleClientChange}
+                handleStatusChange={handleStatusChange}
+                setFormData={setFormData}
+                errors={errors}
               />
             </TabsContent>
             
             <TabsContent value="contacts">
               <ContactsStep 
                 formData={formData} 
-                errors={{}}
+                errors={errors}
                 handleContactChange={() => {}}
                 addContact={() => {}}
                 removeContact={() => {}}
@@ -215,10 +227,10 @@ export function EditSiteForm({
             <TabsContent value="subcontractors">
               <SubcontractorsStep 
                 subcontractors={formData.subcontractors || []} 
-                hasSubcontractors={formData.hasSubcontractors || false}
                 handleAddSubcontractor={() => {}}
                 handleUpdateSubcontractor={() => {}}
                 handleRemoveSubcontractor={() => {}}
+                hasSubcontractors={formData.hasSubcontractors || false}
               />
             </TabsContent>
             

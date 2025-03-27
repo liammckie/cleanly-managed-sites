@@ -1,46 +1,46 @@
 
-// Common type definitions for the application
+// Define common types used across the application
 
-// Site status types
-export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
+export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold' | 'lost';
 
-// Day of the week types for scheduling
-export type Day = 
-  | 'monday' 
-  | 'tuesday' 
-  | 'wednesday' 
-  | 'thursday' 
-  | 'friday' 
-  | 'saturday' 
-  | 'sunday'
-  | 'weekday'
-  | 'public_holiday';
+export type ClientStatus = 'active' | 'inactive' | 'prospect' | 'pending';
 
-// Additional compatible day type for components
-export type UnifiedDay = Day;
+export type UserStatus = 'active' | 'pending' | 'inactive';
 
-// Employment types
-export type EmploymentType = 'casual' | 'part-time' | 'full-time';
+export type ContractorStatus = 'active' | 'inactive' | 'pending';
 
-// Employee level types
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+export type WorkOrderStatus = 
+  | 'draft'
+  | 'pending'
+  | 'in-progress'
+  | 'completed' 
+  | 'cancelled'
+  | 'on-hold';
 
-// Frequency types for billing/scheduling
-export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'one-time';
+export type WorkOrderPriority = 'low' | 'medium' | 'high' | 'urgent';
 
-// Quote status types
-export type QuoteStatus = 
-  | 'draft' 
-  | 'sent' 
-  | 'approved' 
-  | 'accepted' 
-  | 'rejected' 
-  | 'expired' 
-  | 'pending';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
 
-// JSON type for type safety
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-export type JsonValue = Json;
+export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
-// For backward compatibility
-export type BillingFrequency = Frequency;
+export type InvoiceFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
+
+export type ContractLengthUnit = 'days' | 'weeks' | 'months' | 'years';
+
+// Define validation types
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+// Define validation message type to match what's used in import-export
+export interface ValidationMessage {
+  field: string;
+  message: string;
+}
+
+// Enhanced validation result type to work with the existing code
+export interface EnhancedValidationResult {
+  isValid: boolean;
+  errors: ValidationMessage[];
+}

@@ -12,8 +12,7 @@ export function adaptDbToQuote(dbQuote: any): Partial<Quote> {
     
     // Financial data
     laborCost: dbQuote.labor_cost || 0,
-    supplies_cost: dbQuote.supplies_cost || 0,
-    equipment_cost: dbQuote.equipment_cost || 0,
+    equipmentCost: dbQuote.equipment_cost || 0,
     subcontractorCost: dbQuote.subcontractor_cost || 0,
     overheadCost: dbQuote.overhead_cost || 0,
     overheadPercentage: dbQuote.overhead_percentage || 15,

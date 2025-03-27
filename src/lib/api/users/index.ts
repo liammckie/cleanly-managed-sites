@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
-import { SystemUser, UserRoleWithCount } from '@/lib/types';
+import { SystemUser, UserRoleWithCount } from '@/types/users';
 
 /**
  * Fetch all user profiles
@@ -17,7 +17,8 @@ export async function getAllUsers(): Promise<SystemUser[]> {
     
     return (data || []).map(user => ({
       ...user,
-      notes: user.notes || '' // Ensure notes property exists
+      notes: user.notes || '', // Ensure notes property exists
+      status: user.status as SystemUser['status'] // Cast to ensure type safety
     }));
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -46,7 +47,8 @@ export async function getUserById(id: string): Promise<SystemUser | null> {
     
     return {
       ...data,
-      notes: data.notes || '' // Ensure notes property exists
+      notes: data.notes || '', // Ensure notes property exists
+      status: data.status as SystemUser['status'] // Cast to ensure type safety
     };
   } catch (error) {
     console.error(`Error fetching user ${id}:`, error);
@@ -60,10 +62,7 @@ export async function getUserById(id: string): Promise<SystemUser | null> {
 export async function updateUser(id: string, userData: Partial<SystemUser>): Promise<{success: boolean, error?: PostgrestError}> {
   try {
     // Ensure we're using the correct field name
-    if (userData.hasOwnProperty('note')) {
-      userData.notes = userData.note;
-      delete userData.note;
-    }
+    // No need to convert note to notes since we changed the type
     
     const { error } = await supabase
       .from('user_profiles')
@@ -87,17 +86,16 @@ export async function updateUser(id: string, userData: Partial<SystemUser>): Pro
  */
 export async function createUsers(usersData: Partial<SystemUser>[]): Promise<{success: boolean, data?: any[], error?: PostgrestError}> {
   try {
-    // Ensure each user has an ID and convert note to notes
+    // Ensure each user has an ID
     const preparedUsers = usersData.map(user => {
       // Add required properties for each user
       const preparedUser = {
         id: crypto.randomUUID(),
         ...user,
-        notes: user.note || user.notes || '',
-        full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim()
+        notes: user.notes || '',
+        full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        email: user.email || ''  // Ensure email exists
       };
-      // Remove invalid 'note' property if it exists
-      delete preparedUser.note;
       return preparedUser;
     });
     
@@ -178,7 +176,10 @@ export async function getUserRoles(): Promise<UserRoleWithCount[]> {
     // Convert data to UserRoleWithCount
     return (data || []).map(role => ({
       ...role,
-      user_count: roleCounts[role.id] || 0
+      user_count: roleCounts[role.id] || 0,
+      permissions: typeof role.permissions === 'string' 
+        ? JSON.parse(role.permissions) 
+        : (Array.isArray(role.permissions) ? role.permissions : [])
     }));
   } catch (error) {
     console.error('Error fetching user roles:', error);

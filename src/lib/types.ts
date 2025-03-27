@@ -153,8 +153,8 @@ export interface ContractorRecord {
   postcode?: string;
   abn?: string;
   tax_id?: string;
-  insurance_details?: Json;
-  payment_details?: Json;
+  insurance_details?: any;
+  payment_details?: any;
   services?: string[];
   notes?: string;
   status?: 'active' | 'inactive' | 'pending';
@@ -166,6 +166,7 @@ export interface ContractorRecord {
   day_rate?: number;
   specialty?: string[];
   rating?: number;
+  custom_id?: string;
 }
 
 export interface ContractorVersionHistoryEntry {

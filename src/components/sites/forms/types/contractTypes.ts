@@ -1,21 +1,19 @@
 
 export interface ContractTerm {
-  id?: string;
-  title?: string;
-  content?: string;
-  name?: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
-  autoRenew?: boolean;
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+  autoRenew: boolean;
 }
 
 export interface ContractDetails {
-  id?: string;
   startDate?: string;
   endDate?: string;
+  contractNumber?: string;
   contractLength?: number;
   contractLengthUnit?: string;
   autoRenewal?: boolean;
@@ -24,13 +22,9 @@ export interface ContractDetails {
   noticeUnit?: string;
   serviceFrequency?: string;
   serviceDeliveryMethod?: string;
-  contractNumber?: string;
   renewalTerms?: string;
   terminationPeriod?: string;
   contractType?: string;
-  value?: number;
-  billingCycle?: string;
-  notes?: string;
   terms?: ContractTerm[];
 }
 
@@ -42,19 +36,9 @@ export interface ContractHistoryEntry {
   notes: string;
   created_by: string;
   created_at: string;
-  date: string;
-  user: string;
-  changes: any;
   contractor_id?: any;
-}
-
-export interface ContractForecast {
-  id: string;
-  startDate: string;
-  endDate: string;
-  value: number;
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
+  // Add compatibility with the format expected elsewhere in the app
+  date?: string;
+  user?: string;
+  changes?: any;
 }

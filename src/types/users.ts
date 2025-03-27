@@ -12,7 +12,7 @@ export interface SystemUser {
   title?: string;
   phone?: string;
   custom_id?: string;
-  note?: string;   // Singular form as per the error message
+  notes?: string;   // Changed from note to notes to match database field
   territories?: string[];
   status: UserStatus;
   role_id?: string;
