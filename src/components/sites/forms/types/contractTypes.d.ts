@@ -37,6 +37,18 @@ export interface ContractDetails {
   billingCycle?: string;
   notes?: string;
   id?: string; // Used in additionalContractsApi
+  
+  // Additional properties for contract details step
+  type?: string;
+  status?: string;
+  reviewDate?: string;
+  noticePeriodDays?: number;
+  nextIncreaseDate?: string;
+  specialTerms?: string;
+  terminationClause?: string;
+  annualValue?: number;
+  renewalNoticeDays?: number;
+  renewalLengthMonths?: number;
 }
 
 export interface ContractHistoryEntry {
@@ -55,4 +67,3 @@ export interface ContractForecast {
   cost: number;
   profit: number;
 }
-

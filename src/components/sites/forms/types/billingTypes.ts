@@ -35,6 +35,12 @@ export interface BillingDetails {
   billingAddress: BillingAddress;
   useClientInfo: boolean;
   
+  // For backward compatibility and form fields
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  billingEmail?: string;
+  
   // Billing method and contacts
   billingMethod: string;
   paymentTerms: string;
@@ -45,6 +51,13 @@ export interface BillingDetails {
   invoiceFrequency: string;
   invoiceDay?: string;
   invoiceEmail: string;
+  
+  // Invoice address fields
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
   
   // Purchase order
   purchaseOrderRequired: boolean;
@@ -64,15 +77,19 @@ export interface BillingDetails {
   // Service delivery
   serviceType?: string;
   deliveryMethod?: string;
+  serviceDeliveryType?: string;
   
   // Contractor payment info
   weeklyContractorCost?: number;
   monthlyContractorCost?: number;
+  annualContractorCost?: number;
   contractorInvoiceFrequency?: string;
+  contractorCostFrequency?: string;
   
   // Additional fields for BillingDetailsSummary
   rate?: string;
   billingFrequency?: string;
+  invoiceMethod?: string;
   
   // Additional fields used in other components
   accountNumber?: string;

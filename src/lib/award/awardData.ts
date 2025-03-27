@@ -1,110 +1,74 @@
 
-import { AwardData, AwardSettings, EmployeeLevel, EmployeeLevelRates, PayCondition, RateDefinition } from './types';
+import { AwardData, AwardSettings, EmployeeLevelRates, PayCondition, RateDefinition } from './types';
 
-// Define condition rates with the updated RateDefinition interface
-const conditionRates: Record<PayCondition, RateDefinition> = {
-  'base': { id: 'base', percentage: 100, description: 'Base Rate' },
-  'standard': { id: 'standard', percentage: 100, description: 'Standard Rate' },
-  'weekday': { id: 'weekday', percentage: 100, description: 'Weekday Rate' },
-  'monday': { id: 'monday', percentage: 100, description: 'Monday Rate' },
-  'tuesday': { id: 'tuesday', percentage: 100, description: 'Tuesday Rate' },
-  'wednesday': { id: 'wednesday', percentage: 100, description: 'Wednesday Rate' },
-  'thursday': { id: 'thursday', percentage: 100, description: 'Thursday Rate' },
-  'friday': { id: 'friday', percentage: 100, description: 'Friday Rate' },
-  'shift-early-late': { id: 'shift-early-late', percentage: 110, description: 'Early/Late Shift' },
-  'saturday': { id: 'saturday', percentage: 125, description: 'Saturday Rate' },
-  'sunday': { id: 'sunday', percentage: 150, description: 'Sunday Rate' },
-  'public_holiday': { id: 'public_holiday', percentage: 200, description: 'Public Holiday Rate' },
-  'early_morning': { id: 'early_morning', percentage: 115, description: 'Early Morning Rate' },
-  'evening': { id: 'evening', percentage: 115, description: 'Evening Rate' },
-  'night': { id: 'night', percentage: 130, description: 'Night Rate' },
-  'overnight': { id: 'overnight', percentage: 130, description: 'Overnight Rate' },
-  'overtime-first-2-hours': { id: 'overtime-first-2-hours', percentage: 150, description: 'Overtime (First 2 Hours)' },
-  'overtime-after-2-hours': { id: 'overtime-after-2-hours', percentage: 200, description: 'Overtime (After 2 Hours)' },
-  'overtime-sunday': { id: 'overtime-sunday', percentage: 200, description: 'Overtime (Sunday)' },
-  'overtime-public-holiday': { id: 'overtime-public-holiday', percentage: 250, description: 'Overtime (Public Holiday)' }
+export const cleaningServicesRates: RateDefinition[] = [
+  { id: 'standard', dayType: 'all', multiplier: 1.0, percentage: 0, description: 'Standard Rate' },
+  { id: 'saturday', dayType: 'saturday', multiplier: 1.5, percentage: 50, description: 'Saturday Rate' },
+  { id: 'sunday', dayType: 'sunday', multiplier: 2.0, percentage: 100, description: 'Sunday Rate' },
+  { id: 'publicHoliday', dayType: 'public_holiday', multiplier: 2.5, percentage: 150, description: 'Public Holiday Rate' },
+  { id: 'overtime1', dayType: 'all', multiplier: 1.5, percentage: 50, description: 'Overtime (first 2 hours)' },
+  { id: 'overtime2', dayType: 'all', multiplier: 2.0, percentage: 100, description: 'Overtime (after 2 hours)' },
+  { id: 'earlyMorning', dayType: 'all', multiplier: 1.15, percentage: 15, description: 'Early Morning (before 6:00 AM)' },
+  { id: 'evening', dayType: 'all', multiplier: 1.15, percentage: 15, description: 'Evening (after 6:00 PM)' }
+];
+
+export const defaultBaseRates = {
+  1: 25.41, // Level 1
+  2: 26.73, // Level 2
+  3: 28.08, // Level 3
+  4: 29.61, // Level 4
+  5: 30.93, // Level 5
 };
 
-// Define level rates - only include valid EmployeeLevel values (1-5)
-const levelRates: Record<EmployeeLevel, number> = {
-  1: 22.04,
-  2: 23.28,
-  3: 24.54,
-  4: 25.80,
-  5: 27.15
+export const defaultEmployeeLevelRates: EmployeeLevelRates = {
+  level1: 25.41,
+  level2: 26.73,
+  level3: 28.08,
+  level4: 29.61,
+  level5: 30.93,
+  loading: 25, // Default casual loading percentage
 };
 
-// Define employee level rates with the EmployeeLevelRates interface
-const employeeLevelRates: Record<EmployeeLevel, EmployeeLevelRates> = {
-  1: {
-    base: 22.04,
-    fullTime: 22.04,
-    partTime: 22.04,
-    casual: 27.55
-  },
-  2: {
-    base: 23.28,
-    fullTime: 23.28,
-    partTime: 23.28,
-    casual: 29.10
-  },
-  3: {
-    base: 24.54,
-    fullTime: 24.54,
-    partTime: 24.54,
-    casual: 30.68
-  },
-  4: {
-    base: 25.80,
-    fullTime: 25.80,
-    partTime: 25.80,
-    casual: 32.25
-  },
-  5: {
-    base: 27.15,
-    fullTime: 27.15,
-    partTime: 27.15,
-    casual: 33.94
-  }
+export const defaultAllowances = {
+  meal: { amount: 15.94, unit: 'per shift' },
+  travel: { amount: 0.78, unit: 'per km' },
+  uniform: { amount: 1.20, unit: 'per day' },
+  laundry: { amount: 0.30, unit: 'per day' },
+  other: { amount: 0.00, unit: 'custom' }
 };
 
-// Award settings with additional properties
-const settings: AwardSettings = {
-  minimumShiftHours: 3,
-  casualMinimumHours: 2,
-  dailyMaxHours: 10,
-  weeklyMaxHours: 38,
-  breakThresholdHours: 5,
+export const defaultAwardSettings: AwardSettings = {
   allowances: {
-    meal: 12.97,
-    travel: 0.90,
-    laundry: 1.23,
-    uniform: 3.55,
-    firstAid: 9.30
+    meal: 15.94,
+    travel: 0.78,
+    uniform: 1.20,
+    laundry: 0.30,
+    other: 0.00
   },
   usePenalties: true,
+  minimumShiftHours: 3,
+  casualMinimumHours: 3,
+  dailyMaxHours: 12,
+  weeklyMaxHours: 38,
+  breakThresholdHours: 5,
   baseRateMultiplier: 1.0,
   overheadPercentageDefault: 15,
   marginPercentageDefault: 20
 };
 
-// Penalties with the proper RateDefinition interface
-const penalties: RateDefinition[] = [
-  { id: 'p1', percentage: 125, description: 'Saturday', dayType: 'saturday' },
-  { id: 'p2', percentage: 150, description: 'Sunday', dayType: 'sunday' },
-  { id: 'p3', percentage: 250, description: 'Public Holiday', dayType: 'public_holiday' }
-];
-
-// Final award data export
-export const awardData: AwardData = {
-  levels: levelRates,
-  penalties: penalties,
-  employeeLevelRates: employeeLevelRates,
-  conditionRates: conditionRates,
-  settings: settings
+export const cleaningServicesAward: AwardData = {
+  settings: defaultAwardSettings,
+  baseRates: defaultBaseRates,
+  casualLoading: 25,
+  employeeLevelRates: defaultEmployeeLevelRates,
+  conditionRates: {
+    standard: cleaningServicesRates[0],
+    saturday: cleaningServicesRates[1],
+    sunday: cleaningServicesRates[2],
+    public_holiday: cleaningServicesRates[3],
+    overtime: cleaningServicesRates[4],
+    earlyMorning: cleaningServicesRates[6],
+    evening: cleaningServicesRates[7]
+  },
+  rates: cleaningServicesRates
 };
-
-// Export a convenience function to get current award data
-export function getAwardData(): AwardData {
-  return awardData;
-}

@@ -15,6 +15,7 @@ export interface ClientSelectorProps {
   clientId: string;
   onClientChange: (clientId: string) => void;
   error?: string;
+  // Add optional backward compatibility properties
   selectedClientId?: string;
   onClientSelect?: (clientId: string) => void;
 }
@@ -26,7 +27,7 @@ export function ClientSelector({
   selectedClientId,
   onClientSelect
 }: ClientSelectorProps) {
-  const { data: clients, isLoading } = useClients();
+  const { clients = [], isLoading } = useClients();
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   

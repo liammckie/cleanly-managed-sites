@@ -19,6 +19,7 @@ export function parseJson<T>(jsonString: string | null | undefined): T | null {
 
 /**
  * Safely converts a JSON object to a specific type
+ * Returns the JSON object cast to type T if it's a non-null object, or a default empty object
  */
 export function convertJsonToType<T>(jsonData: Json): T {
   if (typeof jsonData === 'object' && jsonData !== null) {
@@ -43,7 +44,7 @@ export function jsonToString(json: Json | null | undefined): string {
 }
 
 /**
- * Safely access a property from a JSON object
+ * Safely access a property from a JSON object with a default value
  */
 export function getJsonProperty<T>(json: Json | null | undefined, key: string, defaultValue: T): T {
   if (!json || typeof json !== 'object' || json === null || Array.isArray(json)) {
@@ -54,4 +55,33 @@ export function getJsonProperty<T>(json: Json | null | undefined, key: string, d
   return (key in typedJson && typedJson[key] !== undefined && typedJson[key] !== null)
     ? typedJson[key] as T
     : defaultValue;
+}
+
+/**
+ * Convert JSON to a typed object with defaultValues for missing properties
+ */
+export function asJsonObject<T>(json: Json | null | undefined, defaultValues: T): T {
+  if (!json) return defaultValues;
+  if (typeof json === 'string') {
+    try {
+      json = JSON.parse(json);
+    } catch (e) {
+      return defaultValues;
+    }
+  }
+  if (typeof json !== 'object' || json === null) return defaultValues;
+  
+  return { ...defaultValues, ...json as Object } as T;
+}
+
+/**
+ * Safe JSON stringify with error handling
+ */
+export function safeJsonStringify(value: any): string {
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    console.error('Error stringifying value:', error);
+    return '';
+  }
 }

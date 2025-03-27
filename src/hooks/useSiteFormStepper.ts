@@ -1,120 +1,94 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { validateBasicInfo } from '@/components/sites/forms/types/validationUtils';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
-export type FormStep = 
-  | 'basic-info'
-  | 'contacts'
-  | 'contract-details'
-  | 'security-details'
-  | 'billing-details'
-  | 'subcontractors'
-  | 'periodicals'
-  | 'replenishables'
-  | 'review';
-
-export interface UseSiteFormStepperProps {
-  initialStep?: FormStep;
-  initialFormData: SiteFormData; // Required prop for validation
-  onValidateStep?: (step: FormStep, formData: SiteFormData) => boolean;
+export interface StepperState {
+  currentStep: number;
+  totalSteps: number;
+  canGoNext: boolean;
+  canGoPrevious: boolean;
+  completedSteps: number[];
+  goToNextStep: () => void;
+  goToPreviousStep: () => void;
+  goToStep: (step: number) => void;
+  setCompletedStep: (step: number) => void;
+  completionPercentage: number;
 }
 
-export function useSiteFormStepper({
-  initialStep = 'basic-info',
-  initialFormData,
-  onValidateStep
-}: UseSiteFormStepperProps) {
-  const [currentStep, setCurrentStep] = useState<FormStep>(initialStep);
-  const [completedSteps, setCompletedSteps] = useState<Set<FormStep>>(new Set());
+// Validation functions for each step
+const stepValidations = {
+  0: (formData: SiteFormData) => validateBasicInfo(formData),
+  1: (formData: SiteFormData) => true, // Contacts
+  2: (formData: SiteFormData) => true, // Contract
+  3: (formData: SiteFormData) => true, // Billing
+  4: (formData: SiteFormData) => true, // Additional
+  5: (formData: SiteFormData) => true, // Review
+};
+
+export const useSiteFormStepper = (initialStep = 0, totalSteps = 6, formData: SiteFormData) => {
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
-  const steps: FormStep[] = [
-    'basic-info',
-    'contacts',
-    'contract-details',
-    'security-details',
-    'billing-details',
-    'subcontractors',
-    'periodicals',
-    'replenishables',
-    'review'
-  ];
-  
-  const validateCurrentStep = (formData: SiteFormData) => {
-    if (onValidateStep) {
-      return onValidateStep(currentStep, formData);
+  const validateStep = (step: number) => {
+    if (step in stepValidations) {
+      return stepValidations[step as keyof typeof stepValidations](formData);
     }
     return true;
   };
   
-  const goToNextStep = (formData: SiteFormData) => {
-    const isValid = validateCurrentStep(formData);
-    
-    if (!isValid) {
-      toast.error('Please complete all required fields before continuing.');
-      return false;
+  const goToNextStep = () => {
+    if (currentStep < totalSteps - 1) {
+      if (validateStep(currentStep)) {
+        setCompletedSteps(prev => {
+          if (!prev.includes(currentStep)) {
+            return [...prev, currentStep];
+          }
+          return prev;
+        });
+        setCurrentStep(prev => prev + 1);
+      }
     }
-    
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex < steps.length - 1) {
-      const nextStep = steps[currentIndex + 1];
-      setCurrentStep(nextStep);
+  };
+  
+  const goToPreviousStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+  
+  const goToStep = (step: number) => {
+    if (step >= 0 && step < totalSteps) {
+      setCurrentStep(step);
+    }
+  };
+  
+  const setCompletedStep = (step: number) => {
+    if (step >= 0 && step < totalSteps) {
       setCompletedSteps(prev => {
-        const updated = new Set(prev);
-        updated.add(currentStep);
-        return updated;
+        if (!prev.includes(step)) {
+          return [...prev, step];
+        }
+        return prev;
       });
-      return true;
     }
-    
-    return false;
   };
   
-  const goToPreviousStep = (formData: SiteFormData) => {
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1]);
-      return true;
-    }
-    return false;
+  const getCompletionPercentage = () => {
+    return (completedSteps.length / totalSteps) * 100;
   };
-  
-  const goToStep = (step: FormStep, formData: SiteFormData) => {
-    const isValid = validateCurrentStep(formData);
-    
-    if (!isValid && steps.indexOf(step) > steps.indexOf(currentStep)) {
-      toast.error('Please complete all required fields before skipping ahead.');
-      return false;
-    }
-    
-    setCurrentStep(step);
-    return true;
-  };
-  
-  const isStepCompleted = (step: FormStep) => {
-    return completedSteps.has(step);
-  };
-  
-  const markStepComplete = (step: FormStep) => {
-    setCompletedSteps(prev => {
-      const updated = new Set(prev);
-      updated.add(step);
-      return updated;
-    });
-  };
-  
-  const isFirstStep = currentStep === steps[0];
-  const isLastStep = currentStep === steps[steps.length - 1];
   
   return {
     currentStep,
-    steps,
-    isFirstStep,
-    isLastStep,
+    totalSteps,
+    canGoNext: currentStep < totalSteps - 1,
+    canGoPrevious: currentStep > 0,
+    completedSteps,
     goToNextStep,
     goToPreviousStep,
     goToStep,
-    isStepCompleted,
-    markStepComplete
+    setCompletedStep,
+    completionPercentage: getCompletionPercentage(),
+    validateStep,
   };
-}
+};
