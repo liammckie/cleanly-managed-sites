@@ -88,6 +88,9 @@ export const cleaningServicesAward: AwardData = {
   }
 };
 
+// Export the award data under both names for compatibility
+export const awardData = cleaningServicesAward;
+
 export const defaultAwardSettings: AwardSettings = {
   usePenalties: true,
   minimumShiftHours: 4,

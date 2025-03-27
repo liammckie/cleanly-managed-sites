@@ -6,16 +6,15 @@ import { PayCondition } from '@/lib/award/types';
 
 const payConditionLabels: Record<string, string> = {
   base: 'Base Rate',
-  overtime_1_5: 'Overtime (1.5x)',
-  overtime_2: 'Overtime (2x)',
   saturday: 'Saturday',
   sunday: 'Sunday',
-  public_holiday: 'Public Holiday',
-  early_morning: 'Early Morning',
+  publicHoliday: 'Public Holiday',
+  earlyMorning: 'Early Morning',
   evening: 'Evening',
-  night: 'Night Shift',
-  shift_allowance: 'Shift Allowance',
-  meal_allowance: 'Meal Allowance'
+  overnight: 'Night Shift',
+  overtime1: 'Overtime (1.5x)',
+  overtime2: 'Overtime (2x)',
+  overtime3: 'Overtime (Public Holiday)',
 };
 
 export function AwardRatesTable() {
@@ -46,8 +45,8 @@ export function AwardRatesTable() {
                 <TableCell className="font-medium">{payConditionLabels[condition]}</TableCell>
                 
                 {levels.map(level => {
-                  const baseRate = levelRates[level].base;
-                  const multiplier = rateDefinition.percentage / 100;
+                  const baseRate = levelRates[level];
+                  const multiplier = rateDefinition;
                   const rate = baseRate * multiplier;
                   
                   return (
@@ -57,7 +56,7 @@ export function AwardRatesTable() {
                   );
                 })}
                 
-                <TableCell>{(rateDefinition.percentage / 100).toFixed(2)}x</TableCell>
+                <TableCell>{rateDefinition.toFixed(2)}x</TableCell>
               </TableRow>
             );
           })}

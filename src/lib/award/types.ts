@@ -1,6 +1,8 @@
 
 import { Day, EmploymentType, EmployeeLevel } from '@/types/common';
 
+export { Day, EmploymentType, EmployeeLevel };
+
 export type PayCondition = 
   | 'base'
   | 'saturday'
@@ -80,6 +82,8 @@ export interface CostCalculationResult {
   breakdownByDay: Record<string, number>;
   byTimeOfDay: Record<string, number>;
 }
+
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once';
 
 export interface QuoteShift {
   id: string;
