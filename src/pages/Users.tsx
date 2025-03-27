@@ -1,136 +1,115 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsers } from '@/hooks/useUsers';
-import { NewUserDialog } from '@/components/users/NewUserDialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { UserRoleBadge } from '@/components/users/UserRoleBadge';
-import { StatusBadge } from '@/components/users/StatusBadge';
-import { formatDistanceToNow } from 'date-fns';
+import { DashboardLayout } from '@/components/ui/layout/DashboardLayout';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { NewUserDialog } from '@/components/users/NewUserDialog';
+import { UserTable } from '@/components/users/UserTable';
+import { UserRole } from '@/lib/types';
 
-export default function Users() {
-  const { users, isLoading, isError, error } = useUsers();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isNewUserDialogOpen, setIsNewUserDialogOpen] = useState(false);
+const Users = () => {
+  const { users, isLoading, error } = useUsers();
   const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string | UserRole | null>(null);
   
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading users...</div>;
-  }
-  
-  if (isError) {
-    return <div className="text-red-500">Error: {error.message}</div>;
-  }
-  
-  const filteredUsers = Array.isArray(users) 
-    ? users.filter(user => 
-        searchTerm === '' || 
-        user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  // Extract unique roles from users
+  const uniqueRoles = users && users.length > 0
+    ? Array.from(new Set(users.map(user => 
+        user.role?.name || 'No Role'
+      )))
     : [];
-  
-  const getInitials = (name: string) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-  
+
+  // Filter users based on search term and role filter
+  const filteredUsers = users && users.length > 0
+    ? users.filter(user => {
+        // Search filter
+        const matchesSearch = searchTerm === '' || 
+          (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.role?.name && user.role.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        // Role filter
+        const matchesRole = !roleFilter || 
+          (typeof roleFilter === 'string' 
+            ? user.role?.name === roleFilter 
+            : user.role?.id === roleFilter.id);
+        
+        return matchesSearch && matchesRole;
+      })
+    : [];
+
   return (
-    <div className="container py-6">
-      <PageHeader 
-        title="Users" 
-        description="Manage your system users and permissions"
-        action={
-          <Button onClick={() => setIsNewUserDialogOpen(true)}>
-            Add User
+    <DashboardLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Users</h1>
+          
+          <Button onClick={() => setIsDialogOpen(true)}>
+            Add New User
           </Button>
-        }
-      />
-      
-      <div className="mt-6 mb-4">
-        <Input
-          placeholder="Search users..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="max-w-md"
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredUsers.map(user => (
-          <Card 
-            key={user.id} 
-            className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate(`/users/${user.id}`)}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  <Avatar>
-                    <AvatarImage src={user.avatar_url || ''} alt={user.full_name} />
-                    <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{user.full_name}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
-                  </div>
-                </div>
-                <StatusBadge status={user.status} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Role</span>
-                  <UserRoleBadge role={user.role} />
-                </div>
-                
-                {user.title && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Title</span>
-                    <span className="text-sm">{user.title}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Last active</span>
-                  <span className="text-sm">
-                    {user.last_login ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
-                  </span>
-                </div>
-                
-                {user.territories && user.territories.length > 0 && (
-                  <div>
-                    <span className="text-sm text-muted-foreground block mb-1">Territories</span>
-                    <div className="flex flex-wrap gap-1">
-                      {user.territories.map(territory => (
-                        <Badge key={territory} variant="outline">
-                          {territory}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      {filteredUsers.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          No users found
         </div>
-      )}
+        
+        <div className="bg-card rounded-lg shadow mb-6">
+          <div className="p-4 border-b">
+            <h2 className="text-lg font-medium">Filters</h2>
+          </div>
+          
+          <div className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-1">Search</label>
+                <Input
+                  placeholder="Search by name or email"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="w-full md:w-1/4">
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select 
+                  className="w-full p-2 border rounded"
+                  value={typeof roleFilter === 'string' ? roleFilter : ''}
+                  onChange={(e) => setRoleFilter(e.target.value || null)}
+                >
+                  <option value="">All Roles</option>
+                  {uniqueRoles.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : error ? (
+          <div className="text-center text-destructive">
+            <h3 className="text-xl font-semibold mb-2">Error Loading Users</h3>
+            <p>{error.message || 'Unable to load users'}</p>
+          </div>
+        ) : (
+          <UserTable 
+            users={filteredUsers} 
+            onUserClick={(userId) => navigate(`/users/${userId}`)}
+          />
+        )}
+      </div>
       
       <NewUserDialog 
-        open={isNewUserDialogOpen} 
-        onOpenChange={setIsNewUserDialogOpen} 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
       />
-    </div>
+    </DashboardLayout>
   );
-}
+};
+
+export default Users;

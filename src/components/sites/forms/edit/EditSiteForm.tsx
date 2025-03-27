@@ -11,10 +11,11 @@ import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { SiteFormData, validateSiteForm } from '@/components/sites/forms/types';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteStatus } from '@/types/common';
 import { useSite } from '@/hooks/useSite';
 import { useSiteUpdate } from '@/hooks/useSiteUpdate';
-import { SiteStatus } from '@/types/common';
+import { SiteRecord } from '@/lib/types';
 
 const siteFormSchema = z.object({
   name: z.string().min(2, {
@@ -84,6 +85,8 @@ export function EditSiteForm() {
     try {
       // Create a properly typed siteFormData
       const formValues = form.getValues();
+
+      // Map form data to SiteFormData structure
       const updatedFormData: SiteFormData = {
         name: formValues.name,
         address: formValues.address,
@@ -91,7 +94,7 @@ export function EditSiteForm() {
         state: formValues.state,
         postalCode: formValues.postalCode,
         country: formValues.country,
-        status: formValues.status as SiteStatus,
+        status: formValues.status,
         client_id: site?.client_id,
         client_name: site?.client_name,
         contacts: site?.contacts || [],
@@ -101,18 +104,28 @@ export function EditSiteForm() {
         jobSpecifications: site?.job_specifications || {},
       };
       
-      const validationResult = validateSiteForm(updatedFormData);
-      
-      if (!validationResult.isValid) {
-        setErrors(validationResult.errors || []);
-        setIsSubmitting(false);
-        return;
-      }
+      // Map to SiteRecord structure for the API
+      const siteUpdateData: Partial<SiteRecord> = {
+        name: formValues.name,
+        address: formValues.address,
+        city: formValues.city,
+        state: formValues.state,
+        postal_code: formValues.postalCode,
+        country: formValues.country,
+        status: formValues.status,
+        client_id: site?.client_id,
+        client_name: site?.client_name,
+        notes: site?.notes,
+        contract_details: site?.contract_details,
+        billing_details: site?.billing_details,
+        job_specifications: site?.job_specifications,
+      };
       
       const result = await updateSiteMutation.mutateAsync({
         id: siteId,
-        data: updatedFormData
+        data: siteUpdateData
       });
+      
       if (result) {
         toast.success("Site updated successfully");
         navigate(`/sites/${siteId}`);

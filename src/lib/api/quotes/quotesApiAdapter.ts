@@ -1,41 +1,67 @@
-import { Quote } from '@/lib/types';
+import { Quote } from '@/lib/types/quotes';
+import { mapToDbQuote } from './utils/quoteDbTypeAdapter';
 
-// Convert from database format to API format
-export const adaptQuoteFromDb = (dbQuote: any): Quote => {
+// Convert frontend quote model to database model
+export const adaptQuoteForDatabase = (quote: Partial<Quote>) => {
+  // Handle property name differences between frontend and database
   return {
-    ...dbQuote,
-    // Convert snake_case to camelCase fields
-    userId: dbQuote.user_id || null,
-    clientName: dbQuote.client_name || null,
-    siteName: dbQuote.site_name || null,
-    contractLength: dbQuote.contract_length || null,
-    contractLengthUnit: dbQuote.contract_length_unit || null,
-    overheadProfile: dbQuote.overhead_profile || 'standard',
-    overheadPercentage: dbQuote.overhead_percentage || 15,
-    // For new fields that aren't present in the Quote type,
-    // add them with a consistent format
-    suppliesCost: dbQuote.supplies_cost || 0,
-    equipmentCost: dbQuote.equipment_cost || 0,
-    // ... any other field conversions
+    name: quote.name,
+    user_id: quote.user_id, // Use snake_case for API
+    site_name: quote.siteName,
+    client_name: quote.clientName,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    contract_length: quote.contractLength,
+    contract_length_unit: quote.contractLengthUnit,
+    expiry_date: quote.expiryDate,
+    status: quote.status,
+    total_price: quote.totalPrice,
+    total_cost: quote.totalCost,
+    labor_cost: quote.laborCost,
+    supplies_cost: quote.suppliesCost,
+    equipment_cost: quote.equipmentCost,
+    subcontractor_cost: quote.subcontractorCost,
+    overhead_cost: quote.overheadCost,
+    margin_amount: quote.marginAmount,
+    margin_percentage: quote.marginPercentage,
+    overhead_percentage: quote.overheadPercentage,
+    overhead_profile: quote.overhead_profile, // Match database field
+    notes: quote.notes,
+    created_by: quote.createdBy
   };
 };
 
-// Convert from API format to database format
-export const adaptQuoteForDb = (quote: Partial<Quote>): any => {
+// Convert database Quote model to frontend model
+export const adaptQuoteFromDatabase = (dbQuote: any): Quote => {
   return {
-    ...quote,
-    // Convert camelCase to snake_case fields
-    user_id: quote.user_id || null,
-    client_name: quote.client_name || null,
-    site_name: quote.site_name || null,
-    contract_length: quote.contract_length || null,
-    contract_length_unit: quote.contract_length_unit || null,
-    overhead_profile: quote.overhead_profile || 'standard',
-    overhead_percentage: quote.overhead_percentage || 15,
-    // For new fields that aren't present in the Quote type,
-    // add them with a consistent format
-    supplies_cost: quote.supplies_cost || 0,
-    equipment_cost: quote.equipment_cost || 0,
-    // ... any other field conversions
+    id: dbQuote.id,
+    name: dbQuote.name,
+    user_id: dbQuote.user_id,
+    siteName: dbQuote.site_name,
+    clientName: dbQuote.client_name,
+    startDate: dbQuote.start_date,
+    endDate: dbQuote.end_date,
+    contractLength: dbQuote.contract_length,
+    contractLengthUnit: dbQuote.contract_length_unit,
+    expiryDate: dbQuote.expiry_date,
+    status: dbQuote.status,
+    totalPrice: dbQuote.total_price,
+    totalCost: dbQuote.total_cost,
+    laborCost: dbQuote.labor_cost,
+    suppliesCost: dbQuote.supplies_cost,
+    equipmentCost: dbQuote.equipment_cost,
+    subcontractorCost: dbQuote.subcontractor_cost,
+    overheadCost: dbQuote.overhead_cost,
+    marginAmount: dbQuote.margin_amount,
+    marginPercentage: dbQuote.margin_percentage,
+    overheadPercentage: dbQuote.overhead_percentage,
+    overhead_profile: dbQuote.overhead_profile,
+    notes: dbQuote.notes,
+    createdBy: dbQuote.created_by,
+    createdAt: dbQuote.created_at,
+    updatedAt: dbQuote.updated_at,
+    // Other fields with default values
+    shifts: [],
+    subcontractors: []
   };
 };

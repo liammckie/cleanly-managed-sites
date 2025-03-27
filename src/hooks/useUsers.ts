@@ -35,7 +35,7 @@ export const useUsers = () => {
   });
 
   return {
-    users,
+    users: users || [],
     isLoading,
     error,
     refetch,

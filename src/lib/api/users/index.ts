@@ -23,7 +23,7 @@ export const usersApi = {
         email: user.email,
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        full_name: user.full_name || '',
+        full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown',
         avatar_url: user.avatar_url,
         role_id: user.role_id,
         created_at: user.created_at,
@@ -65,7 +65,7 @@ export const usersApi = {
         email: data.email,
         first_name: data.first_name || '',
         last_name: data.last_name || '',
-        full_name: data.full_name,
+        full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown',
         avatar_url: data.avatar_url,
         role_id: data.role_id,
         created_at: data.created_at,
@@ -87,16 +87,20 @@ export const usersApi = {
   // Update user
   async updateUser(userId: string, userData: Partial<SystemUser>): Promise<SystemUser> {
     try {
-      const updateData = {
+      const updateData: any = {
         ...userData,
-        notes: userData.note, // Map note to database field
         updated_at: new Date().toISOString()
       };
+
+      // Map note to notes field in the database
+      if (userData.note !== undefined) {
+        updateData.notes = userData.note;
+        delete updateData.note;
+      }
 
       // Remove properties that should not be sent to database
       delete updateData.role;
       delete updateData.permissions;
-      delete updateData.note;
 
       const { data, error } = await supabase
         .from('user_profiles')
@@ -114,7 +118,7 @@ export const usersApi = {
         email: data.email,
         first_name: data.first_name || '',
         last_name: data.last_name || '',
-        full_name: data.full_name,
+        full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown',
         avatar_url: data.avatar_url,
         role_id: data.role_id,
         created_at: data.created_at,
@@ -143,7 +147,7 @@ export const usersApi = {
         email: userData.email,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
-        full_name: userData.full_name,
+        full_name: userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'Unknown',
         avatar_url: userData.avatar_url || '',
         role_id: userData.role_id,
         title: userData.title || '',
@@ -169,7 +173,7 @@ export const usersApi = {
         email: data.email,
         first_name: data.first_name || '',
         last_name: data.last_name || '',
-        full_name: data.full_name,
+        full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown',
         avatar_url: data.avatar_url,
         role_id: data.role_id,
         created_at: data.created_at,
@@ -203,7 +207,11 @@ export const usersApi = {
         id: role.id,
         name: role.name,
         description: role.description || '',
-        permissions: Array.isArray(role.permissions) ? role.permissions : [],
+        permissions: (typeof role.permissions === 'object' && role.permissions !== null)
+          ? Object.keys(role.permissions) 
+          : Array.isArray(role.permissions)
+          ? role.permissions.map(p => String(p))
+          : [],
         created_at: role.created_at,
         updated_at: role.updated_at
       }));
@@ -240,7 +248,11 @@ export const usersApi = {
         id: data.id,
         name: data.name,
         description: data.description || '',
-        permissions: Array.isArray(data.permissions) ? data.permissions : [],
+        permissions: (typeof data.permissions === 'object' && data.permissions !== null)
+          ? Object.keys(data.permissions) 
+          : Array.isArray(data.permissions)
+          ? data.permissions.map(p => String(p))
+          : [],
         created_at: data.created_at,
         updated_at: data.updated_at
       };
@@ -255,9 +267,9 @@ export const usersApi = {
     try {
       const updateData: Record<string, any> = {};
       
-      if (roleData.name) updateData.name = roleData.name;
+      if (roleData.name !== undefined) updateData.name = roleData.name;
       if (roleData.description !== undefined) updateData.description = roleData.description;
-      if (roleData.permissions) updateData.permissions = roleData.permissions;
+      if (roleData.permissions !== undefined) updateData.permissions = roleData.permissions;
 
       const { data, error } = await supabase
         .from('user_roles')
@@ -274,7 +286,11 @@ export const usersApi = {
         id: data.id,
         name: data.name,
         description: data.description || '',
-        permissions: Array.isArray(data.permissions) ? data.permissions : [],
+        permissions: (typeof data.permissions === 'object' && data.permissions !== null)
+          ? Object.keys(data.permissions) 
+          : Array.isArray(data.permissions)
+          ? data.permissions.map(p => String(p))
+          : [],
         created_at: data.created_at,
         updated_at: data.updated_at
       };

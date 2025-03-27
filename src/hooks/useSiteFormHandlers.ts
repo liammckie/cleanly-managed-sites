@@ -1,74 +1,68 @@
-import { useState, useCallback } from 'react';
+
+import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteStatus } from '@/types/common';
 
 export function useSiteFormHandlers(initialFormData: SiteFormData) {
   const [formData, setFormData] = useState<SiteFormData>(initialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }, []);
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  const handleClientChange = useCallback((clientId: string, clientName?: string) => {
-    setFormData(prev => ({
-      ...prev,
-      client_id: clientId,
-      clientId: clientId, // For compatibility
-      client_name: clientName,
-      clientName: clientName // For compatibility
-    }));
-  }, []);
-
+  // Handle status change
   const handleStatusChange = (status: SiteStatus) => {
-    setFormData(prev => ({
-      ...prev,
-      status
-    }));
+    setFormData(prev => ({ ...prev, status }));
   };
 
-  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
+  // Handle client change
+  const handleClientChange = (clientId: string) => {
+    // Update form data when client changes
     setFormData(prev => {
-      const sectionData = prev[section] as Record<string, any> || {};
-      
-      return {
-        ...prev,
-        [section]: {
-          ...sectionData,
-          [field]: value
-        }
+      // Make a copy of the previous state to avoid modifying it directly
+      const updatedData: SiteFormData = {
+        name: prev.name,
+        address: prev.address,
+        city: prev.city,
+        state: prev.state,
+        postalCode: prev.postalCode,
+        country: prev.country,
+        status: prev.status,
+        client_id: clientId,
+        client_name: prev.client_name,
+        phone: prev.phone,
+        email: prev.email,
+        representative: prev.representative,
+        customId: prev.customId,
+        contract_details: prev.contract_details,
+        contacts: prev.contacts || [],
+        useClientInfo: prev.useClientInfo,
+        billingDetails: prev.billingDetails,
+        additionalContracts: prev.additionalContracts,
+        subcontractors: prev.subcontractors,
+        hasSubcontractors: prev.hasSubcontractors,
+        monthlyCost: prev.monthlyCost,
+        weeklyRevenue: prev.weeklyRevenue,
+        monthlyRevenue: prev.monthlyRevenue,
+        annualRevenue: prev.annualRevenue,
+        replenishables: prev.replenishables,
+        periodicals: prev.periodicals,
+        adHocWorkAuthorization: prev.adHocWorkAuthorization,
+        securityDetails: prev.securityDetails,
+        jobSpecifications: prev.jobSpecifications,
+        notes: prev.notes,
+        // Aliases for backward compatibility
+        contractDetails: prev.contractDetails,
+        clientId: clientId,
+        postcode: prev.postalCode
       };
+      
+      return updatedData;
     });
   };
 
-  const handleDoubleNestedChange = (section: keyof SiteFormData, subsection: string, field: string, value: any) => {
-    setFormData(prev => {
-      const sectionData = prev[section] as Record<string, any> || {};
-      const subsectionData = sectionData[subsection] as Record<string, any> || {};
-      
-      return {
-        ...prev,
-        [section]: {
-          ...sectionData,
-          [subsection]: {
-            ...subsectionData,
-            [field]: value
-          }
-        }
-      };
-    });
-  };
-
-  return {
-    formData,
-    setFormData,
-    handleChange,
-    handleClientChange,
-    handleStatusChange,
-    handleNestedChange,
-    handleDoubleNestedChange
-  };
+  return { formData, setFormData, errors, setErrors, handleInputChange, handleStatusChange, handleClientChange };
 }

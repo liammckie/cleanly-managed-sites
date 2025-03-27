@@ -1,11 +1,7 @@
-/**
- * Types for contract-related data in the site form
- */
-
 export interface ContractTerm {
-  id: string;
+  id?: string;
   name: string;
-  description: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
   renewalTerms?: string;
@@ -13,57 +9,15 @@ export interface ContractTerm {
   autoRenew?: boolean;
 }
 
-export interface ContractDetails {
-  contractNumber?: string;
-  startDate?: string;
-  endDate?: string;
-  autoRenewal?: boolean;
-  renewalPeriod?: number;
-  renewalNotice?: number;
-  noticeUnit?: string;
-  terminationPeriod?: string;
-  renewalTerms?: string;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  terms?: ContractTerm[];
-  additionalContracts?: any[];
-  contractType?: string;
-  
-  // Additional properties used in components
-  value?: number;
-  billingCycle?: string;
-  notes?: string;
-  id?: string; // Used in additionalContractsApi
-  
-  // Additional properties for contract details step
-  type?: string;
-  status?: string;
-  reviewDate?: string;
-  noticePeriodDays?: number;
-  nextIncreaseDate?: string;
-  specialTerms?: string;
-  terminationClause?: string;
-  annualValue?: number;
-  renewalNoticeDays?: number;
-  renewalLengthMonths?: number;
-}
-
 export interface ContractHistoryEntry {
   id?: string;
-  site_id: string;
-  contract_details: any;
+  siteId: string;
+  contractDetails: any;
+  timestamp: string;
   notes?: string;
-  created_at?: string;
-  created_by?: string;
-  version_number?: number;
-  date?: string;
-  user?: string;
-  changes?: any;
 }
 
-// Fix ContractForecast interface to include all properties used across components
+// Add the ContractForecast type definition
 export interface ContractForecast {
   id?: string;
   month: string;
@@ -73,4 +27,24 @@ export interface ContractForecast {
   startDate?: string;
   endDate?: string;
   value?: number;
+}
+
+export interface ContractDetails {
+  type?: string;
+  contractType?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  reviewDate?: string;
+  autoRenewal?: boolean;
+  renewalNoticeDays?: number;
+  renewalLengthMonths?: number;
+  contractNumber?: string;
+  annualValue?: number;
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
+  customFields?: Record<string, any>;
+  terms?: ContractTerm[];
+  id?: string;
 }

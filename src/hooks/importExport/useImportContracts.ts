@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
 import { toast } from 'sonner';
+import { useState } from 'react';
 import { 
   parseCSV, 
   convertCSVToContractFormat, 
@@ -14,11 +14,19 @@ export function useImportContracts() {
   const handleImportContracts = async (data: any[]): Promise<void> => {
     try {
       setIsImporting(true);
-      const result = await importContracts(data);
-      setImportResults(result);
-      toast.success('Contracts imported successfully');
+      await importContracts(data);
+      toast.success(`${data.length} contracts imported successfully`);
+      setImportResults({
+        success: true,
+        count: data.length,
+        message: `${data.length} contracts imported successfully`
+      });
     } catch (error: any) {
       toast.error(`Failed to import contracts: ${error.message}`);
+      setImportResults({
+        success: false,
+        error: error.message
+      });
       throw error;
     } finally {
       setIsImporting(false);
@@ -32,7 +40,12 @@ export function useImportContracts() {
       const contracts = convertCSVToContractFormat(csvData);
       await handleImportContracts(contracts);
     } catch (error: any) {
-      toast.error(`Failed to import contracts from CSV: ${error.message}`);
+      console.error(`Error importing contracts from CSV:`, error);
+      toast.error(`Failed to import contracts: ${error.message}`);
+      setImportResults({
+        success: false,
+        error: error.message
+      });
       throw error;
     } finally {
       setIsImporting(false);
@@ -43,6 +56,6 @@ export function useImportContracts() {
     isImporting,
     importResults,
     handleImportContracts,
-    handleCSVImportContracts
+    handleCSVImportContracts,
   };
 }
