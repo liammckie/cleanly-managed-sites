@@ -6,7 +6,7 @@ export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly';
-export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once';
+export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once' | 'daily';
 
 // General JSON types
 export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
@@ -15,3 +15,6 @@ export type Json = JsonValue;
 
 // Payment conditions type
 export type PayCondition = 'standard' | 'saturday' | 'sunday' | 'public_holiday' | 'overtime_1_5' | 'overtime_2';
+
+// Type for unified day format
+export type UnifiedDay = Day;

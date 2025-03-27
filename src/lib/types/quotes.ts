@@ -1,5 +1,5 @@
 
-import { Day, EmploymentType, EmployeeLevel, Frequency } from '@/types/common';
+import { Day, EmploymentType, EmployeeLevel, Frequency, QuoteStatus } from '@/types/common';
 
 export interface QuoteShift {
   id: string;
@@ -15,6 +15,15 @@ export interface QuoteShift {
   estimated_cost: number;
   location: string;
   notes: string;
+  
+  // Camel case aliases for frontend components
+  quoteId?: string;
+  startTime?: string;
+  endTime?: string;
+  breakDuration?: number;
+  numberOfCleaners?: number;
+  employmentType?: EmploymentType;
+  estimatedCost?: number;
 }
 
 export interface QuoteSubcontractor {
@@ -26,9 +35,17 @@ export interface QuoteSubcontractor {
   frequency: Frequency;
   email?: string;
   phone?: string;
-  services?: string[];
-  service?: string;
   notes?: string;
+  
+  // Additional fields used in the UI
+  service?: string;
+  services?: string[];
+  customServices?: string;
+  monthlyCost?: number;
+  isFlatRate?: boolean;
+  
+  // Camel case alias
+  quoteId?: string;
 }
 
 export interface Quote {
@@ -38,7 +55,7 @@ export interface Quote {
   client_name: string;
   site_name?: string;
   description?: string;
-  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted';
+  status: QuoteStatus;
   overhead_percentage: number;
   margin_percentage: number;
   total_price: number;
@@ -65,7 +82,7 @@ export interface Quote {
   overhead_profile?: string;
   user_id?: string;
   created_by?: string;
-  notes: string;
+  notes?: string;
   frequency?: string;
   scope?: string;
   terms?: string;

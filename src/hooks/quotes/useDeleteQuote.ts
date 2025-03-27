@@ -25,6 +25,8 @@ export function useDeleteQuote() {
     deleteQuoteAsync: mutation.mutateAsync,
     isDeleting: mutation.isPending,
     isPending: mutation.isPending,
-    error: mutation.error
+    error: mutation.error,
+    // For backward compatibility with previous implementation
+    mutateAsync: mutation.mutateAsync
   };
 }

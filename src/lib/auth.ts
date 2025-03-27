@@ -1,5 +1,7 @@
 
-// Stub file for auth to satisfy imports
-export const getCurrentUser = async () => {
-  return null; // Or return mock user data if needed
-};
+import { supabase } from '@/lib/supabase';
+
+export async function getUserId() {
+  const { data } = await supabase.auth.getUser();
+  return data?.user?.id || null;
+}

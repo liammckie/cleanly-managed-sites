@@ -15,14 +15,14 @@ export function adaptContractData(contractData: ContractTypes): ContractColumns 
   return {
     id: contractData.id,
     site: { 
-      id: contractData.site_id || '', 
-      name: contractData.site_name || '' 
+      id: contractData.site_id || contractData.site?.id || '', 
+      name: contractData.site_name || contractData.site?.name || '' 
     },
     client: { 
-      id: contractData.client_id || '', 
-      name: contractData.client_name || '' 
+      id: contractData.client_id || contractData.client?.id || '', 
+      name: contractData.client_name || contractData.client?.name || '' 
     },
-    value: contractData.monthly_revenue || 0,
+    value: contractData.monthly_revenue || contractData.value || 0,
     startDate: jsonToString(contractDetails.startDate) || '',
     endDate: jsonToString(contractDetails.endDate) || '',
     status: contractData.status === 'active' ? 'active' : 

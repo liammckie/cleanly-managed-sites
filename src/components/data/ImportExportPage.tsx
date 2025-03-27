@@ -10,7 +10,8 @@ import { ImportExportInstructions } from './ImportExportInstructions';
 import { Button } from '@/components/ui/button';
 import { Beaker } from 'lucide-react';
 import { toast } from 'sonner';
-import { SiteRecord } from '@/lib/types';
+import { SiteRecord, ClientRecord } from '@/lib/types';
+import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
 export const ImportExportPage: React.FC = () => {
   const { clients, isLoading: isLoadingClients } = useClients();
@@ -23,9 +24,9 @@ export const ImportExportPage: React.FC = () => {
     handleCSVImportContracts,
     handleUnifiedImportMode,
     setupTestData = async () => {}, // Providing default implementations
-    getClientCSVTemplate = () => {},
-    getSiteCSVTemplate = () => {},
-    getContractCSVTemplate = () => {},
+    getClientCSVTemplate = () => "",
+    getSiteCSVTemplate = () => "",
+    getContractCSVTemplate = () => "",
     handleImportClients = async () => {},
     handleImportSites = async () => {},
     handleImportContracts = async () => {},
@@ -44,17 +45,41 @@ export const ImportExportPage: React.FC = () => {
     );
   }
   
-  // Create wrapper functions to convert return type from Promise<boolean> to Promise<void>
-  const handleCSVImportClientsWrapper = async (file: File) => {
-    await handleCSVImport(file, 'clients');
+  // Create adapter functions to match interface expectations
+  const handleCSVImportClientsWrapper = async (data: ClientRecord[]) => {
+    if (data instanceof File) {
+      await handleCSVImport(data, 'clients');
+    } else {
+      console.error("Expected File, received ClientRecord[]");
+    }
   };
   
-  const handleCSVImportSitesWrapper = async (file: File) => {
-    await handleCSVImport(file, 'sites');
+  const handleCSVImportSitesWrapper = async (data: SiteRecord[]) => {
+    if (data instanceof File) {
+      await handleCSVImport(data, 'sites');
+    } else {
+      console.error("Expected File, received SiteRecord[]");
+    }
   };
   
-  const handleCSVImportContractsWrapper = async (file: File) => {
-    await handleCSVImport(file, 'contracts');
+  const handleCSVImportContractsWrapper = async (data: ContractHistoryEntry[]) => {
+    if (data instanceof File) {
+      await handleCSVImport(data, 'contracts');
+    } else {
+      console.error("Expected File, received ContractHistoryEntry[]");
+    }
+  };
+  
+  const getClientCSVTemplateWrapper = (): string => {
+    return getClientCSVTemplate() || "";
+  };
+  
+  const getSiteCSVTemplateWrapper = (): string => {
+    return getSiteCSVTemplate() || "";
+  };
+  
+  const getContractCSVTemplateWrapper = (): string => {
+    return getContractCSVTemplate() || "";
   };
   
   const handleSetupTestData = async () => {
@@ -95,9 +120,9 @@ export const ImportExportPage: React.FC = () => {
         onCSVImportSites={handleCSVImportSitesWrapper}
         onCSVImportContracts={handleCSVImportContractsWrapper}
         onUnifiedImport={handleUnifiedImport}
-        getClientCSVTemplate={getClientCSVTemplate}
-        getSiteCSVTemplate={getSiteCSVTemplate}
-        getContractCSVTemplate={getContractCSVTemplate}
+        getClientCSVTemplate={getClientCSVTemplateWrapper}
+        getSiteCSVTemplate={getSiteCSVTemplateWrapper}
+        getContractCSVTemplate={getContractCSVTemplateWrapper}
       />
     </div>
   );

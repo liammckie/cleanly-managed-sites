@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { parseCSV, convertCSVToContractFormat, importContractors } from '@/lib/import-export';
-import { ImportOptions } from '@/lib/import-export/types';
+import { ImportOptions } from '@/types/models';
 
 export function useImportContracts() {
   const [isImporting, setIsImporting] = useState(false);
@@ -27,7 +27,7 @@ export function useImportContracts() {
       const importOptions: ImportOptions = {
         mode: 'incremental',
         format: 'csv',
-        type: 'contractors'
+        type: 'contracts'  // Changed from 'contractors' to 'contracts'
       };
       
       const results = await importContractors(contractData, importOptions);
@@ -35,7 +35,7 @@ export function useImportContracts() {
       setImportResults(results);
       
       // Show a success message
-      const importedCount = results && typeof results === 'object' ? results.imported || 0 : 0;
+      const importedCount = results && typeof results === 'object' && 'imported' in results ? results.imported || 0 : 0;
       toast.success(`Successfully imported ${importedCount} contracts`);
       
     } catch (error) {

@@ -1,50 +1,64 @@
 
-import { Json } from './common';
-
-export interface ContractDetails {
-  contractNumber?: string;
-  startDate?: string;
-  endDate?: string;
-  autoRenewal?: boolean;
-  renewalPeriod?: number;
-  renewalNotice?: number;
-  noticeUnit?: string;
-  terminationPeriod?: string;
-  contractType?: string;
-  value?: number;
-  frequency?: string;
-  notes?: string;
-  serviceDeliveryMethod?: string;
-}
+import { SiteStatus, Json } from './common';
 
 export interface ContractData {
   id: string;
-  site_id: string;
-  site_name: string;
-  client_id: string;
-  client_name: string;
-  monthly_revenue: number;
-  contract_details: ContractDetails;
+  client: {
+    id: string;
+    name: string;
+  };
+  site: {
+    id: string;
+    name: string;
+  };
+  value: number;
+  startDate: string;
+  endDate: string;
   status: string;
-  is_primary: boolean;
-}
-
-export interface GroupedContracts {
-  activeContracts: ContractData[];
-  expiringContracts: ContractData[];
-  expiredContracts: ContractData[];
+  
+  // Additional fields needed by components
+  site_id?: string;
+  site_name?: string;
+  client_id?: string;
+  client_name?: string;
+  monthly_revenue?: number;
+  contract_details?: any;
 }
 
 export interface ContractSummaryData {
-  totalValue: number;
   totalCount: number;
-  expiringCount: number;
-  expiredCount: number;
   activeCount: number;
-  // For compatibility with existing code
-  pendingCount?: number;
-  avgContractValue?: number;
-  totalRevenue?: number;
-  totalCost?: number;
-  totalProfit?: number;
+  pendingCount: number;
+  totalValue: number;
+  
+  // Add missing fields for metrics and totals (used in components)
+  totalContracts: number;
+  expiringWithin30Days: number;
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  
+  // Add missing fields for value metrics
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  
+  // Add missing fields for totals
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  profitMargin: number;
+}
+
+export interface GroupedContracts {
+  [key: string]: ContractData[];
+}
+
+export interface ContractForecast {
+  startDate: string;
+  endDate: string;
+  value: number;
+  id: string;
 }

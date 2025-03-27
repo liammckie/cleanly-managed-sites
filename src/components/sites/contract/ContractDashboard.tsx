@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,27 +10,34 @@ import { formatCurrency } from '@/lib/utils/format';
 export function ContractDashboard() {
   const { forecastData, summaryData } = useContractForecast();
   
-  // Make sure we have complete summary data
+  // Make sure we have complete summary data with defaults for missing properties
   const enhancedSummaryData = {
-    totalContracts: summaryData?.totalCount || 0,
+    totalContracts: summaryData?.totalContracts || summaryData?.totalCount || 0,
     activeCount: summaryData?.activeCount || 0,
     totalValue: summaryData?.totalValue || 0,
+    
+    // Set defaults for expiry metrics if they don't exist
     expiringThisMonth: summaryData?.expiringThisMonth || 0,
     expiringNext3Months: summaryData?.expiringNext3Months || 0,
     expiringNext6Months: summaryData?.expiringNext6Months || 0,
     expiringThisYear: summaryData?.expiringThisYear || 0,
+    
+    // Set defaults for value expiry metrics if they don't exist
     valueExpiringThisMonth: summaryData?.valueExpiringThisMonth || 0,
     valueExpiringNext3Months: summaryData?.valueExpiringNext3Months || 0,
     valueExpiringNext6Months: summaryData?.valueExpiringNext6Months || 0,
     valueExpiringThisYear: summaryData?.valueExpiringThisYear || 0,
+    
+    // Other metrics
     totalRevenue: summaryData?.totalValue || 0,
     totalCost: summaryData?.totalValue ? summaryData.totalValue * 0.7 : 0,
     totalProfit: summaryData?.totalValue ? summaryData.totalValue * 0.3 : 0,
     avgContractValue: summaryData?.activeCount && summaryData.totalValue 
       ? summaryData.totalValue / summaryData.activeCount
       : 0,
-    profitMargin: 30,
-    pendingCount: 0, // Default value
+    profitMargin: summaryData?.profitMargin || 30,
+    pendingCount: summaryData?.pendingCount || 0, 
+    expiringWithin30Days: summaryData?.expiringWithin30Days || 0
   };
   
   const chartData = [

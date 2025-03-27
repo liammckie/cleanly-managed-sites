@@ -1,9 +1,16 @@
 
 export interface ContractTerm {
-  id: string;
+  id?: string;
   title: string;
   content: string;
   description?: string;
+  // Fields used by UI components
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  autoRenew?: boolean;
 }
 
 export interface ContractDetails {
@@ -20,6 +27,15 @@ export interface ContractDetails {
   value?: number;
   id?: string;
   serviceFrequency?: string;
+  
+  // Additional fields used by UI components
+  contractLength?: number;
+  contractLengthUnit?: string;
+  renewalPeriod?: number;
+  renewalNotice?: number;
+  noticeUnit?: string;
+  serviceDeliveryMethod?: string;
+  autoRenewal?: boolean;  // For backward compatibility with autoRenew
 }
 
 export interface ContractHistoryEntry {
@@ -36,4 +52,11 @@ export interface ContractHistoryEntry {
   created_by?: string;
   created_at?: string;
   contractor_id?: string;
+}
+
+export interface ContractForecast {
+  startDate: string;
+  endDate: string;
+  value: number;
+  id: string;
 }

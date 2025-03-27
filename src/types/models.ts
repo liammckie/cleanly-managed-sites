@@ -3,9 +3,10 @@ import { Day, EmploymentType, EmployeeLevel, Frequency, BillingFrequency, QuoteS
 
 export interface Quote {
   id: string;
+  name: string;
   clientName: string;
   siteName?: string;
-  status: string;
+  status: QuoteStatus;
   totalPrice: number;
   laborCost: number;
   overheadPercentage: number;
@@ -15,6 +16,19 @@ export interface Quote {
   updatedAt: string;
   shifts?: QuoteShift[];
   subcontractors?: QuoteSubcontractor[];
+  
+  // Additional fields used in components
+  marginAmount?: number;
+  overheadCost?: number;
+  totalCost?: number;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
+  notes?: string;
+  quoteNumber?: string;
+  validUntil?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
 }
 
 export interface QuoteShift {
@@ -53,6 +67,197 @@ export interface QuoteSubcontractor {
   phone?: string;
   notes?: string;
   
+  // Additional fields used in UI
+  service?: string;
+  services?: string[];
+  customServices?: string;
+  monthlyCost?: number;
+  isFlatRate?: boolean;
+  
   // Camel case alias
   quoteId?: string;
+}
+
+// Add SystemUser type since it's referenced
+export interface SystemUser {
+  id: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  note?: string;  // singular in the database
+  notes?: string;  // but components use plural
+  territories?: string[];
+  status: "active" | "pending" | "inactive";
+  role_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  daily_summary?: boolean;
+}
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Add BillingDetails for site form
+export interface BillingDetails {
+  billingAddress: BillingAddress;
+  useClientInfo: boolean;
+  billingMethod: string;
+  paymentTerms: string;
+  billingEmail: string;
+  contacts: BillingContact[];
+  
+  // Additional fields used in components
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  billingFrequency?: string;
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceMethod?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  accountNumber?: string;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  rate?: string;
+  
+  // Service delivery details
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  annualContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  
+  // Billing lines for the form
+  billingLines?: BillingLine[];
+  
+  // Xero integration
+  xeroContactId?: string;
+}
+
+export interface BillingAddress {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface BillingContact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  isPrimary?: boolean;
+  department?: string;
+  role?: string;
+  position?: string;
+}
+
+export interface BillingLine {
+  id: string;
+  description: string;
+  amount: number;
+  frequency: string;
+}
+
+// Add SiteFormData definition
+export interface SiteFormData {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  client_id?: string;
+  client_name?: string;
+  status: SiteStatus;
+  phone?: string;
+  email?: string;
+  representative?: string;
+  customId?: string;
+  contract_details: any;
+  periodicals?: any;
+  billingDetails: BillingDetails;
+  security_details?: any;
+  job_specifications?: any;
+  subcontractors?: any;
+  monthly_revenue?: number;
+  weekly_revenue?: number;
+  annual_revenue?: number;
+  monthly_cost?: number;
+  billing_on_hold?: boolean;
+  billing_hold_start_date?: string;
+  billing_hold_end_date?: string;
+  notes?: string;
+  postcode?: string;
+  contacts: any[];
+  contractDetails?: any;
+}
+
+// Frontend version of QuoteShift with required fields for component use
+export interface FrontendQuoteShift {
+  id: string;
+  quoteId: string;
+  day: Day;
+  startTime: string;
+  endTime: string;
+  breakDuration: number;
+  numberOfCleaners: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  allowances: string[];
+  estimatedCost: number;
+  location: string;
+  notes: string;
+}
+
+// Add DbOverheadProfile type
+export interface DbOverheadProfile {
+  id: string;
+  name: string;
+  description?: string;
+  labor_percentage: number;
+  created_at: string;
+  updated_at: string;
+  user_id?: string;
+}
+
+// For ImportExport
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  data: any[];
+  imported?: number;
+}
+
+export interface ImportOptions {
+  format: 'json' | 'csv' | 'xlsx';
+  type: 'clients' | 'sites' | 'contracts' | 'contractors' | 'unified';
+  mode: 'full' | 'incremental';
+  validateOnly?: boolean;
+  skipValidation?: boolean;
 }
