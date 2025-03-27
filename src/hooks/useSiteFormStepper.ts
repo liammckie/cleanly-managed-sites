@@ -34,37 +34,37 @@ export function useSiteFormStepper(): StepperState {
     {
       title: 'Basic Information',
       description: 'Enter site basic details',
-      component: <BasicInformationStep />
+      component: BasicInformationStep()
     },
     {
       title: 'Contact Information',
       description: 'Add site contacts',
-      component: <ContactsStep />
+      component: ContactsStep()
     },
     {
       title: 'Contract Details',
       description: 'Define contract terms',
-      component: <ContractDetailsStep />
+      component: ContractDetailsStep()
     },
     {
       title: 'Billing Information',
       description: 'Setup billing details',
-      component: <BillingDetailsStep />
+      component: BillingDetailsStep()
     },
     {
       title: 'Subcontractors',
       description: 'Add subcontractors if needed',
-      component: <SubcontractorsStep />
+      component: SubcontractorsStep()
     },
     {
       title: 'Job Specifications',
       description: 'Define job requirements',
-      component: <JobSpecificationsStep />
+      component: JobSpecificationsStep()
     },
     {
       title: 'Supplies & Replenishables',
       description: 'Add supply requirements',
-      component: <ReplenishablesStep />
+      component: ReplenishablesStep()
     }
   ];
   
