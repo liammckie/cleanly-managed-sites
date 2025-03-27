@@ -16,15 +16,7 @@ export function useUsers() {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: async (userData: {
-      email: string;
-      firstName: string;
-      lastName: string;
-      phone: string;
-      title: string;
-      roleId: string;
-      password: string;
-    }) => {
+    mutationFn: async (userData: SystemUserInsert) => {
       return await usersApi.createUser(userData);
     },
     onSuccess: () => {

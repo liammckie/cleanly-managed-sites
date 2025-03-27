@@ -1,4 +1,3 @@
-
 export type SiteStatus = 'active' | 'pending' | 'inactive' | 'on-hold' | 'lost';
 
 export interface ValidationMessage {
@@ -40,7 +39,7 @@ export type Frequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'an
 // Define billing frequency as an alias to Frequency for consistency
 export type BillingFrequency = Frequency;
 
-// Define quote status types
+// Define quote status types to include 'sent' and 'approved'
 export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'approved' | 'accepted' | 'rejected' | 'expired';
 
 // Define JSON value types

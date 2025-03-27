@@ -23,9 +23,9 @@ export const adaptQuoteToApi = (quoteData: Partial<Quote>) => {
     end_date: quoteData.endDate,
     expiry_date: quoteData.expiryDate,
     notes: quoteData.notes,
-    created_by: quoteData.created_by || get(supabase.auth.getUser(), 'data.user.id'),
-    user_id: quoteData.user_id,
-    overhead_profile: quoteData.overhead_profile,
+    created_by: quoteData.createdBy || get(supabase.auth.getUser(), 'data.user.id'),
+    user_id: quoteData.userId,
+    overhead_profile: quoteData.overheadProfile,
     contract_length: quoteData.contractLength,
     contract_length_unit: quoteData.contractLengthUnit,
   };
@@ -52,17 +52,17 @@ export const adaptQuoteToFrontend = (dbQuote: any): Quote => {
     overheadCost: dbQuote.overhead_cost || 0,
     marginAmount: dbQuote.margin_amount || 0,
     totalCost: dbQuote.total_cost || 0,
-    created_by: dbQuote.created_by,
+    createdBy: dbQuote.created_by,
     createdAt: dbQuote.created_at,
     updatedAt: dbQuote.updated_at,
     startDate: dbQuote.start_date,
     endDate: dbQuote.end_date,
     expiryDate: dbQuote.expiry_date,
     notes: dbQuote.notes,
-    overhead_profile: dbQuote.overhead_profile,
+    overheadProfile: dbQuote.overhead_profile,
     contractLength: dbQuote.contract_length,
     contractLengthUnit: dbQuote.contract_length_unit,
-    user_id: dbQuote.user_id
+    userId: dbQuote.user_id
   } as Quote;
   
   // Add shifts if they exist

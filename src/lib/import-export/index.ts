@@ -1,4 +1,3 @@
-
 import { EnhancedValidationResult, ValidationMessage } from '@/types/common';
 import { validateClientData } from './validation/clientValidation';
 import { validateSiteData } from './validation/siteValidation';
@@ -76,19 +75,23 @@ export function validateInvoiceImport(invoices: any[]): EnhancedValidationResult
   return result;
 }
 
-// Export specific functions from importOperations to avoid duplicate exports
-export { 
-  parseCSV, 
-  importClients, 
-  importSites, 
-  importContracts, 
+// Export operations from importOperations without re-exporting
+export {
+  parseCSV,
+  importClients,
+  importSites,
+  importContracts,
   importContractors,
-  setupTestData,
+  setupTestData
+} from './importOperations';
+
+// Export format conversion utilities
+export {
   convertCSVToClientFormat,
   convertCSVToSiteFormat,
   convertCSVToContractFormat,
   convertCSVToContractorFormat
-} from './importOperations';
+} from './fileFormatConversion';
 
 // Export other functions from parseImportedFile
 export * from './parseImportedFile';

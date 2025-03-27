@@ -1,12 +1,13 @@
 
+// Define UserStatus type since it's missing
 export type UserStatus = "active" | "pending" | "inactive";
 
 export interface SystemUser {
   id: string;
   email: string;
   full_name: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   avatar_url?: string;
   title?: string;
   phone?: string;

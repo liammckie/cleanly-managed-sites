@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PayCondition } from '@/lib/award/types';
 import { awardData } from '@/lib/award/awardData';
 import { EmploymentType, EmployeeLevel } from '@/types/common';
+import { validateEmployeeLevel } from '@/lib/utils/typeMapping';
 
 const payConditionLabels: Record<string, string> = {
   base: 'Base Rate',

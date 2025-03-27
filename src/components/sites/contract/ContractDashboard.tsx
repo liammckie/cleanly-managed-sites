@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/utils/format';
 export function ContractDashboard() {
   const { forecasts, loaded, error } = useContractForecast();
   
-  // Mock summary data since it's not returned from the hook
+  // Create summary data since it's not returned from the hook
   const summaryData = {
     totalContracts: 0,
     activeCount: 0,
