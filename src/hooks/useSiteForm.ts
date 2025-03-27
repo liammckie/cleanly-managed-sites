@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,13 +5,21 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { v4 as uuidv4 } from 'uuid';
 import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
-import { SiteStatus } from '@/types/models';
+import { SiteStatus } from '@/types/common';
 
 export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<SiteFormData>(
-    initialData ? { ...getInitialFormData(), ...initialData } : getInitialFormData()
-  );
+  const [formData, setFormData] = useState<SiteFormData>(() => {
+    if (initialData) {
+      const data = getInitialFormData();
+      return {
+        ...data,
+        ...initialData,
+        contractDetails: initialData.contractDetails || initialData.contract_details || data.contractDetails,
+      };
+    }
+    return getInitialFormData();
+  });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(0);
@@ -20,18 +27,17 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   
   useEffect(() => {
     if (initialData) {
-      const processedInitialData = { ...getInitialFormData(), ...initialData };
+      const baseData = getInitialFormData();
+      const newData = {
+        ...baseData,
+        ...initialData,
+        contractDetails: initialData.contractDetails || initialData.contract_details || baseData.contractDetails,
+      };
       
-      // If contract_details is available but contractDetails is not, map it
-      if (initialData.contract_details && !initialData.contractDetails) {
-        processedInitialData.contractDetails = initialData.contract_details;
-      }
-      
-      setFormData(processedInitialData);
+      setFormData(newData);
     }
   }, [initialData]);
   
-  // Form field handlers
   const handleChange = (field: keyof SiteFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -44,26 +50,30 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
     setFormData(prev => ({
       ...prev,
       [section]: {
-        ...prev[section as keyof SiteFormData],
+        ...(prev[section as keyof SiteFormData] as Record<string, any> || {}),
         [field]: value
       }
     }));
   };
   
   const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof SiteFormData],
-        [subsection]: {
-          ...prev[section as keyof SiteFormData]?.[subsection],
-          [field]: value
+    setFormData(prev => {
+      const sectionData = prev[section as keyof SiteFormData] as Record<string, any> || {};
+      const subsectionData = sectionData[subsection] as Record<string, any> || {};
+      
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [subsection]: {
+            ...subsectionData,
+            [field]: value
+          }
         }
-      }
-    }));
+      };
+    });
   };
   
-  // Billing line handlers
   const addBillingLine = () => {
     const newBillingLine = {
       id: uuidv4(),
@@ -74,38 +84,52 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
       frequency: 'monthly' as 'weekly' | 'monthly' | 'quarterly' | 'annually'
     };
     
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        billingLines: [...(prev.billingDetails?.billingLines || []), newBillingLine]
-      }
-    }));
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const billingLines = billingDetails.billingLines || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          billingLines: [...billingLines, newBillingLine]
+        }
+      };
+    });
   };
   
   const updateBillingLine = (id: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        billingLines: (prev.billingDetails?.billingLines || []).map(line => 
-          line.id === id ? { ...line, [field]: value } : line
-        )
-      }
-    }));
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const billingLines = billingDetails.billingLines || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          billingLines: billingLines.map(line => 
+            line.id === id ? { ...line, [field]: value } : line
+          )
+        }
+      };
+    });
   };
   
   const removeBillingLine = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        billingLines: (prev.billingDetails?.billingLines || []).filter(line => line.id !== id)
-      }
-    }));
+    setFormData(prev => {
+      const billingDetails = prev.billingDetails || {};
+      const billingLines = billingDetails.billingLines || [];
+      
+      return {
+        ...prev,
+        billingDetails: {
+          ...billingDetails,
+          billingLines: billingLines.filter(line => line.id !== id)
+        }
+      };
+    });
   };
   
-  // Contact handlers
   const addContact = (contact: any) => {
     const newContact = {
       ...contact,
@@ -134,7 +158,6 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
     }));
   };
   
-  // Subcontractor handlers
   const addSubcontractor = (subcontractor: any) => {
     const newSubcontractor = {
       ...subcontractor,
@@ -176,8 +199,6 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
     setIsSubmitting(true);
     
     try {
-      // Actual submission logic would be here
-      // This is a placeholder
       toast.success(mode === 'create' ? 'Site created successfully!' : 'Site updated successfully!');
       navigate('/sites');
     } catch (error: any) {

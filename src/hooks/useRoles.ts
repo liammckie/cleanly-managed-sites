@@ -1,136 +1,62 @@
 
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/types/models';
-import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createRole, deleteRole, getRole, getRoles, updateRole } from '@/lib/api/users';
+import { UserRole } from '@/lib/types/users';
 
 export function useRoles() {
-  const rolesQuery = useQuery({
+  const queryClient = useQueryClient();
+
+  const { data: roles, isLoading, error, refetch } = useQuery({
     queryKey: ['roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*');
-        
-      if (error) throw error;
-      
-      return data.map(role => {
-        // Convert permissions from JSON to Record<string, boolean>
-        const permissions: Record<string, boolean> = {};
-        
-        if (typeof role.permissions === 'object' && role.permissions !== null) {
-          Object.entries(role.permissions).forEach(([key, value]) => {
-            permissions[key] = Boolean(value);
-          });
-        } else if (Array.isArray(role.permissions)) {
-          role.permissions.forEach(perm => {
-            if (typeof perm === 'string') {
-              permissions[perm] = true;
-            }
-          });
-        }
-        
-        return {
-          id: role.id,
-          name: role.name,
-          description: role.description || '',
-          permissions,
-          created_at: role.created_at,
-          updated_at: role.updated_at,
-          user_count: role.user_count || 0
-        };
-      }) as UserRole[];
-    },
-    meta: {
-      errorMessage: 'Failed to fetch roles'
-    }
+    queryFn: getRoles,
   });
 
   const createRoleMutation = useMutation({
-    mutationFn: async (roleData: {
-      name: string;
-      description?: string;
-      permissions: Record<string, boolean>;
-    }) => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .insert({
-          name: roleData.name,
-          description: roleData.description,
-          permissions: roleData.permissions
-        })
-        .select();
-        
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (role: Partial<UserRole>) => createRole(role),
     onSuccess: () => {
-      toast.success('Role created successfully');
-      rolesQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
     },
-    onError: (error) => {
-      toast.error(`Failed to create role: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: async ({
-      id,
-      data
-    }: {
-      id: string;
-      data: {
-        name?: string;
-        description?: string;
-        permissions?: Record<string, boolean>;
-      }
-    }) => {
-      const { data: responseData, error } = await supabase
-        .from('user_roles')
-        .update(data)
-        .eq('id', id)
-        .select();
-        
-      if (error) throw error;
-      return responseData;
+    mutationFn: ({ id, data }: { id: string; data: Partial<UserRole> }) => updateRole(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+      queryClient.invalidateQueries({ queryKey: ['role', variables.id] });
     },
-    onSuccess: () => {
-      toast.success('Role updated successfully');
-      rolesQuery.refetch();
-    },
-    onError: (error) => {
-      toast.error(`Failed to update role: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
   });
 
   const deleteRoleMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      return true;
-    },
+    mutationFn: (id: string) => deleteRole(id),
     onSuccess: () => {
-      toast.success('Role deleted successfully');
-      rolesQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
     },
-    onError: (error) => {
-      toast.error(`Failed to delete role: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
   });
 
   return {
-    roles: rolesQuery.data || [],
-    isLoading: rolesQuery.isLoading,
-    isError: rolesQuery.isError,
-    error: rolesQuery.error as Error | null,
-    refetch: rolesQuery.refetch,
-    refetchRoles: rolesQuery.refetch,
-    createRole: createRoleMutation.mutateAsync,
-    updateRole: updateRoleMutation.mutateAsync,
-    deleteRole: deleteRoleMutation.mutateAsync
+    roles,
+    isLoading,
+    error,
+    refetch,
+    createRole: createRoleMutation.mutate,
+    updateRole: updateRoleMutation.mutate,
+    deleteRole: deleteRoleMutation.mutate,
+    isCreating: createRoleMutation.isPending,
+    isUpdating: updateRoleMutation.isPending,
+    isDeleting: deleteRoleMutation.isPending,
+  };
+}
+
+export function useRole(id?: string) {
+  const { data: role, isLoading, error } = useQuery({
+    queryKey: ['role', id],
+    queryFn: () => (id ? getRole(id) : Promise.reject('No role ID provided')),
+    enabled: !!id,
+  });
+
+  return {
+    role,
+    isLoading,
+    error,
   };
 }

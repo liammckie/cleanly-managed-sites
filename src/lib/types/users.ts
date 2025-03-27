@@ -1,5 +1,6 @@
 
-import { UserRole as BaseUserRole } from '@/types/models';
+// Define UserStatus type
+export type UserStatus = "active" | "pending" | "inactive";
 
 export interface SystemUser {
   id: string;
@@ -14,7 +15,7 @@ export interface SystemUser {
   note?: string;
   notes?: string;
   territories?: string[];
-  status: "active" | "pending" | "inactive";
+  status: UserStatus;
   role_id?: string;
   role?: UserRole;
   created_at?: string;
@@ -28,11 +29,19 @@ export interface SystemUserInsert {
   full_name: string;
   first_name?: string;
   last_name?: string;
-  status: "active" | "pending" | "inactive";
+  status: UserStatus;
   role_id?: string;
 }
 
-export type UserStatus = "active" | "pending" | "inactive";
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+}
 
-// Use export type for re-exporting when using isolatedModules
-export type UserRole = BaseUserRole;
+export interface UserRoleWithCount extends UserRole {
+  user_count: number;
+}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BillingDetailsStep } from './BillingDetailsStep';
-import { BillingDetails } from '../types/billingTypes';
+import { BillingDetailsDTO } from '@/types/dto';
 
 interface BillingDetailsStepWrapperProps {
   formData: any;
@@ -20,8 +20,8 @@ export function BillingDetailsStepWrapper({
   updateBillingLine,
   removeBillingLine
 }: BillingDetailsStepWrapperProps) {
-  // Ensure billingDetails has all the required properties with default values
-  const billingDetails: BillingDetails = formData.billingDetails || {
+  // Create default billing details with all required properties
+  const defaultBillingDetails: BillingDetailsDTO = {
     billingLines: [],
     useClientInfo: false,
     billingMethod: '',
@@ -34,19 +34,22 @@ export function BillingDetailsStepWrapper({
       postcode: '',
       country: 'Australia'
     },
-    // Add additional properties required by components
     serviceDeliveryType: 'direct',
     weeklyBudget: 0,
-    annualDirectCost: 0,
-    annualContractorCost: 0,
-    contractorCostFrequency: '',
     weeklyContractorCost: 0,
     monthlyContractorCost: 0,
+    contractorCostFrequency: '',
     contractorInvoiceFrequency: '',
     serviceType: '',
     deliveryMethod: '',
     rate: '',
     xeroContactId: ''
+  };
+  
+  // Merge the default values with any existing billing details
+  const billingDetails: BillingDetailsDTO = {
+    ...defaultBillingDetails,
+    ...(formData.billingDetails || {})
   };
   
   const wrappedFormData = {

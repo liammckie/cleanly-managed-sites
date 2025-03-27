@@ -1,10 +1,11 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { SiteRecord } from '@/types/models';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteDTO } from '@/types/dto';
 
-const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteRecord> => {
+const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => {
   return {
     name: formData.name,
     address: formData.address,
@@ -21,7 +22,7 @@ export function useSiteUpdate() {
   const queryClient = useQueryClient();
 
   const updateSiteMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<SiteRecord> | SiteFormData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<SiteDTO> | SiteFormData }) => {
       const updateData = 'postalCode' in data ? adaptSiteFormToUpdateData(data as SiteFormData) : data;
       return await sitesApi.updateSite(id, updateData);
     },

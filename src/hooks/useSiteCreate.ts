@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { SiteRecord } from '@/types/models';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteDTO } from '@/types/dto';
 
 // Adapt site data for API submission
-const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteRecord> => {
+const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   return {
     name: formData.name,
     client_id: formData.clientId,
