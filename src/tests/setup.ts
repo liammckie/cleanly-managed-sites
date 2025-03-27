@@ -1,16 +1,8 @@
 
-// Set up global test environment for vitest
 import '@testing-library/jest-dom/vitest';
+import { expect } from 'vitest';
 
-// Mock any global browser APIs that might be needed in tests
-globalThis.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {}
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
-
-// Mock any other global functions or objects needed for testing
+// Mock browser APIs
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
@@ -21,6 +13,24 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
   })),
+});
+
+// Global ResizeObserver mock
+globalThis.ResizeObserver = class ResizeObserver {
+  constructor(callback: ResizeObserverCallback) {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Enhanced error matching for Zod
+expect.extend({
+  toHaveValidationError(received, expectedMessage) {
+    const pass = received.some(error => error.message === expectedMessage);
+    return {
+      pass,
+      message: () => `Expected validation errors to include: ${expectedMessage}`
+    };
+  }
 });
