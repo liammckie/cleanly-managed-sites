@@ -22,7 +22,7 @@ export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
     annualAmount: modelLine.annualAmount,
     holdStartDate: modelLine.holdStartDate,
     holdEndDate: modelLine.holdEndDate,
-    creditAmount: modelLine.creditAmount,
+    creditAmount: modelLine.creditAmount?.toString(),
     creditDate: modelLine.creditDate,
     creditReason: modelLine.creditReason
   };
@@ -41,7 +41,12 @@ export function adaptSiteFormData(modelData: ModelSiteFormData): UISiteFormData 
     billingDetails: modelData.billingDetails ? {
       ...modelData.billingDetails,
       billingLines: modelData.billingDetails.billingLines?.map(adaptBillingLine) || []
-    } : undefined
+    } : {
+      billingLines: [],
+      useClientInfo: false,
+      billingMethod: '',
+      paymentTerms: ''
+    }
   };
 }
 

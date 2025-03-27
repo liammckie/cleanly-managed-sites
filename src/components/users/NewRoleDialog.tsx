@@ -36,11 +36,7 @@ function NewRoleDialog({ isOpen, onClose, onRoleCreated }: NewRoleDialogProps) {
     e.preventDefault();
     
     if (!name) {
-      toast({
-        title: "Error",
-        description: "Role name is required",
-        variant: "destructive"
-      });
+      toast.error("Role name is required");
       return;
     }
     
@@ -51,11 +47,6 @@ function NewRoleDialog({ isOpen, onClose, onRoleCreated }: NewRoleDialogProps) {
         name,
         description,
         permissions
-      });
-      
-      toast({
-        title: "Success",
-        description: "Role created successfully"
       });
       
       // Reset form
@@ -72,11 +63,7 @@ function NewRoleDialog({ isOpen, onClose, onRoleCreated }: NewRoleDialogProps) {
       }
     } catch (error) {
       console.error('Error creating role:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to create role',
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to create role');
     } finally {
       setIsSubmitting(false);
     }

@@ -47,20 +47,12 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
     e.preventDefault();
     
     if (!role?.id) {
-      toast({
-        title: "Error",
-        description: "No role selected",
-        variant: "destructive"
-      });
+      toast.error("No role selected");
       return;
     }
     
     if (!name) {
-      toast({
-        title: "Error",
-        description: "Role name is required",
-        variant: "destructive"
-      });
+      toast.error("Role name is required");
       return;
     }
     
@@ -69,14 +61,11 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
     try {
       await updateRole({
         id: role.id,
-        name,
-        description,
-        permissions
-      });
-      
-      toast({
-        title: "Success",
-        description: "Role updated successfully"
+        data: {
+          name,
+          description,
+          permissions
+        }
       });
       
       // Close dialog
@@ -88,11 +77,7 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
       }
     } catch (error) {
       console.error('Error updating role:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to update role',
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to update role');
     } finally {
       setIsSubmitting(false);
     }
@@ -110,11 +95,6 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
     try {
       await deleteRole(role.id);
       
-      toast({
-        title: "Success",
-        description: "Role deleted successfully"
-      });
-      
       // Close dialog
       onClose();
       
@@ -124,11 +104,7 @@ function EditRoleDialog({ isOpen, onClose, role, onRoleUpdated }: EditRoleDialog
       }
     } catch (error) {
       console.error('Error deleting role:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to delete role',
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to delete role');
     } finally {
       setIsSubmitting(false);
     }

@@ -28,7 +28,7 @@ export interface BillingLine {
   weeklyAmount?: number;
   monthlyAmount?: number;
   annualAmount?: number;
-  creditAmount?: number;
+  creditAmount?: string;
   creditDate?: string;
   creditReason?: string;
 }
@@ -49,4 +49,24 @@ export interface BillingDetails {
   annualContractorCost?: number;
   contactId?: string;
   contacts?: BillingContact[];
+  
+  // Additional fields used in components
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  billingFrequency?: string;
+  invoiceFrequency?: string;
+  invoiceDay?: string;
+  invoiceMethod?: string;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  accountNumber?: string;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
 }

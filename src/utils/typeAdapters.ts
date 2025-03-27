@@ -1,77 +1,46 @@
-import { Quote } from '@/types/models';
 
-// Utility function to adapt API quote data to frontend format
-export function adaptQuoteToFrontend(apiQuote: any): Quote {
-  return {
-    id: apiQuote.id || '',
-    clientName: apiQuote.client_name || '',
-    siteName: apiQuote.site_name || '',
-    status: apiQuote.status || 'draft',
-    totalPrice: apiQuote.total_price || 0,
-    laborCost: apiQuote.labor_cost || 0,
-    overheadPercentage: apiQuote.overhead_percentage || 15,
-    marginPercentage: apiQuote.margin_percentage || 20,
-    subcontractorCost: apiQuote.subcontractor_cost || 0,
-    createdAt: apiQuote.created_at || new Date().toISOString(),
-    updatedAt: apiQuote.updated_at || new Date().toISOString(),
-    title: apiQuote.name || '',
-    description: apiQuote.description || '',
-    
-    // Convert additional fields
-    marginAmount: apiQuote.margin_amount || 0,
-    overheadCost: apiQuote.overhead_cost || 0,
-    totalCost: apiQuote.total_cost || 0,
-    startDate: apiQuote.start_date || '',
-    endDate: apiQuote.end_date || '',
-    expiryDate: apiQuote.expiry_date || '',
-    notes: apiQuote.notes || '',
-    quoteNumber: apiQuote.quote_number || '',
-    contractLength: apiQuote.contract_length || 0,
-    contractLengthUnit: apiQuote.contract_length_unit || '',
-    
-    // Include any shifts or subcontractors
-    shifts: apiQuote.shifts || [],
-    subcontractors: apiQuote.subcontractors || []
-  };
+// Define the DB and frontend types for OverheadProfile
+export interface DbOverheadProfile {
+  id: string;
+  name: string;
+  description?: string;
+  labor_percentage: number;
+  created_at: string;
+  updated_at: string;
+  user_id?: string;
 }
 
-// Utility function to adapt frontend quote data to API format
-export function adaptQuoteToApi(frontendQuote: Partial<Quote>): any {
-  return {
-    name: frontendQuote.title || '',
-    client_name: frontendQuote.clientName || '',
-    site_name: frontendQuote.siteName || '',
-    status: frontendQuote.status || 'draft',
-    total_price: frontendQuote.totalPrice || 0,
-    labor_cost: frontendQuote.laborCost || 0,
-    overhead_percentage: frontendQuote.overheadPercentage || 15,
-    margin_percentage: frontendQuote.marginPercentage || 20,
-    subcontractor_cost: frontendQuote.subcontractorCost || 0,
-    
-    // Convert additional fields
-    margin_amount: frontendQuote.marginAmount || 0,
-    overhead_cost: frontendQuote.overheadCost || 0,
-    total_cost: frontendQuote.totalCost || 0,
-    start_date: frontendQuote.startDate || null,
-    end_date: frontendQuote.endDate || null,
-    expiry_date: frontendQuote.expiryDate || null,
-    notes: frontendQuote.notes || '',
-    contract_length: frontendQuote.contractLength || null,
-    contract_length_unit: frontendQuote.contractLengthUnit || null
-  };
+export interface OverheadProfile {
+  id: string;
+  name: string;
+  description?: string;
+  laborPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
 }
 
-// Adapt a database overhead profile to frontend format
-export function adaptOverheadProfile(dbProfile: any) {
+export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
   return {
     id: dbProfile.id,
     name: dbProfile.name,
-    description: dbProfile.description || '',
-    labor_percentage: dbProfile.labor_percentage,
-    laborPercentage: dbProfile.labor_percentage, // Add camelCase alias
-    created_at: dbProfile.created_at,
-    updated_at: dbProfile.updated_at,
-    user_id: dbProfile.user_id
+    description: dbProfile.description,
+    laborPercentage: dbProfile.labor_percentage,
+    createdAt: dbProfile.created_at,
+    updatedAt: dbProfile.updated_at,
+    userId: dbProfile.user_id
+  };
+}
+
+export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile {
+  return {
+    id: profile.id,
+    name: profile.name,
+    description: profile.description,
+    labor_percentage: profile.laborPercentage,
+    created_at: profile.createdAt,
+    updated_at: profile.updatedAt,
+    user_id: profile.userId
   };
 }
 
@@ -83,14 +52,15 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
         street: '',
         city: '',
         state: '',
-        postalCode: '',
+        postcode: '',
         country: ''
       },
       useClientInfo: false,
       billingMethod: '',
       paymentTerms: '',
       billingEmail: '',
-      contacts: []
+      contacts: [],
+      billingLines: []
     };
   }
 
@@ -99,7 +69,7 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
       street: '',
       city: '',
       state: '',
-      postalCode: '',
+      postcode: '',
       country: ''
     },
     useClientInfo: billingDetailsFromApi.useClientInfo || false,
@@ -125,27 +95,8 @@ export function adaptBillingDetails(billingDetailsFromApi: any) {
     accountNumber: billingDetailsFromApi.accountNumber || '',
     purchaseOrderRequired: billingDetailsFromApi.purchaseOrderRequired || false,
     purchaseOrderNumber: billingDetailsFromApi.purchaseOrderNumber || '',
-    rate: billingDetailsFromApi.rate || '',
-    serviceType: billingDetailsFromApi.serviceType || '',
-    deliveryMethod: billingDetailsFromApi.deliveryMethod || '',
-    contractorCostFrequency: billingDetailsFromApi.contractorCostFrequency || '',
-    weeklyContractorCost: billingDetailsFromApi.weeklyContractorCost || 0,
-    monthlyContractorCost: billingDetailsFromApi.monthlyContractorCost || 0,
-    annualContractorCost: billingDetailsFromApi.annualContractorCost || 0,
-    contractorInvoiceFrequency: billingDetailsFromApi.contractorInvoiceFrequency || '',
-    serviceDeliveryType: billingDetailsFromApi.serviceDeliveryType || '',
-    weeklyBudget: billingDetailsFromApi.weeklyBudget || 0,
-    billingLines: billingDetailsFromApi.billingLines || [],
-    xeroContactId: billingDetailsFromApi.xeroContactId || ''
+    billingLines: billingDetailsFromApi.billingLines || []
   };
-}
-
-// Export adaptQuoteToFrontend as adaptQuote for backwards compatibility
-export const adaptQuote = adaptQuoteToFrontend;
-
-// Add missing function to adapt employment type (needed by ShiftScheduler)
-export function adaptEmploymentType(employmentType: string): string {
-  return employmentType;
 }
 
 // Add missing function to adapt address (needed by useClientData)
@@ -160,4 +111,4 @@ export function adaptAddress(address: any): any {
 }
 
 // Alias dbToOverheadProfile to adaptOverheadProfile for backwards compatibility
-export const dbToOverheadProfile = adaptOverheadProfile;
+export const adaptOverheadProfile = dbToOverheadProfile;

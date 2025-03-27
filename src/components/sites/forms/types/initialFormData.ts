@@ -22,6 +22,12 @@ export function getInitialFormData(): SiteFormData {
       parkingDetails: '',
       siteSize: '',
       siteSizeUnit: 'sqm',
+    },
+    billingDetails: {
+      billingLines: [],
+      useClientInfo: false,
+      billingMethod: '',
+      paymentTerms: ''
     }
   };
 }
