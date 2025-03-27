@@ -1,17 +1,17 @@
 
 import { Day, EmployeeLevel, EmploymentType } from '@/lib/award/types';
 
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once';
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once' | 'annually';
 
 export interface QuoteShift {
   id: string;
   quoteId: string;
-  day: Day;  // Changed from string to Day enum
+  day: Day;
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: EmploymentType;  // Changed from string to EmploymentType enum
+  employmentType: EmploymentType;
   level: EmployeeLevel | number;
   allowances: string[];
   estimatedCost: number;
@@ -19,13 +19,13 @@ export interface QuoteShift {
   notes: string;
 }
 
-export interface Subcontractor {
+export interface QuoteSubcontractor {
   id: string;
-  quoteId?: string;
+  quoteId: string;
   name: string;
   description?: string;
   cost: number;
-  frequency: Frequency;  // Changed from string to Frequency enum
+  frequency: Frequency;
   email?: string;
   phone?: string;
   services?: string[];
@@ -65,7 +65,7 @@ export interface Quote {
   client_id?: string;
   site_id?: string;
   shifts?: QuoteShift[];
-  subcontractors?: Subcontractor[];
+  subcontractors?: QuoteSubcontractor[];
   
   // Required fields to match award/types
   notes: string;
@@ -110,8 +110,4 @@ export interface Quote {
   validUntil?: string;
   clientId?: string;
   siteId?: string;
-}
-
-export interface QuoteSubcontractor extends Subcontractor {
-  quoteId: string;
 }

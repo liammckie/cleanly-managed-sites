@@ -1,84 +1,81 @@
 
-import { useState } from 'react';
-import { StepConfig } from '@/components/sites/forms/siteFormConfig';
+import { useState, ReactNode } from 'react';
+
+export interface StepDefinition {
+  title: string;
+  description: string;
+  component: ReactNode;
+}
 
 export interface StepperState {
-  steps: StepConfig[];
   currentStep: number;
+  steps: StepDefinition[];
   totalSteps: number;
-  progress: number;
   isFirstStep: boolean;
   isLastStep: boolean;
-  handleNext: (onSubmit?: () => Promise<void>) => void;
+  progress: number;
   handleBack: () => void;
-  goToStep: (stepIndex: number) => void;
-  validateCurrentStep?: () => boolean; // Added validation method for the current step
+  handleNext: () => void;
+  validateCurrentStep?: () => boolean;
 }
 
-interface UseSiteFormStepperProps {
-  steps: StepConfig[];
-  validateStep?: (stepIndex: number) => boolean;
-}
-
-export const useSiteFormStepper = ({
-  steps,
-  validateStep = () => true
-}: UseSiteFormStepperProps): StepperState => {
+export function useSiteFormStepper(): StepperState {
   const [currentStep, setCurrentStep] = useState(0);
+  
+  // Define steps
+  const steps: StepDefinition[] = [
+    {
+      title: 'Basic Information',
+      description: 'Enter site basic details',
+      component: <div>Basic Information Step</div>
+    },
+    {
+      title: 'Contact Information',
+      description: 'Add site contacts',
+      component: <div>Contact Information Step</div>
+    },
+    {
+      title: 'Contract Details',
+      description: 'Define contract terms',
+      component: <div>Contract Details Step</div>
+    },
+    {
+      title: 'Billing Information',
+      description: 'Setup billing details',
+      component: <div>Billing Information Step</div>
+    },
+    {
+      title: 'Additional Details',
+      description: 'Add any additional information',
+      component: <div>Additional Details Step</div>
+    }
+  ];
+  
   const totalSteps = steps.length;
-  const progress = Math.round(((currentStep + 1) / totalSteps) * 100);
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === totalSteps - 1;
-  
-  const handleNext = async (onSubmit?: () => Promise<void>) => {
-    // If validation function provided, check before proceeding
-    console.log(`Validating step ${currentStep} before proceeding`);
-    if (!validateStep(currentStep)) {
-      console.log(`Validation failed for step ${currentStep}`);
-      return;
-    }
-    
-    if (isLastStep) {
-      // If we're on the last step and have an onSubmit callback, use it
-      console.log("On last step, using onSubmit callback if provided");
-      if (onSubmit) {
-        await onSubmit();
-      }
-      return;
-    }
-    
-    // Move to the next step
-    console.log(`Moving from step ${currentStep} to step ${currentStep + 1}`);
-    setCurrentStep(prev => prev + 1);
-  };
+  const progress = Math.round(((currentStep + 1) / totalSteps) * 100);
   
   const handleBack = () => {
-    if (isFirstStep) return;
-    setCurrentStep(prev => prev - 1);
-  };
-
-  // Add function to jump to a specific step
-  const goToStep = (stepIndex: number) => {
-    if (stepIndex >= 0 && stepIndex < totalSteps) {
-      setCurrentStep(stepIndex);
+    if (!isFirstStep) {
+      setCurrentStep(prev => prev - 1);
     }
   };
   
-  // Add a function to validate the current step
-  const validateCurrentStep = () => {
-    return validateStep(currentStep);
+  const handleNext = () => {
+    if (!isLastStep) {
+      setCurrentStep(prev => prev + 1);
+    }
   };
   
   return {
-    steps,
     currentStep,
+    steps,
     totalSteps,
-    progress,
     isFirstStep,
     isLastStep,
-    handleNext,
+    progress,
     handleBack,
-    goToStep,
-    validateCurrentStep
+    handleNext
   };
-};
+}

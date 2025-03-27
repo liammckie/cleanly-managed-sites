@@ -3,10 +3,10 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Sidebar } from '@/components/ui/layout/Sidebar';
 import { Navbar } from '@/components/ui/layout/Navbar';
-import { EditSiteForm } from '@/components/sites/forms/EditSiteForm';
 import { useSite } from '@/hooks/useSite';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { EditSiteForm } from '@/components/sites/forms/edit/EditSiteForm';
 
 const EditSite = () => {
   const { id } = useParams<{ id: string }>();

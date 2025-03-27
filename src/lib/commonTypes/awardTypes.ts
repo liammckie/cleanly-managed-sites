@@ -8,7 +8,7 @@ export interface RateDefinition {
   percentage: number;
   description: string;
   
-  // Added props to satisfy errors
+  // Added props to satisfy errors - with sensible defaults
   id?: string;
   dayType?: string;
   startTime?: string;
@@ -36,11 +36,11 @@ export interface CostCalculationResult {
   finalPrice: number;
 }
 
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | number;
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 9 | number;
 
-export type EmployeeLevelRates = Record<EmployeeLevel, number> & {
+export interface EmployeeLevelRates extends Record<EmployeeLevel, number> {
   loading?: boolean; // Additional prop to satisfy errors
-};
+}
 
 export interface AwardSettings {
   useModernAward: boolean;

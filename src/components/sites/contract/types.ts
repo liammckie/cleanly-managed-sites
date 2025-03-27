@@ -37,6 +37,7 @@ export interface ContractDetails {
   serviceDeliveryMethod?: string;
   terms?: { id: string; name: string; description: string }[];
   additionalContracts?: any[];
+  contractType?: string;
 }
 
 export interface ContractSummaryData {
@@ -64,7 +65,18 @@ export interface ContractSummaryData {
   profitMargin: number;
   
   // Additional metrics
-  activeCount?: number; // Add this property for ContractValueMetrics component
+  activeCount?: number;
+}
+
+// Define contract data interface for individual contracts
+export interface ContractData {
+  id: string;
+  client: string;
+  site: string;
+  value: number;
+  startDate: string;
+  endDate: string;
+  status: string;
 }
 
 // Define contract forecast interface
@@ -77,5 +89,5 @@ export interface ContractForecast {
 
 // Define interface for grouped contracts
 export interface GroupedContracts {
-  [key: string]: any[];
+  [key: string]: ContractData[];
 }

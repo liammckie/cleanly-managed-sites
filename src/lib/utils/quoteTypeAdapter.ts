@@ -1,136 +1,143 @@
+import { Quote, QuoteShift, QuoteSubcontractor } from '@/lib/types/quotes';
+import { adaptQuoteData } from './adapters';
 
-import { adaptQuoteData } from './quoteTypeAdapter';
-import { Quote, QuoteShift, QuoteSubcontractor } from '@/types/models';
-import { adaptDay, adaptFrequency } from './typeAdapters';
-
-/**
- * Adapt a quote from one format to another
- */
-export function adaptQuote(quote: any): Quote {
-  return adaptQuoteData(quote);
+// Adapt models to quotes function - converts DB models to Quote objects
+export function adaptModelsToQuotes(data: any[]): Quote[] {
+  if (!data || !Array.isArray(data)) return [];
+  
+  return data.map(item => {
+    return {
+      id: item.id || '',
+      name: item.name || '',
+      title: item.title || '',
+      client_name: item.client_name || '',
+      clientName: item.client_name || '',
+      site_name: item.site_name || '',
+      siteName: item.site_name || '',
+      status: item.status || 'draft',
+      overhead_percentage: item.overhead_percentage || 0,
+      overheadPercentage: item.overhead_percentage || 0,
+      margin_percentage: item.margin_percentage || 0,
+      marginPercentage: item.margin_percentage || 0,
+      total_price: item.total_price || 0,
+      totalPrice: item.total_price || 0,
+      labor_cost: item.labor_cost || 0,
+      laborCost: item.labor_cost || 0,
+      supplies_cost: item.supplies_cost || 0,
+      suppliesCost: item.supplies_cost || 0,
+      equipment_cost: item.equipment_cost || 0,
+      equipmentCost: item.equipment_cost || 0,
+      subcontractor_cost: item.subcontractor_cost || 0,
+      subcontractorCost: item.subcontractor_cost || 0,
+      created_at: item.created_at || '',
+      createdAt: item.created_at || '',
+      updated_at: item.updated_at || '',
+      updatedAt: item.updated_at || '',
+      quote_number: item.quote_number || '',
+      quoteNumber: item.quote_number || '',
+      valid_until: item.valid_until || '',
+      validUntil: item.valid_until || '',
+      client_id: item.client_id || '',
+      clientId: item.client_id || '',
+      site_id: item.site_id || '',
+      siteId: item.site_id || '',
+      notes: item.notes || '',
+      description: item.description || '',
+      // Any other properties needed
+    };
+  });
 }
 
-/**
- * Adapt an array of quotes from database models to application models
- */
-export function adaptModelsToQuotes(quotes: any[]): Quote[] {
-  if (!Array.isArray(quotes)) return [];
-  return quotes.map(adaptQuoteData);
-}
-
-/**
- * Adapt a quote status string to the QuoteStatus type
- */
-function adaptQuoteStatus(status: string): 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'pending' | 'accepted' {
-  const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'expired', 'pending', 'accepted'];
-  return validStatuses.includes(status) ? status as any : 'draft';
-}
-
-/**
- * Adapt a shift object to the QuoteShift type
- */
-function adaptQuoteShift(shift: any): QuoteShift {
+// Adapt a single quote object for API use
+export function adaptQuote(quote: Quote): any {
   return {
-    id: shift.id || crypto.randomUUID(),
-    quoteId: shift.quoteId || shift.quote_id || '',
-    day: adaptDay(shift.day || 'monday') as any,
-    startTime: shift.startTime || shift.start_time || '09:00',
-    endTime: shift.endTime || shift.end_time || '17:00',
-    breakDuration: Number(shift.breakDuration || shift.break_duration || 30),
-    numberOfCleaners: Number(shift.numberOfCleaners || shift.number_of_cleaners || 1),
-    employmentType: (shift.employmentType || shift.employment_type || 'casual') as any,
-    level: Number(shift.level || 1) as any, // Cast to EmployeeLevel type
-    allowances: Array.isArray(shift.allowances) ? shift.allowances : [],
-    estimatedCost: Number(shift.estimatedCost || shift.estimated_cost || 0),
-    location: shift.location || '',
-    notes: shift.notes || ''
+    id: quote.id,
+    name: quote.name,
+    title: quote.title,
+    client_name: quote.client_name || quote.clientName,
+    site_name: quote.site_name || quote.siteName,
+    status: quote.status,
+    overhead_percentage: quote.overhead_percentage || quote.overheadPercentage,
+    margin_percentage: quote.margin_percentage || quote.marginPercentage,
+    total_price: quote.total_price || quote.totalPrice,
+    labor_cost: quote.labor_cost || quote.laborCost,
+    supplies_cost: quote.supplies_cost || quote.suppliesCost,
+    equipment_cost: quote.equipment_cost || quote.equipmentCost,
+    subcontractor_cost: quote.subcontractor_cost || quote.subcontractorCost,
+    notes: quote.notes,
+    description: quote.description,
+    client_id: quote.client_id || quote.clientId,
+    site_id: quote.site_id || quote.siteId,
+    valid_until: quote.valid_until || quote.validUntil,
+    quote_number: quote.quote_number || quote.quoteNumber
   };
 }
 
-/**
- * Adapt a subcontractor object to the QuoteSubcontractor type
- */
-function adaptQuoteSubcontractor(sub: any): QuoteSubcontractor {
+// Convert API data to Quote objects
+export function adaptQuoteData(data: any): Quote {
+  if (!data) return {} as Quote;
+  
   return {
-    id: sub.id || crypto.randomUUID(),
-    quoteId: sub.quoteId || sub.quote_id || '',
-    name: sub.name || sub.business_name || '',
-    description: sub.description || sub.custom_services || '',
-    cost: Number(sub.cost || sub.monthly_cost || 0),
-    frequency: adaptFrequency(sub.frequency || 'monthly') as any,
-    email: sub.email || '',
-    phone: sub.phone || '',
-    service: sub.service || '',
-    notes: sub.notes || '',
-    services: Array.isArray(sub.services) ? sub.services : [],
-    customServices: sub.customServices || sub.custom_services || '',
-    monthlyCost: Number(sub.monthlyCost || sub.monthly_cost || 0),
-    monthly_cost: Number(sub.monthly_cost || sub.monthlyCost || 0),
-    isFlatRate: Boolean(sub.isFlatRate || sub.is_flat_rate || true),
-    is_flat_rate: Boolean(sub.is_flat_rate || sub.isFlatRate || true),
-    business_name: sub.business_name || sub.name || '',
-    contact_name: sub.contact_name || ''
+    id: data.id || '',
+    name: data.name || '',
+    title: data.title || '',
+    client_name: data.client_name || '',
+    clientName: data.client_name || '',
+    site_name: data.site_name || '',
+    siteName: data.site_name || '',
+    status: data.status || 'draft',
+    overhead_percentage: data.overhead_percentage || 0,
+    overheadPercentage: data.overhead_percentage || 0,
+    margin_percentage: data.margin_percentage || 0,
+    marginPercentage: data.margin_percentage || 0,
+    total_price: data.total_price || 0,
+    totalPrice: data.total_price || 0,
+    labor_cost: data.labor_cost || 0,
+    laborCost: data.labor_cost || 0,
+    supplies_cost: data.supplies_cost || 0,
+    suppliesCost: data.supplies_cost || 0,
+    equipment_cost: data.equipment_cost || 0,
+    equipmentCost: data.equipment_cost || 0,
+    subcontractor_cost: data.subcontractor_cost || 0,
+    subcontractorCost: data.subcontractor_cost || 0,
+    created_at: data.created_at || '',
+    createdAt: data.created_at || '',
+    updated_at: data.updated_at || '',
+    updatedAt: data.updated_at || '',
+    quote_number: data.quote_number || '',
+    quoteNumber: data.quote_number || '',
+    valid_until: data.valid_until || '',
+    validUntil: data.valid_until || '',
+    client_id: data.client_id || '',
+    clientId: data.client_id || '',
+    site_id: data.site_id || '',
+    siteId: data.site_id || '',
+    notes: data.notes || '',
+    description: data.description || '',
+    clientContact: data.client_contact || '',
+    clientEmail: data.client_email || '',
+    clientPhone: data.client_phone || '',
+    siteAddress: data.site_address || '',
+    frequency: data.frequency || '',
+    scope: data.scope || '',
+    terms: data.terms || '',
+    overhead_cost: data.overhead_cost || 0,
+    overheadCost: data.overhead_cost || 0,
+    total_cost: data.total_cost || 0,
+    totalCost: data.total_cost || 0,
+    margin_amount: data.margin_amount || 0,
+    marginAmount: data.margin_amount || 0,
+    startDate: data.start_date || '',
+    start_date: data.start_date || '',
+    endDate: data.end_date || '',
+    end_date: data.end_date || '',
+    expiryDate: data.expiry_date || '',
+    expiry_date: data.expiry_date || '',
+    contractLength: data.contract_length || 0,
+    contractLengthUnit: data.contract_length_unit || 'months',
+    overheadProfile: data.overhead_profile || '',
+    userId: data.user_id || '',
+    createdBy: data.created_by || '',
+    created_by: data.created_by || ''
   };
-}
-
-/**
- * Adapt a quote from one format to another
- */
-export function adaptQuoteData(quote: any): Quote {
-  // Create a base quote object
-  const adaptedQuote: Quote = {
-    id: quote.id || crypto.randomUUID(),
-    name: quote.name || '',
-    title: quote.title || '',
-    client_name: quote.client_name || quote.clientName || '',
-    clientName: quote.clientName || quote.client_name || '',
-    site_name: quote.site_name || quote.siteName || '',
-    siteName: quote.siteName || quote.site_name || '',
-    description: quote.description || '',
-    status: adaptQuoteStatus(quote.status || 'draft'),
-    overhead_percentage: Number(quote.overhead_percentage || quote.overheadPercentage || 15),
-    overheadPercentage: Number(quote.overheadPercentage || quote.overhead_percentage || 15),
-    margin_percentage: Number(quote.margin_percentage || quote.marginPercentage || 20),
-    marginPercentage: Number(quote.marginPercentage || quote.margin_percentage || 20),
-    total_price: Number(quote.total_price || quote.totalPrice || 0),
-    totalPrice: Number(quote.totalPrice || quote.total_price || 0),
-    labor_cost: Number(quote.labor_cost || quote.laborCost || 0),
-    laborCost: Number(quote.laborCost || quote.labor_cost || 0),
-    supplies_cost: Number(quote.supplies_cost || quote.suppliesCost || 0),
-    equipment_cost: Number(quote.equipment_cost || quote.equipmentCost || 0),
-    subcontractor_cost: Number(quote.subcontractor_cost || quote.subcontractorCost || 0),
-    subcontractorCost: Number(quote.subcontractorCost || quote.subcontractor_cost || 0),
-    created_at: quote.created_at || quote.createdAt || new Date().toISOString(),
-    createdAt: quote.createdAt || quote.created_at || new Date().toISOString(),
-    updated_at: quote.updated_at || quote.updatedAt || new Date().toISOString(),
-    updatedAt: quote.updatedAt || quote.updated_at || new Date().toISOString(),
-    quote_number: quote.quote_number || quote.quoteNumber || '',
-    quoteNumber: quote.quoteNumber || quote.quote_number || '',
-    valid_until: quote.valid_until || quote.validUntil || '',
-    validUntil: quote.validUntil || quote.valid_until || '',
-    client_id: quote.client_id || quote.clientId || '',
-    clientId: quote.clientId || quote.client_id || '',
-    site_id: quote.site_id || quote.siteId || '',
-    siteId: quote.siteId || quote.site_id || '',
-    notes: quote.notes || '',
-    frequency: quote.frequency || 'weekly',
-    scope: quote.scope || '',
-    terms: quote.terms || '',
-    clientContact: quote.clientContact || '',
-    clientEmail: quote.clientEmail || '',
-    clientPhone: quote.clientPhone || '',
-    siteAddress: quote.siteAddress || ''
-  };
-
-  // Adapt shifts if available
-  if (quote.shifts && Array.isArray(quote.shifts)) {
-    adaptedQuote.shifts = quote.shifts.map(adaptQuoteShift);
-  }
-
-  // Adapt subcontractors if available
-  if (quote.subcontractors && Array.isArray(quote.subcontractors)) {
-    adaptedQuote.subcontractors = quote.subcontractors.map(adaptQuoteSubcontractor);
-  }
-
-  return adaptedQuote;
 }

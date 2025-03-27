@@ -42,6 +42,8 @@ export function prepareQuoteSubcontractorForApi(subcontractor: QuoteSubcontracto
     description: subcontractor.description,
     cost: subcontractor.cost,
     frequency: subcontractor.frequency,
-    // Add any other fields needed for the API
+    email: subcontractor.email,
+    phone: subcontractor.phone,
+    services: subcontractor.services
   };
 }
