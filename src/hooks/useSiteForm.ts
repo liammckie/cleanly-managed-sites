@@ -6,7 +6,7 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { v4 as uuidv4 } from 'uuid';
 import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
-import { useSiteFormHandlers } from './useSiteFormHandlers';
+import { SiteStatus } from '@/types/models';
 
 export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   const navigate = useNavigate();
@@ -17,22 +17,6 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const {
-    handleChange,
-    handleSelectChange,
-    handleNestedChange,
-    handleDoubleNestedChange,
-    addBillingLine,
-    updateBillingLine,
-    removeBillingLine,
-    addContact,
-    removeContact,
-    updateContact,
-    addSubcontractor,
-    updateSubcontractor,
-    removeSubcontractor
-  } = useSiteFormHandlers(formData, setFormData);
   
   useEffect(() => {
     if (initialData) {
@@ -47,8 +31,139 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
     }
   }, [initialData]);
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Form field handlers
+  const handleChange = (field: keyof SiteFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleSelectChange = (field: keyof SiteFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleNestedChange = (section: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof SiteFormData],
+        [field]: value
+      }
+    }));
+  };
+  
+  const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof SiteFormData],
+        [subsection]: {
+          ...prev[section as keyof SiteFormData]?.[subsection],
+          [field]: value
+        }
+      }
+    }));
+  };
+  
+  // Billing line handlers
+  const addBillingLine = () => {
+    const newBillingLine = {
+      id: uuidv4(),
+      description: '',
+      amount: 0,
+      isRecurring: true,
+      onHold: false,
+      frequency: 'monthly' as 'weekly' | 'monthly' | 'quarterly' | 'annually'
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: [...(prev.billingDetails?.billingLines || []), newBillingLine]
+      }
+    }));
+  };
+  
+  const updateBillingLine = (id: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: (prev.billingDetails?.billingLines || []).map(line => 
+          line.id === id ? { ...line, [field]: value } : line
+        )
+      }
+    }));
+  };
+  
+  const removeBillingLine = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: (prev.billingDetails?.billingLines || []).filter(line => line.id !== id)
+      }
+    }));
+  };
+  
+  // Contact handlers
+  const addContact = (contact: any) => {
+    const newContact = {
+      ...contact,
+      id: uuidv4()
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      contacts: [...(prev.contacts || []), newContact]
+    }));
+  };
+  
+  const updateContact = (id: string, updatedContact: any) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: (prev.contacts || []).map(contact => 
+        contact.id === id ? { ...contact, ...updatedContact } : contact
+      )
+    }));
+  };
+  
+  const removeContact = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: (prev.contacts || []).filter(contact => contact.id !== id)
+    }));
+  };
+  
+  // Subcontractor handlers
+  const addSubcontractor = (subcontractor: any) => {
+    const newSubcontractor = {
+      ...subcontractor,
+      id: uuidv4()
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      subcontractors: [...(prev.subcontractors || []), newSubcontractor]
+    }));
+  };
+  
+  const updateSubcontractor = (id: string, updatedSubcontractor: any) => {
+    setFormData(prev => ({
+      ...prev,
+      subcontractors: (prev.subcontractors || []).map(sub => 
+        sub.id === id ? { ...sub, ...updatedSubcontractor } : sub
+      )
+    }));
+  };
+  
+  const removeSubcontractor = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      subcontractors: (prev.subcontractors || []).filter(sub => sub.id !== id)
+    }));
+  };
+  
+  const handleSubmit = async () => {
     const validationErrors = validateSiteForm(formData);
     
     setErrors(validationErrors);
@@ -66,7 +181,9 @@ export const useSiteForm = (mode: 'create' | 'edit', initialData?: any) => {
       toast.success(mode === 'create' ? 'Site created successfully!' : 'Site updated successfully!');
       navigate('/sites');
     } catch (error: any) {
-      toast.error(`Error: ${error.message || 'An unknown error occurred'}`);
+      const errorMsg = error.message || 'An unknown error occurred';
+      setErrors(prev => ({ ...prev, general: errorMsg }));
+      toast.error(`Error: ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,31 +1,19 @@
 
 import React from 'react';
-import { SiteFormStepper } from './SiteFormStepper';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { SiteForm } from './SiteForm';
 import { Card, CardContent } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
 
 export function CreateSiteForm() {
-  const navigate = useNavigate();
-  
   const {
     formData,
+    errors,
+    isSubmitting,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    handleLocationDetailsChange,
-    handleContactChange,
-    addContact,
-    removeContact,
-    handleBillingLineChange,
-    addBillingLine,
-    removeBillingLine,
-    handleStatusChange,
-    handleSubmit,
-    isSubmitting,
-    error
-  } = useSiteForm();
+    handleSubmit
+  } = useSiteForm('create');
 
   return (
     <Card>
@@ -35,9 +23,9 @@ export function CreateSiteForm() {
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleDoubleNestedChange={handleDoubleNestedChange}
-          handleSubmit={() => handleSubmit('create')}
+          handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          error={error}
+          error={errors['general']}
         />
       </CardContent>
     </Card>

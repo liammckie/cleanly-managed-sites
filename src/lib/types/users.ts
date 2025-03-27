@@ -1,5 +1,5 @@
 
-import { UserRole } from '@/types/models';
+import { UserRole as BaseUserRole } from '@/types/models';
 
 export interface SystemUser {
   id: string;
@@ -34,4 +34,5 @@ export interface SystemUserInsert {
 
 export type UserStatus = "active" | "pending" | "inactive";
 
-export { UserRole };
+// Use export type for re-exporting when using isolatedModules
+export type UserRole = BaseUserRole;

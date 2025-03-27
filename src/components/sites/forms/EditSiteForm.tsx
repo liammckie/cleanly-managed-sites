@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useSiteForm } from '@/hooks/useSiteForm';
 import { SiteForm } from './SiteForm';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,26 +9,17 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export function EditSiteForm() {
   const { siteId } = useParams<{ siteId: string }>();
-  const navigate = useNavigate();
   const { site, isLoading } = useSite(siteId);
   
   const {
     formData,
+    errors,
+    isSubmitting,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    handleLocationDetailsChange,
-    handleContactChange,
-    addContact,
-    removeContact,
-    handleBillingLineChange,
-    addBillingLine,
-    removeBillingLine,
-    handleStatusChange,
-    handleSubmit,
-    isSubmitting,
-    error
-  } = useSiteForm(siteId);
+    handleSubmit
+  } = useSiteForm('edit', site);
 
   if (isLoading) {
     return (
@@ -46,9 +37,9 @@ export function EditSiteForm() {
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleDoubleNestedChange={handleDoubleNestedChange}
-          handleSubmit={() => handleSubmit('update')}
+          handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          error={error}
+          error={errors['general']}
         />
       </CardContent>
     </Card>

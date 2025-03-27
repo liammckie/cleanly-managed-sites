@@ -20,7 +20,7 @@ export function BillingDetailsStepWrapper({
   updateBillingLine,
   removeBillingLine
 }: BillingDetailsStepWrapperProps) {
-  // Ensure billingDetails has all the required properties
+  // Ensure billingDetails has all the required properties with default values
   const billingDetails: BillingDetails = formData.billingDetails || {
     billingLines: [],
     useClientInfo: false,
@@ -33,7 +33,20 @@ export function BillingDetailsStepWrapper({
       state: '',
       postcode: '',
       country: 'Australia'
-    }
+    },
+    // Add additional properties required by components
+    serviceDeliveryType: 'direct',
+    weeklyBudget: 0,
+    annualDirectCost: 0,
+    annualContractorCost: 0,
+    contractorCostFrequency: '',
+    weeklyContractorCost: 0,
+    monthlyContractorCost: 0,
+    contractorInvoiceFrequency: '',
+    serviceType: '',
+    deliveryMethod: '',
+    rate: '',
+    xeroContactId: ''
   };
   
   const wrappedFormData = {
