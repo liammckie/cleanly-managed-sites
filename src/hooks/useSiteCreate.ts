@@ -1,9 +1,12 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
+import { validateWithZod } from '@/lib/validation';
+import { siteFormSchema } from '@/lib/validation/siteSchema';
 
 // Adapt site data for API submission
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
@@ -27,6 +30,12 @@ export function useSiteCreate() {
 
   const createSiteMutation = useMutation({
     mutationFn: async (siteData: SiteFormData) => {
+      // Validate the site data before sending to API
+      const validation = validateWithZod(siteFormSchema, siteData);
+      if (!validation.success) {
+        throw new Error('Invalid site data: ' + Object.values(validation.errors || {}).join(', '));
+      }
+      
       const adaptedData = adaptSiteFormToApiData(siteData);
       return await sitesApi.createSite(adaptedData);
     },

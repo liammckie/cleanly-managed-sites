@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { sitesApi } from '@/lib/api/sites';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
+import { validateWithZod } from '@/lib/validation';
+import { siteFormSchema } from '@/lib/validation/siteSchema';
 
 const adaptSiteFormToUpdateData = (formData: SiteFormData): Partial<SiteDTO> => {
   return {
@@ -23,8 +25,19 @@ export function useSiteUpdate() {
 
   const updateSiteMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<SiteDTO> | SiteFormData }) => {
-      const updateData = 'postalCode' in data ? adaptSiteFormToUpdateData(data as SiteFormData) : data;
-      return await sitesApi.updateSite(id, updateData);
+      // If it's form data, validate and adapt it
+      if ('postalCode' in data) {
+        const validation = validateWithZod(siteFormSchema, data);
+        if (!validation.success) {
+          throw new Error('Invalid site data: ' + Object.values(validation.errors || {}).join(', '));
+        }
+        const updateData = adaptSiteFormToUpdateData(data as SiteFormData);
+        return await sitesApi.updateSite(id, updateData);
+      } 
+      // If it's already a DTO, just use it directly
+      else {
+        return await sitesApi.updateSite(id, data);
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
