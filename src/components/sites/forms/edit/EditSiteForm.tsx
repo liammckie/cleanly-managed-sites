@@ -1,273 +1,248 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { SiteFormData } from '../types/siteFormData';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BasicInformationStep } from '../steps/BasicInformationStep';
-import { ContactsStep } from '../steps/contacts/ContactsStep';
-import { BillingDetailsStepWrapper } from '../steps/BillingDetailsStepWrapper';
-import { ContractDetailsStep } from '../steps/ContractDetailsStep';
-import { JobSpecificationsStepWrapper } from '../steps/JobSpecificationsStepWrapper';
-import { PeriodicalsStepWrapper } from '../steps/PeriodicalsStepWrapper';
-import { SubcontractorsStep } from '../steps/SubcontractorsStep';
-import { ReplenishablesStep } from '../steps/ReplenishablesStep';
-import { SecurityStep } from '../steps/SecurityStep';
-import { useSiteFormBillingLines } from '@/hooks/useSiteFormBillingLines';
-import { useSiteFormContractTerms } from '@/hooks/useSiteFormContractTerms';
-import { useSiteFormAdditionalContracts } from '@/hooks/useSiteFormAdditionalContracts';
+import { Form } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import { SiteFormData, validateSiteForm } from '@/components/sites/forms/types';
+import { useSite } from '@/hooks/useSite';
+import { useSiteUpdate } from '@/hooks/useSiteUpdate';
 import { SiteStatus } from '@/types/common';
 
-// Define the props interface for EditSiteForm
-export interface EditSiteFormProps {
-  initialData: any;
-  siteId: string;
-  isLoading: boolean;
-  onSubmit: (data: any) => void;
-}
+const siteFormSchema = z.object({
+  name: z.string().min(2, {
+    message: "Site name must be at least 2 characters.",
+  }),
+  address: z.string().min(5, {
+    message: "Address must be at least 5 characters.",
+  }),
+  city: z.string().min(2, {
+    message: "City must be at least 2 characters.",
+  }),
+  state: z.string().min(2, {
+    message: "State must be at least 2 characters.",
+  }),
+  postalCode: z.string().min(4, {
+    message: "Postal code must be at least 4 characters.",
+  }),
+  country: z.string().min(2, {
+    message: "Country must be at least 2 characters.",
+  }),
+  status: z.enum(['active', 'pending', 'inactive', 'on-hold', 'lost']),
+});
 
-export function EditSiteForm({ 
-  initialData, 
-  siteId, 
-  isLoading, 
-  onSubmit 
-}: EditSiteFormProps) {
-  const [formData, setFormData] = useState<SiteFormData>(initialData || {} as SiteFormData);
-  const [activeTab, setActiveTab] = useState('basic-info');
+type SiteFormValues = z.infer<typeof siteFormSchema>;
+
+export function EditSiteForm() {
+  const { siteId } = useParams<{ siteId: string }>();
+  const navigate = useNavigate();
+  const { site, isLoading } = useSite(siteId);
+  const { updateSiteMutation } = useSiteUpdate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<any[]>([]);
   
-  const form = useForm<SiteFormData>({
-    defaultValues: initialData || {}
+  const form = useForm<SiteFormValues>({
+    resolver: zodResolver(siteFormSchema),
+    defaultValues: {
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      status: 'active',
+    }
   });
   
-  // Update form data when initialData changes
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
+    if (site) {
+      form.reset({
+        name: site.name,
+        address: site.address || '',
+        city: site.city || '',
+        state: site.state || '',
+        postalCode: site.postal_code || site.postcode || '',
+        country: site.country || '',
+        status: site.status || 'active' as SiteStatus,
+      });
     }
-  }, [initialData]);
+  }, [site, form]);
   
-  // Use billing lines hook
-  const { 
-    billingLines, 
-    addBillingLine, 
-    updateBillingLine, 
-    removeBillingLine 
-  } = useSiteFormBillingLines();
-  
-  // Use contract terms hook
-  const {
-    addContractTerm,
-    updateContractTerm,
-    removeContractTerm
-  } = useSiteFormContractTerms(formData, setFormData);
-  
-  // Use additional contracts hook
-  const {
-    addAdditionalContract,
-    updateAdditionalContract,
-    removeAdditionalContract
-  } = useSiteFormAdditionalContracts(formData, setFormData);
-  
-  // Handle form submission
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!siteId) return;
+    
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      await onSubmit(formData);
+      // Replace problematic spread operator with explicit assignment
+      const updatedFormData = {
+        ...site,
+        name: form.getValues().name,
+        address: form.getValues().address,
+        city: form.getValues().city,
+        state: form.getValues().state,
+        postal_code: form.getValues().postalCode,
+        country: form.getValues().country,
+        status: form.getValues().status,
+      };
+      
+      // For validating the form:
+      const validationResult = validateSiteForm(updatedFormData as SiteFormData);
+      
+      if (!validationResult.isValid) {
+        // Handle validation errors
+        setErrors(validationResult.errors);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Process and submit the form
+      const result = await updateSiteMutation.mutateAsync({
+        id: siteId,
+        data: updatedFormData
+      });
+      if (result) {
+        toast.success("Site updated successfully");
+        navigate(`/sites/${siteId}`);
+      } else {
+        toast.error("Failed to update site");
+        setIsSubmitting(false);
+      }
     } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
+      console.error("Error updating site:", error);
+      toast.error("An error occurred while updating the site");
       setIsSubmitting(false);
     }
   };
   
-  // Handle field changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
-  // Handle status changes
-  const handleStatusChange = (status: SiteStatus) => {
-    setFormData(prev => ({
-      ...prev,
-      status
-    }));
-  };
-  
-  // Handle nested field changes
-  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
-    setFormData(prev => {
-      const currentSection = prev[section] || {};
-      return {
-        ...prev,
-        [section]: {
-          ...currentSection,
-          [field]: value
-        }
-      };
-    });
-  };
-  
-  // Handle doubly nested field changes
-  const handleDoubleNestedChange = (
-    section: keyof SiteFormData, 
-    subsection: string, 
-    field: string, 
-    value: any
-  ) => {
-    setFormData(prev => {
-      const currentSection = prev[section] || {};
-      const currentSubsection = currentSection[subsection] || {};
-      
-      return {
-        ...prev,
-        [section]: {
-          ...currentSection,
-          [subsection]: {
-            ...currentSubsection,
-            [field]: value
-          }
-        }
-      };
-    });
-  };
-  
-  // Handle client selection
-  const handleClientChange = (clientId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      client_id: clientId
-    }));
-  };
+  if (!site) {
+    return (
+      <div className="text-center py-8">
+        <p>Site not found</p>
+        <Button onClick={() => navigate('/sites')} className="mt-4">
+          Return to Sites
+        </Button>
+      </div>
+    );
+  }
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Site: {formData.name}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 mb-6">
-              <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-              <TabsTrigger value="contacts">Contacts</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="contract">Contract</TabsTrigger>
-              <TabsTrigger value="job-specs">Job Specs</TabsTrigger>
-              <TabsTrigger value="periodicals">Periodicals</TabsTrigger>
-              <TabsTrigger value="subcontractors">Subcontractors</TabsTrigger>
-              <TabsTrigger value="replenishables">Replenishables</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-            </TabsList>
+    <Card className="max-w-2xl mx-auto">
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Site Name</Label>
+                <Input id="name" type="text" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" type="text" {...form.register("address")} />
+                {form.formState.errors.address && (
+                  <p className="text-sm text-red-500">{form.formState.errors.address.message}</p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" type="text" {...form.register("city")} />
+                  {form.formState.errors.city && (
+                    <p className="text-sm text-red-500">{form.formState.errors.city.message}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input id="state" type="text" {...form.register("state")} />
+                  {form.formState.errors.state && (
+                    <p className="text-sm text-red-500">{form.formState.errors.state.message}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input id="postalCode" type="text" {...form.register("postalCode")} />
+                  {form.formState.errors.postalCode && (
+                    <p className="text-sm text-red-500">{form.formState.errors.postalCode.message}</p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="country">Country</Label>
+                <Input id="country" type="text" {...form.register("country")} />
+                {form.formState.errors.country && (
+                  <p className="text-sm text-red-500">{form.formState.errors.country.message}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  className="w-full px-3 py-2 border rounded"
+                  {...form.register("status")}
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="lost">Lost</option>
+                </select>
+                {form.formState.errors.status && (
+                  <p className="text-sm text-red-500">{form.formState.errors.status.message}</p>
+                )}
+              </div>
+            </div>
             
-            <TabsContent value="basic-info">
-              <BasicInformationStep 
-                formData={formData} 
-                handleChange={handleChange}
-                handleClientChange={handleClientChange}
-                handleStatusChange={handleStatusChange}
-                setFormData={setFormData}
-                errors={errors}
-              />
-            </TabsContent>
+            {errors.length > 0 && (
+              <div className="rounded-md bg-red-50 p-4">
+                <h3 className="text-sm font-medium text-red-800">
+                  There were errors with your submission:
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <ul className="list-disc pl-5 space-y-1">
+                    {errors.map((error, index) => (
+                      <li key={index}>{error.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
             
-            <TabsContent value="contacts">
-              <ContactsStep 
-                formData={formData} 
-                errors={errors}
-                handleContactChange={() => {}}
-                addContact={() => {}}
-                removeContact={() => {}}
-              />
-            </TabsContent>
-            
-            <TabsContent value="billing">
-              <BillingDetailsStepWrapper 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
-                handleDoubleNestedChange={handleDoubleNestedChange}
-                addBillingLine={addBillingLine}
-                updateBillingLine={updateBillingLine}
-                removeBillingLine={removeBillingLine}
-              />
-            </TabsContent>
-            
-            <TabsContent value="contract">
-              <ContractDetailsStep 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
-                addContractTerm={addContractTerm}
-                updateContractTerm={updateContractTerm}
-                removeContractTerm={removeContractTerm}
-              />
-            </TabsContent>
-            
-            <TabsContent value="job-specs">
-              <JobSpecificationsStepWrapper 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
-              />
-            </TabsContent>
-            
-            <TabsContent value="periodicals">
-              <PeriodicalsStepWrapper 
-                formData={formData} 
-                handleNestedChange={handleNestedChange}
-                handleDoubleNestedChange={handleDoubleNestedChange}
-              />
-            </TabsContent>
-            
-            <TabsContent value="subcontractors">
-              <SubcontractorsStep 
-                subcontractors={formData.subcontractors || []} 
-                handleAddSubcontractor={() => {}}
-                handleUpdateSubcontractor={() => {}}
-                handleRemoveSubcontractor={() => {}}
-                hasSubcontractors={formData.hasSubcontractors || false}
-              />
-            </TabsContent>
-            
-            <TabsContent value="replenishables">
-              <ReplenishablesStep 
-                replenishables={formData.replenishables || {}}
-                handleAddItem={() => {}}
-                handleUpdateItem={() => {}}
-                handleRemoveItem={() => {}}
-              />
-            </TabsContent>
-            
-            <TabsContent value="security">
-              <SecurityStep 
-                securityDetails={formData.securityDetails || {}}
-                handleChange={() => {}}
-              />
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex justify-end mt-6 space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => window.history.back()}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => navigate('/sites')}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update Site
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

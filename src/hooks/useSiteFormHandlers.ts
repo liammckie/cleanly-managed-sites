@@ -1,44 +1,43 @@
+import { useState, useCallback } from 'react';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { SiteStatus } from '@/types/common';
 
-import { useState } from 'react';
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
-import { SiteStatus } from '@/lib/types/commonTypes';
+export function useSiteFormHandlers(initialFormData: SiteFormData) {
+  const [formData, setFormData] = useState<SiteFormData>(initialFormData);
 
-export const useSiteFormHandlers = (
-  formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>,
-  errors: Record<string, string>,
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>
-) => {
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when field is filled
-    if (errors[name] && value.trim()) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[name];
-      setErrors(updatedErrors);
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, []);
+
+  const handleClientChange = useCallback((clientId: string, clientName?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      client_id: clientId,
+      clientId: clientId, // For compatibility
+      client_name: clientName,
+      clientName: clientName // For compatibility
+    }));
+  }, []);
+
+  const handleStatusChange = useCallback((status: SiteStatus) => {
+    // Normalize status values to ensure compatibility
+    let normalizedStatus: SiteStatus;
+    if (status === 'on_hold') {
+      normalizedStatus = 'on-hold';
+    } else {
+      normalizedStatus = status as SiteStatus;
     }
-  };
-  
-  // Handle status change
-  const handleStatusChange = (value: SiteStatus) => {
-    setFormData(prev => ({ ...prev, status: value }));
-  };
-  
-  // Handle client change
-  const handleClientChange = (clientId: string) => {
-    setFormData(prev => ({ ...prev, clientId }));
     
-    // Clear error when client is selected
-    if (errors['clientId']) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors['clientId'];
-      setErrors(updatedErrors);
-    }
-  };
-  
+    setFormData(prev => ({
+      ...prev,
+      status: normalizedStatus
+    }));
+  }, []);
+
   // Handle nested object changes with type safety
   const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
     setFormData(prev => {
@@ -74,12 +73,14 @@ export const useSiteFormHandlers = (
       };
     });
   };
-  
+
   return {
+    formData,
+    setFormData,
     handleChange,
-    handleStatusChange,
     handleClientChange,
+    handleStatusChange,
     handleNestedChange,
     handleDoubleNestedChange
   };
-};
+}

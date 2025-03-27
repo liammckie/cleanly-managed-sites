@@ -1,51 +1,45 @@
 
-import { ClientRecord } from '../../types';
-import { ValidationMessage, ValidationResult } from '../types';
+import { EnhancedValidationResult, ValidationMessage } from '@/types/common';
+import { isValidEmail, isValidPhone } from '@/utils/validationUtils';
 
-// Validate client data
-export const validateClientData = (data: any[]): ValidationResult => {
+export function validateClientData(clients: any[]): EnhancedValidationResult {
   const errors: ValidationMessage[] = [];
-  const warnings: ValidationMessage[] = [];
-  const validData: Partial<ClientRecord>[] = [];
   
-  data.forEach((row, index) => {
-    if (!row.name) {
+  clients.forEach((client, index) => {
+    // Validate required fields
+    if (!client.name) {
       errors.push({
-        row: index + 1,
         field: 'name',
         message: 'Client name is required',
-        value: row.name
+        row: index
       });
     }
     
-    if (!row.contact_name) {
+    // Validate email format if provided
+    if (client.email && !isValidEmail(client.email)) {
       errors.push({
-        row: index + 1,
-        field: 'contact_name',
-        message: 'Contact name is required',
-        value: row.contact_name
-      });
-    }
-    
-    if (row.email && !/\S+@\S+\.\S+/.test(row.email)) {
-      warnings.push({
-        row: index + 1,
         field: 'email',
-        message: 'Email format appears to be invalid',
-        value: row.email
+        message: 'Invalid email format',
+        row: index
       });
     }
     
-    // Add the row to validData if it has all required fields
-    if (row.name && row.contact_name) {
-      validData.push(row);
+    // Validate phone number format if provided
+    if (client.phone && !isValidPhone(client.phone)) {
+      errors.push({
+        field: 'phone',
+        message: 'Invalid phone number format',
+        row: index
+      });
     }
+    
+    // Additional validations as needed...
   });
   
   return {
     isValid: errors.length === 0,
     errors,
-    warnings,
-    data: validData
+    data: clients,
+    warnings: []
   };
-};
+}

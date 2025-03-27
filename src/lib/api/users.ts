@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SystemUser } from '@/lib/types/users';
 
@@ -15,6 +14,28 @@ export interface SystemUserInsert {
   custom_id: string;
   notes: string;
   territories: string[];
+}
+
+export async function bulkUpsertUsers(users: any[]) {
+  // Make sure all users have an id
+  const usersWithIds = users.map(user => {
+    if (!user.id) {
+      return { ...user, id: uuidv4() };
+    }
+    return user;
+  });
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .upsert(usersWithIds);
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error during bulk user upsert:', error);
+    return { success: false, error };
+  }
 }
 
 export const usersApi = {

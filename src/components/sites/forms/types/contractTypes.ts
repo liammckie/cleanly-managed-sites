@@ -11,6 +11,7 @@ export interface ContractTerm {
 }
 
 export interface ContractDetails {
+  id?: string;
   startDate?: string;
   endDate?: string;
   contractNumber?: string;
@@ -26,6 +27,9 @@ export interface ContractDetails {
   terminationPeriod?: string;
   contractType?: string;
   terms?: ContractTerm[];
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
 }
 
 export interface ContractHistoryEntry {
@@ -41,4 +45,16 @@ export interface ContractHistoryEntry {
   date?: string;
   user?: string;
   changes?: any;
+}
+
+// Define ContractForecast interface
+export interface ContractForecast {
+  contractStartDate: Date;
+  contractEndDate: Date;
+  billingAmount: number;
+  billingFrequency: string;
+  upcomingRenewal?: Date;
+  noticeDate?: Date;
+  renewalLeadDays?: number;
+  status: 'active' | 'ending' | 'pending-renewal' | 'expired';
 }

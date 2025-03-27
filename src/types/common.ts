@@ -19,7 +19,14 @@ export type WorkOrderStatus =
 
 export type WorkOrderPriority = 'low' | 'medium' | 'high' | 'urgent';
 
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
+export type QuoteStatus = 
+  | 'draft' 
+  | 'sent' 
+  | 'approved' 
+  | 'rejected' 
+  | 'expired' 
+  | 'pending'
+  | 'accepted';
 
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
 
@@ -31,16 +38,60 @@ export type ContractLengthUnit = 'days' | 'weeks' | 'months' | 'years';
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
+  data: any[];
+  warnings?: string[];
 }
 
 // Define validation message type to match what's used in import-export
 export interface ValidationMessage {
   field: string;
   message: string;
+  row?: number;
 }
 
 // Enhanced validation result type to work with the existing code
 export interface EnhancedValidationResult {
   isValid: boolean;
   errors: ValidationMessage[];
+  data?: any[];
+  warnings?: ValidationMessage[];
+  imported?: number;
 }
+
+// Add Day, EmploymentType, EmployeeLevel, Frequency types
+export type Day = 
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
+  | 'weekday'
+  | 'public_holiday';
+
+export type UnifiedDay = Day;
+
+export type EmploymentType = 'full-time' | 'part-time' | 'casual';
+
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+export type Frequency = 
+  | 'daily'
+  | 'weekly'
+  | 'fortnightly'
+  | 'monthly'
+  | 'quarterly'
+  | 'yearly'
+  | 'once';
+
+// Define Json and JsonValue types
+export type JsonValue = 
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+export type Json = JsonValue | { [key: string]: JsonValue } | JsonValue[];

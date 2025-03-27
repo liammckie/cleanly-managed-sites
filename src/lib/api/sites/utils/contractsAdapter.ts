@@ -1,44 +1,56 @@
 
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
-export function adaptContractDetails(dbContract: any): ContractDetails {
+export function adaptContractDetailsForDb(contractDetails: Partial<ContractDetails>) {
   return {
-    id: dbContract.id || crypto.randomUUID(),
-    startDate: dbContract.start_date || dbContract.startDate || '',
-    endDate: dbContract.end_date || dbContract.endDate || '',
-    contractLength: dbContract.contract_length || dbContract.contractLength || 0,
-    contractLengthUnit: dbContract.contract_length_unit || dbContract.contractLengthUnit || 'months',
-    autoRenewal: dbContract.auto_renew || dbContract.autoRenewal || false,
-    renewalPeriod: dbContract.renewal_period || dbContract.renewalPeriod || 0,
-    renewalNotice: dbContract.renewal_notice || dbContract.renewalNotice || 0,
-    noticeUnit: dbContract.notice_unit || dbContract.noticeUnit || 'months',
-    serviceFrequency: dbContract.service_frequency || dbContract.serviceFrequency || '',
-    serviceDeliveryMethod: dbContract.service_delivery_method || dbContract.serviceDeliveryMethod || '',
-    contractNumber: dbContract.contract_number || dbContract.contractNumber || '',
-    renewalTerms: dbContract.renewal_terms || dbContract.renewalTerms || '',
-    terminationPeriod: dbContract.termination_period || dbContract.terminationPeriod || '',
-    contractType: dbContract.contract_type || dbContract.contractType || 'cleaning',
-    notes: dbContract.notes || '',
-    terms: dbContract.terms || []
+    id: contractDetails.id,
+    startDate: contractDetails.startDate,
+    endDate: contractDetails.endDate,
+    contractNumber: contractDetails.contractNumber,
+    contractLength: contractDetails.contractLength,
+    contractLengthUnit: contractDetails.contractLengthUnit,
+    autoRenewal: contractDetails.autoRenewal,
+    renewalPeriod: contractDetails.renewalPeriod,
+    renewalNotice: contractDetails.renewalNotice,
+    noticeUnit: contractDetails.noticeUnit,
+    serviceFrequency: contractDetails.serviceFrequency,
+    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod,
+    renewalTerms: contractDetails.renewalTerms,
+    terminationPeriod: contractDetails.terminationPeriod,
+    contractType: contractDetails.contractType,
+    terms: contractDetails.terms,
+    value: contractDetails.value,
+    billingCycle: contractDetails.billingCycle,
+    notes: contractDetails.notes
   };
 }
 
-export function prepareContractDetailsForApi(contract: Partial<ContractDetails>): any {
-  return {
-    start_date: contract.startDate || null,
-    end_date: contract.endDate || null,
-    contract_length: contract.contractLength || 0,
-    contract_length_unit: contract.contractLengthUnit || 'months',
-    auto_renew: contract.autoRenewal || false,
-    renewal_period: contract.renewalPeriod || 0,
-    renewal_notice: contract.renewalNotice || 0,
-    notice_unit: contract.noticeUnit || 'months',
-    service_frequency: contract.serviceFrequency || '',
-    service_delivery_method: contract.serviceDeliveryMethod || '',
-    contract_number: contract.contractNumber || '',
-    renewal_terms: contract.renewalTerms || '',
-    termination_period: contract.terminationPeriod || '',
-    contract_type: contract.contractType || 'cleaning',
-    notes: contract.notes || ''
+export function adaptDbToContractDetails(dbContractDetails: any): ContractDetails {
+  // Ensure we handle null/undefined values
+  if (!dbContractDetails) return {} as ContractDetails;
+  
+  // Convert from DB snake_case to camelCase if needed
+  const convertedDetails = {
+    id: dbContractDetails.id,
+    startDate: dbContractDetails.startDate || dbContractDetails.start_date,
+    endDate: dbContractDetails.endDate || dbContractDetails.end_date,
+    contractNumber: dbContractDetails.contractNumber || dbContractDetails.contract_number,
+    contractLength: dbContractDetails.contractLength || dbContractDetails.contract_length,
+    contractLengthUnit: dbContractDetails.contractLengthUnit || dbContractDetails.contract_length_unit,
+    autoRenewal: dbContractDetails.autoRenewal || dbContractDetails.auto_renewal,
+    renewalPeriod: dbContractDetails.renewalPeriod || dbContractDetails.renewal_period,
+    renewalNotice: dbContractDetails.renewalNotice || dbContractDetails.renewal_notice,
+    noticeUnit: dbContractDetails.noticeUnit || dbContractDetails.notice_unit,
+    serviceFrequency: dbContractDetails.serviceFrequency || dbContractDetails.service_frequency,
+    serviceDeliveryMethod: dbContractDetails.serviceDeliveryMethod || dbContractDetails.service_delivery_method,
+    renewalTerms: dbContractDetails.renewalTerms || dbContractDetails.renewal_terms,
+    terminationPeriod: dbContractDetails.terminationPeriod || dbContractDetails.termination_period,
+    contractType: dbContractDetails.contractType || dbContractDetails.contract_type,
+    terms: dbContractDetails.terms,
+    value: dbContractDetails.value,
+    billingCycle: dbContractDetails.billingCycle || dbContractDetails.billing_cycle,
+    notes: dbContractDetails.notes
   };
+
+  return convertedDetails as ContractDetails;
 }
