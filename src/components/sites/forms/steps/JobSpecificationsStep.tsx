@@ -1,292 +1,134 @@
 
 import React from 'react';
-import { 
-  FormField,
-  FormItem, 
-  FormLabel, 
-  FormControl,
-  FormDescription
-} from '@/components/ui/form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SiteFormData } from '../types/siteFormData';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface JobSpecificationsStepProps {
   formData: SiteFormData;
   handleNestedChange: (section: string, field: string, value: any) => void;
 }
 
-export function JobSpecificationsStep({ 
-  formData, 
-  handleNestedChange 
+export function JobSpecificationsStep({
+  formData,
+  handleNestedChange
 }: JobSpecificationsStepProps) {
-  const jobSpecs = formData.job_specifications || {};
-
-  const handleChange = (field: string, value: any) => {
-    handleNestedChange('job_specifications', field, value);
-  };
-
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Job Specifications</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              name="cleaningFrequency"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Cleaning Frequency</FormLabel>
-                  <Select
-                    value={jobSpecs.cleaningFrequency || ''}
-                    onValueChange={(value) => handleChange('cleaningFrequency', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="fortnightly">Fortnightly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            {jobSpecs.cleaningFrequency === 'custom' && (
-              <FormField
-                name="customFrequency"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Custom Frequency</FormLabel>
-                    <FormControl>
-                      <Input
-                        value={jobSpecs.customFrequency || ''}
-                        onChange={(e) => handleChange('customFrequency', e.target.value)}
-                        placeholder="Specify custom frequency"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="daysPerWeek">Days Per Week</Label>
+                <Input
+                  id="daysPerWeek"
+                  type="number"
+                  min="1"
+                  max="7"
+                  value={formData.jobSpecifications?.daysPerWeek || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'daysPerWeek', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="hoursPerDay">Hours Per Day</Label>
+                <Input
+                  id="hoursPerDay"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={formData.jobSpecifications?.hoursPerDay || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'hoursPerDay', parseFloat(e.target.value) || '')}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="directEmployees">Direct Employees</Label>
+                <Input
+                  id="directEmployees"
+                  type="number"
+                  min="0"
+                  value={formData.jobSpecifications?.directEmployees || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'directEmployees', parseInt(e.target.value) || '')}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="cleaningFrequency">Cleaning Frequency</Label>
+                <Input
+                  id="cleaningFrequency"
+                  value={formData.jobSpecifications?.cleaningFrequency || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'cleaningFrequency', e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="serviceDays">Service Days</Label>
+                <Input
+                  id="serviceDays"
+                  value={formData.jobSpecifications?.serviceDays || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'serviceDays', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="serviceTime">Service Time</Label>
+                <Input
+                  id="serviceTime"
+                  value={formData.jobSpecifications?.serviceTime || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'serviceTime', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="estimatedHours">Estimated Hours</Label>
+                <Input
+                  id="estimatedHours"
+                  value={formData.jobSpecifications?.estimatedHours || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'estimatedHours', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="equipmentRequired">Equipment Required</Label>
+                <Input
+                  id="equipmentRequired"
+                  value={formData.jobSpecifications?.equipmentRequired || ''}
+                  onChange={(e) => handleNestedChange('jobSpecifications', 'equipmentRequired', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="scopeNotes">Scope Notes</Label>
+              <Textarea
+                id="scopeNotes"
+                rows={4}
+                value={formData.jobSpecifications?.scopeNotes || ''}
+                onChange={(e) => handleNestedChange('jobSpecifications', 'scopeNotes', e.target.value)}
               />
-            )}
-
-            <FormField
-              name="serviceDays"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Service Days</FormLabel>
-                  <FormControl>
-                    <Input
-                      value={jobSpecs.serviceDays || ''}
-                      onChange={(e) => handleChange('serviceDays', e.target.value)}
-                      placeholder="e.g. Monday, Wednesday, Friday"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="serviceTime"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Service Time</FormLabel>
-                  <FormControl>
-                    <Input
-                      value={jobSpecs.serviceTime || ''}
-                      onChange={(e) => handleChange('serviceTime', e.target.value)}
-                      placeholder="e.g. After 5:00 PM"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            </div>
+            
+            <div>
+              <Label htmlFor="notes">Additional Notes</Label>
+              <Textarea
+                id="notes"
+                rows={4}
+                value={formData.jobSpecifications?.notes || ''}
+                onChange={(e) => handleNestedChange('jobSpecifications', 'notes', e.target.value)}
+              />
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              name="daysPerWeek"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Days Per Week</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.daysPerWeek || ''}
-                      onChange={(e) => handleChange('daysPerWeek', e.target.value)}
-                      min="0"
-                      max="7"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="hoursPerDay"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Hours Per Day</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.hoursPerDay || ''}
-                      onChange={(e) => handleChange('hoursPerDay', e.target.value)}
-                      min="0"
-                      step="0.5"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="directEmployees"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Direct Employees</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.directEmployees || ''}
-                      onChange={(e) => handleChange('directEmployees', e.target.value)}
-                      min="0"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              name="weeklyContractorCost"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Weekly Contractor Cost</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.weeklyContractorCost || ''}
-                      onChange={(e) => handleChange('weeklyContractorCost', parseFloat(e.target.value))}
-                      min="0"
-                      step="0.01"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="monthlyContractorCost"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Monthly Contractor Cost</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.monthlyContractorCost || ''}
-                      onChange={(e) => handleChange('monthlyContractorCost', parseFloat(e.target.value))}
-                      min="0"
-                      step="0.01"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              name="annualContractorCost"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Annual Contractor Cost</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      value={jobSpecs.annualContractorCost || ''}
-                      onChange={(e) => handleChange('annualContractorCost', parseFloat(e.target.value))}
-                      min="0"
-                      step="0.01"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <FormField
-            name="estimatedHours"
-            render={() => (
-              <FormItem>
-                <FormLabel>Estimated Hours</FormLabel>
-                <FormControl>
-                  <Input
-                    value={jobSpecs.estimatedHours || ''}
-                    onChange={(e) => handleChange('estimatedHours', e.target.value)}
-                    placeholder="e.g. 8 hours per week"
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="equipmentRequired"
-            render={() => (
-              <FormItem>
-                <FormLabel>Equipment Required</FormLabel>
-                <FormControl>
-                  <Input
-                    value={jobSpecs.equipmentRequired || ''}
-                    onChange={(e) => handleChange('equipmentRequired', e.target.value)}
-                    placeholder="e.g. Vacuum, mop, etc."
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="scopeNotes"
-            render={() => (
-              <FormItem>
-                <FormLabel>Scope Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    value={jobSpecs.scopeNotes || ''}
-                    onChange={(e) => handleChange('scopeNotes', e.target.value)}
-                    placeholder="Detailed description of job requirements"
-                    rows={4}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="notes"
-            render={() => (
-              <FormItem>
-                <FormLabel>Additional Notes</FormLabel>
-                <FormControl>
-                  <Textarea
-                    value={jobSpecs.notes || ''}
-                    onChange={(e) => handleChange('notes', e.target.value)}
-                    placeholder="Any additional information about the job specifications"
-                    rows={4}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
         </CardContent>
       </Card>
     </div>
