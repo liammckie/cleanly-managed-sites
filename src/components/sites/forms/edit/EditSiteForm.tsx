@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { SiteFormData } from '../types/siteFormData';
 import { useSiteFormData } from './useSiteFormData';
@@ -12,7 +13,8 @@ interface EditSiteFormProps {
   isLoading: boolean;
 }
 
-const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubmit, isLoading }) => {
+// Changed from default export to named export
+export const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubmit, isLoading }) => {
   const [formData, setFormData] = useState<SiteFormData>({
     name: '',
     address: '',
@@ -315,4 +317,5 @@ const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId, onSubm
   );
 };
 
+// Also export as default for backward compatibility
 export default EditSiteForm;
