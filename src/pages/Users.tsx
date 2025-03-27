@@ -8,13 +8,24 @@ import { UserTable } from '@/components/users/UserTable';
 import { NewUserDialog } from '@/components/users/NewUserDialog';
 import { Loader2 } from 'lucide-react';
 import { SystemUser } from '@/lib/types/users';
+import { useRoles } from '@/hooks/useRoles';
 
 export default function Users() {
-  const { users, isLoading, error, refetch } = useUsers();
+  const { users, isLoading, error, refetch, createUserMutation } = useUsers();
+  const { roles } = useRoles();
   const [newUserDialogOpen, setNewUserDialogOpen] = useState(false);
   
   const handleOpenDialog = () => {
     setNewUserDialogOpen(true);
+  };
+  
+  const handleCloseDialog = () => {
+    setNewUserDialogOpen(false);
+  };
+  
+  const handleCreateUser = (userData: any) => {
+    createUserMutation.mutate(userData);
+    setNewUserDialogOpen(false);
   };
   
   if (isLoading) {
@@ -69,6 +80,10 @@ export default function Users() {
       
       <NewUserDialog
         open={newUserDialogOpen}
+        onClose={handleCloseDialog}
+        onSubmit={handleCreateUser}
+        roles={roles || []}
+        isSubmitting={createUserMutation.isPending}
         onOpenChange={setNewUserDialogOpen}
       />
     </div>

@@ -1,80 +1,82 @@
 
-// File Format Conversion Utilities
-import { z } from 'zod';
-
-// Client format conversion
-export const convertCSVToClientFormat = (csvData: any[]): any[] => {
+// Helper functions to convert CSV data to different formats
+export function convertCSVToClientFormat(csvData: any[]): any[] {
+  if (!csvData || !csvData.length) {
+    return [];
+  }
+  
   return csvData.map(row => ({
-    name: row.name || row.Name || '',
-    contact_name: row.contact_name || row.contact || row['Contact Name'] || '',
-    email: row.email || row.Email || '',
-    phone: row.phone || row.Phone || row['Phone Number'] || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.zip || row.Zip || row['Postal Code'] || '',
-    notes: row.notes || row.Notes || '',
-    status: 'active'
+    name: row.name || row.client_name || 'Unnamed Client',
+    contact_name: row.contact_name || row.contact || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || row.postal_code || row.zip || '',
+    status: row.status || 'active',
+    notes: row.notes || row.note || '',
+    custom_id: row.custom_id || row.id || ''
   }));
-};
+}
 
-// Contractor format conversion
-export const convertCSVToContractorFormat = (csvData: any[]): any[] => {
+export function convertCSVToSiteFormat(csvData: any[]): any[] {
+  if (!csvData || !csvData.length) {
+    return [];
+  }
+  
   return csvData.map(row => ({
-    business_name: row.business_name || row['Business Name'] || row.name || row.Name || '',
-    contact_name: row.contact_name || row['Contact Name'] || row.contact || '',
-    email: row.email || row.Email || '',
-    phone: row.phone || row.Phone || row['Phone Number'] || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.zip || row.Zip || row['Postal Code'] || '',
-    tax_id: row.tax_id || row.abn || row.ABN || row['Tax ID'] || '',
-    status: 'active',
-    contractor_type: row.contractor_type || row.type || row.Type || row['Contractor Type'] || 'cleaning',
-    notes: row.notes || row.Notes || ''
+    name: row.name || row.site_name || 'Unnamed Site',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || row.postal_code || row.zip || '',
+    client_id: row.client_id || null,
+    monthly_revenue: parseFloat(row.monthly_revenue || '0'),
+    status: row.status || 'active',
+    custom_id: row.custom_id || row.id || '',
+    representative: row.representative || row.rep || ''
   }));
-};
+}
 
-// Site format conversion
-export const convertCSVToSiteFormat = (csvData: any[]): any[] => {
+export function convertCSVToContractorFormat(csvData: any[]): any[] {
+  if (!csvData || !csvData.length) {
+    return [];
+  }
+  
   return csvData.map(row => ({
-    name: row.name || row.Name || row['Site Name'] || '',
-    address: row.address || row.Address || '',
-    city: row.city || row.City || '',
-    state: row.state || row.State || '',
-    postcode: row.postcode || row.zip || row.Zip || row['Postal Code'] || '',
-    representative: row.representative || row.contact || row['Site Contact'] || '',
-    phone: row.phone || row.Phone || row['Phone Number'] || '',
-    email: row.email || row.Email || '',
-    client_id: row.client_id || row['Client ID'] || '',
-    client_name: row.client_name || row['Client Name'] || '',
-    status: 'active',
-    monthly_revenue: parseFloat(row.monthly_revenue || row['Monthly Revenue'] || '0') || 0,
-    weekly_revenue: parseFloat(row.weekly_revenue || row['Weekly Revenue'] || '0') || 0,
-    annual_revenue: parseFloat(row.annual_revenue || row['Annual Revenue'] || '0') || 0,
-    monthly_cost: parseFloat(row.monthly_cost || row['Monthly Cost'] || '0') || 0,
-    custom_id: row.custom_id || row['Custom ID'] || row.id || '',
-    notes: row.notes || row.Notes || ''
+    business_name: row.business_name || row.company || row.name || 'Unnamed Contractor',
+    contact_name: row.contact_name || row.contact || '',
+    email: row.email || '',
+    phone: row.phone || '',
+    address: row.address || '',
+    city: row.city || '',
+    state: row.state || '',
+    postcode: row.postcode || row.postal_code || row.zip || '',
+    abn: row.abn || row.tax_id || '',
+    contractor_type: row.contractor_type || row.type || 'general',
+    status: row.status || 'active',
+    hourly_rate: parseFloat(row.hourly_rate || '0'),
+    day_rate: parseFloat(row.day_rate || '0'),
+    notes: row.notes || row.note || ''
   }));
-};
+}
 
-// Contract format conversion
-export const convertCSVToContractFormat = (csvData: any[]): any[] => {
+export function convertCSVToContractFormat(csvData: any[]): any[] {
+  if (!csvData || !csvData.length) {
+    return [];
+  }
+  
   return csvData.map(row => ({
-    site_id: row.site_id || row['Site ID'] || '',
-    site_name: row.site_name || row['Site Name'] || '',
-    client_id: row.client_id || row['Client ID'] || '',
-    client_name: row.client_name || row['Client Name'] || '',
-    contract_number: row.contract_number || row['Contract Number'] || '',
-    start_date: row.start_date || row['Start Date'] || '',
-    end_date: row.end_date || row['End Date'] || '',
-    value: parseFloat(row.value || row.Value || row['Contract Value'] || '0') || 0,
-    status: row.status || row.Status || 'active',
-    contract_type: row.contract_type || row['Contract Type'] || 'cleaning',
-    auto_renewal: row.auto_renewal === 'true' || row.auto_renewal === 'Yes' || false,
-    renewal_terms: row.renewal_terms || row['Renewal Terms'] || '',
-    termination_period: row.termination_period || row['Termination Period'] || '',
-    notes: row.notes || row.Notes || ''
+    site_id: row.site_id || null,
+    contract_type: row.contract_type || row.type || 'service',
+    value: parseFloat(row.value || row.amount || '0'),
+    start_date: row.start_date || null,
+    end_date: row.end_date || null,
+    billing_cycle: row.billing_cycle || row.frequency || 'monthly',
+    auto_renew: row.auto_renew === 'true' || row.auto_renew === true || false,
+    termination_period: row.termination_period || '',
+    renewal_terms: row.renewal_terms || '',
+    notes: row.notes || row.note || ''
   }));
-};
+}

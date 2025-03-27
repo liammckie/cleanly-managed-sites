@@ -26,6 +26,13 @@ export interface ContractData {
   client_name?: string;
   monthly_revenue?: number;
   contract_details?: any;
+  
+  // For backward compatibility
+  start_date?: string;
+  end_date?: string;
+  
+  // Add the is_primary field that was referenced in contractAdapter.ts
+  is_primary?: boolean;
 }
 
 export interface ContractSummaryData {
@@ -60,8 +67,18 @@ export interface GroupedContracts {
 }
 
 export interface ContractForecast {
-  startDate: string;
-  endDate: string;
-  value: number;
-  id: string;
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+  contractCount?: number;
+  activeContracts?: number;
+  expiringContracts?: number;
+  renewingContracts?: number;
+  
+  // Additional optional fields that may be used
+  startDate?: string;
+  endDate?: string;
+  value?: number;
+  id?: string;
 }

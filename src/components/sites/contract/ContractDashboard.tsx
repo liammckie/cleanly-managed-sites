@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,14 +33,13 @@ export function ContractDashboard() {
   
   // Make sure we have complete summary data with defaults for missing properties
   const enhancedSummaryData = {
-    totalContracts: summaryData?.totalContracts || summaryData?.totalCount || 0,
+    totalContracts: summaryData?.totalContracts || 0,
     activeCount: summaryData?.activeCount || 0,
     totalValue: summaryData?.totalValue || 0,
     
     // Set defaults for expiry metrics if they don't exist
     expiringThisMonth: summaryData?.expiringThisMonth || 0,
     expiringNext3Months: summaryData?.expiringNext3Months || 0,
-    expiringNext6Months: summaryData?.expiringNext6Months || 0,
     expiringThisYear: summaryData?.expiringThisYear || 0,
     
     // Set defaults for value expiry metrics if they don't exist
@@ -101,7 +99,8 @@ export function ContractDashboard() {
   const enhancedForecasts = forecasts.map(forecast => ({
     ...forecast,
     cost: typeof forecast.revenue === 'number' ? forecast.revenue * 0.7 : 0,
-    profit: typeof forecast.revenue === 'number' ? forecast.revenue * 0.3 : 0
+    profit: typeof forecast.revenue === 'number' ? forecast.revenue * 0.3 : 0,
+    month: forecast.month || ''
   }));
 
   return (

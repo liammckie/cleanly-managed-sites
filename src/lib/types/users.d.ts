@@ -21,7 +21,7 @@ export interface SystemUser {
   daily_summary?: boolean;
 }
 
-export interface SystemUserRole {
+export interface UserRole {
   id: string;
   name: string;
   description?: string;
@@ -29,6 +29,9 @@ export interface SystemUserRole {
   created_at: string;
   updated_at: string;
 }
+
+// Alias UserRole as SystemUserRole for backward compatibility
+export type SystemUserRole = UserRole;
 
 export interface SystemUserInsert {
   email: string;

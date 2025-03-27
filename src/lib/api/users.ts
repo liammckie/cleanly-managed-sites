@@ -1,7 +1,21 @@
 
 import { supabase } from '@/lib/supabase';
-import { SystemUser, SystemUserRole, SystemUserInsert } from '@/lib/types/users';
+import { SystemUser, UserRole } from '@/lib/types/users';
 import { Json } from '@/types/common';
+import { v4 as uuidv4 } from 'uuid';
+
+// Type definition for user insert
+export interface SystemUserInsert {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  title?: string;
+  role_id: string;
+  status?: string;
+  full_name?: string;
+  password?: string;
+}
 
 // API methods for users
 export const usersApi = {
@@ -38,10 +52,14 @@ export const usersApi = {
   
   // Create a new user
   async createUser(userData: SystemUserInsert): Promise<SystemUser> {
+    // Generate a UUID for the new user
+    const userId = uuidv4();
+    
     // Map the input data to match the required database fields
     const dbUserData = {
+      id: userId,
       email: userData.email,
-      full_name: `${userData.firstName} ${userData.lastName}`,
+      full_name: userData.full_name || `${userData.firstName} ${userData.lastName}`,
       first_name: userData.firstName,
       last_name: userData.lastName,
       phone: userData.phone,
@@ -112,7 +130,7 @@ export const usersApi = {
   },
   
   // Get all user roles
-  async getAllRoles(): Promise<SystemUserRole[]> {
+  async getAllRoles(): Promise<UserRole[]> {
     const { data, error } = await supabase
       .from('user_roles')
       .select('*')
@@ -123,17 +141,15 @@ export const usersApi = {
       throw error;
     }
     
-    // Transform the permissions from Json[] to string[]
+    // Transform the permissions from Json to string[]
     return data.map(role => ({
       ...role,
-      permissions: typeof role.permissions === 'object' 
-        ? Object.keys(role.permissions).filter(key => role.permissions[key] === true)
-        : []
-    })) as SystemUserRole[];
+      permissions: this.convertPermissionsToArray(role.permissions)
+    })) as UserRole[];
   },
   
   // Get a single role by ID
-  async getRoleById(id: string): Promise<SystemUserRole> {
+  async getRoleById(id: string): Promise<UserRole> {
     const { data, error } = await supabase
       .from('user_roles')
       .select('*')
@@ -148,14 +164,22 @@ export const usersApi = {
     // Transform the permissions from Json to string[]
     return {
       ...data,
-      permissions: typeof data.permissions === 'object' 
-        ? Object.keys(data.permissions).filter(key => data.permissions[key] === true)
-        : []
-    } as SystemUserRole;
+      permissions: this.convertPermissionsToArray(data.permissions)
+    } as UserRole;
+  },
+  
+  // Helper method to convert permissions from Json to string[]
+  convertPermissionsToArray(permissions: any): string[] {
+    if (typeof permissions === 'object' && permissions !== null) {
+      return Object.keys(permissions).filter(key => permissions[key] === true);
+    } else if (Array.isArray(permissions)) {
+      return permissions.map(p => String(p));
+    }
+    return [];
   },
   
   // Create a new role
-  async createRole(roleData: Partial<SystemUserRole>): Promise<SystemUserRole> {
+  async createRole(roleData: Partial<UserRole>): Promise<UserRole> {
     // Convert string[] permissions to JSON object
     const permissionsObj: { [key: string]: boolean } = {};
     (roleData.permissions || []).forEach(perm => {
@@ -180,14 +204,12 @@ export const usersApi = {
     // Transform the permissions from Json to string[]
     return {
       ...data,
-      permissions: typeof data.permissions === 'object' 
-        ? Object.keys(data.permissions).filter(key => data.permissions[key] === true)
-        : []
-    } as SystemUserRole;
+      permissions: this.convertPermissionsToArray(data.permissions)
+    } as UserRole;
   },
   
   // Update a role
-  async updateRole(id: string, roleData: Partial<SystemUserRole>): Promise<SystemUserRole> {
+  async updateRole(id: string, roleData: Partial<UserRole>): Promise<UserRole> {
     // Prepare update data
     const updateData: any = {};
     
@@ -223,10 +245,8 @@ export const usersApi = {
     // Transform the permissions from Json to string[]
     return {
       ...data,
-      permissions: typeof data.permissions === 'object' 
-        ? Object.keys(data.permissions).filter(key => data.permissions[key] === true)
-        : []
-    } as SystemUserRole;
+      permissions: this.convertPermissionsToArray(data.permissions)
+    } as UserRole;
   },
   
   // Delete a role
@@ -242,16 +262,3 @@ export const usersApi = {
     }
   }
 };
-
-// Type definition for user insert
-export interface SystemUserInsert {
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  title?: string;
-  role_id: string;
-  status?: string;
-  full_name?: string;
-  password?: string;
-}

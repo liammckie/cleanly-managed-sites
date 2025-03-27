@@ -7,17 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { SystemUserInsert } from '@/lib/api/users';
-import { SystemUserRole } from '@/lib/types/users';
+import { UserRole } from '@/lib/types/users';
 
 interface NewUserDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: SystemUserInsert) => void;
-  roles: SystemUserRole[];
+  roles: UserRole[];
   isSubmitting?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function NewUserDialog({ open, onClose, onSubmit, roles, isSubmitting = false }: NewUserDialogProps) {
+export function NewUserDialog({ open, onClose, onSubmit, roles, isSubmitting = false, onOpenChange }: NewUserDialogProps) {
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm({
     defaultValues: {
       email: '',
@@ -50,10 +51,22 @@ export function NewUserDialog({ open, onClose, onSubmit, roles, isSubmitting = f
   const onDialogClose = () => {
     reset();
     onClose();
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+  };
+  
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onDialogClose();
+    }
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
   };
   
   return (
-    <Dialog open={open} onOpenChange={onDialogClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>

@@ -17,6 +17,7 @@ export interface ContractTerm {
   renewalTerms: string;
   terminationPeriod: string;
   autoRenew: boolean;
+  description?: string;
 }
 
 export interface ContractSummary {
@@ -44,4 +45,7 @@ export interface ContractDetails {
   terms?: { id: string; name: string; description: string }[];
   additionalContracts?: any[];
   contractType?: string;
+  value?: number;
+  billingCycle?: string;
+  notes?: string;
 }

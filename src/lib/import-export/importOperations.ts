@@ -3,13 +3,14 @@
 import { supabase } from '@/lib/supabase';
 
 // Base functions for importing data
-export async function importData(tableName: string, data: any[]): Promise<void> {
+export async function importData<T extends Record<string, any>>(tableName: string, data: T[]): Promise<void> {
   if (!data || data.length === 0) {
     throw new Error('No data to import');
   }
   
+  // Use explicit type casting for the table name
   const { error } = await supabase
-    .from(tableName)
+    .from(tableName as any)
     .insert(data);
   
   if (error) {
