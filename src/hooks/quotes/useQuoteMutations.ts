@@ -1,66 +1,77 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { createQuote, updateQuote, deleteQuote } from '@/lib/api/quotes';
 import { Quote } from '@/types/models';
-import { createQuoteMutation, updateQuoteMutation, deleteQuoteMutation } from '@/lib/api/quotes';
-import { adaptQuote } from '@/utils/typeAdapters';
+import { toast } from 'sonner';
 
-export function useQuoteCreate() {
+// Hook for creating quotes
+export const useQuoteCreate = () => {
   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: async (quoteData: Partial<Quote>) => {
-      // Use any to bypass the type checking
-      const result = await createQuoteMutation(quoteData as any);
-      return adaptQuote(result);
-    },
+  const mutation = useMutation({
+    mutationFn: (quoteData: Partial<Quote>) => createQuote(quoteData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote created successfully');
     },
     onError: (error: Error) => {
       toast.error(`Failed to create quote: ${error.message}`);
+      console.error('Quote creation error:', error);
     }
   });
-}
+  
+  return {
+    createQuote: mutation.mutate,
+    isCreating: mutation.isPending,
+    error: mutation.error
+  };
+};
 
-export function useQuoteUpdate() {
+// Hook for updating quotes
+export const useQuoteUpdate = () => {
   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: async (quoteData: Quote) => {
-      // Use any to bypass the type checking
-      const result = await updateQuoteMutation(quoteData as any);
-      return adaptQuote(result);
-    },
-    onSuccess: (data) => {
-      const quoteId = (data as any).id;
+  const mutation = useMutation({
+    mutationFn: (params: { id: string; data: Partial<Quote> }) => 
+      updateQuote(params.id, params.data),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      if (quoteId) {
-        queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['quote', variables.id] });
       toast.success('Quote updated successfully');
     },
     onError: (error: Error) => {
       toast.error(`Failed to update quote: ${error.message}`);
+      console.error('Quote update error:', error);
     }
   });
-}
+  
+  return {
+    updateQuote: (data: Partial<Quote> & { id: string }) => 
+      mutation.mutate({ id: data.id, data }),
+    isUpdating: mutation.isPending,
+    error: mutation.error
+  };
+};
 
-export function useQuoteDelete() {
+// Hook for deleting quotes
+export const useQuoteDelete = () => {
   const queryClient = useQueryClient();
   
-  return useMutation({
-    mutationFn: async (quoteId: string) => {
-      await deleteQuoteMutation(quoteId);
-      return quoteId;
-    },
+  const mutation = useMutation({
+    mutationFn: (quoteId: string) => deleteQuote(quoteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote deleted successfully');
     },
     onError: (error: Error) => {
       toast.error(`Failed to delete quote: ${error.message}`);
+      console.error('Quote deletion error:', error);
     }
   });
-}
+  
+  return {
+    deleteQuote: mutation.mutate,
+    isDeleting: mutation.isPending,
+    error: mutation.error
+  };
+};

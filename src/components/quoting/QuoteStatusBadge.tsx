@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { QuoteStatus } from '@/lib/types/quotes';
+import { QuoteStatus } from '@/types/common';
 
 interface QuoteStatusBadgeProps {
   status: QuoteStatus;

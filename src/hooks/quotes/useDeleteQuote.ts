@@ -1,26 +1,22 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteQuote } from '@/lib/api/quotes';
 import { toast } from 'sonner';
-import { deleteQuoteMutation } from '@/lib/api/quotes';
 
 export function useDeleteQuote() {
   const queryClient = useQueryClient();
-
+  
   const mutation = useMutation({
-    mutationFn: async (quoteId: string) => {
-      await deleteQuoteMutation(quoteId);
-      return quoteId;
-    },
-    onSuccess: (quoteId: string) => {
+    mutationFn: (quoteId: string) => deleteQuote(quoteId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       toast.success('Quote deleted successfully');
-      return quoteId;
     },
     onError: (error: Error) => {
       toast.error(`Failed to delete quote: ${error.message}`);
     }
   });
-
+  
   return {
     deleteQuote: mutation.mutate,
     isDeleting: mutation.isPending,

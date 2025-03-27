@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,33 +7,31 @@ import { awardData } from '@/lib/award/awardData';
 
 const payConditionLabels: Record<string, string> = {
   base: 'Base Rate',
-  overtime_1_5: 'Overtime (1.5x)',
-  overtime_2: 'Overtime (2x)',
   saturday: 'Saturday',
   sunday: 'Sunday',
-  public_holiday: 'Public Holiday',
-  early_morning: 'Early Morning',
+  publicHoliday: 'Public Holiday',
+  earlyMorning: 'Early Morning',
   evening: 'Evening',
-  night: 'Night Shift',
-  shift_allowance: 'Shift Allowance',
-  meal_allowance: 'Meal Allowance'
+  overnight: 'Night Shift',
+  overtime1: 'Overtime (1.5x)',
+  overtime2: 'Overtime (2x)',
+  overtime3: 'Overtime (Public Holiday)'
 };
 
 export function JobCostCalculator() {
   const [employmentType, setEmploymentType] = useState<EmploymentType>('full_time');
-  const [level, setLevel] = useState<EmployeeLevel>('1');
-  const [hours, setHours] = useState<Record<PayCondition, number>>({
+  const [level, setLevel] = useState<EmployeeLevel>(1);
+  const [hours, setHours] = useState<Partial<Record<PayCondition, number>>>({
     base: 38,
-    overtime_1_5: 0,
-    overtime_2: 0,
     saturday: 0,
     sunday: 0,
-    public_holiday: 0,
-    early_morning: 0,
+    publicHoliday: 0,
+    earlyMorning: 0,
     evening: 0,
-    night: 0,
-    shift_allowance: 0,
-    meal_allowance: 0
+    overnight: 0,
+    overtime1: 0,
+    overtime2: 0,
+    overtime3: 0
   });
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [marginPercentage, setMarginPercentage] = useState(20);
@@ -47,7 +46,8 @@ export function JobCostCalculator() {
   const result = calculateJobCost({
     employmentType,
     level,
-    hours,
+    hours: Object.values(hours).reduce((sum, val) => sum + (val || 0), 0),
+    conditions: hours,
     overheadPercentage,
     marginPercentage
   });
@@ -62,7 +62,31 @@ export function JobCostCalculator() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-medium mb-2">Employee Details</h3>
-              {/* Add employee type and level selectors here */}
+              <div className="mb-4">
+                <label className="block mb-1">Employment Type</label>
+                <select 
+                  value={employmentType}
+                  onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="full_time">Full Time</option>
+                  <option value="part_time">Part Time</option>
+                  <option value="casual">Casual</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block mb-1">Employee Level</label>
+                <select 
+                  value={level}
+                  onChange={(e) => setLevel(Number(e.target.value) as EmployeeLevel)}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  {Object.keys(awardData.employeeLevelRates).map(lvl => (
+                    <option key={lvl} value={lvl}>Level {lvl}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             <div>
@@ -73,8 +97,11 @@ export function JobCostCalculator() {
                   <input
                     type="number"
                     min="0"
-                    value={hours[condition as PayCondition]}
-                    onChange={(e) => handleChangeHours(condition as PayCondition, parseFloat(e.target.value) || 0)}
+                    value={hours[condition as PayCondition] || 0}
+                    onChange={(e) => handleChangeHours(
+                      condition as PayCondition, 
+                      parseFloat(e.target.value) || 0
+                    )}
                     className="w-20 px-2 py-1 border rounded"
                   />
                 </div>

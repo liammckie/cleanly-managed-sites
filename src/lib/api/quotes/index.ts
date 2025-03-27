@@ -4,6 +4,7 @@ export * from './quotesApi';
 export * from './quoteShiftsApi';
 export * from './quoteSubcontractorsApi';
 export * from './overheadProfilesApi';
+export * from './allowancesApi';
 
 // Export fetchQuote as both fetchQuoteById and fetchQuote for compatibility
 export { fetchQuote as fetchQuoteById, fetchQuote } from './quotesApi';

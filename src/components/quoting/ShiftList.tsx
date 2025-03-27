@@ -10,8 +10,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { QuoteShift } from '@/types/models';
-import { ShiftListProps } from './types';
+import { FrontendQuoteShift } from '@/lib/api/quotes/utils/shiftAdapter';
+
+export interface ShiftListProps {
+  shifts: FrontendQuoteShift[];
+  onRemoveShift?: (shiftId: string) => void;
+}
 
 export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onRemoveShift }) => {
   // Helper to format day
@@ -63,18 +67,16 @@ export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onRemoveShift }) =
                   </div>
                 </TableCell>
                 <TableCell>{shift.location}</TableCell>
-                <TableCell className="text-right font-medium">
-                  ${shift.estimatedCost.toFixed(2)}
-                </TableCell>
+                <TableCell className="text-right">${shift.estimatedCost.toFixed(2)}</TableCell>
                 {onRemoveShift && (
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
+                  <TableCell>
+                    <Button 
+                      variant="ghost" 
                       size="icon"
                       onClick={() => onRemoveShift(shift.id)}
-                      title="Remove shift"
+                      className="h-8 w-8"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 )}
@@ -85,4 +87,4 @@ export const ShiftList: React.FC<ShiftListProps> = ({ shifts, onRemoveShift }) =
       </Table>
     </div>
   );
-};
+}

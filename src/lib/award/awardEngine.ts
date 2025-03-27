@@ -20,16 +20,20 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
   
   // Calculate labor cost based on hours and conditions
   let laborCost = appliedBaseRate * input.hours;
+  let totalHours = input.hours;
   
   // Apply any penalty rates from the conditions
   if (input.conditions && Object.keys(input.conditions).length > 0) {
-    laborCost = Object.entries(input.conditions).reduce(
-      (cost, [condition, hours]) => {
+    laborCost = 0;
+    totalHours = 0;
+    
+    Object.entries(input.conditions).forEach(([condition, hours]) => {
+      if (hours && hours > 0) {
         const rate = cleaningServicesAward.conditionRates[condition as PayCondition] || 1;
-        return cost + (appliedBaseRate * rate * hours);
-      },
-      0
-    );
+        laborCost += (appliedBaseRate * rate * hours);
+        totalHours += hours;
+      }
+    });
   }
   
   // Calculate overhead cost
@@ -55,8 +59,8 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
   // Create cost calculation result
   return {
     baseRate: appliedBaseRate,
-    totalHours: input.hours,
-    laborHours: input.hours,
+    totalHours,
+    laborHours: totalHours,
     laborCost,
     overheadCost,
     totalCost: totalCostBeforeMargin,

@@ -1,7 +1,8 @@
 
 import { Day, EmploymentType, EmployeeLevel } from '@/types/common';
 
-export { Day, EmploymentType, EmployeeLevel };
+// Use export type for type re-exports
+export type { Day, EmploymentType, EmployeeLevel };
 
 export type PayCondition = 
   | 'base'
@@ -56,7 +57,7 @@ export interface AwardData {
 }
 
 export interface JobCostCalculationInput {
-  baseRate: number;
+  baseRate?: number;
   hours: number;
   employmentType: EmploymentType;
   level: EmployeeLevel;
