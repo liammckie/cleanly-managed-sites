@@ -1,34 +1,27 @@
 
+// Re-export contract types from the central registry
+export type { 
+  Contract, 
+  DbContract, 
+  ContractDetailsForm, 
+  ContractTerm,
+  ContractSummary,
+  ContractForecast,
+  ContractActivity
+} from './db';
+
+import { Contract, ContractTerm } from './db';
 import { ContractStatus, Json } from './common';
 
 /**
  * Contract data structure for API and components
+ * @deprecated Use Contract from the central registry instead
  */
-export interface ContractData {
-  id: string;
-  site_id?: string;
-  site_name?: string;
-  site?: {
-    id: string;
-    name: string;
-  };
-  client_id?: string;
-  client_name?: string;
-  client?: {
-    id: string;
-    name: string;
-  };
-  monthly_revenue?: number;
-  value?: number;
-  status: ContractStatus;
-  contract_details?: Json;
-  start_date?: string;
-  end_date?: string;
-  is_primary?: boolean;
-}
+export interface ContractData extends Contract {}
 
 /**
  * Contract summary data for dashboards and reports
+ * @deprecated Use ContractSummary from the central registry instead
  */
 export interface ContractSummaryData {
   total_count: number;
@@ -45,29 +38,12 @@ export interface GroupedContracts {
   label: string;
   count: number;
   value: number;
-  contracts: ContractData[];
-}
-
-/**
- * Contract forecast for financial projections
- */
-export interface ContractForecast {
-  month: string;
-  contractCount: number;
-  revenue: number;
-  cost: number;
-  profit: number;
-  activeContracts?: number;
-  expiringContracts?: number;
-  renewingContracts?: number;
-  id?: string;
-  startDate?: string;
-  endDate?: string;
-  value?: number;
+  contracts: Contract[];
 }
 
 /**
  * Contract details for forms and detailed views
+ * @deprecated Use ContractDetailsForm from the central registry instead
  */
 export interface ContractDetails {
   id?: string;
@@ -92,18 +68,4 @@ export interface ContractDetails {
   notes?: string;
   type?: string;
   status?: string;
-}
-
-/**
- * Contract term details
- */
-export interface ContractTerm {
-  id?: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  renewalTerms: string;
-  terminationPeriod: string;
-  autoRenew: boolean;
-  description?: string;
 }
