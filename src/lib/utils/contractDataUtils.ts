@@ -1,54 +1,44 @@
 
-import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-import { format, parseISO } from 'date-fns';
+import { ContractDetails } from '@/types/contracts';
+import { Json } from '@/types/common';
 
 /**
- * Extracts contract data from JSON format for API usage
- * @param contractData Contract data from API (possibly as JSON)
- * @returns Properly formatted ContractDetails object
+ * Extract contract data from a JSON field
+ * @param jsonData JSON data from the database
+ * @returns Structured contract details
  */
-export function extractContractData(contractData: any): ContractDetails | null {
-  if (!contractData) return null;
+export function extractContractData(jsonData: Json): ContractDetails | null {
+  if (!jsonData) return null;
   
   try {
-    // If it's a string, try to parse it
-    if (typeof contractData === 'string') {
-      try {
-        contractData = JSON.parse(contractData);
-      } catch (e) {
-        console.error('Error parsing contract data string:', e);
-      }
-    }
+    // If it's a string, parse it
+    const contractData = typeof jsonData === 'string' 
+      ? JSON.parse(jsonData) 
+      : jsonData;
     
     return {
       id: contractData.id,
       contractNumber: contractData.contractNumber || contractData.contract_number,
-      type: contractData.type,
-      status: contractData.status,
       startDate: contractData.startDate || contractData.start_date,
       endDate: contractData.endDate || contractData.end_date,
       autoRenewal: contractData.autoRenewal || contractData.auto_renewal,
+      renewalPeriod: contractData.renewalPeriod || contractData.renewal_period,
       renewalNoticeDays: contractData.renewalNoticeDays || contractData.renewal_notice_days,
-      renewalLengthMonths: contractData.renewalLengthMonths || contractData.renewal_length_months,
-      reviewDate: contractData.reviewDate || contractData.review_date,
-      annualValue: contractData.annualValue || contractData.annual_value,
-      terminationClause: contractData.terminationClause || contractData.termination_clause,
-      noticePeriodDays: contractData.noticePeriodDays || contractData.notice_period_days,
-      nextIncreaseDate: contractData.nextIncreaseDate || contractData.next_increase_date,
-      specialTerms: contractData.specialTerms || contractData.special_terms,
-      value: contractData.value,
-      billingCycle: contractData.billingCycle || contractData.billing_cycle,
-      contractType: contractData.contractType || contractData.contract_type,
+      noticeUnit: contractData.noticeUnit || contractData.notice_unit,
       terminationPeriod: contractData.terminationPeriod || contractData.termination_period,
       renewalTerms: contractData.renewalTerms || contractData.renewal_terms,
       contractLength: contractData.contractLength || contractData.contract_length,
       contractLengthUnit: contractData.contractLengthUnit || contractData.contract_length_unit,
-      renewalPeriod: contractData.renewalPeriod || contractData.renewal_period,
-      renewalNotice: contractData.renewalNotice || contractData.renewal_notice,
-      noticeUnit: contractData.noticeUnit || contractData.notice_unit,
       serviceFrequency: contractData.serviceFrequency || contractData.service_frequency,
       serviceDeliveryMethod: contractData.serviceDeliveryMethod || contractData.service_delivery_method,
-      notes: contractData.notes
+      terms: contractData.terms || [],
+      additionalContracts: contractData.additionalContracts || contractData.additional_contracts || [],
+      contractType: contractData.contractType || contractData.contract_type,
+      value: contractData.value,
+      billingCycle: contractData.billingCycle || contractData.billing_cycle,
+      notes: contractData.notes,
+      type: contractData.type,
+      status: contractData.status
     };
   } catch (error) {
     console.error('Error extracting contract data:', error);
@@ -57,136 +47,34 @@ export function extractContractData(contractData: any): ContractDetails | null {
 }
 
 /**
- * Formats a contract for display purposes
- * @param contract The contract details to format
- * @returns Formatted contract information as a string
+ * Normalize contract data for database storage
+ * @param contractDetails Contract details from form
+ * @returns Normalized contract data for storage
  */
-export function formatContractForDisplay(contract: ContractDetails | null): string {
-  if (!contract) return 'No contract information';
-  
-  const parts = [];
-  
-  if (contract.contractNumber) {
-    parts.push(`Contract #${contract.contractNumber}`);
-  }
-  
-  if (contract.startDate && contract.endDate) {
-    try {
-      const formattedStart = format(parseISO(contract.startDate), 'dd/MM/yyyy');
-      const formattedEnd = format(parseISO(contract.endDate), 'dd/MM/yyyy');
-      parts.push(`${formattedStart} - ${formattedEnd}`);
-    } catch (e) {
-      // Skip date formatting if dates are invalid
-    }
-  }
-  
-  if (contract.value) {
-    parts.push(`$${contract.value.toLocaleString()}`);
-    
-    if (contract.billingCycle) {
-      parts[parts.length - 1] += ` per ${contract.billingCycle}`;
-    }
-  }
-  
-  if (contract.status) {
-    parts.push(`Status: ${contract.status}`);
-  }
-  
-  return parts.join(' | ');
-}
-
-/**
- * Normalizes the contract data to ensure consistency
- * @param contractData Raw contract data
- * @returns Normalized contract data
- */
-export function normalizeContractData(contractData: any): ContractDetails {
-  if (!contractData) return {} as ContractDetails;
-  
-  const normalized: ContractDetails = { ...contractData };
-  
-  // Convert any number fields stored as strings to numbers
-  if (typeof normalized.renewalPeriod === 'string') {
-    normalized.renewalPeriod = parseInt(normalized.renewalPeriod, 10) || undefined;
-  }
-  
-  if (typeof normalized.renewalNoticeDays === 'string') {
-    normalized.renewalNoticeDays = parseInt(normalized.renewalNoticeDays, 10) || undefined;
-  }
-  
-  if (typeof normalized.contractLength === 'string') {
-    normalized.contractLength = parseInt(normalized.contractLength, 10) || undefined;
-  }
-  
-  if (typeof normalized.value === 'string') {
-    normalized.value = parseFloat(normalized.value) || undefined;
-  }
-  
-  // Ensure boolean fields are actual booleans
-  normalized.autoRenewal = !!normalized.autoRenewal;
-  
-  return normalized;
-}
-
-/**
- * Gets the start date from contract details
- * @param contractDetails Contract details object or JSON
- * @returns Start date string or null if not found
- */
-export function getContractStartDate(contractDetails: any): string | null {
+export function normalizeContractData(contractDetails: ContractDetails): Json {
   if (!contractDetails) return null;
   
-  try {
-    // If contractDetails is a string (JSON), parse it
-    const details = typeof contractDetails === 'string' 
-      ? JSON.parse(contractDetails) 
-      : contractDetails;
-    
-    return details.startDate || details.start_date || null;
-  } catch (error) {
-    console.error('Error getting contract start date:', error);
-    return null;
-  }
-}
+  // Convert any nested objects to proper format
+  const normalizedDetails = {
+    ...contractDetails,
+    // Convert string numbers to actual numbers where needed
+    renewalNoticeDays: typeof contractDetails.renewalNoticeDays === 'string' 
+      ? parseInt(contractDetails.renewalNoticeDays, 10) 
+      : contractDetails.renewalNoticeDays,
+    contractLength: typeof contractDetails.contractLength === 'string' 
+      ? parseInt(contractDetails.contractLength, 10) 
+      : contractDetails.contractLength,
+    value: typeof contractDetails.value === 'string' 
+      ? parseFloat(contractDetails.value) 
+      : contractDetails.value,
+    // Ensure terms array is properly formatted
+    terms: Array.isArray(contractDetails.terms) 
+      ? contractDetails.terms.map(term => ({
+          ...term,
+          autoRenew: Boolean(term.autoRenew)
+        })) 
+      : []
+  };
 
-/**
- * Gets the end date from contract details
- * @param contractDetails Contract details object or JSON
- * @returns End date string or null if not found
- */
-export function getContractEndDate(contractDetails: any): string | null {
-  if (!contractDetails) return null;
-  
-  try {
-    // If contractDetails is a string (JSON), parse it
-    const details = typeof contractDetails === 'string' 
-      ? JSON.parse(contractDetails) 
-      : contractDetails;
-    
-    return details.endDate || details.end_date || null;
-  } catch (error) {
-    console.error('Error getting contract end date:', error);
-    return null;
-  }
-}
-
-/**
- * Gets the contract type from contract details
- * @param contractDetails Contract details object or JSON
- * @returns Contract type string or default value if not found
- */
-export function getContractType(contractDetails: any): string {
-  if (!contractDetails) return 'Standard';
-  
-  try {
-    // If contractDetails is a string (JSON), parse it
-    const details = typeof contractDetails === 'string' 
-      ? JSON.parse(contractDetails) 
-      : contractDetails;
-    
-    return details.contractType || details.contract_type || 'Standard';
-  } catch (error) {
-    console.error('Error getting contract type:', error);
-    return 'Standard';
-  }
+  return normalizedDetails as Json;
 }

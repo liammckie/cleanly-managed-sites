@@ -49,6 +49,24 @@ export interface GroupedContracts {
 }
 
 /**
+ * Contract forecast for financial projections
+ */
+export interface ContractForecast {
+  month: string;
+  contractCount: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  activeContracts?: number;
+  expiringContracts?: number;
+  renewingContracts?: number;
+  id?: string;
+  startDate?: string;
+  endDate?: string;
+  value?: number;
+}
+
+/**
  * Contract details for forms and detailed views
  */
 export interface ContractDetails {
@@ -57,7 +75,7 @@ export interface ContractDetails {
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
-  renewalPeriod: string;
+  renewalPeriod?: string;
   renewalNoticeDays?: number;
   noticeUnit?: string;
   terminationPeriod?: string;

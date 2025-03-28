@@ -1,90 +1,106 @@
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { SystemUser, UserRole, UserProfile, UserStatus } from '@/lib/types/users';
 import { toast } from 'sonner';
-import { usersApi } from '@/lib/api/users';
-import { validateWithZod } from '@/utils/zodValidation';
-import { userProfileSchema } from '@/lib/validation/userSchema';
-import { SystemUser } from '@/lib/types';
 
 export function useUsers() {
   const queryClient = useQueryClient();
+  const [error, setError] = useState<Error | null>(null);
   
-  // Query for fetching all users
-  const { data: users, isLoading, error, refetch } = useQuery({
+  // Fetch users
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
-    queryFn: usersApi.getUsers,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*, user_roles(*)');
+      
+      if (error) throw error;
+      
+      // Map the response to our SystemUser type
+      return data.map(user => ({
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        role_id: user.role_id,
+        role: user.user_roles as UserRole,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        title: user.title,
+        phone: user.phone,
+        status: user.status as UserStatus,
+        last_login: user.last_login,
+        custom_id: user.custom_id,
+        note: user.notes,
+        territories: user.territories
+      }));
+    }
   });
   
-  // Mutation for creating a new user
+  // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: async (userData: Partial<SystemUser>) => {
-      const result = validateWithZod(userProfileSchema, userData);
-      if (!result.success) {
-        throw new Error(`Invalid user data: ${Object.values(result.errors).join(', ')}`);
-      }
-      // Make sure email is provided when creating a user
-      if (!userData.email) {
-        throw new Error("Email is required when creating a user");
-      }
-      return await usersApi.createUser({
+    mutationFn: async (userData: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => {
+      // Ensure status is set
+      const userWithStatus = {
         ...userData,
-        email: userData.email
-      });
+        status: userData.status || 'active' as UserStatus
+      };
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert(userWithStatus)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
+      setError(error);
       toast.error(`Failed to create user: ${error.message}`);
-    },
+    }
   });
   
-  // Mutation for updating an existing user
+  // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<SystemUser> }) => {
-      const result = validateWithZod(userProfileSchema.partial(), data);
-      if (!result.success) {
-        throw new Error(`Invalid user data: ${Object.values(result.errors).join(', ')}`);
-      }
-      return await usersApi.updateUser(id, data);
+    mutationFn: async ({ id, ...userData }: Partial<SystemUser> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(userData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
-      toast.success('User updated successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update user: ${error.message}`);
-    },
-  });
-  
-  // Mutation for deleting a user
-  const deleteUserMutation = useMutation({
-    mutationFn: usersApi.deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User deleted successfully');
+      toast.success('User updated successfully');
     },
-    onError: (error: any) => {
-      toast.error(`Failed to delete user: ${error.message}`);
-    },
+    onError: (error: Error) => {
+      setError(error);
+      toast.error(`Failed to update user: ${error.message}`);
+    }
   });
   
   return {
-    users: users ? users.map(user => ({
-      ...user,
-      status: user.status as "active" | "pending" | "inactive"
-    })) as SystemUser[] : undefined,
+    users,
     isLoading,
     error,
     refetch,
-    isCreating: createUserMutation.isPending,
-    isUpdating: updateUserMutation.isPending,
-    isDeleting: deleteUserMutation.isPending,
     createUser: createUserMutation.mutate,
     updateUser: updateUserMutation.mutate,
-    deleteUser: deleteUserMutation.mutate,
+    isCreating: createUserMutation.isPending,
+    isUpdating: updateUserMutation.isPending
   };
 }

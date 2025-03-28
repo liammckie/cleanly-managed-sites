@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useClient } from './useClient';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { adaptAddress } from '@/utils/typeAdapters';
+import { stringToAddressObject } from '@/utils/typeAdapters';
 
 interface UseClientDataProps {
   clientId?: string;
@@ -23,20 +23,19 @@ export function useClientData({ clientId, setFormData }: UseClientDataProps) {
     if (!client) return;
 
     setFormData(prev => {
+      // Convert address string to object if needed
+      const billingAddress = {
+        street: client.address || '',
+        city: client.city || '',
+        state: client.state || '',
+        postcode: client.postcode || '',
+        country: 'Australia'
+      };
+
       // Create a new billingDetails object with client data
-      const billingDetails = {
-        ...prev.billingDetails,
-        // Convert client address to billing address using the adapter
-        billingAddress: adaptAddress({
-          street: client.address || '',
-          city: client.city || '',
-          state: client.state || '',
-          postcode: client.postcode || '',
-          country: 'Australia'
-        }),
-        billingCity: client.city || '',
-        billingState: client.state || '',
-        billingPostcode: client.postcode || '',
+      const updatedBillingDetails = {
+        ...(prev.billingDetails || {}),
+        billingAddress,
         billingEmail: client.email || '',
         contacts: [],
         useClientInfo: true
@@ -44,7 +43,7 @@ export function useClientData({ clientId, setFormData }: UseClientDataProps) {
 
       // Add primary client contact to billing contacts if available
       if (client.contact_name) {
-        billingDetails.contacts = [
+        updatedBillingDetails.contacts = [
           {
             id: 'primary',
             name: client.contact_name,
@@ -60,7 +59,7 @@ export function useClientData({ clientId, setFormData }: UseClientDataProps) {
         ...prev,
         client_id: client.id,
         client_name: client.name,
-        billingDetails
+        billingDetails: updatedBillingDetails
       };
     });
   };

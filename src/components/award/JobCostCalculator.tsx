@@ -1,9 +1,7 @@
-import { EmployeeLevel } from '@/types/common';
+import { EmployeeLevel, EmploymentType, PayCondition } from '@/types/common';
 import React, { useState } from 'react';
-import { EmploymentType } from '@/types/common';
 import { calculateJobCost } from '@/lib/award/awardEngine';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PayCondition } from '@/lib/award/types';
 import { awardData } from '@/lib/award/awardData';
 import { validateEmployeeLevel } from '@/lib/utils/typeMapping';
 

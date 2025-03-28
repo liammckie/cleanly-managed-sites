@@ -1,6 +1,8 @@
 
 import { UserStatus } from '@/types/common';
 
+export { UserStatus } from '@/types/common';
+
 export interface SystemUser {
   id: string;
   email: string;
