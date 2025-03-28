@@ -1,3 +1,4 @@
+import { EmployeeLevel } from '@/types/common';
 import React, { useState } from 'react';
 import { EmploymentType } from '@/types/common';
 import { calculateJobCost } from '@/lib/award/awardEngine';
