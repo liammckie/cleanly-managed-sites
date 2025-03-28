@@ -1,81 +1,72 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ContactForm } from './ContactForm';
-import { toast } from 'sonner';
+import { ContactForm } from '@/components/contacts/ContactForm';
 import { ContactRecord } from '@/lib/types';
 import { EntityType } from './contactSchema';
 
-interface ContactDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (contact: Partial<ContactRecord>) => Promise<void>;
-  initialData?: Partial<ContactRecord>;
-  entityId: string;
+export interface ContactDialogProps {
   entityType: EntityType;
+  entityId: string;
+  initialContact?: Partial<ContactRecord>;
+  onSubmit?: (data: Partial<ContactRecord>) => Promise<void>;
+  onSuccess?: () => void;
+  trigger: React.ReactNode;
   title?: string;
+  disabled?: boolean;
 }
 
-export function ContactDialog({
-  isOpen,
-  onClose,
-  onSave,
-  initialData = {},
-  entityId,
-  entityType,
-  title = 'Add Contact'
+export function ContactDialog({ 
+  entityType, 
+  entityId, 
+  initialContact,
+  onSubmit,
+  onSuccess,
+  trigger,
+  title = 'Add Contact',
+  disabled = false
 }: ContactDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentEntityType, setCurrentEntityType] = useState<EntityType>(entityType);
-
-  const handleEntityTypeChange = (newType: EntityType) => {
-    setCurrentEntityType(newType);
-  };
-
-  const handleSubmit = async (values: Partial<ContactRecord>) => {
+  
+  const handleSubmit = async (data: Partial<ContactRecord>) => {
+    if (!onSubmit) return;
+    
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Ensure entity type and ID are included
-      const contactData = {
-        ...values,
+      await onSubmit({
+        ...data,
         entity_id: entityId,
-        entity_type: currentEntityType
-      };
-      
-      await onSave(contactData);
-      toast.success('Contact saved successfully');
-      onClose();
+        entity_type: entityType
+      });
+      setIsOpen(false);
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error saving contact:', error);
-      toast.error('Failed to save contact');
+      console.error('Error submitting contact:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const enhancedInitialData = {
-    ...initialData,
-    entity_id: entityId,
-    entity_type: currentEntityType
-  };
-
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        
-        <ContactForm
-          initialData={enhancedInitialData}
-          onSubmit={handleSubmit}
-          onCancel={onClose}
-          isSubmitting={isSubmitting}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <div onClick={() => !disabled && setIsOpen(true)}>
+        {trigger}
+      </div>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <ContactForm
+            entityType={entityType}
+            entityId={entityId}
+            initialData={initialContact}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
-
-export default ContactDialog;

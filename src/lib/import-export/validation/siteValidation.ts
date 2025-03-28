@@ -1,60 +1,62 @@
 
 import { validateGenericData, validateEmail } from './commonValidation';
 import { ValidationError, ValidationResult } from './types';
-import { SiteRecord } from '@/lib/types';
+
+export interface SiteImportItem {
+  name: string;
+  client_id: string;
+  address: string;
+  city: string;
+  state: string;
+  postcode: string;
+  status?: string;
+  email?: string;
+  phone?: string;
+  representative?: string;
+  monthly_revenue?: number;
+  custom_id?: string;
+  notes?: string;
+}
 
 /**
  * Validates site data for import
  * @param data The site data to validate
  * @returns A validation result
  */
-export function validateSiteData(data: any[]): ValidationResult<Partial<SiteRecord>[]> {
-  const requiredFields = ['name', 'address', 'city', 'state', 'client_id'];
+export function validateSiteData(data: any[]): ValidationResult<SiteImportItem[]> {
+  const requiredFields = ['name', 'client_id', 'address', 'city', 'state', 'postcode'];
   
-  return validateGenericData<Partial<SiteRecord>>(
+  return validateGenericData<SiteImportItem>(
     data,
     requiredFields,
     (item, index) => {
       const errors: ValidationError[] = [];
       
-      // Validate email if present
-      const emailError = validateEmail(item.email, 'email', index);
-      if (emailError) errors.push(emailError);
+      // Validate email if provided
+      if (item.email) {
+        const emailError = validateEmail(item.email, 'email', index);
+        if (emailError) errors.push(emailError);
+      }
       
-      // Status validation
-      if (item.status && !['active', 'inactive', 'pending', 'on-hold'].includes(item.status)) {
+      // Validate status if provided
+      if (item.status && !['active', 'inactive', 'pending', 'on-hold', 'lost'].includes(item.status)) {
         errors.push({
           path: 'status',
-          message: 'Status must be one of: active, inactive, pending, on-hold',
+          message: 'Status must be one of: active, inactive, pending, on-hold, lost',
           row: index,
           value: item.status
         });
       }
       
-      // Ensure postcode is set if postal_code is provided and vice versa
-      if (item.postal_code && !item.postcode) {
-        item.postcode = item.postal_code;
-      } else if (item.postcode && !item.postal_code) {
-        item.postal_code = item.postcode;
+      // Validate monthly_revenue if provided
+      if (item.monthly_revenue !== undefined && isNaN(Number(item.monthly_revenue))) {
+        errors.push({
+          path: 'monthly_revenue',
+          message: 'Monthly revenue must be a number',
+          row: index,
+          value: item.monthly_revenue
+        });
       }
-      
-      // Validate any JSON fields
-      const jsonFields = ['contract_details', 'job_specifications', 'security_details', 'billing_details', 'replenishables'];
-      
-      jsonFields.forEach(field => {
-        if (item[field] && typeof item[field] === 'string') {
-          try {
-            item[field] = JSON.parse(item[field]);
-          } catch (e) {
-            errors.push({
-              path: field,
-              message: `${field} must be valid JSON`,
-              row: index,
-              value: item[field]
-            });
-          }
-        }
-      });
       
       return errors;
     }

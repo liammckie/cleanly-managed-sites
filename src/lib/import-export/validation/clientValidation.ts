@@ -1,7 +1,19 @@
 
 import { validateGenericData, validateEmail } from './commonValidation';
 import { ValidationError, ValidationResult } from './types';
-import { ClientImportItem } from '../types';
+
+export interface ClientImportItem {
+  name: string;
+  contact_name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  status?: string;
+  notes?: string;
+}
 
 /**
  * Validates client data for import
@@ -17,11 +29,13 @@ export function validateClientData(data: any[]): ValidationResult<ClientImportIt
     (item, index) => {
       const errors: ValidationError[] = [];
       
-      // Validate email if present
-      const emailError = validateEmail(item.email, 'email', index);
-      if (emailError) errors.push(emailError);
+      // Validate email if provided
+      if (item.email) {
+        const emailError = validateEmail(item.email, 'email', index);
+        if (emailError) errors.push(emailError);
+      }
       
-      // Status validation
+      // Validate status if provided
       if (item.status && !['active', 'inactive', 'prospect', 'pending'].includes(item.status)) {
         errors.push({
           path: 'status',

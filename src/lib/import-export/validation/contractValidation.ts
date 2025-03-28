@@ -1,7 +1,20 @@
 
 import { validateGenericData, validateDateFormat } from './commonValidation';
 import { ValidationError, ValidationResult } from './types';
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
+import { ContractDetails } from '@/types/contracts';
+
+/**
+ * Partial contract entry with site_id and other details
+ */
+export interface ContractHistoryEntry {
+  site_id: string;
+  contract_details?: ContractDetails;
+  id?: string;
+  notes?: string;
+  created_by?: string;
+  created_at?: string;
+  version_number?: number;
+}
 
 /**
  * Validates contract data for import
@@ -11,7 +24,7 @@ import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTyp
 export function validateContractData(data: any[]): ValidationResult<Partial<ContractHistoryEntry>[]> {
   const requiredFields = ['site_id'];
   
-  return validateGenericData<Partial<ContractHistoryEntry>>(
+  return validateGenericData<ContractHistoryEntry>(
     data,
     requiredFields,
     (item, index) => {

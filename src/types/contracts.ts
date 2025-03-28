@@ -1,133 +1,91 @@
 
-import { SiteStatus, ContractStatus, ContractType, ContractBillingCycle, Json } from '@/types/common';
+import { ContractStatus, Json } from './common';
 
 /**
- * Contract model for API use
- */
-export interface Contract {
-  id: string;
-  site_id: string;
-  contract_number: string;
-  contract_type: ContractType;
-  status: ContractStatus;
-  start_date: string;
-  end_date: string;
-  auto_renewal: boolean;
-  renewal_notice_days: number;
-  renewal_length_months: number;
-  review_date?: string;
-  annual_value: number;
-  termination_clause?: string;
-  notice_period_days: number;
-  next_increase_date?: string;
-  special_terms?: string;
-  created_at: string;
-  updated_at: string;
-  details?: Json;
-}
-
-/**
- * Contract history entry
- */
-export interface ContractHistoryEntry {
-  id: string;
-  contract_id: string;
-  version_number: number;
-  changes: Json;
-  created_by: string;
-  created_at: string;
-  notes?: string;
-}
-
-/**
- * Contract data for UI representation
+ * Contract data structure for API and components
  */
 export interface ContractData {
   id: string;
-  client: {
-    id: string;
-    name: string;
-  };
-  site: {
-    id: string;
-    name: string;
-  };
-  value: number;
-  startDate: string;
-  endDate: string;
-  status: string;
-  
-  // Additional fields needed by components
   site_id?: string;
   site_name?: string;
+  site?: {
+    id: string;
+    name: string;
+  };
   client_id?: string;
   client_name?: string;
+  client?: {
+    id: string;
+    name: string;
+  };
   monthly_revenue?: number;
-  contract_details?: any;
-  
-  // For backward compatibility
+  value?: number;
+  status: ContractStatus;
+  contract_details?: Json;
   start_date?: string;
   end_date?: string;
-  
-  // Add the is_primary field that was referenced in contractAdapter.ts
   is_primary?: boolean;
 }
 
 /**
- * Contract summary data for dashboard metrics
+ * Contract summary data for dashboards and reports
  */
 export interface ContractSummaryData {
-  totalContracts: number;
-  activeCount: number;
-  pendingCount: number;
-  totalValue: number;
-  
-  // Add totalCount for backward compatibility
-  totalCount: number;
-  
-  // Add missing fields for expiry metrics
-  expiringWithin30Days: number;
-  expiringThisMonth: number;
-  expiringNext3Months: number;
-  expiringNext6Months: number;
-  expiringThisYear: number;
-  
-  // Add missing fields for value metrics
-  valueExpiringThisMonth: number;
-  valueExpiringNext3Months: number;
-  valueExpiringNext6Months: number;
-  valueExpiringThisYear: number;
-  
-  // Add missing fields for totals
-  totalRevenue: number;
-  totalCost: number;
-  totalProfit: number;
-  profitMargin: number;
+  total_count: number;
+  active_count: number;
+  expiring_soon_count: number;
+  monthly_revenue: number;
+  annual_revenue: number;
 }
 
 /**
- * Grouped contracts by category
+ * Grouped contracts by client or status
  */
 export interface GroupedContracts {
-  [key: string]: ContractData[];
+  label: string;
+  count: number;
+  value: number;
+  contracts: ContractData[];
 }
 
 /**
- * Contract forecast for revenue projections
+ * Contract details for forms and detailed views
  */
-export interface ContractForecast {
-  month: string;
-  revenue: number;
-  cost: number;
-  profit: number;
-  contractCount?: number;
-  activeContracts?: number;
-  expiringContracts?: number;
-  renewingContracts?: number;
-  
-  // Additional optional fields that may be used
+export interface ContractDetails {
+  id?: string;
+  contractNumber?: string;
   startDate?: string;
   endDate?: string;
+  autoRenewal?: boolean;
+  renewalPeriod: string;
+  renewalNoticeDays?: number;
+  noticeUnit?: string;
+  terminationPeriod?: string;
+  renewalTerms?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  terms?: ContractTerm[];
+  additionalContracts?: any[];
+  contractType?: string;
   value?: number;
+  billingCycle?: string;
+  notes?: string;
+  type?: string;
+  status?: string;
+}
+
+/**
+ * Contract term details
+ */
+export interface ContractTerm {
   id?: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  renewalTerms: string;
+  terminationPeriod: string;
+  autoRenew: boolean;
+  description?: string;
 }

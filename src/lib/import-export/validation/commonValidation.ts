@@ -1,71 +1,105 @@
 
-import { supabase } from '@/lib/supabase';
-import { ValidationError, ValidationResult } from './types';
+import { ValidationError } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Checks if records with the given IDs already exist in the specified table
- * @param table The table name to check
- * @param ids The array of IDs to check
- * @returns An array of IDs that already exist in the table
+ * Validates that an email is in a valid format
+ * @param email The email to validate
+ * @param fieldName The field name for error context
+ * @param rowIndex Optional row index for error context
+ * @returns ValidationError or null if valid
  */
-export async function checkExistingItems(table: string, ids: string[]): Promise<string[]> {
-  if (!ids || ids.length === 0) return [];
-  
-  try {
-    const { data, error } = await supabase
-      .from(table)
-      .select('id')
-      .in('id', ids);
-    
-    if (error) {
-      console.error(`Error checking existing ${table}:`, error);
-      return [];
-    }
-    
-    return data?.map(item => item.id as string) || [];
-  } catch (error) {
-    console.error(`Error checking existing ${table}:`, error);
-    return [];
+export function validateEmail(email: string, fieldName: string, rowIndex?: number): ValidationError | null {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || emailRegex.test(email)) {
+    return null;
   }
+  
+  return {
+    path: fieldName,
+    message: 'Invalid email address format',
+    row: rowIndex,
+    value: email
+  };
 }
 
 /**
- * Generic validation function that can be used by specific entity validators
- * @param data The data to validate
- * @param requiredFields An array of required field names
- * @param validateItem Optional custom validation function for each item
- * @returns A validation result
+ * Validates that a date is in a valid format (YYYY-MM-DD)
+ * @param date The date string to validate
+ * @param fieldName The field name for error context
+ * @param rowIndex Optional row index for error context
+ * @returns ValidationError or null if valid
+ */
+export function validateDateFormat(date: string, fieldName: string, rowIndex?: number): ValidationError | null {
+  if (!date) return null;
+  
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    return {
+      path: fieldName,
+      message: 'Date must be in YYYY-MM-DD format',
+      row: rowIndex,
+      value: date
+    };
+  }
+  
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) {
+    return {
+      path: fieldName,
+      message: 'Invalid date',
+      row: rowIndex,
+      value: date
+    };
+  }
+  
+  return null;
+}
+
+/**
+ * Generic data validation function that can be used for multiple data types
+ * @param data The data array to validate
+ * @param requiredFields Array of required field names
+ * @param customValidator Optional custom validation function
+ * @param options Validation options
+ * @returns ValidationResult
  */
 export function validateGenericData<T>(
   data: any[],
-  requiredFields: string[] = [],
-  validateItem?: (item: any, index: number) => ValidationError[]
-): ValidationResult<T[]> {
-  if (!Array.isArray(data)) {
-    return {
-      valid: false,
-      errors: [{ path: '', message: 'Data must be an array' }]
-    };
-  }
-  
-  if (data.length === 0) {
-    return {
-      valid: true,
-      data: [] as unknown as T[],
-      messages: [{ type: 'info', field: '', message: 'No data to validate' }]
-    };
-  }
-  
+  requiredFields: string[],
+  customValidator?: (item: any, index: number) => ValidationError[],
+  options?: { ignoreEmptyRows?: boolean; requireAllFields?: boolean }
+): {
+  valid: boolean;
+  data: Partial<T>[];
+  errors?: ValidationError[];
+  warnings?: ValidationError[];
+} {
   const errors: ValidationError[] = [];
-  const validItems: any[] = [];
+  const warnings: ValidationError[] = [];
+  const validData: Partial<T>[] = [];
+  
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    errors.push({
+      path: 'data',
+      message: 'No data provided or data is not an array'
+    });
+    return { valid: false, data: [], errors };
+  }
   
   data.forEach((item, index) => {
-    const itemErrors: ValidationError[] = [];
+    const rowErrors: ValidationError[] = [];
+    const rowWarnings: ValidationError[] = [];
     
-    // Check required fields
+    // Skip empty rows if configured
+    if (options?.ignoreEmptyRows && Object.keys(item).length === 0) {
+      return;
+    }
+    
+    // Validate required fields
     requiredFields.forEach(field => {
-      if (!item[field] && item[field] !== 0 && item[field] !== false) {
-        itemErrors.push({
+      if (item[field] === undefined || item[field] === null || item[field] === '') {
+        rowErrors.push({
           path: field,
           message: `${field} is required`,
           row: index,
@@ -74,102 +108,26 @@ export function validateGenericData<T>(
       }
     });
     
-    // Run custom validation if provided
-    if (validateItem) {
-      const customErrors = validateItem(item, index);
-      if (customErrors && customErrors.length > 0) {
-        itemErrors.push(...customErrors);
-      }
+    // Run custom validator if provided
+    if (customValidator) {
+      const customErrors = customValidator(item, index);
+      rowErrors.push(...customErrors);
     }
     
-    if (itemErrors.length > 0) {
-      errors.push(...itemErrors);
-    } else {
-      validItems.push(item);
+    // Add errors and warnings for this row
+    errors.push(...rowErrors);
+    warnings.push(...rowWarnings);
+    
+    // Add to valid data if no errors (or if not requiring all fields)
+    if (rowErrors.length === 0 || !options?.requireAllFields) {
+      validData.push(item as Partial<T>);
     }
   });
   
   return {
     valid: errors.length === 0,
-    data: validItems as T[],
-    errors: errors.length > 0 ? errors : undefined
+    data: validData,
+    errors: errors.length > 0 ? errors : undefined,
+    warnings: warnings.length > 0 ? warnings : undefined
   };
-}
-
-/**
- * Validates that a value is a date string in the format YYYY-MM-DD
- * @param value The value to validate
- * @param field The field name for error messages
- * @param row Optional row number for error messages
- * @returns A validation error or null if valid
- */
-export function validateDateFormat(value: any, field: string, row?: number): ValidationError | null {
-  if (!value) return null; // Empty is handled by required field validation
-  
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(value)) {
-    return {
-      path: field,
-      message: `${field} must be in the format YYYY-MM-DD`,
-      row,
-      value
-    };
-  }
-  
-  const date = new Date(value);
-  if (isNaN(date.getTime())) {
-    return {
-      path: field,
-      message: `${field} must be a valid date`,
-      row,
-      value
-    };
-  }
-  
-  return null;
-}
-
-/**
- * Validates that a value is a number
- * @param value The value to validate
- * @param field The field name for error messages
- * @param row Optional row number for error messages
- * @returns A validation error or null if valid
- */
-export function validateNumber(value: any, field: string, row?: number): ValidationError | null {
-  if (value === undefined || value === null || value === '') return null;
-  
-  if (isNaN(Number(value))) {
-    return {
-      path: field,
-      message: `${field} must be a number`,
-      row,
-      value
-    };
-  }
-  
-  return null;
-}
-
-/**
- * Validates that a value is a valid email address
- * @param value The value to validate
- * @param field The field name for error messages
- * @param row Optional row number for error messages
- * @returns A validation error or null if valid
- */
-export function validateEmail(value: any, field: string, row?: number): ValidationError | null {
-  if (!value) return null; // Empty is handled by required field validation
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(value)) {
-    return {
-      path: field,
-      message: `${field} must be a valid email address`,
-      row,
-      value
-    };
-  }
-  
-  return null;
 }

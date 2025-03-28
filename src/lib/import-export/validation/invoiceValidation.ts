@@ -1,7 +1,7 @@
 
-import { validateGenericData, validateDateFormat, validateEmail } from './commonValidation';
+import { validateGenericData, validateDateFormat } from './commonValidation';
 import { ValidationError, ValidationResult } from './types';
-import { InvoiceRecord } from '../types';
+import { InvoiceRecord } from '@/lib/import-export/types';
 
 /**
  * Validates invoice data for import
@@ -18,61 +18,69 @@ export function validateInvoiceData(data: any[]): ValidationResult<InvoiceRecord
       const errors: ValidationError[] = [];
       
       // Validate dates
-      const invoiceDateError = validateDateFormat(item.invoice_date, 'invoice_date', index);
-      if (invoiceDateError) errors.push(invoiceDateError);
+      if (item.invoice_date) {
+        const invoiceDateError = validateDateFormat(item.invoice_date, 'invoice_date', index);
+        if (invoiceDateError) errors.push(invoiceDateError);
+      }
       
       if (item.due_date) {
         const dueDateError = validateDateFormat(item.due_date, 'due_date', index);
         if (dueDateError) errors.push(dueDateError);
         
-        // Check that due date is not before invoice date
-        if (new Date(item.due_date) < new Date(item.invoice_date)) {
+        // Check that due date is after invoice date
+        if (item.invoice_date && new Date(item.due_date) < new Date(item.invoice_date)) {
           errors.push({
             path: 'due_date',
-            message: 'Due date cannot be before invoice date',
+            message: 'Due date must be on or after invoice date',
             row: index,
             value: item.due_date
           });
         }
       }
       
-      // Validate numeric fields
-      if (isNaN(Number(item.amount)) || Number(item.amount) <= 0) {
+      // Validate amount
+      if (isNaN(Number(item.amount))) {
         errors.push({
           path: 'amount',
-          message: 'Amount must be a positive number',
+          message: 'Amount must be a number',
           row: index,
           value: item.amount
         });
       }
       
-      // Status validation
-      const validStatuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled', 'void'];
-      if (item.status && !validStatuses.includes(item.status)) {
+      // Validate status
+      if (!['draft', 'sent', 'paid', 'overdue', 'cancelled', 'void'].includes(item.status)) {
         errors.push({
           path: 'status',
-          message: `Status must be one of: ${validStatuses.join(', ')}`,
+          message: 'Status must be one of: draft, sent, paid, overdue, cancelled, void',
           row: index,
           value: item.status
         });
       }
       
       // Validate line items if present
-      if (item.line_items && Array.isArray(item.line_items)) {
-        item.line_items.forEach((lineItem, lineIndex) => {
-          // Validate required fields for line items
+      if (item.line_items && !Array.isArray(item.line_items)) {
+        errors.push({
+          path: 'line_items',
+          message: 'Line items must be an array',
+          row: index,
+          value: item.line_items
+        });
+      } else if (Array.isArray(item.line_items)) {
+        item.line_items.forEach((lineItem: any, lineIndex: number) => {
           if (!lineItem.description) {
             errors.push({
               path: `line_items[${lineIndex}].description`,
               message: 'Line item description is required',
-              row: index
+              row: index,
+              value: lineItem
             });
           }
           
-          if (isNaN(Number(lineItem.quantity)) || Number(lineItem.quantity) <= 0) {
+          if (isNaN(Number(lineItem.quantity))) {
             errors.push({
               path: `line_items[${lineIndex}].quantity`,
-              message: 'Line item quantity must be a positive number',
+              message: 'Line item quantity must be a number',
               row: index,
               value: lineItem.quantity
             });
@@ -93,10 +101,3 @@ export function validateInvoiceData(data: any[]): ValidationResult<InvoiceRecord
     }
   );
 }
-
-/**
- * Exports validation functions for explicit imports
- */
-export const invoiceValidation = {
-  validateInvoiceData
-};

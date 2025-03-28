@@ -3,6 +3,15 @@
  * Export all validation functions from the validation module
  */
 
+// Import all validation functions
+import { validateClientData } from './clientValidation';
+import { validateSiteData } from './siteValidation';
+import { validateContractorData } from './contractorValidation';
+import { validateContractData } from './contractValidation';
+import { validateInvoiceData } from './invoiceValidation';
+import { validateGenericData, validateEmail, validateDateFormat } from './commonValidation';
+
+// Export all validation functions
 export { validateClientData } from './clientValidation';
 export { validateSiteData } from './siteValidation';
 export { validateContractorData } from './contractorValidation';

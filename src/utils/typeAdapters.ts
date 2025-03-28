@@ -1,5 +1,37 @@
 
-import { EmploymentType } from '@/types/common';
+import { ContractDetails } from '@/types/contracts';
+import { Quote } from '@/types/models';
+import { UserRole } from '@/lib/types/users';
+
+/**
+ * Adapts raw contract details to frontend contract details format
+ * @param details The raw contract details from API/DB
+ * @returns A properly formatted ContractDetails object
+ */
+export const adaptContractDetailsToApi = (details: ContractDetails): any => {
+  if (!details) return null;
+  
+  // Ensure renewal period is a string
+  return {
+    ...details,
+    renewalPeriod: String(details.renewalPeriod || ''),
+  };
+};
+
+/**
+ * Adapts billing details to DTO format for API calls
+ * @param billingDetails The billing details from form
+ * @returns Billing details formatted for API
+ */
+export const adaptBillingDetailsToDTO = (billingDetails: any): any => {
+  if (!billingDetails) return null;
+  
+  return {
+    ...billingDetails,
+    serviceDeliveryType: billingDetails.serviceDeliveryType || 'direct',
+    billingLines: billingDetails.billingLines || []
+  };
+};
 
 // Define the DB and frontend types for OverheadProfile
 export interface DbOverheadProfile {
@@ -22,43 +54,7 @@ export interface OverheadProfile {
   userId?: string;
 }
 
-// Type definitions for contract related operations
-export interface ContractDetails {
-  id?: string;
-  contractNumber?: string;
-  startDate?: string;
-  endDate?: string;
-  autoRenewal?: boolean;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  contractType?: string;
-  renewalPeriod?: string;
-  renewalNoticeDays?: number;
-  noticeUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
-  value?: number;
-  billingCycle?: string;
-  notes?: string;
-}
-
-// BillingLine interface for consistent usage
-export interface BillingLine {
-  id: string;
-  description: string;
-  amount: number;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'annually';
-  isRecurring: boolean;
-  onHold: boolean;
-  weeklyAmount?: number;
-  monthlyAmount?: number;
-  annualAmount?: number;
-}
-
-// Type adapters to convert database models to frontend models and vice versa
-export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
+export function adaptOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfile {
   return {
     id: dbProfile.id,
     name: dbProfile.name,
@@ -70,7 +66,7 @@ export function dbToOverheadProfile(dbProfile: DbOverheadProfile): OverheadProfi
   };
 }
 
-export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile {
+export function adaptOverheadProfileToDb(profile: OverheadProfile): DbOverheadProfile {
   return {
     id: profile.id,
     name: profile.name,
@@ -82,69 +78,129 @@ export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile
   };
 }
 
-// Convert employment type format
-export function adaptEmploymentType(dbType: string): EmploymentType {
-  const mapping: Record<string, EmploymentType> = {
-    'full_time': 'full-time',
-    'part_time': 'part-time',
-    'casual': 'casual',
-    'contract': 'contract',
-    'intern': 'intern'
-  };
-  
-  return (mapping[dbType] || dbType) as EmploymentType;
-}
-
-// UserRole adapters
-export function adaptUserRole(dbRole: any): Record<string, boolean> {
-  if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
-    return dbRole.permissions as Record<string, boolean>;
-  }
-  
-  // If permissions is a string (JSON), try to parse it
-  if (typeof dbRole.permissions === 'string') {
-    try {
-      return JSON.parse(dbRole.permissions);
-    } catch (e) {
-      console.error('Failed to parse permissions string', e);
-      return {};
-    }
-  }
-  
-  return {};
-}
-
-// Contract adapters
-export function adaptContractDetailsToJson(details: ContractDetails): { [key: string]: any } {
+/**
+ * Adapts Quote data for frontend use
+ * @param apiQuote Quote data from API
+ * @returns Formatted Quote for frontend
+ */
+export function adaptQuote(apiQuote: any): Quote {
   return {
-    ...details,
-    // Convert any specific fields if needed
+    id: apiQuote.id,
+    name: apiQuote.name || '',
+    clientName: apiQuote.client_name || apiQuote.clientName || '',
+    siteName: apiQuote.site_name || apiQuote.siteName || '',
+    status: apiQuote.status || 'draft',
+    totalPrice: apiQuote.total_price || apiQuote.totalPrice || 0,
+    laborCost: apiQuote.labor_cost || apiQuote.laborCost || 0,
+    overheadPercentage: apiQuote.overhead_percentage || apiQuote.overheadPercentage || 15,
+    marginPercentage: apiQuote.margin_percentage || apiQuote.marginPercentage || 20,
+    subcontractorCost: apiQuote.subcontractor_cost || apiQuote.subcontractorCost || 0,
+    createdAt: apiQuote.created_at || apiQuote.createdAt || '',
+    updatedAt: apiQuote.updated_at || apiQuote.updatedAt || '',
+    shifts: apiQuote.shifts || [],
+    subcontractors: apiQuote.subcontractors || [],
+    title: apiQuote.title || apiQuote.name || '',
+    description: apiQuote.description || '',
+    marginAmount: apiQuote.margin_amount || apiQuote.marginAmount || 0,
+    overheadCost: apiQuote.overhead_cost || apiQuote.overheadCost || 0,
+    totalCost: apiQuote.total_cost || apiQuote.totalCost || 0,
+    startDate: apiQuote.start_date || apiQuote.startDate || '',
+    endDate: apiQuote.end_date || apiQuote.endDate || '',
+    expiryDate: apiQuote.expiry_date || apiQuote.expiryDate || '',
+    notes: apiQuote.notes || '',
+    quoteNumber: apiQuote.quote_number || apiQuote.quoteNumber || '',
+    validUntil: apiQuote.valid_until || apiQuote.validUntil || '',
+    contractLength: apiQuote.contract_length || apiQuote.contractLength || 0,
+    contractLengthUnit: apiQuote.contract_length_unit || apiQuote.contractLengthUnit || 'months',
   };
 }
 
-export function adaptContractDetailsToApi(details: ContractDetails): { [key: string]: any } {
+/**
+ * Adapts frontend Quote to API format
+ * @param quote Frontend Quote object
+ * @returns Quote formatted for API
+ */
+export function adaptQuoteToApi(quote: Quote): any {
   return {
-    ...details,
-    // Make sure to format dates or other fields as needed for the API
+    id: quote.id,
+    name: quote.name,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
+    status: quote.status,
+    total_price: quote.totalPrice,
+    labor_cost: quote.laborCost,
+    overhead_percentage: quote.overheadPercentage,
+    margin_percentage: quote.marginPercentage,
+    subcontractor_cost: quote.subcontractorCost,
+    margin_amount: quote.marginAmount,
+    overhead_cost: quote.overheadCost,
+    total_cost: quote.totalCost,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    expiry_date: quote.expiryDate,
+    notes: quote.notes,
+    contract_length: quote.contractLength,
+    contract_length_unit: quote.contractLengthUnit,
+    shifts: quote.shifts,
+    subcontractors: quote.subcontractors,
   };
 }
 
-// BillingLine adapter
-export function adaptBillingLine(modelLine: any): BillingLine {
-  // Ensure modelLine has the required properties or set defaults
-  const formattedLine: BillingLine = {
-    id: modelLine.id || crypto.randomUUID(),
-    description: modelLine.description || '',
-    amount: modelLine.amount || 0,
-    frequency: modelLine.frequency === 'weekly' || modelLine.frequency === 'monthly' || 
-               modelLine.frequency === 'quarterly' || modelLine.frequency === 'annually' ? 
-               modelLine.frequency : 'monthly',
-    isRecurring: modelLine.isRecurring !== undefined ? modelLine.isRecurring : true,
-    onHold: modelLine.onHold !== undefined ? modelLine.onHold : false,
-    weeklyAmount: modelLine.weeklyAmount,
-    monthlyAmount: modelLine.monthlyAmount,
-    annualAmount: modelLine.annualAmount
-  };
+/**
+ * Transforms Quote from API for frontend display
+ * @param apiQuote Quote from API
+ * @returns Formatted Quote for frontend display
+ */
+export function adaptQuoteToFrontend(apiQuote: any): Quote {
+  return adaptQuote(apiQuote);
+}
+
+/**
+ * Maps address object from API to a formatted string
+ * @param address Address object
+ * @returns Formatted address string
+ */
+export function adaptAddress(address: any): string {
+  if (!address) return '';
   
-  return formattedLine;
+  const parts = [
+    address.street,
+    address.city,
+    address.state,
+    address.postcode || address.postalCode,
+    address.country
+  ].filter(Boolean);
+  
+  return parts.join(', ');
+}
+
+/**
+ * Adapts UserRole for API
+ * @param role UserRole object
+ * @returns Role formatted for API
+ */
+export function adaptUserRoleToApi(role: UserRole): any {
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: role.permissions
+  };
+}
+
+/**
+ * Adapts UserRole from API
+ * @param apiRole Role from API
+ * @returns Formatted UserRole
+ */
+export function adaptUserRole(apiRole: any): UserRole {
+  return {
+    id: apiRole.id,
+    name: apiRole.name,
+    description: apiRole.description,
+    permissions: apiRole.permissions as Record<string, boolean>,
+    created_at: apiRole.created_at,
+    updated_at: apiRole.updated_at,
+    user_count: apiRole.user_count
+  };
 }
