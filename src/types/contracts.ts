@@ -1,20 +1,5 @@
 
-import { Json } from './common';
-
-/**
- * Contract lifecycle status
- */
-export type ContractStatus = 'draft' | 'active' | 'pending' | 'expired' | 'canceled' | 'renewed' | 'terminated';
-
-/**
- * Contract type
- */
-export type ContractType = 'service' | 'maintenance' | 'one-time' | 'project' | 'other';
-
-/**
- * Contract billing cycle
- */
-export type ContractBillingCycle = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
+import { SiteStatus, ContractStatus, ContractType, ContractBillingCycle, Json } from '@/types/common';
 
 /**
  * Contract model for API use

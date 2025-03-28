@@ -67,3 +67,62 @@ export function validateContractData(data: any[]): ValidationResult<Partial<Cont
     }
   );
 }
+
+/**
+ * Validates contract terms within a contract
+ * @param contractTerms The contract terms to validate
+ * @param rowIndex Optional row index for error context
+ * @returns Array of validation errors
+ */
+export function validateContractTerms(contractTerms: any[], rowIndex?: number): ValidationError[] {
+  const errors: ValidationError[] = [];
+  
+  if (!Array.isArray(contractTerms)) {
+    return [{
+      path: 'terms',
+      message: 'Contract terms must be an array',
+      row: rowIndex,
+      value: contractTerms
+    }];
+  }
+  
+  contractTerms.forEach((term, index) => {
+    if (!term.name) {
+      errors.push({
+        path: `terms[${index}].name`,
+        message: 'Term name is required',
+        row: rowIndex,
+        value: term
+      });
+    }
+    
+    // Validate term dates
+    if (term.startDate && term.endDate) {
+      const startDateError = validateDateFormat(term.startDate, `terms[${index}].startDate`, rowIndex);
+      if (startDateError) errors.push(startDateError);
+      
+      const endDateError = validateDateFormat(term.endDate, `terms[${index}].endDate`, rowIndex);
+      if (endDateError) errors.push(endDateError);
+      
+      // Check that end date is after start date
+      if (new Date(term.endDate) <= new Date(term.startDate)) {
+        errors.push({
+          path: `terms[${index}].endDate`,
+          message: 'End date must be after start date',
+          row: rowIndex,
+          value: term.endDate
+        });
+      }
+    }
+  });
+  
+  return errors;
+}
+
+/**
+ * Exports validation functions for explicit imports
+ */
+export const contractValidation = {
+  validateContractData,
+  validateContractTerms
+};

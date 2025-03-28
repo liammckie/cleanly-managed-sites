@@ -1,5 +1,5 @@
 
-import { validateGenericData, validateNumber, validateDateFormat } from './commonValidation';
+import { validateGenericData, validateDateFormat, validateEmail } from './commonValidation';
 import { ValidationError, ValidationResult } from './types';
 import { InvoiceRecord } from '../types';
 
@@ -21,58 +21,82 @@ export function validateInvoiceData(data: any[]): ValidationResult<InvoiceRecord
       const invoiceDateError = validateDateFormat(item.invoice_date, 'invoice_date', index);
       if (invoiceDateError) errors.push(invoiceDateError);
       
-      const dueDateError = validateDateFormat(item.due_date, 'due_date', index);
-      if (dueDateError) errors.push(dueDateError);
+      if (item.due_date) {
+        const dueDateError = validateDateFormat(item.due_date, 'due_date', index);
+        if (dueDateError) errors.push(dueDateError);
+        
+        // Check that due date is not before invoice date
+        if (new Date(item.due_date) < new Date(item.invoice_date)) {
+          errors.push({
+            path: 'due_date',
+            message: 'Due date cannot be before invoice date',
+            row: index,
+            value: item.due_date
+          });
+        }
+      }
       
-      // Validate amount
-      const amountError = validateNumber(item.amount, 'amount', index);
-      if (amountError) errors.push(amountError);
+      // Validate numeric fields
+      if (isNaN(Number(item.amount)) || Number(item.amount) <= 0) {
+        errors.push({
+          path: 'amount',
+          message: 'Amount must be a positive number',
+          row: index,
+          value: item.amount
+        });
+      }
       
       // Status validation
-      if (!['draft', 'sent', 'paid', 'overdue', 'cancelled'].includes(item.status)) {
+      const validStatuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled', 'void'];
+      if (item.status && !validStatuses.includes(item.status)) {
         errors.push({
           path: 'status',
-          message: 'Status must be one of: draft, sent, paid, overdue, cancelled',
+          message: `Status must be one of: ${validStatuses.join(', ')}`,
           row: index,
           value: item.status
         });
       }
       
       // Validate line items if present
-      if (item.line_items) {
-        if (typeof item.line_items === 'string') {
-          try {
-            item.line_items = JSON.parse(item.line_items);
-          } catch (e) {
+      if (item.line_items && Array.isArray(item.line_items)) {
+        item.line_items.forEach((lineItem, lineIndex) => {
+          // Validate required fields for line items
+          if (!lineItem.description) {
             errors.push({
-              path: 'line_items',
-              message: 'Line items must be valid JSON',
-              row: index,
-              value: item.line_items
+              path: `line_items[${lineIndex}].description`,
+              message: 'Line item description is required',
+              row: index
             });
           }
-        }
-        
-        if (Array.isArray(item.line_items)) {
-          item.line_items.forEach((lineItem, lineIndex) => {
-            if (!lineItem.description) {
-              errors.push({
-                path: `line_items[${lineIndex}].description`,
-                message: 'Description is required for line item',
-                row: index
-              });
-            }
-            
-            const quantityError = validateNumber(lineItem.quantity, `line_items[${lineIndex}].quantity`, index);
-            if (quantityError) errors.push(quantityError);
-            
-            const unitPriceError = validateNumber(lineItem.unit_price, `line_items[${lineIndex}].unit_price`, index);
-            if (unitPriceError) errors.push(unitPriceError);
-          });
-        }
+          
+          if (isNaN(Number(lineItem.quantity)) || Number(lineItem.quantity) <= 0) {
+            errors.push({
+              path: `line_items[${lineIndex}].quantity`,
+              message: 'Line item quantity must be a positive number',
+              row: index,
+              value: lineItem.quantity
+            });
+          }
+          
+          if (isNaN(Number(lineItem.unit_price))) {
+            errors.push({
+              path: `line_items[${lineIndex}].unit_price`,
+              message: 'Line item unit price must be a number',
+              row: index,
+              value: lineItem.unit_price
+            });
+          }
+        });
       }
       
       return errors;
     }
   );
 }
+
+/**
+ * Exports validation functions for explicit imports
+ */
+export const invoiceValidation = {
+  validateInvoiceData
+};

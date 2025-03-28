@@ -18,3 +18,18 @@ export const assignmentTypes = ['single', 'all_sites', 'all_clients'] as const;
 export type AssignmentType = typeof assignmentTypes[number];
 
 export type ContactFormValues = z.infer<typeof contactSchema>;
+
+// Add entity schema for validation
+export const entitySchema = z.object({
+  entity_id: z.string().uuid('Invalid entity ID'),
+  entity_type: z.enum(entityTypes, {
+    errorMap: () => ({ message: 'Invalid entity type' }),
+  }),
+});
+
+// Extend contactSchema with entity information for complete contact form
+export const fullContactSchema = contactSchema.extend({
+  ...entitySchema.shape,
+});
+
+export type FullContactFormValues = z.infer<typeof fullContactSchema>;

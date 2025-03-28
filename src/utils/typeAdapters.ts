@@ -1,4 +1,6 @@
 
+import { EmploymentType } from '@/types/common';
+
 // Define the DB and frontend types for OverheadProfile
 export interface DbOverheadProfile {
   id: string;
@@ -81,8 +83,8 @@ export function overheadProfileToDb(profile: OverheadProfile): DbOverheadProfile
 }
 
 // Convert employment type format
-export function adaptEmploymentType(dbType: string): string {
-  const mapping: Record<string, string> = {
+export function adaptEmploymentType(dbType: string): EmploymentType {
+  const mapping: Record<string, EmploymentType> = {
     'full_time': 'full-time',
     'part_time': 'part-time',
     'casual': 'casual',
@@ -90,7 +92,7 @@ export function adaptEmploymentType(dbType: string): string {
     'intern': 'intern'
   };
   
-  return mapping[dbType] || dbType;
+  return (mapping[dbType] || dbType) as EmploymentType;
 }
 
 // UserRole adapters
@@ -124,41 +126,6 @@ export function adaptContractDetailsToApi(details: ContractDetails): { [key: str
   return {
     ...details,
     // Make sure to format dates or other fields as needed for the API
-  };
-}
-
-// Quote adapters
-export function adaptQuote(dbQuote: any): any {
-  // Implement quote adapter logic
-  return {
-    ...dbQuote,
-    // Convert DB fields to frontend format
-  };
-}
-
-export function adaptQuoteToApi(frontendQuote: any): any {
-  // Implement quote to API adapter
-  return {
-    ...frontendQuote,
-    // Convert frontend fields to DB format
-  };
-}
-
-// Billing and Address adapters
-export function adaptBillingDetailsToDTO(billingDetails: any): any {
-  if (!billingDetails) return null;
-  
-  return {
-    ...billingDetails,
-    serviceDeliveryType: billingDetails.serviceDeliveryType === 'contractor' ? 'contractor' : 'direct'
-  };
-}
-
-export function adaptAddress(address: any): any {
-  // Implement address adapter
-  return {
-    ...address,
-    // Convert address fields as needed
   };
 }
 

@@ -4,7 +4,14 @@ export type {
   ValidationError,
   ValidationMessage,
   ValidationResult,
-  ValidationOptions 
+  ValidationOptions,
+  LegacyValidationResult,
+  ZodValidationResult
+} from './validation/types';
+
+export {
+  legacyToNewValidationResult,
+  newToLegacyValidationResult
 } from './validation/types';
 
 export interface ImportOptions {
@@ -31,33 +38,6 @@ export interface ExportOptions {
 
 // Define the DataType for csvGenerator
 export type DataType = 'client' | 'site' | 'contractor' | 'invoice' | 'contract';
-
-// Legacy validation structure - to maintain compatibility
-export interface LegacyValidationResult<T = unknown> {
-  isValid: boolean;
-  data?: T;
-  errors?: ValidationError[];
-  warnings?: ValidationError[];
-}
-
-// Add cross-mapping functions to help with legacy code
-export function legacyToNewValidationResult<T>(legacy: LegacyValidationResult<T>): ValidationResult<T> {
-  return {
-    valid: legacy.isValid,
-    data: legacy.data,
-    errors: legacy.errors,
-    warnings: legacy.warnings
-  };
-}
-
-export function newToLegacyValidationResult<T>(result: ValidationResult<T>): LegacyValidationResult<T> {
-  return {
-    isValid: result.valid,
-    data: result.data,
-    errors: result.errors,
-    warnings: (result as any).warnings
-  };
-}
 
 // Add missing types from import-export module
 export interface ClientImportItem {

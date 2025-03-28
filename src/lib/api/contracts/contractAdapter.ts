@@ -1,6 +1,11 @@
 
 import { ContractData } from '@/types/contracts';
 
+/**
+ * Adapts raw contract data to the ContractData interface
+ * @param data Raw contract data from API or database
+ * @returns Standardized ContractData object
+ */
 export const adaptContractData = (data: any): ContractData => {
   return {
     id: data.id || crypto.randomUUID(),
@@ -29,13 +34,15 @@ export const adaptContractData = (data: any): ContractData => {
     start_date: data.start_date || data.startDate,
     end_date: data.end_date || data.endDate,
     
-    // Add the is_primary field that was being referenced elsewhere
+    // Add the is_primary field
     is_primary: data.is_primary || false
   };
 };
 
 /**
  * Adapts an array of contract data
+ * @param dataArray Array of raw contract data
+ * @returns Array of standardized ContractData objects
  */
 export const adaptContracts = (dataArray: any[]): ContractData[] => {
   return dataArray.map(adaptContractData);
