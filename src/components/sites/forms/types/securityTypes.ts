@@ -1,4 +1,5 @@
 
+// Define SecurityDetails interface with all required properties
 export interface SecurityDetails {
   alarmCode?: string;
   keyLocation?: string;
@@ -9,4 +10,7 @@ export interface SecurityDetails {
   securityCompany?: string;
   accessHours?: string;
   specialInstructions?: string;
+  hasSecuritySystem?: boolean;
+  accessInstructions?: string;
+  notes?: string;
 }

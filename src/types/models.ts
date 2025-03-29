@@ -1,320 +1,250 @@
+import { 
+  Day, 
+  EmploymentType, 
+  EmployeeLevel, 
+  Frequency, 
+  QuoteStatus 
+} from '@/types/common';
 
-// Define interfaces for common use
-
-// Contract interface
-export interface Contract {
-  id: string;
-  site_id: string;
-  client_id?: string;
-  contract_number?: string;
-  start_date?: string;
-  end_date?: string;
-  auto_renewal?: boolean;
-  renewal_period?: string;
-  renewal_notice_days?: number;
-  termination_period?: string;
-  billing_cycle?: string;
-  service_frequency?: string;
-  service_delivery_method?: string;
-  created_at: string;
-  updated_at: string;
-  
-  // Camel case aliases for frontend use
-  siteId?: string;
-  clientId?: string;
-  contractNumber?: string;
-  startDate?: string;
-  endDate?: string;
-  autoRenewal?: boolean;
-  renewalPeriod?: string;
-  renewalNoticeDays?: number;
-  terminationPeriod?: string;
-  billingCycle?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// User profile and roles
-export interface UserRole {
-  id: string;
-  name: string;
-  description?: string;
-  permissions: Record<string, boolean | string>;
-}
-
-export interface UserProfile {
-  id: string;
-  full_name: string;
-  email: string;
-  role_id?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  
-  // Camel case aliases
-  fullName?: string;
-  roleId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Quote related interfaces
+// Quote and related types
 export interface Quote {
   id: string;
   name: string;
+  title?: string;
   client_name: string;
+  clientName: string;
   site_name?: string;
-  description?: string;
-  status: string;
-  overhead_percentage: number;
-  margin_percentage: number;
-  total_price: number;
-  labor_cost: number;
-  subcontractor_cost: number;
-  quote_number?: string;
-  valid_until?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  start_date?: string;
-  end_date?: string;
-  expiry_date?: string;
-  contract_length?: number;
-  contract_length_unit?: string;
-  overhead_cost?: number;
-  total_cost?: number;
-  margin_amount?: number;
-  
-  // Camel case aliases for frontend components
-  clientName?: string;
   siteName?: string;
-  overheadPercentage?: number;
-  marginPercentage?: number;
-  totalPrice?: number;
-  laborCost?: number;
-  subcontractorCost?: number;
+  description?: string;
+  status: QuoteStatus;
+  overhead_percentage: number;
+  overheadPercentage: number;
+  margin_percentage: number;
+  marginPercentage: number;
+  total_price: number;
+  totalPrice: number;
+  labor_cost: number;
+  laborCost: number;
+  supplies_cost?: number;
+  suppliesCost?: number;
+  equipment_cost?: number;
+  equipmentCost?: number;
+  subcontractor_cost: number;
+  subcontractorCost: number;
+  created_at: string;
+  createdAt: string;
+  updated_at: string;
+  updatedAt: string;
+  quote_number?: string;
   quoteNumber?: string;
+  valid_until?: string;
   validUntil?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  startDate?: string;
-  endDate?: string;
-  expiryDate?: string;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  overheadCost?: number;
-  totalCost?: number;
-  marginAmount?: number;
-  
-  // Relationships
+  client_id?: string;
+  clientId?: string;
+  site_id?: string;
+  siteId?: string;
   shifts?: QuoteShift[];
   subcontractors?: QuoteSubcontractor[];
+  overhead_cost?: number;
+  overheadCost?: number;
+  total_cost?: number;
+  totalCost?: number;
+  margin_amount?: number;
+  marginAmount?: number;
+  start_date?: string;
+  startDate?: string;
+  end_date?: string;
+  endDate?: string;
+  expiry_date?: string;
+  expiryDate?: string;
+  contract_length?: number;
+  contractLength?: number;
+  contract_length_unit?: 'days' | 'weeks' | 'months' | 'years';
+  contractLengthUnit?: 'days' | 'weeks' | 'months' | 'years';
+  overhead_profile?: string;
+  overheadProfile?: string;
+  user_id?: string;
+  userId?: string;
+  created_by?: string;
+  createdBy?: string;
+  notes?: string;
+  frequency?: string;
+  scope?: string;
+  terms?: string;
 }
 
 export interface QuoteShift {
   id: string;
   quote_id: string;
-  day: string;
+  quoteId?: string;
+  day: Day;
   start_time: string;
+  startTime?: string;
   end_time: string;
+  endTime?: string;
   break_duration: number;
+  breakDuration?: number;
   number_of_cleaners: number;
-  employment_type: string;
-  level: number;
+  numberOfCleaners?: number;
+  employment_type: EmploymentType;
+  employmentType?: EmploymentType;
+  level: EmployeeLevel;
   allowances: string[];
   estimated_cost: number;
+  estimatedCost?: number;
   location: string;
   notes: string;
-  
-  // Camel case aliases for frontend components
-  quoteId?: string;
-  startTime?: string;
-  endTime?: string;
-  breakDuration?: number;
-  numberOfCleaners?: number;
-  employmentType?: string;
-  estimatedCost?: number;
 }
 
 export interface QuoteSubcontractor {
   id: string;
   quote_id: string;
+  quoteId?: string;
   name: string;
   description?: string;
   cost: number;
-  frequency: string;
+  frequency: Frequency | string;
   email?: string;
   phone?: string;
-  notes?: string;
-  service?: string;
-  
-  // Camel case aliases
-  quoteId?: string;
-  
-  // Additional UI fields
   services?: string[];
+  service?: string;
+  notes?: string;
   customServices?: string;
   monthlyCost?: number;
   isFlatRate?: boolean;
 }
 
-// SystemUser interface
-export interface SystemUser {
+// Contract related data types
+export interface ContractSummaryData {
+  totalCount: number;
+  activeCount: number;
+  pendingCount: number;
+  totalValue: number;
+  totalContracts: number;
+  expiringWithin30Days: number;
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  profitMargin: number;
+  avgContractValue: number;
+  expiredCount?: number;
+}
+
+export interface ContractData {
   id: string;
-  email: string;
-  fullName: string;
-  status: string;
-  roleId?: string;
-  roleName?: string;
-  createdAt: string;
-  updatedAt?: string;
-  phone?: string;
-  title?: string;
-  lastLogin?: string;
-  avatarUrl?: string;
-  notes?: string;
-}
-
-// BillingLine interface
-export interface BillingLine {
-  id: string;
-  site_id?: string;
-  description: string;
-  amount: number;
-  frequency?: string;
-  is_recurring?: boolean;
-  on_hold?: boolean;
-  weekly_amount?: number;
-  monthly_amount?: number;
-  annual_amount?: number;
-  
-  // Camel case aliases
-  siteId?: string;
-  isRecurring?: boolean;
-  onHold?: boolean;
-  weeklyAmount?: number;
-  monthlyAmount?: number;
-  annualAmount?: number;
-}
-
-// Extended security details
-export interface SecurityDetails {
-  alarmCode?: string;
-  keyLocation?: string;
-  keyNumber?: string;
-  accessNotes?: string;
-  securityContact?: string;
-  securityPhone?: string;
-  securityCompany?: string;
-  accessHours?: string;
-  specialInstructions?: string;
-  hasSecuritySystem?: boolean;
-  accessInstructions?: string;
-  notes?: string;
-}
-
-// Extended periodicals interface
-export interface Periodicals {
-  items?: PeriodicalItem[];
-  notes?: string;
-  glazing?: boolean;
-  ceilings?: boolean;
-  upholstery?: boolean;
-  sanitizing?: boolean;
-  pressureWashing?: boolean;
-  nextGlazingDate?: string;
-  nextCeilingsDate?: string;
-  nextUpholsteryDate?: string;
-  nextSanitizingDate?: string;
-  nextPressureWashingDate?: string;
-  glazingFrequency?: string;
-  ceilingsFrequency?: string;
-  upholsteryFrequency?: string;
-  sanitizingFrequency?: string;
-  pressureWashingFrequency?: string;
-}
-
-// Extended AdHocWorkAuthorization interface
-export interface AdHocWorkAuthorization {
-  canAuthorize?: boolean;
-  authorizationLimit?: number;
-  authorizationContact?: string;
-  authorizationEmail?: string;
-  authorizationPhone?: string;
-  authorizationNotes?: string;
-  purchaseOrderRequired?: boolean;
-  approvalLimit?: number;
-  requirePurchaseOrder?: boolean;
-}
-
-// BillingDetails with extended properties
-export interface BillingDetails {
-  billingFrequency?: string;
-  billingCycle?: string;
-  billingDay?: number;
-  paymentTerms?: string;
-  billingLines?: BillingLine[];
-  billingEmail?: string;
-  billingNotes?: string;
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  
-  // Extended properties needed by components
-  billingAddress?: {
-    line1?: string;
-    line2?: string;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-    country?: string;
-  };
-  useClientInfo?: boolean;
-  billingMethod?: string;
-  invoiceFrequency?: string;
-  invoiceDay?: number;
-  invoiceEmail?: string;
-  invoiceAddressLine1?: string;
-  invoiceAddressLine2?: string;
-  invoiceCity?: string;
-  invoiceState?: string;
-  invoicePostalCode?: string;
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  annualRevenue?: number;
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
-  rate?: number;
-  invoiceMethod?: string;
-  accountNumber?: string;
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
-  annualContractorCost?: number;
-  serviceType?: string;
-  deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  contractorInvoiceFrequency?: string;
-  xeroContactId?: string;
-}
-
-// Periodical item
-export interface PeriodicalItem {
-  id?: string;
   name: string;
-  description?: string;
-  frequency: string;
-  lastCompleted?: string;
-  nextDue?: string;
-  assignedTo?: string;
-  status?: string;
-  notes?: string;
+  client_id: string;
+  site_id: string;
+  start_date: string;
+  end_date: string;
+  value: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  is_primary?: boolean;
 }
 
-// User status
+// Define BillingDetails and related types
+export interface BillingAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country?: string;
+}
+
+export interface BillingContact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  isPrimary?: boolean;
+}
+
+export interface BillingDetails {
+  billingAddress: BillingAddress;
+  useClientInfo: boolean;
+  billingMethod: string;
+  paymentTerms: string;
+  billingEmail: string;
+  billingLines: any[];
+  contacts: BillingContact[];
+  billingCity?: string;
+  billingState?: string;
+  billingPostcode?: string;
+  notes?: string;
+  totalAnnualAmount?: number;
+}
+
+// Interface for SiteFormData
+export interface SiteFormData {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  client_id?: string;
+  client_name?: string;
+  status: string;
+  phone?: string;
+  email?: string;
+  representative?: string;
+  customId?: string;
+  contract_details?: any;
+  contractDetails?: any;
+  periodicals?: any[];
+  replenishables?: any[];
+  subcontractors?: any[];
+  security?: any;
+  specifications?: any;
+  contacts?: any[];
+  billingDetails: BillingDetails;
+  notes?: string;
+  postcode?: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings?: string[];
+}
+
+// Add missing ContractActivity interface
+export interface ContractActivity {
+  id: string;
+  contractId: string;
+  contract_id: string;
+  action: string;
+  activity_type: string;
+  timestamp: string;
+  created_at: string;
+  userName: string;
+  created_by?: string;
+  details: any;
+  metadata?: any;
+  description?: string;
+}
+
+// Add missing ContractHistoryEntry interface
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: any;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
+  version_number: number;
+}
+
+// Export UserStatus enum properly
 export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
@@ -322,39 +252,11 @@ export enum UserStatus {
   SUSPENDED = 'suspended'
 }
 
-// Export a BillingContact interface
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  role?: string;
-  isPrimary?: boolean;
-}
-
-// Export BillingAddress interface
-export interface BillingAddress {
-  line1?: string;
-  line2?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-}
-
-// FrontendQuoteShift interface for the UI
-export interface FrontendQuoteShift {
-  id: string;
-  quoteId: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: string;
-  level: number;
-  allowances: string[];
-  estimatedCost: number;
-  location: string;
-  notes: string;
+// Add ImportOptions interface
+export interface ImportOptions {
+  mapping?: Record<string, string>;
+  skipValidation?: boolean;
+  skipExistingCheck?: boolean;
+  updateExisting?: boolean;
+  dryRun?: boolean;
 }

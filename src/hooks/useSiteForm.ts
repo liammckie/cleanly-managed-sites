@@ -1,133 +1,128 @@
-import { useState } from 'react';
+
+import { useState, useCallback } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { ContractDetails } from '@/types/contracts';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
+import { useSiteCreate } from './useSiteCreate';
+import { useSiteUpdate } from './useSiteUpdate';
+import { toast } from 'sonner';
 
-// Default initial state for the site form
-const initialState: SiteFormData = {
-  name: '',
-  address: '',
-  city: '',
-  state: '',
-  postalCode: '',
-  country: 'Australia',
-  status: 'active',
-  phone: '',
-  email: '',
-  representative: '',
-  customId: '',
-  contacts: [],
-  contract_details: {},
-  billingDetails: {
-    billingFrequency: 'monthly',
-    billingLines: []
-  },
-  subcontractors: [],
-  replenishables: {
-    stock: [],
-    supplies: [],
-    notes: ''
-  },
-  periodicals: {
-    items: []
-  },
-  securityDetails: {
-    alarmCode: '',
-    keyLocation: '',
-    accessNotes: ''
-  },
-  jobSpecifications: {
-    daysPerWeek: 5,
-    hoursPerDay: 8,
-    directEmployees: 0,
-    cleaningFrequency: 'daily',
-    serviceDays: '',
-    serviceTime: '',
-    scopeNotes: ''
-  }
-};
-
+// Create a proper interface for UseSiteFormReturn
 export interface UseSiteFormReturn {
-  formData: any; // Replace with your actual type
-  setFormData: (data: any) => void;
-  handleSubmit: (event: React.FormEvent) => void;
-  handleChange: (field: string, value: any) => void;
-  // Add any other properties that this hook returns
+  formData: SiteFormData;
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  handleNestedChange: (section: string, field: string, value: any) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
+  handleSubmit: () => void;
+  isSubmitting: boolean;
+  errors: Record<string, string>;
+  resetForm: () => void;
 }
 
-export function useSiteForm(initialData?: Partial<SiteFormData>) {
-  const [formState, setFormState] = useState<SiteFormData>({
-    ...initialState,
-    ...(initialData || {})
-  });
-
-  const updateForm = (updates: Partial<SiteFormData>) => {
-    setFormState(prev => ({
+export function useSiteForm(
+  mode: 'create' | 'edit',
+  initialData?: Partial<SiteFormData>
+): UseSiteFormReturn {
+  const [formData, setFormData] = useState<SiteFormData>(
+    initialData 
+      ? { ...getInitialFormData(), ...initialData }
+      : getInitialFormData()
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const { createSite } = useSiteCreate();
+  const { updateSite } = useSiteUpdate();
+  
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
       ...prev,
-      ...updates
+      [name]: value
     }));
-  };
-
-  const updateContractDetails = (updates: Partial<ContractDetails>) => {
-    setFormState(prev => ({
+  }, []);
+  
+  const handleNestedChange = useCallback((section: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  }, []);
+  
+  const handleDoubleNestedChange = useCallback((section: string, subsection: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [subsection]: {
+          ...prev[section]?.[subsection],
+          [field]: value
+        }
+      }
+    }));
+  }, []);
+  
+  const updateContractDetails = useCallback((updates: Partial<ContractDetails>) => {
+    setFormData(prev => ({
       ...prev,
       contractDetails: {
         ...prev.contractDetails,
         ...updates
       }
     }));
-  };
-
-  const updateBillingDetails = (updates: Partial<BillingDetails>) => {
-    setFormState(prev => ({
+  }, []);
+  
+  const updateBillingDetails = useCallback((updates: Partial<BillingDetails>) => {
+    setFormData(prev => ({
       ...prev,
       billingDetails: {
         ...prev.billingDetails,
         ...updates
       }
     }));
+  }, []);
+  
+  const resetForm = useCallback(() => {
+    setFormData(getInitialFormData());
+    setErrors({});
+  }, []);
+  
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setErrors({});
+    
+    try {
+      if (mode === 'create') {
+        await createSite(formData);
+        toast.success('Site created successfully');
+        resetForm();
+      } else {
+        await updateSite(formData.id, formData);
+        toast.success('Site updated successfully');
+      }
+    } catch (error) {
+      console.error('Error submitting site form:', error);
+      setErrors({ general: 'Failed to save site. Please try again.' });
+      toast.error('Error saving site data');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const addContact = (contact: SiteFormData['contacts'][0]) => {
-    setFormState(prev => ({
-      ...prev,
-      contacts: [...prev.contacts, contact]
-    }));
-  };
-
-  const updateContact = (index: number, contact: Partial<SiteFormData['contacts'][0]>) => {
-    setFormState(prev => {
-      const newContacts = [...prev.contacts];
-      newContacts[index] = {
-        ...newContacts[index],
-        ...contact
-      };
-      return {
-        ...prev,
-        contacts: newContacts
-      };
-    });
-  };
-
-  const removeContact = (index: number) => {
-    setFormState(prev => ({
-      ...prev,
-      contacts: prev.contacts.filter((_, i) => i !== index)
-    }));
-  };
-
-  const resetForm = () => {
-    setFormState(initialState);
-  };
-
+  
   return {
-    formState,
-    updateForm,
-    updateContractDetails,
-    updateBillingDetails,
-    addContact,
-    updateContact,
-    removeContact,
+    formData,
+    setFormData,
+    handleChange,
+    handleNestedChange,
+    handleDoubleNestedChange,
+    handleSubmit,
+    isSubmitting,
+    errors,
     resetForm
   };
 }

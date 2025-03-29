@@ -1,101 +1,49 @@
 
-import { Json, UserStatus } from '@/types/common';
+// Define UserStatus type since it's missing
+export type UserStatus = "active" | "pending" | "inactive";
 
-// User role definition
-export type UserRoleString = 'admin' | 'manager' | 'staff' | 'client' | 'contractor';
-
-export interface UserRoleObject {
-  id: string;
-  name: string;
-  description?: string;
-  permissions?: string[];
-}
-
-export type UserRole = UserRoleString | UserRoleObject;
-
-// System user interface
 export interface SystemUser {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  phone?: string;
-  title?: string;
-  customId?: string;
-  role: UserRole;
-  status: UserStatus;
-  avatarUrl?: string;
-  lastLogin?: string;
-  territories?: string[];
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-// DB/API style user profile - with snake_case
-export interface UserProfile {
-  id: string;
-  email: string;
+  full_name: string;
   first_name?: string;
   last_name?: string;
-  full_name?: string;
-  phone?: string;
-  title?: string;
-  custom_id?: string;
-  role: UserRole;
-  status: string;
   avatar_url?: string;
-  last_login?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;   // Changed from note to notes to match database field
   territories?: string[];
-  notes?: string;
-  created_at: string;
+  status: UserStatus;
+  role_id?: string;
+  role?: UserRole;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  daily_summary?: boolean;
+}
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  created_at?: string;
   updated_at?: string;
 }
 
-export interface UserProfileWithRole extends UserProfile {
-  role_details?: UserRoleObject;
+export interface UserRoleWithCount extends UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[];
+  user_count?: number;
 }
 
-// Function to convert between user formats
-export function dbUserToSystemUser(user: UserProfile): SystemUser {
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    fullName: user.full_name,
-    phone: user.phone,
-    title: user.title,
-    customId: user.custom_id,
-    role: user.role,
-    status: user.status as UserStatus,
-    avatarUrl: user.avatar_url,
-    lastLogin: user.last_login,
-    territories: user.territories,
-    notes: user.notes,
-    createdAt: user.created_at,
-    updatedAt: user.updated_at
-  };
-}
-
-export function systemUserToDbUser(user: SystemUser): UserProfile {
-  return {
-    id: user.id,
-    email: user.email,
-    first_name: user.firstName,
-    last_name: user.lastName,
-    full_name: user.fullName,
-    phone: user.phone,
-    title: user.title,
-    custom_id: user.customId,
-    role: user.role,
-    status: user.status,
-    avatar_url: user.avatarUrl,
-    last_login: user.lastLogin,
-    territories: user.territories,
-    notes: user.notes,
-    created_at: user.createdAt,
-    updated_at: user.updatedAt
-  };
-}
+// Create a UserRoleObject alias to avoid type conflicts
+export type UserRoleObject = {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
+};

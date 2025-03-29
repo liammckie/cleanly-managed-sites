@@ -21,7 +21,7 @@ export function EditSiteForm() {
     setValidationErrors({});
     
     // Validate with Zod
-    const result = siteFormSchema.safeParse(siteForm.formState);
+    const result = siteFormSchema.safeParse(siteForm.formData);
     
     if (!result.success) {
       // Format Zod errors for field-level feedback
@@ -52,7 +52,7 @@ export function EditSiteForm() {
     <Card>
       <CardContent className="pt-6">
         <SiteForm
-          formData={siteForm.formState}
+          formData={siteForm.formData}
           handleChange={siteForm.handleChange}
           handleNestedChange={siteForm.handleNestedChange}
           handleDoubleNestedChange={siteForm.handleDoubleNestedChange}
