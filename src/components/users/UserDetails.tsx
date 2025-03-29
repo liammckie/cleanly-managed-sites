@@ -1,185 +1,184 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { formatDate, formatRelativeTime } from '@/lib/utils/dateUtils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SystemUser } from '@/types/models';
-import { Pencil, Trash2, Mail, Phone, Calendar, Key, UserCheck, Building, MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { DollarSign, Mail, MapPin, Phone, User } from 'lucide-react';
+import { SystemUser, dbUserToSystemUser } from '@/lib/types/users';
+import { formatDate } from '@/lib/utils/dateUtils';
 
 interface UserDetailsProps {
-  user: SystemUser;
+  user: any;
   onEdit: () => void;
-  onDelete: () => void;
 }
 
-export function UserDetails({ user, onEdit, onDelete }: UserDetailsProps) {
-  // Get user initials for avatar fallback
+export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
+  const navigate = useNavigate();
+  
+  // Convert user to SystemUser type if it's from the DB
+  const systemUser: SystemUser = user.first_name !== undefined ? dbUserToSystemUser(user) : user;
+  
   const getInitials = () => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`;
-    } else if (user.full_name) {
-      return user.full_name.split(' ').map(n => n[0]).join('');
+    if (systemUser.firstName && systemUser.lastName) {
+      return `${systemUser.firstName.charAt(0)}${systemUser.lastName.charAt(0)}`;
     }
-    return user.email[0].toUpperCase();
+    return systemUser.fullName ? systemUser.fullName.charAt(0) : systemUser.email.charAt(0).toUpperCase();
   };
   
-  // Format role name
-  const formatRoleName = (role?: string) => {
-    if (!role) return 'No Role Assigned';
-    return role.charAt(0).toUpperCase() + role.slice(1).replace(/_/g, ' ');
-  };
-  
-  // Get status badge variant
-  const getStatusVariant = (status?: string) => {
-    switch (status) {
+  const getUserStatusColor = () => {
+    switch (systemUser.status) {
       case 'active':
-        return 'success';
-      case 'pending':
-        return 'secondary';
+        return 'bg-green-500';
       case 'inactive':
-        return 'destructive';
+        return 'bg-gray-400';
+      case 'pending':
+        return 'bg-yellow-500';
       default:
-        return 'secondary';
+        return 'bg-gray-400';
     }
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Card>
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle>{user.full_name || 'User Profile'}</CardTitle>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={onEdit}>
-                <Pencil className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="destructive" size="sm" onClick={onDelete}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            </div>
+            <CardTitle>User Profile</CardTitle>
+            <Button onClick={onEdit}>Edit Profile</Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user.avatar_url} alt={user.full_name || 'User'} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-lg font-medium">{user.full_name || user.email}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant={getStatusVariant(user.status) as any}>
-                  {user.status || 'Unknown Status'}
-                </Badge>
-                {user.role?.name && (
-                  <Badge variant="outline">
-                    {formatRoleName(user.role?.name)}
-                  </Badge>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col items-center space-y-4">
+              <Avatar className="h-24 w-24">
+                {systemUser.avatarUrl ? (
+                  <AvatarImage src={systemUser.avatarUrl} alt={systemUser.fullName || 'User'} />
+                ) : (
+                  <AvatarFallback className="text-xl">{getInitials()}</AvatarFallback>
                 )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-2">
-                <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{user.email}</p>
+              </Avatar>
+              
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">{systemUser.fullName || `${systemUser.email}`}</h3>
+                <div className="flex items-center justify-center mt-1">
+                  <div className={`w-2 h-2 rounded-full ${getUserStatusColor()} mr-2`}></div>
+                  <span className="text-sm capitalize">{systemUser.status}</span>
                 </div>
               </div>
               
-              {user.phone && (
-                <div className="flex items-start gap-2">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Phone</p>
-                    <p className="font-medium">{user.phone}</p>
-                  </div>
-                </div>
-              )}
-              
-              {user.title && (
-                <div className="flex items-start gap-2">
-                  <UserCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Job Title</p>
-                    <p className="font-medium">{user.title}</p>
-                  </div>
-                </div>
-              )}
-              
-              {user.custom_id && (
-                <div className="flex items-start gap-2">
-                  <Key className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Custom ID</p>
-                    <p className="font-medium">{user.custom_id}</p>
-                  </div>
-                </div>
+              {typeof systemUser.role === 'object' && systemUser.role.name ? (
+                <Badge variant="outline" className="px-3 py-1">
+                  {systemUser.role.name}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="px-3 py-1 capitalize">
+                  {String(systemUser.role)}
+                </Badge>
               )}
             </div>
             
-            <div className="space-y-4">
-              {user.created_at && (
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Account Created</p>
-                    <p className="font-medium">{formatDate(user.created_at)}</p>
-                  </div>
-                </div>
-              )}
-              
-              {user.last_login && (
-                <div className="flex items-start gap-2">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Last Login</p>
-                    <p className="font-medium">{formatRelativeTime(user.last_login)}</p>
-                  </div>
-                </div>
-              )}
-              
-              {user.territories && user.territories.length > 0 && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Territories</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {user.territories.map((territory, i) => (
-                        <Badge key={i} variant="outline">{territory}</Badge>
-                      ))}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Contact Information</h4>
+                <div className="space-y-2">
+                  <div className="flex items-start">
+                    <Mail className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Email</p>
+                      <p className="text-sm text-muted-foreground">{systemUser.email}</p>
                     </div>
                   </div>
+                  
+                  {systemUser.phone && (
+                    <div className="flex items-start">
+                      <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Phone</p>
+                        <p className="text-sm text-muted-foreground">{systemUser.phone}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {systemUser.title && (
+                    <div className="flex items-start">
+                      <User className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Job Title</p>
+                        <p className="text-sm text-muted-foreground">{systemUser.title}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {systemUser.customId && (
+                    <div className="flex items-start">
+                      <DollarSign className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Employee ID</p>
+                        <p className="text-sm text-muted-foreground">{systemUser.customId}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">System Information</h4>
+                <div className="space-y-2">
+                  <div className="flex items-start">
+                    <div className="w-5 mr-2">&nbsp;</div>
+                    <div>
+                      <p className="font-medium">Created</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(systemUser.createdAt)}</p>
+                    </div>
+                  </div>
+                  
+                  {systemUser.lastLogin && (
+                    <div className="flex items-start">
+                      <div className="w-5 mr-2">&nbsp;</div>
+                      <div>
+                        <p className="font-medium">Last Login</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(systemUser.lastLogin)}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {systemUser.territories && systemUser.territories.length > 0 && (
+                    <div className="flex items-start">
+                      <MapPin className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">Territories</p>
+                        <div className="flex gap-1 flex-wrap mt-1">
+                          {systemUser.territories.map((territory, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {territory}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {typeof systemUser.role === 'object' && systemUser.role.description && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Role Description</h4>
+                  <p className="text-sm">{systemUser.role.description}</p>
                 </div>
               )}
               
-              {user.role && (
-                <div className="flex items-start gap-2">
-                  <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Role</p>
-                    <p className="font-medium">{formatRoleName(user.role.name)}</p>
-                  </div>
+              {systemUser.notes && (
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Notes</h4>
+                  <p className="text-sm whitespace-pre-line">{systemUser.notes}</p>
                 </div>
               )}
             </div>
           </div>
-          
-          {user.notes && (
-            <div className="mt-6">
-              <p className="text-sm text-muted-foreground mb-1">Notes</p>
-              <p className="p-3 bg-muted rounded-md">{user.notes}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
   );
-}
+};

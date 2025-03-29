@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useSiteForm } from '@/hooks/useSiteForm';
+import { useSiteForm, UseSiteFormReturn } from '@/hooks/useSiteForm';
 import { SiteForm } from './SiteForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -9,22 +9,14 @@ import { siteFormSchema } from '@/lib/validation/siteSchema';
 export function CreateSiteForm() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
-  const {
-    formState,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleNestedChange,
-    handleDoubleNestedChange,
-    handleSubmit
-  } = useSiteForm('create');
-
+  const siteForm: UseSiteFormReturn = useSiteForm('create');
+  
   const onSubmit = () => {
     // Reset validation errors
     setValidationErrors({});
     
     // Validate with Zod
-    const result = siteFormSchema.safeParse(formState);
+    const result = siteFormSchema.safeParse(siteForm.formState);
     
     if (!result.success) {
       // Format Zod errors for field-level feedback
@@ -40,20 +32,20 @@ export function CreateSiteForm() {
     }
     
     // If validation passes, proceed with form submission
-    handleSubmit();
+    siteForm.handleSubmit();
   };
 
   return (
     <Card>
       <CardContent className="pt-6">
         <SiteForm
-          formData={formState}
-          handleChange={handleChange}
-          handleNestedChange={handleNestedChange}
-          handleDoubleNestedChange={handleDoubleNestedChange}
+          formData={siteForm.formState}
+          handleChange={siteForm.handleChange}
+          handleNestedChange={siteForm.handleNestedChange}
+          handleDoubleNestedChange={siteForm.handleDoubleNestedChange}
           handleSubmit={onSubmit}
-          isSubmitting={isSubmitting}
-          error={errors['general']}
+          isSubmitting={siteForm.isSubmitting}
+          error={siteForm.errors['general']}
           validationErrors={validationErrors}
         />
       </CardContent>

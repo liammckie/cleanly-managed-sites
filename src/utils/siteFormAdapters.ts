@@ -1,88 +1,76 @@
 
-import { SiteFormData as UISiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { SiteFormData as ModelSiteFormData } from '@/types/models';
-import { BillingLine as UIBillingLine } from '@/components/sites/forms/types/billingTypes';
-import { BillingLine as ModelBillingLine } from '@/types/models';
+import { mapToDb, mapFromDb } from '@/lib/mappers';
 
 /**
- * Converts a BillingLine from model format to UI format
+ * Adapt billing lines from DB format to frontend format
  */
-export function adaptBillingLine(modelLine: ModelBillingLine): UIBillingLine {
-  // Ensure modelLine has the required properties or set defaults
-  const formattedLine: UIBillingLine = {
-    id: modelLine.id || crypto.randomUUID(),
-    description: modelLine.description,
-    amount: modelLine.amount,
-    frequency: modelLine.frequency === 'weekly' || modelLine.frequency === 'monthly' || 
-               modelLine.frequency === 'quarterly' || modelLine.frequency === 'annually' ? 
-               modelLine.frequency : 'monthly',
-    isRecurring: modelLine.isRecurring !== undefined ? modelLine.isRecurring : true,
-    onHold: modelLine.onHold !== undefined ? modelLine.onHold : false,
-    // Add any other properties needed for UIBillingLine
-    weeklyAmount: modelLine.weeklyAmount,
-    monthlyAmount: modelLine.monthlyAmount,
-    annualAmount: modelLine.annualAmount
-  };
+export function adaptBillingLines(lines: any[] = []) {
+  if (!lines || !Array.isArray(lines)) return [];
   
-  return formattedLine;
+  return lines.map(line => ({
+    id: line.id,
+    description: line.description,
+    amount: line.amount,
+    frequency: line.frequency,
+    isRecurring: line.is_recurring,
+    onHold: line.on_hold,
+    notes: line.notes,
+    weeklyAmount: line.weekly_amount,
+    monthlyAmount: line.monthly_amount,
+    annualAmount: line.annual_amount
+  }));
 }
 
 /**
- * Converts a SiteFormData from model format to UI format
+ * Adapt billing lines from frontend format to DB format
  */
-export function adaptSiteFormData(modelData: ModelSiteFormData): UISiteFormData {
-  return {
-    ...modelData,
-    postalCode: modelData.postal_code || '',
-    contacts: modelData.contacts || [],
-    billingDetails: modelData.billingDetails ? {
-      ...modelData.billingDetails,
-      billingLines: modelData.billingDetails.billingLines?.map(adaptBillingLine) || []
-    } : {
-      billingLines: [],
-      useClientInfo: false,
-      billingMethod: '',
-      paymentTerms: '',
-      billingEmail: '',
-      contacts: []
-    }
-  };
+export function adaptBillingLinesToDb(lines: any[] = []) {
+  if (!lines || !Array.isArray(lines)) return [];
+  
+  return lines.map(line => ({
+    id: line.id,
+    description: line.description,
+    amount: line.amount,
+    frequency: line.frequency,
+    is_recurring: line.isRecurring,
+    on_hold: line.onHold,
+    notes: line.notes,
+    weekly_amount: line.weeklyAmount,
+    monthly_amount: line.monthlyAmount,
+    annual_amount: line.annualAmount
+  }));
 }
 
 /**
- * Converts a SiteFormData from UI format to model format
+ * Adapt site form data from frontend to DB format
  */
-export function convertToModelSiteFormData(uiData: UISiteFormData): ModelSiteFormData {
-  const modelData: any = {
-    ...uiData,
-    postal_code: uiData.postalCode,
-    // Copy additional properties that need conversion
-    contract_details: uiData.contractDetails || uiData.contract_details,
+export function adaptSiteFormToDb(formData: any) {
+  const dbData = {
+    id: formData.id,
+    name: formData.name,
+    address: formData.address,
+    city: formData.city,
+    state: formData.state,
+    postcode: formData.postalCode || formData.postcode,
+    country: formData.country,
+    client_id: formData.client_id || formData.clientId,
+    client_name: formData.client_name,
+    status: formData.status,
+    email: formData.email,
+    phone: formData.phone,
+    custom_id: formData.customId,
+    contract_details: mapToDb(formData.contractDetails || formData.contract_details || {}),
+    billing_details: mapToDb(formData.billingDetails || {}),
+    job_specifications: mapToDb(formData.jobSpecifications || {}),
+    security_details: mapToDb(formData.securityDetails || {}),
+    periodicals: mapToDb(formData.periodicals || {}),
+    ad_hoc_work_authorization: mapToDb(formData.adHocWorkAuthorization || {}),
+    notes: formData.notes,
+    weekly_revenue: formData.weeklyRevenue,
+    monthly_revenue: formData.monthlyRevenue,
+    annual_revenue: formData.annualRevenue,
+    monthly_cost: formData.monthlyCost,
   };
   
-  // Remove UI-specific fields not needed in the model
-  delete modelData.postalCode;
-  delete modelData.contractDetails;
-  
-  // Ensure billingDetails is properly formatted if it exists
-  if (uiData.billingDetails) {
-    modelData.billingDetails = {
-      ...uiData.billingDetails,
-      // Add any conversion specific to billingDetails if needed
-      serviceDeliveryType: uiData.billingDetails.serviceDeliveryType === 'direct' || 
-                           uiData.billingDetails.serviceDeliveryType === 'contractor' ?
-                           uiData.billingDetails.serviceDeliveryType : 'direct'
-    };
-    
-    // Convert billingAddress if it exists
-    if (uiData.billingDetails.billingAddress) {
-      modelData.billingDetails.billingAddress = {
-        ...uiData.billingDetails.billingAddress,
-        postal_code: uiData.billingDetails.billingAddress.postcode
-      };
-      delete modelData.billingDetails.billingAddress.postcode;
-    }
-  }
-  
-  return modelData as ModelSiteFormData;
+  return dbData;
 }

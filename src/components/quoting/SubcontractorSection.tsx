@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,7 @@ export const SubcontractorSection: React.FC<SubcontractorSectionProps> = ({
     } else if (onSubcontractorsChange) {
       const newSubcontractor: QuoteSubcontractor = {
         id: uuidv4(),
-        quoteId: '',
+        quote_id: '',
         name: formData.name || '',
         description: formData.description || '',
         service: formData.service || '',

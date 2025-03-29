@@ -1,66 +1,70 @@
 
 /**
- * Format a date string or Date object to a user-friendly format
- * @param date The date to format
- * @param includeTime Whether to include the time in the formatted date
- * @returns Formatted date string
+ * Format a date string or Date object to a human-readable format
+ * @param {string | Date} date - The date to format
+ * @param {string} format - The format to use (default: 'short')
+ * @returns {string} Formatted date string
  */
-export function formatDate(date: string | Date | undefined, includeTime = false): string {
+export function formatDate(date: string | Date, format: 'short' | 'long' = 'short'): string {
   if (!date) return 'N/A';
   
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) {
-      return 'Invalid date';
-    }
-    
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      ...(includeTime && { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    return new Intl.DateTimeFormat('en-AU', options).format(dateObj);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Error';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid date';
   }
+  
+  const options: Intl.DateTimeFormatOptions = format === 'long' 
+    ? { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }
+    : { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric'
+      };
+  
+  return dateObj.toLocaleDateString(undefined, options);
 }
 
 /**
- * Format a date as a relative time (e.g., "2 days ago", "just now")
- * @param date The date to format
- * @returns Relative time string
+ * Format a time string or Date object to a human-readable format
+ * @param {string | Date} time - The time to format 
+ * @returns {string} Formatted time string
  */
-export function formatRelativeTime(date: string | Date | undefined): string {
-  if (!date) return 'N/A';
+export function formatTime(time: string | Date): string {
+  if (!time) return 'N/A';
   
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) {
-      return 'Invalid date';
-    }
-    
-    const now = new Date();
-    const diffMs = now.getTime() - dateObj.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffSecs < 60) return 'just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
-    
-    return formatDate(dateObj);
-  } catch (error) {
-    console.error('Error formatting relative time:', error);
-    return 'Error';
+  const dateObj = typeof time === 'string' ? new Date(time) : time;
+  
+  // Check if the date is valid
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid time';
   }
+  
+  return dateObj.toLocaleTimeString(undefined, { 
+    hour: '2-digit', 
+    minute: '2-digit'
+  });
+}
+
+/**
+ * Calculate the difference between two dates in days
+ * @param {Date | string} date1 - The first date
+ * @param {Date | string} date2 - The second date
+ * @returns {number} The difference in days
+ */
+export function daysBetween(date1: Date | string, date2: Date | string): number {
+  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+  
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
 }

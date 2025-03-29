@@ -1,98 +1,149 @@
 
-import React from 'react';
-import QuoteShiftForm from '@/components/quotes/QuoteShiftForm';
-import QuoteSubcontractorForm from '@/components/quotes/QuoteSubcontractorForm';
-import { useQuoteShifts } from '@/hooks/quotes/useQuoteShifts';
-import { useQuoteSubcontractors } from '@/hooks/quotes/useQuoteSubcontractors';
-import { useQuote } from '@/hooks/useQuote';
-import { useAwardEngine } from '@/hooks/useAwardEngine';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useQuote } from '@/hooks/quotes/useQuote';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { QuoteStatusBadge } from '@/components/quoting/QuoteStatusBadge';
+import { format } from 'date-fns';
+import { ArrowLeft, FileText, Printer, Send } from 'lucide-react';
 import { mapFromDb } from '@/lib/mappers';
-import type { QuoteShift } from '@/types/models';
 
-interface QuoteDetailsProps {
-  quoteId: string;
-}
-
-const QuoteDetails: React.FC<QuoteDetailsProps> = ({ quoteId }) => {
-  const { quote, isLoading: quoteLoading } = useQuote(quoteId);
-  const { shifts, isLoading: shiftsLoading } = useQuoteShifts(quoteId);
-  const { subcontractors, isLoading: subcontractorsLoading } = useQuoteSubcontractors(quoteId);
-  const { awardData, loading: awardLoading } = useAwardEngine(quoteId);
-
-  if (quoteLoading || awardLoading || shiftsLoading || subcontractorsLoading) {
-    return <div>Loading...</div>;
+export default function QuoteDetails() {
+  const { quoteId } = useParams<{ quoteId: string }>();
+  const navigate = useNavigate();
+  const { quote, isLoading, error } = useQuote(quoteId);
+  
+  if (isLoading) {
+    return (
+      <div className="container py-8">
+        <div className="flex justify-center items-center h-40">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
   }
-
-  if (!quote) {
-    return <div>Quote not found</div>;
+  
+  if (error || !quote) {
+    return (
+      <div className="container py-8">
+        <div className="bg-red-50 p-4 rounded-md text-red-800">
+          <h2 className="text-lg font-semibold mb-2">Error loading quote</h2>
+          <p>{error?.message || 'Quote not found'}</p>
+          <Button onClick={() => navigate('/quotes')} variant="outline" className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Return to Quotes
+          </Button>
+        </div>
+      </div>
+    );
   }
-
+  
+  // Convert snake_case to camelCase for consistent usage
+  const mappedQuote = mapFromDb(quote);
+  
   return (
-    <div>
-      <h1>Quote Details</h1>
+    <div className="container py-8">
+      <div className="mb-6">
+        <Button onClick={() => navigate('/quotes')} variant="ghost" className="pl-0">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Quotes
+        </Button>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h2>Basic Information</h2>
-          <p>Client: {quote.client_name || quote.clientName}</p>
-          <p>Site: {quote.site_name || quote.siteName}</p>
-          <p>Status: {quote.status}</p>
+          <h1 className="text-2xl font-bold mb-1">{quote.name}</h1>
+          <p className="text-muted-foreground">Client: {quote.client_name}</p>
+          <p className="text-muted-foreground">Site: {quote.site_name || 'Not specified'}</p>
         </div>
-        
-        <div>
-          <h2>Financial Details</h2>
-          <p>Total Price: ${quote.total_price || quote.totalPrice}</p>
-          <p>Labor Cost: ${quote.labor_cost || quote.laborCost}</p>
-          <p>Subcontractor Cost: ${quote.subcontractor_cost || quote.subcontractorCost}</p>
+        <div className="flex flex-col items-end gap-2">
+          <QuoteStatusBadge status={quote.status} />
+          <p className="text-sm text-muted-foreground">Quote #{quote.id.substring(0, 8)}</p>
         </div>
       </div>
       
-      <div className="mt-6">
-        <h2>Shifts</h2>
-        {shifts && shifts.length > 0 ? (
-          <div className="grid gap-2">
-            {shifts.map((shift) => (
-              <div key={shift.id} className="p-2 border rounded">
-                <p>Day: {shift.day}</p>
-                <p>Time: {shift.startTime || shift.start_time} - {shift.endTime || shift.end_time}</p>
-                <p>Cleaners: {shift.numberOfCleaners || shift.number_of_cleaners}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Quote Value</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">${quote.total_price.toFixed(2)}</p>
+            <div className="mt-2 text-sm text-muted-foreground">
+              <p>Labor: ${quote.labor_cost.toFixed(2)}</p>
+              {quote.subcontractor_cost > 0 && <p>Subcontractors: ${quote.subcontractor_cost.toFixed(2)}</p>}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Dates</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div>
+              <p className="text-sm text-muted-foreground">Created</p>
+              <p>{format(new Date(quote.created_at), 'PPP')}</p>
+            </div>
+            {quote.expiry_date && (
+              <div>
+                <p className="text-sm text-muted-foreground">Valid Until</p>
+                <p>{format(new Date(quote.expiry_date), 'PPP')}</p>
               </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Button className="w-full justify-start">
+              <Send className="mr-2 h-4 w-4" /> Send to Client
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Printer className="mr-2 h-4 w-4" /> Print Quote
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => navigate(`/quotes/${quoteId}/edit`)}
+            >
+              <FileText className="mr-2 h-4 w-4" /> Edit Quote
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Additional quote details would go here */}
+      
+      {/* Shift summary section, if there are any shifts */}
+      {quote.shifts && quote.shifts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold mb-4">Shift Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {quote.shifts.map((shift: any) => (
+              <Card key={shift.id}>
+                <CardContent className="p-4">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="font-medium capitalize">{shift.day}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {shift.start_time} - {shift.end_time}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{shift.number_of_cleaners} staff</p>
+                      <p className="text-sm text-muted-foreground">Level {shift.level}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        ) : (
-          <p>No shifts found</p>
-        )}
-        
-        <QuoteShiftForm quoteId={quoteId} />
-      </div>
-      
-      <div className="mt-6">
-        <h2>Subcontractors</h2>
-        {subcontractors && subcontractors.length > 0 ? (
-          <div className="grid gap-2">
-            {subcontractors.map((subcontractor) => (
-              <div key={subcontractor.id} className="p-2 border rounded">
-                <p>Name: {subcontractor.name}</p>
-                <p>Cost: ${subcontractor.cost}</p>
-                <p>Frequency: {subcontractor.frequency}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No subcontractors found</p>
-        )}
-        
-        <QuoteSubcontractorForm quoteId={quoteId} />
-      </div>
-      
-      {awardData && (
-        <div className="mt-6">
-          <h2>Award Engine Details</h2>
-          <pre>{JSON.stringify(awardData, null, 2)}</pre>
         </div>
       )}
     </div>
   );
-};
-
-export default QuoteDetails;
+}

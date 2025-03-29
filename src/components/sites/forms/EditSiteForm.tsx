@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSiteForm } from '@/hooks/useSiteForm';
+import { useSiteForm, UseSiteFormReturn } from '@/hooks/useSiteForm';
 import { SiteForm } from './SiteForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSite } from '@/hooks/useSite';
@@ -14,22 +14,14 @@ export function EditSiteForm() {
   const { site, isLoading } = useSite(siteId);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
-  const {
-    formState,
-    errors,
-    isSubmitting,
-    handleChange,
-    handleNestedChange,
-    handleDoubleNestedChange,
-    handleSubmit
-  } = useSiteForm('edit', site);
+  const siteForm: UseSiteFormReturn = useSiteForm('edit', site);
 
   const onSubmit = () => {
     // Reset validation errors
     setValidationErrors({});
     
     // Validate with Zod
-    const result = siteFormSchema.safeParse(formState);
+    const result = siteFormSchema.safeParse(siteForm.formState);
     
     if (!result.success) {
       // Format Zod errors for field-level feedback
@@ -45,7 +37,7 @@ export function EditSiteForm() {
     }
     
     // If validation passes, proceed with form submission
-    handleSubmit();
+    siteForm.handleSubmit();
   };
 
   if (isLoading) {
@@ -60,13 +52,13 @@ export function EditSiteForm() {
     <Card>
       <CardContent className="pt-6">
         <SiteForm
-          formData={formState}
-          handleChange={handleChange}
-          handleNestedChange={handleNestedChange}
-          handleDoubleNestedChange={handleDoubleNestedChange}
+          formData={siteForm.formState}
+          handleChange={siteForm.handleChange}
+          handleNestedChange={siteForm.handleNestedChange}
+          handleDoubleNestedChange={siteForm.handleDoubleNestedChange}
           handleSubmit={onSubmit}
-          isSubmitting={isSubmitting}
-          error={errors['general']}
+          isSubmitting={siteForm.isSubmitting}
+          error={siteForm.errors['general']}
           validationErrors={validationErrors}
         />
       </CardContent>

@@ -6,8 +6,8 @@ import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 import Dashboard from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import PageLayout from '@/components/ui/layout/PageLayout';
-import Loader from '@/components/ui/loader';
+import { PageLayout } from '@/components/ui/layout/PageLayout';
+import Loader from '@/components/ui/loader/Loader';
 
 // Lazy-loaded page components
 const Clients = lazy(() => import('@/pages/Clients'));
@@ -202,8 +202,7 @@ function App() {
             <PageLayout>
               <ErrorBoundary>
                 <Suspense fallback={<Loader />}>
-                  {/* Fixed to use the route parameter */}
-                  {({ params }) => <QuoteDetail quoteId={params.quoteId} />}
+                  <QuoteDetail />
                 </Suspense>
               </ErrorBoundary>
             </PageLayout>
