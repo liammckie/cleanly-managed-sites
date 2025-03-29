@@ -1,55 +1,53 @@
 
 /**
  * Client related type definitions
- * Centralizes all client types
  */
 
 /**
- * Client record interface from database
+ * Client record from database
  */
 export interface ClientRecord {
   id: string;
   name: string;
-  address: string;
-  city: string;
-  state: string;
-  postcode: string;
-  status: string;
-  email: string;
-  phone: string;
   contact_name: string;
-  custom_id: string;
-  notes: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  status: 'active' | 'pending' | 'inactive' | 'on-hold';
+  notes?: string;
+  custom_id?: string;
+  xero_contact_id?: string;
   created_at: string;
   updated_at: string;
   user_id: string;
-  xero_contact_id?: string;
 }
 
 /**
- * Enhanced client record with additional properties
+ * Client record with additional data
  */
 export interface EnhancedClientRecord extends ClientRecord {
   total_sites?: number;
-  active_sites?: number;
   total_revenue?: number;
-  contract_value?: number;
+  active_contacts?: number;
+  site_count?: number;
 }
 
 /**
- * Client form data (for forms)
+ * Client form data
  */
 export interface ClientFormData {
-  id?: string;
   name: string;
   contact_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  postcode: string;
-  status: 'active' | 'inactive' | 'pending';
-  notes: string;
-  customId?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  status: 'active' | 'pending' | 'inactive' | 'on-hold';
+  notes?: string;
+  custom_id?: string;
 }

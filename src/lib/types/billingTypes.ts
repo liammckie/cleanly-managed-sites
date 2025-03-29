@@ -2,106 +2,60 @@
 /**
  * Billing related type definitions
  */
-import { Frequency } from './common';
+import { Json } from './common';
 
 /**
- * Billing line item for site billing
- */
-export interface BillingLine {
-  id: string;
-  description: string;
-  amount: number;
-  frequency: Frequency;
-  isRecurring: boolean;
-  is_recurring?: boolean; // Database field
-  onHold: boolean;
-  on_hold?: boolean; // Database field
-  notes?: string;
-  weeklyAmount?: number;
-  weekly_amount?: number; // Database field
-  monthlyAmount?: number;
-  monthly_amount?: number; // Database field
-  annualAmount?: number;
-  annual_amount?: number; // Database field
-  holdStartDate?: string;
-  hold_start_date?: string;
-  holdEndDate?: string;
-  hold_end_date?: string;
-  creditAmount?: number;
-  credit_amount?: number;
-  creditDate?: string;
-  credit_date?: string;
-  creditReason?: string;
-  credit_reason?: string;
-}
-
-/**
- * Billing address details
- */
-export interface BillingAddress {
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postcode: string;
-  postalCode?: string; // Alias for frontend compatibility
-  country?: string;
-}
-
-/**
- * Billing contact
- */
-export interface BillingContact {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role?: string;
-  isPrimary?: boolean;
-  is_primary?: boolean; // Database field
-}
-
-/**
- * Billing details for sites
+ * Billing details structure
  */
 export interface BillingDetails {
-  billingAddress?: BillingAddress;
-  useClientInfo?: boolean;
-  billingMethod?: string;
-  paymentTerms?: string;
-  billingEmail?: string;
-  billingLines?: BillingLine[];
-  contacts?: BillingContact[];
-  invoiceFrequency?: string;
-  invoiceDay?: number;
-  invoiceEmail?: string;
-  invoiceAddressLine1?: string;
-  invoiceAddressLine2?: string;
-  invoiceCity?: string;
-  invoiceState?: string;
-  invoicePostalCode?: string;
-  weeklyRevenue?: number;
-  monthlyRevenue?: number;
-  annualRevenue?: number;
-  totalWeeklyAmount?: number;
-  totalMonthlyAmount?: number;
-  totalAnnualAmount?: number;
-  // Additional billing details
-  serviceDeliveryType?: string;
-  weeklyBudget?: number;
-  annualContractorCost?: number;
-  serviceType?: string;
-  deliveryMethod?: string;
-  contractorCostFrequency?: string;
-  weeklyContractorCost?: number;
-  monthlyContractorCost?: number;
-  contractorInvoiceFrequency?: string;
-  xeroContactId?: string;
-  rate?: number;
-  invoiceMethod?: string;
-  accountNumber?: string;
-  billingFrequency?: string;
-  purchaseOrderRequired?: boolean;
-  purchaseOrderNumber?: string;
-  notes?: string;
+  frequency?: string;
+  payment_terms?: string;
+  invoicing_day?: number;
+  gst_registered?: boolean;
+  payment_method?: string;
+  account_number?: string;
+  account_name?: string;
+  billing_email?: string;
+  billing_address?: string;
+  billing_contact?: string;
+  billing_phone?: string;
+  special_instructions?: string;
+  purchase_order_required?: boolean;
+  auto_billing?: boolean;
+  billing_on_hold?: boolean;
+  billing_hold_start_date?: string;
+  billing_hold_end_date?: string;
+  billing_notes?: string;
+  xero_contact_id?: string;
+  [key: string]: any; // Allow additional properties to satisfy Json compatibility
+}
+
+/**
+ * Billing line item
+ */
+export interface BillingLineItem {
+  id: string;
+  site_id: string;
+  description: string;
+  amount: number;
+  frequency?: string;
+  weekly_amount?: number;
+  monthly_amount?: number;
+  annual_amount?: number;
+  is_recurring?: boolean;
+  on_hold?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Billing summary data
+ */
+export interface BillingSummary {
+  weekly_revenue?: number;
+  monthly_revenue?: number;
+  annual_revenue?: number;
+  monthly_cost?: number;
+  profit_margin?: number;
+  billing_lines?: BillingLineItem[];
 }

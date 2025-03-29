@@ -1,23 +1,31 @@
 
+/**
+ * Site contact types for forms
+ */
+
 export interface SiteContact {
   id?: string;
   name: string;
   role: string;
+  department?: string;
   email?: string;
   phone?: string;
-  department?: string;
-  is_primary?: boolean;
   notes?: string;
+  is_primary?: boolean;
+  entity_type?: string;
+  entity_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  position?: string; // Job title/role
-  primary?: boolean;
-  notes?: string;
-  role?: string; // Added for compatibility
-  isPrimary?: boolean; // Added for compatibility
+export interface ContactFormState {
+  isOpen: boolean;
+  mode: 'add' | 'edit';
+  currentContact: SiteContact | null;
+}
+
+export interface ContactsStepState {
+  contacts: SiteContact[];
+  useClientInfo: boolean;
+  errors: Record<string, string>;
 }

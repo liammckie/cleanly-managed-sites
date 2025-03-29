@@ -83,3 +83,6 @@ export interface UserProfileWithRole {
  * User profile interface (alias for SystemUser)
  */
 export type UserProfile = SystemUser;
+
+// Re-export UserStatus for convenience
+export { UserStatus } from './common';

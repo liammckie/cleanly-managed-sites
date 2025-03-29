@@ -14,6 +14,8 @@ export type {
   UserStatus,
   Contract,
   ContractDetails,
+  ContractHistoryEntry,
+  ContractSummaryData,
   Json,
   ClientRecord,
   SiteRecord,
@@ -22,7 +24,11 @@ export type {
   ContractorVersionHistoryEntry,
   SiteContact,
   WorkOrderRecord,
-  ContractSummaryData
+  BillingDetails,
+  BillingLineItem,
+  BillingSummary,
+  ValidationResult,
+  ValidationError
 } from './types/index';
 
 // Re-export adapters for backward compatibility
@@ -34,5 +40,8 @@ export {
   adaptContractFromDb,
   adaptContractToDb,
   adaptContractDetailsToDb,
-  adaptContractDetailsFromDb
+  adaptContractDetailsFromDb,
+  adaptContractDetailsToJson,
+  legacyToNewValidationResult,
+  newToLegacyValidationResult
 } from './types/index';

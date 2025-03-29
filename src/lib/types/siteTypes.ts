@@ -42,6 +42,11 @@ export interface SiteRecord {
   billing_hold_start_date?: string;
   billing_hold_end_date?: string;
   // Additional fields for front-end use
+  client_name?: string;
+  contractor_name?: string;
+  total_work_orders?: number;
+  tasks_completed?: number;
+  tasks_pending?: number;
   billingLines?: any[];
   additional_contracts?: any[];
 }
