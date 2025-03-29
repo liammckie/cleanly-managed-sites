@@ -1,6 +1,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
+
+// Import from the updated location
 import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
 
 export function useContractHistory(siteId: string | undefined) {

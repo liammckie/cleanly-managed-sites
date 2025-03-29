@@ -1,17 +1,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { contractHistoryApi } from '@/lib/api/sites/siteContractHistoryApi';
-import { Json } from '@/types';
-
-export interface ContractHistoryEntry {
-  id: string;
-  site_id: string;
-  contract_details: Json;
-  version_number: number;
-  notes?: string;
-  created_by?: string;
-  created_at: string;
-}
+import { Json } from '@/types/common';
+import { ContractHistoryEntry } from '@/types/contracts';
 
 export function useSiteContractHistory(siteId?: string) {
   const {

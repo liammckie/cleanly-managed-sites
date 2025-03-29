@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { SiteRecord } from '@/lib/types';
-import { SiteDetailHeader } from './detail/SiteDetailHeader';
+import SiteDetailHeader from './detail/SiteDetailHeader';
 import { SiteDetailTabs } from './detail/SiteDetailTabs';
 
 interface SiteDetailViewProps {

@@ -10,7 +10,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { site, isLoading, isError, error } = useSiteDetails(id);
+  const { site, isLoading, isError, error, refetch } = useSiteDetails(id);
   
   return (
     <SidebarProvider>
@@ -31,7 +31,7 @@ const SiteDetail = () => {
                 <p>{(error as any)?.message || 'Unable to load site details'}</p>
               </div>
             ) : site ? (
-              <SiteDetailView site={site} isLoading={isLoading} refetchSite={() => {}} />
+              <SiteDetailView site={site} isLoading={isLoading} refetchSite={refetch} />
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2">Site Not Found</h3>

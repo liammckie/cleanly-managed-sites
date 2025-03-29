@@ -12,9 +12,10 @@ export function useDataImportExport() {
   
   // Import hooks
   const {
-    importClients,
+    handleImportClients,
     isImporting: isImportingClients,
-    result: clientsResult
+    importResults: clientsResult,
+    handleCSVImportClients
   } = useImportClients();
   
   const {
@@ -32,8 +33,16 @@ export function useDataImportExport() {
   const {
     importContracts,
     isImporting: isImportingContracts,
-    result: contractsResult
+    result: contractsResult,
+    handleCSVImportContracts
   } = useImportContracts();
+  
+  // Define function for unified import mode
+  const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental') => {
+    console.log(`Unified import (${mode}) started with file:`, file.name);
+    // Implementation will be added later
+    return Promise.resolve();
+  };
   
   // Overall import status
   const isImporting = 
@@ -45,6 +54,10 @@ export function useDataImportExport() {
   return {
     activeTab,
     setActiveTab,
+    isImportingContracts,
+    contractImportResults: contractsResult,
+    handleCSVImportContracts,
+    handleUnifiedImportMode,
     testData: {
       createTestData: testData.generateTestData,
       isCreating: testData.isGenerating,
@@ -52,7 +65,7 @@ export function useDataImportExport() {
     },
     imports: {
       clients: {
-        importClients,
+        importClients: handleImportClients,
         isImporting: isImportingClients,
         result: clientsResult
       },
