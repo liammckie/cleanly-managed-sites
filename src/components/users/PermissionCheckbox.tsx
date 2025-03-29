@@ -1,49 +1,44 @@
 
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip';
-import { HelpCircle } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
-interface PermissionCheckboxProps {
-  id: string;
-  label: string;
-  description: string;
-  checked?: boolean;
-  onCheckedChange?: (checked: boolean | "indeterminate") => void;
+export interface PermissionCheckboxProps {
+  permission: string;
+  checked: boolean;
+  onChange: (permission: string, checked: boolean) => void;
 }
 
-export const PermissionCheckbox = ({
-  id,
-  label,
-  description,
-  checked,
-  onCheckedChange
-}: PermissionCheckboxProps) => {
+export const PermissionCheckbox: React.FC<PermissionCheckboxProps> = ({ 
+  permission, 
+  checked, 
+  onChange 
+}) => {
+  const formatPermissionLabel = (permission: string) => {
+    return permission
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+  };
+
+  const handleChange = (checked: boolean) => {
+    onChange(permission, checked);
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <Checkbox 
-        id={id} 
+        id={`permission-${permission}`} 
         checked={checked} 
-        onCheckedChange={onCheckedChange}
+        onCheckedChange={handleChange}
       />
-      <label htmlFor={id} className="text-sm font-medium cursor-pointer flex items-center">
-        {label}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <HelpCircle className="h-3.5 w-3.5 ml-1 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p className="max-w-xs text-sm">{description}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </label>
+      <Label 
+        htmlFor={`permission-${permission}`}
+        className="text-sm cursor-pointer"
+      >
+        {formatPermissionLabel(permission)}
+      </Label>
     </div>
   );
 };
+
+export default PermissionCheckbox;

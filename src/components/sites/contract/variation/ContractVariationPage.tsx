@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams, useNavigate, Routes, Route } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ContractVariationSelector } from './ContractVariationSelector';
 import { BillingVariationForm } from './billing';
 import { ContractorChangeForm } from './ContractorChangeForm';
@@ -11,7 +11,12 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 export function ContractVariationPage() {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { site, isLoading } = useSite(siteId);
+  
+  // Extract the variation type from the URL path
+  const pathParts = location.pathname.split('/');
+  const variationType = pathParts[pathParts.length - 1];
   
   if (isLoading) {
     return (
@@ -32,15 +37,22 @@ export function ContractVariationPage() {
     );
   }
   
+  // Render the appropriate component based on variation type
+  const renderVariationContent = () => {
+    switch (variationType) {
+      case 'billing':
+        return <BillingVariationForm />;
+      case 'contractor':
+        return <ContractorChangeForm />;
+      default:
+        // If no specific variation or unknown, show the selector
+        return <ContractVariationSelector siteId={siteId!} />;
+    }
+  };
+  
   return (
     <div className="container py-6">
-      <Routes>
-        <Route index element={<ContractVariationSelector siteId={siteId!} />} />
-        <Route path="billing" element={<BillingVariationForm />} />
-        <Route path="contractor" element={<ContractorChangeForm />} />
-        {/* The routes below will be implemented as needed, for now they will redirect to the selector */}
-        <Route path="*" element={<ContractVariationSelector siteId={siteId!} />} />
-      </Routes>
+      {renderVariationContent()}
     </div>
   );
 }

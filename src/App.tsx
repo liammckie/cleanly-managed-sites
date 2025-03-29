@@ -29,6 +29,7 @@ import Contacts from './pages/Contacts';
 import NotFound from './pages/NotFound';
 import UserRoleEdit from './pages/UserRoleEdit';
 import UserRoleCreate from './pages/UserRoleCreate';
+import { ContractVariationPage } from './components/sites/contract/variation/ContractVariationPage';
 
 const App = () => {
   return (
@@ -59,6 +60,11 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/work-orders/:id" element={<WorkOrderDetails />} />
         <Route path="/contacts" element={<Contacts />} />
+        
+        {/* Contract variation routes */}
+        <Route path="/sites/:siteId/variations" element={<ContractVariationPage />} />
+        <Route path="/sites/:siteId/variations/:variationType" element={<ContractVariationPage />} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </HelmetProvider>
