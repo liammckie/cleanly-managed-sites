@@ -1,4 +1,3 @@
-
 /**
  * Central hub for type exports
  * This file exports all types from the types directory to provide a single import point
@@ -72,3 +71,19 @@ export {
 
 // Export WorkOrderRecord from the API directly to avoid circular dependencies
 export type { WorkOrderRecord } from '../api/workorders/types';
+
+// Contract types
+export type {
+  Contract,
+  ContractDetails,
+  ContractTerm,
+  DbContract
+} from './contracts';
+
+// Export adapters
+export {
+  adaptContractFromDb,
+  adaptContractToDb,
+  adaptContractDetailsToDb,
+  adaptContractDetailsFromDb
+} from '../adapters/contractAdapter';

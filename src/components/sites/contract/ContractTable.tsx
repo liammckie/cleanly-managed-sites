@@ -3,7 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Contract } from '@/lib/types/contractTypes';
+import { Contract } from '@/lib/types/contracts';
 
 interface ContractTableProps {
   contracts: Contract[];
@@ -33,14 +33,14 @@ export function ContractTable({ contracts }: ContractTableProps) {
               <TableCell className="font-medium">{contract.siteName}</TableCell>
               <TableCell>{contract.clientName}</TableCell>
               <TableCell className="hidden md:table-cell">
-                {contract.contract_number}
+                {contract.contractNumber}
               </TableCell>
               <TableCell className="text-right">
-                ${contract.monthly_revenue?.toLocaleString() || '0'}
+                ${contract.monthlyRevenue?.toLocaleString() || '0'}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {contract.end_date ? 
-                  format(new Date(contract.end_date), 'dd/MM/yyyy') : 
+                {contract.endDate ? 
+                  format(new Date(contract.endDate), 'dd/MM/yyyy') : 
                   'N/A'}
               </TableCell>
               <TableCell>
@@ -71,4 +71,3 @@ function getStatusVariant(status: string): "default" | "success" | "destructive"
       return 'default';
   }
 }
-
