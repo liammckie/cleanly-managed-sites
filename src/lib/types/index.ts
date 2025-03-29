@@ -7,11 +7,17 @@
 // Export common types
 export * from './common';
 
+// Resolve potential naming conflicts with explicit re-exports
+export { 
+  UserRole, 
+  UserStatus, 
+  SystemUser 
+} from './userTypes';
+
 // Export domain-specific types
-export * from './userTypes';
 export * from './clientTypes';
-export * from './contractTypes';
 export * from './siteTypes';
+export * from './contractTypes';
 export * from './contactTypes';
 export * from './contractorTypes';
 
