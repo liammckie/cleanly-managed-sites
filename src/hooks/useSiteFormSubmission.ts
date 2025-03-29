@@ -1,63 +1,45 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useSiteCreate } from './useSiteCreate';
 import { useSiteUpdate } from './useSiteUpdate';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { SiteRecord } from '@/lib/types';
+import { toast } from 'sonner';
 
-export function useSiteFormSubmission(
-  mode: 'create' | 'edit',
-  formData: SiteFormData,
-  validateForm: (data: SiteFormData) => boolean,
-  initialData?: SiteRecord
-) {
-  const navigate = useNavigate();
-  const { createSite, isCreating } = useSiteCreate();
-  const { updateSite, isUpdating } = useSiteUpdate();
-  
-  const [errors, setErrors] = useState<Record<string, string>>({});
+export function useSiteFormSubmission(siteId?: string) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createSite } = useSiteCreate();
+  const { updateSite } = useSiteUpdate();
 
-  // Form submission handler
-  const handleSubmit = async () => {
-    if (!validateForm(formData)) {
-      toast.error('Please fix the validation errors');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrors({});
-    
+  const handleSubmit = async (formData: SiteFormData, onSuccess?: (data: any) => void) => {
     try {
-      if (mode === 'create') {
-        await createSite(formData);
-        toast.success('Site created successfully!');
-        navigate('/sites');
-      } else if (mode === 'edit' && initialData) {
-        await updateSite({ id: initialData.id, data: formData });
-        toast.success('Site updated successfully!');
-        navigate(`/sites/${initialData.id}`);
-      }
-    } catch (error: any) {
-      console.error('Error submitting site form:', error);
+      setIsSubmitting(true);
       
-      if (error.message) {
-        setErrors({ general: error.message });
+      let result;
+      if (siteId) {
+        // Update existing site
+        result = await updateSite(siteId, formData);
+        toast.success('Site updated successfully');
       } else {
-        setErrors({ general: 'An unknown error occurred' });
+        // Create new site
+        result = await createSite(formData);
+        toast.success('Site created successfully');
       }
       
-      toast.error('Failed to save site');
+      if (onSuccess) {
+        onSuccess(result);
+      }
+      
+      return result;
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred while saving the site');
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return {
-    errors,
-    isSubmitting: isSubmitting || isCreating || isUpdating,
-    handleSubmit
-  };
+  
+  // For backward compatibility
+  const isCreating = !siteId && isSubmitting;
+  
+  return { handleSubmit, isSubmitting, isCreating };
 }

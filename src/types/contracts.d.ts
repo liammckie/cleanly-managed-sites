@@ -61,3 +61,54 @@ export interface ContractHistoryEntry {
   created_by?: string;
   created_at: string;
 }
+
+export interface ContractSummaryData {
+  totalContracts: number;
+  activeCount: number;
+  pendingCount: number;
+  totalValue: number;
+  totalCount: number;
+  expiringWithin30Days: number;
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  profitMargin: number;
+}
+
+export interface GroupedContracts {
+  [key: string]: ContractData[];
+}
+
+export interface ContractForecast {
+  month: string;
+  revenue: number;
+  cost: number;
+  profit: number;
+  contractCount?: number;
+  activeContracts?: number;
+  expiringContracts?: number;
+  renewingContracts?: number;
+  startDate?: string;
+  endDate?: string;
+  value?: number;
+  id?: string;
+}
+
+export interface ContractActivity {
+  id: string;
+  contract_id: string;
+  activity_type: string;
+  description: string;
+  user_id?: string;
+  user_name?: string;
+  created_at: string;
+  details?: Json;
+}

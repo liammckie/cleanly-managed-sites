@@ -1,49 +1,40 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { contractDetailsToDb } from '@/lib/adapters/contractAdapter';
-import { ContractDetailsDTO } from '@/components/sites/contract/types';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
-export const useSiteCreate = () => {
+export function useSiteCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const createSite = async (formData: SiteFormData) => {
-    setIsSubmitting(true);
     try {
-      // Create payload for database
+      setIsSubmitting(true);
+
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Prepare the site data for insertion
       const siteData = {
         name: formData.name,
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        postcode: formData.postalCode,
+        postcode: formData.postcode,
         status: formData.status,
         client_id: formData.client_id,
         representative: formData.representative,
         phone: formData.phone,
         email: formData.email,
-        custom_id: formData.customId,
-        // Convert contract details to JSON for database
-        contract_details: contractDetailsToDb(formData.contractDetails || formData.contract_details) as any,
-        // Convert billing details to JSON for database
-        billing_details: {
-          billingAddress: formData.billingDetails?.billingAddress,
-          serviceDeliveryType: formData.billingDetails?.serviceDeliveryType || 'direct',
-          billingLines: formData.billingDetails?.billingLines || [],
-          useClientInfo: formData.billingDetails?.useClientInfo,
-          billingMethod: formData.billingDetails?.billingMethod,
-          paymentTerms: formData.billingDetails?.paymentTerms,
-          billingEmail: formData.billingDetails?.billingEmail,
-          contacts: formData.billingDetails?.contacts || [],
-          ...formData.billingDetails
-        }
+        custom_id: formData.custom_id,
+        contract_details: formData.contractDetails,
+        billing_details: formData.billingDetails,
+        user_id: user.id
       };
 
-      // Create site
       const { data, error } = await supabase
         .from('sites')
         .insert(siteData)
@@ -51,25 +42,18 @@ export const useSiteCreate = () => {
         .single();
 
       if (error) {
-        console.error('Error creating site:', error);
-        throw new Error('Failed to create site');
+        throw new Error(`Error creating site: ${error.message}`);
       }
 
       toast.success('Site created successfully');
       return data;
-    } catch (error) {
-      console.error('Error in createSite:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create site');
-      return null;
+    } catch (error: any) {
+      toast.error(`Failed to create site: ${error.message}`);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return {
-    createSite,
-    isSubmitting
-  };
-};
-
-export default useSiteCreate;
+  return { createSite, isSubmitting };
+}

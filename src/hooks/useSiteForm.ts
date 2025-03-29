@@ -1,59 +1,127 @@
 
+import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { SiteRecord } from '@/lib/types';
-import { useSiteFormState } from './useSiteFormState';
-import { useBillingLines } from './useBillingLines';
-import { useSiteFormValidation } from './useSiteFormValidation';
-import { useSiteFormSubmission } from './useSiteFormSubmission';
+import { ContractDetails, BillingDetails } from '@/components/sites/forms/types/siteFormData';
 
-export function useSiteForm(mode: 'create' | 'edit', initialData?: SiteRecord) {
-  // Form state management
-  const {
-    formData,
-    setFormData,
-    handleChange,
-    handleNestedChange,
-    handleDoubleNestedChange
-  } = useSiteFormState(mode, initialData);
-  
-  // Validation management
-  const {
-    validationErrors,
-    validateForm
-  } = useSiteFormValidation();
-  
-  // Billing lines management
-  const {
-    addBillingLine,
-    updateBillingLine,
-    removeBillingLine
-  } = useBillingLines(formData, setFormData);
-  
-  // Form submission
-  const {
-    errors,
-    isSubmitting,
-    handleSubmit
-  } = useSiteFormSubmission(mode, formData, validateForm, initialData);
+export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
+  const [formState, setFormState] = useState<SiteFormData>({
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    postcode: '',
+    client_id: '',
+    representative: '',
+    status: 'active',
+    phone: '',
+    email: '',
+    custom_id: '',
+    contractDetails: {
+      contractNumber: '',
+      startDate: '',
+      endDate: '',
+      autoRenewal: false,
+      terminationPeriod: '',
+      renewalTerms: '',
+      status: 'active',
+    },
+    billingDetails: {
+      billingLines: [],
+    },
+    ...initialData
+  });
+
+  const updateForm = (updates: Partial<SiteFormData>) => {
+    setFormState(prev => ({ ...prev, ...updates }));
+  };
+
+  const updateContractDetails = (updates: Partial<ContractDetails>) => {
+    setFormState(prev => ({
+      ...prev,
+      contractDetails: {
+        ...prev.contractDetails,
+        ...updates
+      }
+    }));
+  };
+
+  const updateBillingDetails = (updates: Partial<BillingDetails>) => {
+    setFormState(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        ...updates
+      }
+    }));
+  };
+
+  // For backward compatibility
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    updateForm({ [name]: value } as any);
+  };
+
+  const handleNestedChange = (parentKey: keyof SiteFormData, field: string, value: any) => {
+    const updatedParent = {
+      ...formState[parentKey],
+      [field]: value
+    };
+    updateForm({ [parentKey]: updatedParent } as any);
+  };
+
+  const handleDoubleNestedChange = (
+    parentKey: keyof SiteFormData,
+    childKey: string,
+    field: string,
+    value: any
+  ) => {
+    const parent = formState[parentKey] as any;
+    const updatedParent = {
+      ...parent,
+      [childKey]: {
+        ...parent[childKey],
+        [field]: value
+      }
+    };
+    updateForm({ [parentKey]: updatedParent } as any);
+  };
 
   return {
-    // Form data and handlers
-    formData,
+    formState,
+    updateForm,
+    updateContractDetails,
+    updateBillingDetails,
+    setFormState,
+    // For backward compatibility
+    formData: formState,
+    setFormData: setFormState,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    
-    // Validation
-    validationErrors,
-    
-    // Billing lines
-    addBillingLine,
-    updateBillingLine,
-    removeBillingLine,
-    
-    // Submission
-    errors,
-    isSubmitting,
-    handleSubmit
+    resetForm: () => setFormState({
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postcode: '',
+      client_id: '',
+      representative: '',
+      status: 'active',
+      phone: '',
+      email: '',
+      custom_id: '',
+      contractDetails: {
+        contractNumber: '',
+        startDate: '',
+        endDate: '',
+        autoRenewal: false,
+        terminationPeriod: '',
+        renewalTerms: '',
+        status: 'active',
+      },
+      billingDetails: {
+        billingLines: [],
+      },
+    })
   };
-}
+};

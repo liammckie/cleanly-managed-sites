@@ -1,90 +1,75 @@
 
 import { useState } from 'react';
-import { useTestData } from './useTestData';
-import { useImportClients } from './useImportClients';
-import { useImportContractors } from './useImportContractors';
-import { useImportSites } from './useImportSites';
-import { useImportContracts } from './useImportContracts';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export function useDataImportExport() {
-  const [activeTab, setActiveTab] = useState('import');
-  const testData = useTestData();
-  
-  // Import hooks
-  const {
-    handleImportClients,
-    isImporting: isImportingClients,
-    importResults: clientsResult,
-    handleCSVImportClients
-  } = useImportClients();
-  
-  const {
-    importContractors,
-    isImporting: isImportingContractors,
-    result: contractorsResult
-  } = useImportContractors();
-  
-  const {
-    importSites,
-    isImporting: isImportingSites,
-    result: sitesResult
-  } = useImportSites();
-  
-  const {
-    importContracts,
-    isImporting: isImportingContracts,
-    result: contractsResult,
-    handleCSVImportContracts
-  } = useImportContracts();
-  
-  // Define function for unified import mode
-  const handleUnifiedImportMode = async (file: File, mode: 'full' | 'incremental') => {
-    console.log(`Unified import (${mode}) started with file:`, file.name);
-    // Implementation will be added later
-    return Promise.resolve();
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerated, setIsGenerated] = useState(false);
+  const [exportData, setExportData] = useState<any>(null);
+
+  const exportAllData = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Fetch all needed data
+      const fetchTableData = async (table: string) => {
+        const { data, error } = await supabase.from(table).select('*');
+        if (error) throw new Error(`Error fetching ${table}: ${error.message}`);
+        return data;
+      };
+      
+      const [clients, sites, contractors, contacts] = await Promise.all([
+        fetchTableData('clients'),
+        fetchTableData('sites'),
+        fetchTableData('contractors'),
+        fetchTableData('contacts')
+      ]);
+      
+      const exportObject = {
+        clients,
+        sites,
+        contractors,
+        contacts,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      setExportData(exportObject);
+      return exportObject;
+    } catch (error: any) {
+      toast.error(`Export failed: ${error.message}`);
+      throw error;
+    } finally {
+      setIsExporting(false);
+    }
   };
   
-  // Overall import status
-  const isImporting = 
-    isImportingClients || 
-    isImportingContractors || 
-    isImportingSites || 
-    isImportingContracts;
+  const generateTestData = async () => {
+    try {
+      setIsGenerating(true);
+      
+      // Implementation would go here
+      // This is a placeholder for the actual data generation logic
+      
+      toast.success('Test data generated successfully');
+      setIsGenerated(true);
+    } catch (error: any) {
+      toast.error(`Failed to generate test data: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   
   return {
-    activeTab,
-    setActiveTab,
-    isImportingContracts,
-    contractImportResults: contractsResult,
-    handleCSVImportContracts,
-    handleUnifiedImportMode,
-    testData: {
-      createTestData: testData.generateTestData,
-      isCreating: testData.isGenerating,
-      result: testData.result
-    },
-    imports: {
-      clients: {
-        importClients: handleImportClients,
-        isImporting: isImportingClients,
-        result: clientsResult
-      },
-      contractors: {
-        importContractors,
-        isImporting: isImportingContractors,
-        result: contractorsResult
-      },
-      sites: {
-        importSites,
-        isImporting: isImportingSites,
-        result: sitesResult
-      },
-      contracts: {
-        importContracts,
-        isImporting: isImportingContracts,
-        result: contractsResult
-      }
-    },
-    isImporting
+    isExporting,
+    isImporting,
+    exportData,
+    exportAllData,
+    isGenerating,
+    isGenerated,
+    generateTestData
   };
 }

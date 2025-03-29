@@ -1,67 +1,82 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
+import { ContractHistoryEntry } from '@/types/contracts';
+import { Json } from '@/types/common';
 
-export const fetchSiteContractHistory = async (siteId: string): Promise<ContractHistoryEntry[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('site_id', siteId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching site contract history:', error);
-      throw new Error('Failed to fetch site contract history');
-    }
-    
-    return data as unknown as ContractHistoryEntry[];
-  } catch (error) {
-    console.error('Error in fetchSiteContractHistory:', error);
-    throw error;
-  }
-};
+export const contractHistoryApi = {
+  async fetchContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .select('*')
+        .eq('site_id', siteId)
+        .order('created_at', { ascending: false });
 
-export const fetchContractHistoryEntry = async (historyId: string): Promise<ContractHistoryEntry | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('id', historyId)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching contract history entry:', error);
-      if (error.code === 'PGRST116') {
-        // Not found error
-        return null;
+      if (error) {
+        console.error('Error fetching contract history:', error);
+        throw new Error(error.message);
       }
-      throw new Error('Failed to fetch contract history entry');
+
+      return data as ContractHistoryEntry[];
+    } catch (error) {
+      console.error('Failed to fetch contract history:', error);
+      throw error;
     }
-    
-    return data as unknown as ContractHistoryEntry;
-  } catch (error) {
-    console.error('Error in fetchContractHistoryEntry:', error);
-    throw error;
+  },
+
+  async getContractVersion(versionId: string): Promise<ContractHistoryEntry | null> {
+    try {
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .select('*')
+        .eq('id', versionId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching contract version:', error);
+        throw new Error(error.message);
+      }
+
+      return data as ContractHistoryEntry;
+    } catch (error) {
+      console.error('Failed to fetch contract version:', error);
+      throw error;
+    }
+  },
+
+  async saveContractVersion(
+    siteId: string,
+    contractDetails: Json,
+    notes?: string
+  ): Promise<ContractHistoryEntry> {
+    try {
+      // Since version_number is required but auto-managed by a trigger, we need to provide a dummy value
+      // The actual number will be set by the database trigger
+      const entry: Partial<ContractHistoryEntry> = {
+        site_id: siteId,
+        contract_details: contractDetails,
+        notes,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        version_number: 1 // This will be overwritten by the database trigger
+      };
+
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .insert(entry)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving contract version:', error);
+        throw new Error(error.message);
+      }
+
+      return data as ContractHistoryEntry;
+    } catch (error) {
+      console.error('Failed to save contract version:', error);
+      throw error;
+    }
   }
 };
 
-export const createContractHistoryEntry = async (entry: Omit<ContractHistoryEntry, 'id' | 'created_at' | 'version_number'>): Promise<ContractHistoryEntry> => {
-  try {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .insert(entry)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error creating contract history entry:', error);
-      throw new Error('Failed to create contract history entry');
-    }
-    
-    return data as unknown as ContractHistoryEntry;
-  } catch (error) {
-    console.error('Error in createContractHistoryEntry:', error);
-    throw error;
-  }
-};
+export type { ContractHistoryEntry };
