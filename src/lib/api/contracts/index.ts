@@ -1,6 +1,6 @@
 
 import { Contract, ContractForecast } from '@/types/db';
-import { adaptContractData, adaptContracts, dbToContract } from './contractAdapter';
+import { adaptContract, adaptContracts, dbToContract } from '@/lib/adapters/contractAdapter';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -75,7 +75,7 @@ export const fetchContract = async (id: string): Promise<Contract> => {
 
     if (error) throw error;
     
-    return adaptContractData(data);
+    return adaptContract(data);
   } catch (error) {
     console.error(`Error fetching contract ${id}:`, error);
     throw error;
@@ -131,7 +131,7 @@ export const deleteContract = async (id: string): Promise<void> => {
 };
 
 // Export the adapters for use elsewhere
-export { adaptContractData, adaptContracts, dbToContract };
+export { adaptContract, adaptContracts, dbToContract };
 
 // Create a contracts API object with all methods for convenient import
 export const contractsApi = {

@@ -3,7 +3,7 @@ import React from 'react';
 import { SiteRecord } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, addMonths, differenceInDays } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { CalendarIcon, ClockIcon } from 'lucide-react';
 import { getContractField } from '@/lib/utils/contractUtils';
 

@@ -21,6 +21,7 @@ export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
 
 // JSON type for database fields
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type JsonValue = Json;
 
 // Billing frequency types
 export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once-off';
@@ -40,3 +41,22 @@ export type PayCondition =
 
 // File types
 export type FileType = 'image' | 'document' | 'spreadsheet' | 'pdf';
+
+// Day type
+export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type UnifiedDay = Day;
+
+// Frequency type
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once-off';
+
+// Quote status
+export type QuoteStatus = 
+  | 'draft'
+  | 'submitted'
+  | 'pending'
+  | 'approved'
+  | 'declined'
+  | 'expired'
+  | 'accepted'
+  | 'sent'
+  | 'rejected';

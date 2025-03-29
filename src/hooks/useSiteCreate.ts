@@ -6,16 +6,15 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { SiteDTO } from '@/types/dto';
 import { validateWithZod } from '@/lib/validation';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
-import { ServiceDeliveryType } from '@/types/common';
-import { adaptContractDetailsToApi, adaptBillingDetailsToDTO } from '@/utils/typeAdapters';
+import { contractDetailsToDb } from '@/lib/api/contracts/contractAdapter';
 
 // Adapt site data for API submission
 const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   // Convert contractDetails to the appropriate format
   const contractDetails = formData.contractDetails || formData.contract_details;
   
-  // Create a compatible contract details object if it exists
-  const adaptedContractDetails = contractDetails ? adaptContractDetailsToApi(contractDetails) : undefined;
+  // Convert contract details to DB format
+  const adaptedContractDetails = contractDetails ? contractDetailsToDb(contractDetails) : undefined;
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -28,8 +27,8 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   
   // Ensure serviceDeliveryType is properly typed
   const serviceDeliveryType = formData.billingDetails?.serviceDeliveryType === 'contractor' 
-    ? 'contractor' as ServiceDeliveryType 
-    : 'direct' as ServiceDeliveryType;
+    ? 'contractor' 
+    : 'direct';
   
   // Create a compatible billing details object
   const adaptedBillingDetails = formData.billingDetails ? {
@@ -78,6 +77,10 @@ export function useSiteCreate() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sites'] });
+      toast.success('Site created successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to create site: ' + error.message);
     }
   });
 

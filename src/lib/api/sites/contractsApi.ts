@@ -1,7 +1,8 @@
+
 import { supabase } from '@/lib/supabase';
 import { ContractData, ContractSummaryData } from '@/types/contracts';
 import { asJsonObject } from '@/lib/utils/json';
-import { adaptContract, adaptContracts } from '../contracts/contractAdapter';
+import { adaptContract, adaptContracts } from '@/lib/adapters/contractAdapter';
 
 /**
  * Fetch contracts for a specific site

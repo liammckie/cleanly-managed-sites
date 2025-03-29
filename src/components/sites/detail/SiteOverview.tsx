@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SiteRecord } from '@/lib/types';
 import { formatDate } from '@/lib/utils/date';
-import { getContractStartDate, getContractEndDate, getContractType } from '@/lib/utils/contractDataUtils';
+import { getContractStartDate, getContractEndDate, getContractType } from '@/lib/utils/contractUtils';
 
 export const SiteOverview: React.FC<SiteOverviewProps> = ({ site, isLoading }) => {
   if (isLoading) {
