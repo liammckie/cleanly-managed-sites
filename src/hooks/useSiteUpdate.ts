@@ -1,70 +1,57 @@
-
-import { useState } from 'react';
+import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
-interface UpdateSiteParams {
+// Import needed to convert types for the database
+import { Json } from '@/lib/types';
+
+// Function to prepare site data for database update
+const prepareSiteForDb = (siteData: any) => {
+  return {
+    ...siteData,
+    contract_details: siteData.contract_details as Json,
+    billing_details: siteData.billing_details as Json
+  };
+};
+
+interface UpdateSiteMutation {
   id: string;
   data: SiteFormData;
 }
 
-export function useSiteUpdate(id?: string) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const updateSite = async (params: UpdateSiteParams) => {
-    const siteId = id || params.id;
-    if (!siteId) {
-      throw new Error("Site ID is required for updates");
-    }
-    
+export const useSiteUpdate = (): {
+  updateSiteMutation: UseMutationResult<any, Error, UpdateSiteMutation>;
+} => {
+  const router = useRouter();
+  
+  const updateSite = async (id: string, siteData: any) => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const formData = params.data;
-      
-      const updateData = {
-        name: formData.name,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        postcode: formData.postalCode || formData.postcode,
-        country: formData.country,
-        status: formData.status,
-        email: formData.email,
-        phone: formData.phone,
-        contract_details: formData.contract_details || {},
-        billing_details: formData.billingDetails || {},
-        // Additional fields as needed
-      };
-      
-      const { data, error: updateError } = await supabase
+      const dbReadySiteData = prepareSiteForDb(siteData);
+      const { data, error } = await supabase
         .from('sites')
-        .update(updateData)
-        .eq('id', siteId)
-        .select()
-        .single();
-        
-      if (updateError) throw new Error(updateError.message);
+        .update(dbReadySiteData)
+        .eq('id', id);
       
+      if (error) {
+        console.error('Error updating site:', error);
+        throw new Error(error.message);
+      }
+      
+      toast.success('Site updated successfully!');
+      router.refresh();
       return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error during site update';
-      setError(new Error(errorMessage));
-      toast.error(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Error updating site:', error);
+      toast.error(`Failed to update site: ${error.message}`);
+      throw error;
     }
   };
 
-  const updateSiteMutation = {
-    mutateAsync: updateSite,
-    isLoading,
-    error
-  };
+  const updateSiteMutation = useMutation<any, Error, UpdateSiteMutation>({
+    mutationFn: ({ id, data }) => updateSite(id, data),
+  });
 
-  return { updateSite, updateSiteMutation };
-}
+  return { updateSiteMutation };
+};

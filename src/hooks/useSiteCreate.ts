@@ -1,38 +1,30 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { mapToDb } from '@/lib/mappers';
-import type { Json } from '@/types/common';
+import type { Json } from '@/lib/types';
 import type { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
 export function useSiteCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createSite = async (formData: SiteFormData) => {
+  const prepareSiteForDb = (siteData: any) => {
+    return {
+      ...siteData,
+      representative: siteData.representative || '',
+      contract_details: siteData.contract_details as Json,
+      billing_details: siteData.billing_details as Json
+    };
+  };
+
+  const createSite = async (siteData: any) => {
     try {
       setIsSubmitting(true);
       
-      const siteData = {
-        name: formData.name,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state, 
-        postcode: formData.postalCode || formData.postcode,
-        country: formData.country,
-        email: formData.email,
-        phone: formData.phone,
-        status: formData.status,
-        custom_id: formData.customId,
-        client_id: formData.client_id,
-        contract_details: formData.contract_details || {},
-        billing_details: formData.billingDetails || {},
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      };
-      
+      const dbReadySiteData = prepareSiteForDb(siteData);
       const { data, error } = await supabase
         .from('sites')
-        .insert(siteData)
+        .insert(dbReadySiteData)
         .select()
         .single();
         

@@ -34,7 +34,7 @@ export const createUser = async (userData: SystemUserInsert): Promise<SystemUser
         title: userData.title,
         phone: userData.phone,
         custom_id: userData.custom_id,
-        notes: userData.notes, // Use notes, not note
+        notes: userData.notes,
         territories: userData.territories,
         status: userData.status || 'active',
         role_id: userData.role_id,
@@ -54,9 +54,7 @@ export const createUser = async (userData: SystemUserInsert): Promise<SystemUser
 
 export const updateUser = async (userId: string, userData: Partial<SystemUser>): Promise<SystemUser> => {
   try {
-    // Check if we need to convert note to notes
     if (userData.notes !== undefined) {
-      // Make sure we use notes, not note
       userData.notes = userData.notes;
     }
     
@@ -71,7 +69,7 @@ export const updateUser = async (userId: string, userData: Partial<SystemUser>):
         title: userData.title,
         phone: userData.phone,
         custom_id: userData.custom_id,
-        notes: userData.notes, // Use notes, not note
+        notes: userData.notes,
         territories: userData.territories,
         status: userData.status,
         role_id: userData.role_id,
@@ -208,7 +206,6 @@ export const getUserProfile = async (userId: string): Promise<SystemUser> => {
       
     if (error) throw error;
     
-    // Fix any note/notes inconsistency here
     if (data.note && !data.notes) {
       data.notes = data.note;
     }
@@ -216,6 +213,43 @@ export const getUserProfile = async (userId: string): Promise<SystemUser> => {
     return adaptUserFromDb(data);
   } catch (error) {
     console.error('Error fetching user profile:', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (userId: string, userData: Partial<UserProfile>) => {
+  try {
+    if (userData.notes) {
+      userData.notes = userData.notes;
+    }
+    
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({
+        email: userData.email,
+        full_name: userData.full_name,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        avatar_url: userData.avatar_url,
+        title: userData.title,
+        phone: userData.phone,
+        custom_id: userData.custom_id,
+        notes: userData.notes,
+        territories: userData.territories,
+        status: userData.status,
+        role_id: userData.role_id,
+        updated_at: new Date().toISOString(),
+        daily_summary: userData.daily_summary
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+      
+    if (error) throw error;
+    
+    return adaptUserFromDb(data);
+  } catch (error) {
+    console.error('Error updating user profile:', error);
     throw error;
   }
 };

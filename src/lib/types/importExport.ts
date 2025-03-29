@@ -1,33 +1,58 @@
 
-import { Json } from '@/lib/types/common';
-
+// Import/Export Related Types
 export type DataImportType = 'clients' | 'sites' | 'contractors' | 'contracts' | 'invoices';
-export type DataExportType = DataImportType;
+export type DataExportType = 'clients' | 'sites' | 'contractors' | 'contracts' | 'invoices';
 
 export interface ImportOptions {
-  mode: 'full' | 'incremental';
+  mode?: 'create' | 'update' | 'upsert';
+  skipValidation?: boolean;
+  updateExisting?: boolean;
   skipExistingCheck?: boolean;
-  checkDuplicates?: boolean;
+  dryRun?: boolean;
+  message?: string;
+  userId?: string;
+}
+
+export interface ExportOptions {
+  format?: 'csv' | 'json' | 'xlsx';
+  includeHeaders?: boolean;
+  fileName?: string;
+  filters?: Record<string, any>;
 }
 
 export interface ImportResult {
   success: boolean;
   count: number;
+  message?: string;
   data?: any[];
   failures?: any[];
+}
+
+export interface ExportResult {
+  success: boolean;
+  data?: any;
+  count?: number;
+  message?: string;
+  fileName?: string;
+}
+
+export interface ValidationMessage {
+  field: string;
+  message: string;
+  type?: 'error' | 'warning' | 'info';
 }
 
 export interface ValidationError {
   field: string;
   message: string;
-  row?: number;
+  code?: string;
 }
 
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
+  warnings?: ValidationMessage[];
   validData?: any[];
-  warnings?: string[];
 }
 
 export interface ClientImportItem {
@@ -39,35 +64,29 @@ export interface ClientImportItem {
   city?: string;
   state?: string;
   postcode?: string;
-  custom_id?: string;
-  notes?: string;
   status?: string;
+  notes?: string;
+  customId?: string;
+  id?: string;
 }
 
 export interface ContractorImportItem {
   business_name: string;
   contact_name: string;
-  contractor_type: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  abn?: string;
-  tax_id?: string;
+  contractor_type?: string;
+  specialty?: string[];
   hourly_rate?: number;
   day_rate?: number;
   notes?: string;
-  specialty?: string[];
-}
-
-export interface InvoiceLineItem {
-  description: string;
-  quantity: number;
-  unit_price: number;
-  tax_type?: string;
-  xero_account_code?: string;
+  status?: string;
+  abn?: string;
+  tax_id?: string;
 }
 
 export interface InvoiceImportItem {
@@ -78,7 +97,15 @@ export interface InvoiceImportItem {
   client_id?: string;
   site_id?: string;
   work_order_id?: string;
+  status?: string;
   notes?: string;
-  gst_inclusive?: boolean;
   line_items?: InvoiceLineItem[];
+}
+
+export interface InvoiceLineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_type?: string;
+  xero_account_code?: string;
 }

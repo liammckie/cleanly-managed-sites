@@ -1,7 +1,7 @@
 
 import { useFormValidation } from './useFormValidation';
-import { siteFormSchema } from '@/lib/validation/schemas';
-import { SiteFormData } from '@/lib/types';
+import { siteFormSchema } from '@/lib/validation/schemas/siteSchema';
+import { SiteFormData } from '@/lib/validation/schemas/siteSchema';
 
 /**
  * Custom hook for site form validation using the centralized schema

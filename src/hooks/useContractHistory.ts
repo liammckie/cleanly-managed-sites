@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { contractHistoryApi } from '@/lib/api/sites/contractHistoryApi';
 
@@ -37,7 +36,7 @@ export function useContractVersion(versionId: string | undefined) {
     queryFn: async () => {
       if (!versionId) return null;
       try {
-        return await contractHistoryApi.getContractVersion(versionId);
+        return await contractHistoryApi.getContractHistoryEntry(versionId);
       } catch (error) {
         console.error('Failed to fetch contract version:', error);
         throw error;

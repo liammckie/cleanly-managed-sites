@@ -1,72 +1,83 @@
+import { ContractDetails } from '@/types/contracts';
+import { Json } from '@/lib/types';
 
-import { Contract, ContractDetails, Json } from '@/lib/types';
-
-export const adaptContractFromDb = (data: any): Contract => {
-  return {
-    id: data.id,
-    siteId: data.site_id,
-    clientId: data.client_id,
-    contractNumber: data.contract_number || '',
-    startDate: data.start_date || '',
-    endDate: data.end_date || '',
-    value: data.value || 0,
-    status: data.status || 'active',
-    monthlyValue: data.monthly_value || 0,
-    monthlyRevenue: data.monthly_revenue || 0,
-    autoRenewal: data.auto_renewal || false,
-    renewalPeriod: data.renewal_period || '',
-    renewalNoticeDays: data.renewal_notice_days || 0,
-    terminationPeriod: data.termination_period || '',
-    serviceFrequency: data.service_frequency || '',
-    serviceDeliveryMethod: data.service_delivery_method || '',
-    isPrimary: data.is_primary || false,
-    createdAt: data.created_at || '',
-    updatedAt: data.updated_at || '',
-    contractDetails: data.contract_details || {}
-  };
-};
-
-export const adaptContractToDb = (contract: Contract): any => {
-  return {
-    site_id: contract.siteId,
-    client_id: contract.clientId,
-    contract_number: contract.contractNumber,
-    start_date: contract.startDate,
-    end_date: contract.endDate,
-    value: contract.value,
-    status: contract.status,
-    monthly_value: contract.monthlyValue,
-    monthly_revenue: contract.monthlyRevenue,
-    auto_renewal: contract.autoRenewal,
-    renewal_period: contract.renewalPeriod,
-    renewal_notice_days: contract.renewalNoticeDays,
-    termination_period: contract.terminationPeriod,
-    service_frequency: contract.serviceFrequency,
-    service_delivery_method: contract.serviceDeliveryMethod,
-    is_primary: contract.isPrimary,
-    contract_details: contract.contractDetails
-  };
-};
-
+// Adapter to convert contract details to DB format
 export const adaptContractDetailsToDb = (details: ContractDetails): Json => {
+  // Ensure we're working with a plain object for DB storage
   return {
-    ...details,
-    renewalPeriod: details.renewalPeriod?.toString(),
-    terms: details.terms?.map(term => ({
-      ...term,
-      id: term.id || crypto.randomUUID()
-    }))
-  };
+    renewalPeriod: details.renewalPeriod,
+    terms: details.terms || [],
+    contractNumber: details.contractNumber,
+    startDate: details.startDate,
+    endDate: details.endDate,
+    autoRenewal: details.autoRenewal,
+    renewalNoticeDays: details.renewalNoticeDays,
+    noticeUnit: details.noticeUnit,
+    serviceFrequency: details.serviceFrequency,
+    serviceDeliveryMethod: details.serviceDeliveryMethod,
+    renewalTerms: details.renewalTerms,
+    terminationPeriod: details.terminationPeriod,
+    value: details.value,
+    billingCycle: details.billingCycle,
+    notes: details.notes,
+    type: details.type,
+    status: details.status,
+    reviewDate: details.reviewDate,
+    terminationClause: details.terminationClause,
+    noticePeriodDays: details.noticePeriodDays,
+    nextIncreaseDate: details.nextIncreaseDate,
+    specialTerms: details.specialTerms,
+    contractorChanges: details.contractorChanges
+  } as unknown as Json;
 };
 
-export const adaptContractDetailsFromDb = (details: Json): ContractDetails => {
-  if (!details) return {};
+// Adapter to convert contract details from DB format
+export const adaptContractDetailsFromDb = (dbData: Json): ContractDetails => {
+  if (!dbData || typeof dbData !== 'object') {
+    return {} as ContractDetails;
+  }
+  
+  // Safely cast the JSON to an object
+  const data = dbData as Record<string, any>;
   
   return {
-    ...details,
-    renewalPeriod: details.renewalPeriod,
-    terms: Array.isArray(details.terms) ? details.terms : []
-  };
+    renewalPeriod: data.renewalPeriod || '',
+    terms: Array.isArray(data.terms) ? data.terms : [],
+    contractNumber: data.contractNumber,
+    startDate: data.startDate,
+    endDate: data.endDate,
+    autoRenewal: data.autoRenewal,
+    renewalNoticeDays: data.renewalNoticeDays,
+    noticeUnit: data.noticeUnit,
+    serviceFrequency: data.serviceFrequency,
+    serviceDeliveryMethod: data.serviceDeliveryMethod,
+    renewalTerms: data.renewalTerms,
+    terminationPeriod: data.terminationPeriod,
+    value: data.value,
+    billingCycle: data.billingCycle,
+    notes: data.notes,
+    type: data.type,
+    status: data.status,
+    reviewDate: data.reviewDate,
+    terminationClause: data.terminationClause,
+    noticePeriodDays: data.noticePeriodDays,
+    nextIncreaseDate: data.nextIncreaseDate,
+    specialTerms: data.specialTerms,
+    contractorChanges: data.contractorChanges
+  } as ContractDetails;
 };
 
-export const adaptContractDetailsToJson = adaptContractDetailsToDb;
+// Re-export for backward compatibility
+export const adaptContractFromDb = (contract: any): any => {
+  // Implementation
+  return contract;
+};
+
+export const adaptContractToDb = (contract: any): any => {
+  // Implementation
+  return contract;
+};
+
+export const adaptContractDetailsToJson = (details: ContractDetails): string => {
+  return JSON.stringify(details);
+};

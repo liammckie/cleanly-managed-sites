@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarIcon, DollarSign, PercentIcon, ClockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ContractSummary } from './types';
+import { ContractSummary } from '@/types/contracts';
 
 interface ContractSummaryCardsProps {
   summary: ContractSummary;
