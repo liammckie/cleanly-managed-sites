@@ -1,7 +1,7 @@
 
 import { UserRole } from '@/lib/types/userTypes';
 
-// Only updating the problematic section
+// Fix for handleRoleChange function
 const handleRoleChange = (selectedRole: string | UserRole) => {
   if (typeof selectedRole === 'string') {
     const roleMatch = roles.find(r => r.id === selectedRole);

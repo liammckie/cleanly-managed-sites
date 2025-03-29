@@ -1,5 +1,5 @@
 
-// Only updating the problematic section
+// Fixed version of permissionDisplay function
 const permissionDisplay = (permissions: string[] | Record<string, boolean>) => {
   if (Array.isArray(permissions)) {
     // Convert array to Record for display
@@ -7,5 +7,5 @@ const permissionDisplay = (permissions: string[] | Record<string, boolean>) => {
     permissions.forEach(p => { permRecord[p] = true; });
     return permRecord;
   }
-  return permissions as Record<string, boolean>;
+  return permissions;
 };

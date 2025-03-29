@@ -1,10 +1,9 @@
+
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-
-// Import needed to convert types for the database
 import { Json } from '@/lib/types';
 
 // Function to prepare site data for database update
@@ -23,10 +22,12 @@ interface UpdateSiteMutation {
 
 export const useSiteUpdate = (): {
   updateSiteMutation: UseMutationResult<any, Error, UpdateSiteMutation>;
+  updateSite: (params: UpdateSiteMutation) => Promise<any>;
 } => {
-  const router = useRouter();
+  const navigate = useNavigate();
   
-  const updateSite = async (id: string, siteData: any) => {
+  const updateSite = async (params: UpdateSiteMutation) => {
+    const { id, data: siteData } = params;
     try {
       const dbReadySiteData = prepareSiteForDb(siteData);
       const { data, error } = await supabase
@@ -40,7 +41,7 @@ export const useSiteUpdate = (): {
       }
       
       toast.success('Site updated successfully!');
-      router.refresh();
+      // Instead of router.refresh(), we can either navigate to the same page or just return the data
       return data;
     } catch (error: any) {
       console.error('Error updating site:', error);
@@ -50,8 +51,11 @@ export const useSiteUpdate = (): {
   };
 
   const updateSiteMutation = useMutation<any, Error, UpdateSiteMutation>({
-    mutationFn: ({ id, data }) => updateSite(id, data),
+    mutationFn: (params) => updateSite(params),
   });
 
-  return { updateSiteMutation };
+  return { 
+    updateSiteMutation,
+    updateSite
+  };
 };
