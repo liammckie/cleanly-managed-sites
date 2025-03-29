@@ -7,6 +7,8 @@ import { validateSiteData } from './siteValidation';
 import { validateContractorData } from './contractorValidation';
 import { validateContractData } from './contractValidation';
 import { validateInvoiceData } from './invoiceValidation';
+
+// Import from centralized validation module
 import { validateWithZod } from '@/lib/validation';
 
 // Import types from centralized location
@@ -15,7 +17,7 @@ import {
   ValidationResult,
   ValidationOptions,
   ImportOptions
-} from '@/lib/types';
+} from '@/lib/types/validationTypes';
 
 // Export all validation functions
 export {

@@ -10,6 +10,7 @@ export interface ValidationError {
   field: string;
   message: string;
   code?: string;
+  row?: number;
 }
 
 /**
@@ -29,6 +30,7 @@ export interface ValidationResult {
   errors: ValidationError[];
   warnings?: ValidationMessage[];
   message?: string;
+  validData?: any[];
 }
 
 /**
@@ -37,6 +39,11 @@ export interface ValidationResult {
 export interface ValidationOptions {
   skipRequiredFields?: boolean;
   additionalValidation?: (data: any) => ValidationError[];
+  skipValidation?: boolean;
+  checkDuplicates?: boolean;
+  updateExisting?: boolean;
+  ignoreErrors?: boolean;
+  idField?: string;
 }
 
 /**
@@ -51,10 +58,10 @@ export interface LegacyValidationResult {
 /**
  * Zod-based validation result
  */
-export interface ZodValidationResult {
+export interface ZodValidationResult<T = any> {
   success: boolean;
   errors?: ValidationError[];
-  data?: any;
+  data?: T;
 }
 
 /**

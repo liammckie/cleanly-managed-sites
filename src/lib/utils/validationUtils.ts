@@ -1,45 +1,25 @@
 
-import { ValidationError, ValidationResult } from '@/lib/types';
+/**
+ * Legacy validation utilities file - most functionality has been moved to /lib/validation/*
+ * This file is maintained for backward compatibility
+ */
 
-export const simplifyValidationErrors = (errors: ValidationError[]): string[] => {
-  return errors.map(error => `${error.field}: ${error.message}`);
-};
+import { ValidationError, ValidationResult } from '@/lib/types/validationTypes';
+import {
+  isValidEmail as checkValidEmail,
+  isValidDateFormat as checkValidDateFormat
+} from '@/lib/validation/core/formatValidators';
+import {
+  validateRequiredFields as checkRequiredFields,
+  mergeValidationResults as combinedResults
+} from '@/lib/validation/core/validationCore';
+import {
+  simplifyValidationErrors as simplifyErrors
+} from '@/lib/validation/core/errorFormatters';
 
-export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-export const isValidDateFormat = (date: string): boolean => {
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  return dateRegex.test(date);
-};
-
-export const validateRequiredFields = (
-  data: any,
-  requiredFields: string[]
-): ValidationError[] => {
-  const errors: ValidationError[] = [];
-  
-  requiredFields.forEach(field => {
-    if (!data[field]) {
-      errors.push({
-        field,
-        message: `${field} is required`
-      });
-    }
-  });
-  
-  return errors;
-};
-
-export const mergeValidationResults = (
-  results: ValidationResult[]
-): ValidationResult => {
-  return {
-    valid: results.every(r => r.valid),
-    errors: results.flatMap(r => r.errors),
-    warnings: results.flatMap(r => r.warnings || []),
-    validData: results.flatMap(r => r.validData || [])
-  };
-};
+// Re-export for backward compatibility
+export const simplifyValidationErrors = simplifyErrors;
+export const isValidEmail = checkValidEmail;
+export const isValidDateFormat = checkValidDateFormat;
+export const validateRequiredFields = checkRequiredFields;
+export const mergeValidationResults = combinedResults;
