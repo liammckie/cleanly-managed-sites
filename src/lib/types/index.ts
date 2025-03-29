@@ -1,13 +1,8 @@
 
-/**
- * Central hub for type exports
- * This file exports all types from the types directory to provide a single import point
- */
-
 // Export common types
 export * from './common';
 
-// Resolve potential naming conflicts with explicit re-exports
+// Export user types with explicit type exports
 export type { 
   UserRole, 
   UserProfile,
@@ -15,17 +10,17 @@ export type {
   SystemUser
 } from './userTypes';
 
-// Re-export UserStatus from userTypes (which re-exports from common)
+// Export status enums
 export { UserStatus } from './userTypes';
 
-// Export domain-specific types
+// Export domain types
 export * from './clientTypes';
 export * from './siteTypes';
 export * from './contractTypes';
 export * from './contactTypes';
 export * from './contractorTypes';
 
-// Export contract types from the centralized location
+// Export contract types
 export type {
   Contract,
   ContractDetails,
@@ -43,37 +38,25 @@ export type {
 // Export billing types
 export * from './billingTypes';
 
-// Export import/export types and validation types
-// Use explicit re-exports to avoid naming conflicts
+// Export import/export types
 export type {
-  ImportMode,
+  DataImportType,
+  DataExportType,
   ImportOptions,
   ImportResult,
-  ExportOptions,
-  ExportResult,
-  FieldMapping
-} from './importExportTypes';
-
-export type {
   ValidationError,
-  ValidationMessage,
   ValidationResult,
-  ValidationOptions,
-  ZodValidationResult,
-  LegacyValidationResult
-} from './validationTypes';
+  ClientImportItem,
+  ContractorImportItem,
+  InvoiceImportItem,
+  InvoiceLineItem
+} from './importExport';
 
-// Export validation conversion functions
-export {
-  legacyToNewValidationResult,
-  newToLegacyValidationResult
-} from './validationTypes';
-
-// Export adapter functions for convenience
+// Export adapter functions
 export { 
   adaptContractFromDb,
-  adaptContractToDb, 
-  adaptContractDetailsToDb, 
+  adaptContractToDb,
+  adaptContractDetailsToDb,
   adaptContractDetailsFromDb,
   adaptContractDetailsToJson
 } from '../adapters/contractAdapter';
@@ -85,5 +68,5 @@ export {
   adaptUserRoleToDb
 } from '../adapters/userAdapter';
 
-// Export WorkOrderRecord from the API directly to avoid circular dependencies
+// Export WorkOrderRecord type
 export type { WorkOrderRecord } from '../api/workorders/types';
