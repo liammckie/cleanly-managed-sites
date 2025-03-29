@@ -2,6 +2,9 @@
 import { Contract, ContractDetails, DbContract } from '../types/contracts';
 import { Json } from '../types/common';
 
+/**
+ * Converts a database contract record to a frontend Contract object
+ */
 export function adaptContractFromDb(dbContract: DbContract): Contract {
   return {
     id: dbContract.id,
@@ -20,12 +23,17 @@ export function adaptContractFromDb(dbContract: DbContract): Contract {
     terminationPeriod: dbContract.termination_period,
     serviceFrequency: dbContract.service_frequency,
     serviceDeliveryMethod: dbContract.service_delivery_method,
+    billingCycle: dbContract.billing_cycle,
     isPrimary: dbContract.is_primary,
     createdAt: dbContract.created_at,
-    updatedAt: dbContract.updated_at
+    updatedAt: dbContract.updated_at,
+    contractDetails: dbContract.contract_details
   };
 }
 
+/**
+ * Converts a frontend Contract object to a database-friendly format
+ */
 export function adaptContractToDb(contract: Partial<Contract>): Partial<DbContract> {
   return {
     id: contract.id,
@@ -44,14 +52,20 @@ export function adaptContractToDb(contract: Partial<Contract>): Partial<DbContra
     termination_period: contract.terminationPeriod,
     service_frequency: contract.serviceFrequency,
     service_delivery_method: contract.serviceDeliveryMethod,
-    is_primary: contract.isPrimary
+    billing_cycle: contract.billingCycle,
+    is_primary: contract.isPrimary,
+    contract_details: contract.contractDetails as Json
   };
 }
 
+/**
+ * Converts contract details object to JSON for database storage
+ */
 export function adaptContractDetailsToDb(details: ContractDetails | null | undefined): Json {
-  if (!details) return null;
+  if (!details) return null as unknown as Json;
   
-  return {
+  // Convert the details object to JSON compatible format
+  const detailsObj = {
     contractNumber: details.contractNumber,
     startDate: details.startDate,
     endDate: details.endDate,
@@ -72,12 +86,28 @@ export function adaptContractDetailsToDb(details: ContractDetails | null | undef
     contractLength: details.contractLength,
     contractLengthUnit: details.contractLengthUnit,
     noticeUnit: details.noticeUnit,
-    renewalTerms: details.renewalTerms
-  } as Json;
+    renewalTerms: details.renewalTerms,
+    contractorChanges: details.contractorChanges
+  };
+  
+  // Cast to Json type for database storage
+  return detailsObj as unknown as Json;
 }
 
+/**
+ * Converts database JSON contract details to a typed ContractDetails object
+ */
 export function adaptContractDetailsFromDb(details: Json | null): ContractDetails {
   if (!details) return {};
   
-  return details as ContractDetails;
+  return details as unknown as ContractDetails;
+}
+
+/**
+ * Converts ContractDetails to a JSON string for legacy compatibility
+ */
+export function adaptContractDetailsToJson(details: ContractDetails | null | undefined): string {
+  if (!details) return '{}';
+  
+  return JSON.stringify(details);
 }

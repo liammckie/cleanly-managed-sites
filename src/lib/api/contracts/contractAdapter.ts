@@ -18,17 +18,17 @@ export function dbToContract(dbContract: DbContract): Contract {
     endDate: dbContract.end_date,
     value: dbContract.value,
     monthlyRevenue: dbContract.monthly_revenue,
-    contractDetails: dbContract.contract_details,
     autoRenewal: dbContract.auto_renewal,
     renewalPeriod: dbContract.renewal_period,
     renewalNoticeDays: dbContract.renewal_notice_days,
     terminationPeriod: dbContract.termination_period,
     billingCycle: dbContract.billing_cycle,
     serviceFrequency: dbContract.service_frequency,
-    serviceDeliveryMethod: dbContract.service_delivery_method,
+    serviceDeliveryMethod: dbContract.service_delivery_method || '',
     isPrimary: dbContract.is_primary,
     createdAt: dbContract.created_at,
-    updatedAt: dbContract.updated_at
+    updatedAt: dbContract.updated_at,
+    contractDetails: dbContract.contract_details
   };
 }
 
@@ -48,7 +48,7 @@ export function contractToDb(contract: Contract): DbContract {
     end_date: contract.endDate,
     value: contract.value,
     monthly_revenue: contract.monthlyRevenue,
-    contract_details: contract.contractDetails,
+    monthly_value: contract.monthlyValue,
     auto_renewal: contract.autoRenewal,
     renewal_period: contract.renewalPeriod,
     renewal_notice_days: contract.renewalNoticeDays,
@@ -58,7 +58,8 @@ export function contractToDb(contract: Contract): DbContract {
     service_delivery_method: contract.serviceDeliveryMethod,
     is_primary: contract.isPrimary,
     created_at: contract.createdAt,
-    updated_at: contract.updatedAt
+    updated_at: contract.updatedAt,
+    contract_details: contract.contractDetails
   };
 }
 
@@ -68,7 +69,7 @@ export function contractToDb(contract: Contract): DbContract {
  * @returns Contract details for database
  */
 export function contractDetailsToDb(details: ContractDetails | null | undefined): Json {
-  if (!details) return null;
+  if (!details) return null as unknown as Json;
   
   // Create a deep copy to avoid modifying the original
   const detailsCopy = JSON.parse(JSON.stringify(details));

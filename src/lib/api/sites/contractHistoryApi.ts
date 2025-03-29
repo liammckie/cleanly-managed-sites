@@ -1,94 +1,106 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractHistoryEntry } from '@/lib/types/contracts';
 import { Json } from '@/lib/types/common';
+import { ContractHistoryEntry } from '@/lib/types/contracts';
 
 /**
- * Contract history API functions
+ * Save a new version of a contract's details to the history table
  */
-export const contractHistoryApi = {
-  /**
-   * Save a new version of contract details to history
-   */
-  async saveContractVersion(
-    siteId: string,
-    contractDetails: any,
-    notes: string = '',
-    userId: string = 'system'
-  ): Promise<boolean> {
-    try {
-      // First get the latest version number
-      const { data: latestVersions, error: versionError } = await supabase
-        .from('site_contract_history')
-        .select('version_number')
-        .eq('site_id', siteId)
-        .order('version_number', { ascending: false })
-        .limit(1);
+export async function saveContractVersion(
+  siteId: string,
+  contractDetails: Json, 
+  notes: string = '', 
+  userId: string = ''
+): Promise<boolean> {
+  try {
+    // Get the current highest version number
+    const { data: versionData, error: versionError } = await supabase
+      .from('site_contract_history')
+      .select('version_number')
+      .eq('site_id', siteId)
+      .order('version_number', { ascending: false })
+      .limit(1);
 
-      if (versionError) throw versionError;
+    if (versionError) {
+      console.error('Error fetching contract version:', versionError);
+      return false;
+    }
 
-      // Calculate the next version number
-      const nextVersionNumber = latestVersions && latestVersions.length > 0
-        ? (latestVersions[0].version_number || 0) + 1
-        : 1;
+    const newVersionNumber = versionData && versionData.length > 0 
+      ? (versionData[0].version_number + 1) 
+      : 1;
 
-      // Save the contract version with the calculated version number
-      const { data, error } = await supabase
-        .from('site_contract_history')
-        .insert({
-          site_id: siteId,
-          contract_details: contractDetails,
-          notes: notes,
-          created_by: userId,
-          version_number: nextVersionNumber
-        });
+    // Insert the new version
+    const { error } = await supabase
+      .from('site_contract_history')
+      .insert({
+        site_id: siteId,
+        contract_details: contractDetails,
+        notes,
+        created_by: userId,
+        version_number: newVersionNumber
+      });
 
-      if (error) throw error;
-
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Error saving contract version:', error);
       return false;
     }
-  },
 
-  /**
-   * Get contract history for a site
-   */
-  async getContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
-    try {
-      const { data, error } = await supabase
-        .from('site_contract_history')
-        .select('*')
-        .eq('site_id', siteId)
-        .order('version_number', { ascending: false });
+    return true;
+  } catch (error) {
+    console.error('Error in saveContractVersion:', error);
+    return false;
+  }
+}
 
-      if (error) throw error;
+/**
+ * Get the contract history for a site
+ */
+export async function getContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
+  try {
+    const { data, error } = await supabase
+      .from('site_contract_history')
+      .select('*')
+      .eq('site_id', siteId)
+      .order('version_number', { ascending: false });
 
-      return data as ContractHistoryEntry[];
-    } catch (error) {
+    if (error) {
       console.error('Error fetching contract history:', error);
       return [];
     }
-  },
 
-  /**
-   * Get a specific contract history entry
-   */
-  async getContractHistoryEntry(entryId: string): Promise<ContractHistoryEntry | null> {
-    try {
-      const { data, error } = await supabase
-        .from('site_contract_history')
-        .select('*')
-        .eq('id', entryId)
-        .single();
+    return data || [];
+  } catch (error) {
+    console.error('Error in getContractHistory:', error);
+    return [];
+  }
+}
 
-      if (error) throw error;
+/**
+ * Get a specific contract history entry by ID
+ */
+export async function getContractHistoryEntry(entryId: string): Promise<ContractHistoryEntry | null> {
+  try {
+    const { data, error } = await supabase
+      .from('site_contract_history')
+      .select('*')
+      .eq('id', entryId)
+      .single();
 
-      return data as ContractHistoryEntry;
-    } catch (error) {
+    if (error) {
       console.error('Error fetching contract history entry:', error);
       return null;
     }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getContractHistoryEntry:', error);
+    return null;
   }
+}
+
+export const contractHistoryApi = {
+  saveContractVersion,
+  getContractHistory,
+  getContractHistoryEntry
 };

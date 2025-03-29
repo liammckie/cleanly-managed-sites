@@ -1,5 +1,5 @@
 
-import { Contract, ContractDetails, ContractSummaryData } from '@/lib/types/contractTypes';
+import { Contract, ContractDetails, ContractSummaryData } from '@/lib/types/contracts';
 
 export interface ContractComponentProps {
   contract: Contract;
@@ -16,4 +16,3 @@ export interface ContractSummaryProps {
 export interface ContractTermsProps {
   terms?: ContractDetails['terms'];
 }
-

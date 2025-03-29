@@ -1,3 +1,4 @@
+
 /**
  * Central hub for type exports
  * This file exports all types from the types directory to provide a single import point
@@ -23,6 +24,21 @@ export * from './siteTypes';
 export * from './contractTypes';
 export * from './contactTypes';
 export * from './contractorTypes';
+
+// Export contract types from the centralized location
+export type {
+  Contract,
+  ContractDetails,
+  ContractTerm,
+  DbContract,
+  ContractSummaryData,
+  ContractHistoryEntry,
+  ContractData,
+  GroupedContracts,
+  ContractorChange,
+  ContractForecast,
+  ContractActivity
+} from './contracts';
 
 // Export billing types
 export * from './billingTypes';
@@ -71,19 +87,3 @@ export {
 
 // Export WorkOrderRecord from the API directly to avoid circular dependencies
 export type { WorkOrderRecord } from '../api/workorders/types';
-
-// Contract types
-export type {
-  Contract,
-  ContractDetails,
-  ContractTerm,
-  DbContract
-} from './contracts';
-
-// Export adapters
-export {
-  adaptContractFromDb,
-  adaptContractToDb,
-  adaptContractDetailsToDb,
-  adaptContractDetailsFromDb
-} from '../adapters/contractAdapter';
