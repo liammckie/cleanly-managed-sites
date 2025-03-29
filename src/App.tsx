@@ -1,167 +1,385 @@
+import React, { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 
-import React from 'react';
-import { Route, Routes, useNavigate } from 'react-router-dom';
-import Sites from './pages/Sites';
-import Clients from './pages/Clients';
-import Settings from './pages/Settings';
-import Dashboard from './pages/Dashboard';
-import WorkOrders from './pages/WorkOrders';
-import Subcontractors from './pages/Subcontractors';
-import Login from './pages/Login';
-import ProtectedRoute from './components/ProtectedRoute';
-import SiteDetails from './pages/SiteDetails';
-import ClientDetails from './pages/ClientDetails';
-import CreateSite from './pages/CreateSite';
-import EditSite from './pages/EditSite';
-import CreateClient from './pages/CreateClient';
-import EditClient from './pages/EditClient';
-import QuotingTool from './pages/QuotingTool';
-import QuoteDetails from './pages/QuoteDetails';
-import CreateQuote from './pages/CreateQuote';
-import EditQuote from './pages/EditQuote';
-import AwardCalculator from './pages/AwardCalculator';
-import ErrorPage from './pages/ErrorPage';
-import GlobalErrorPage from './components/error/GlobalErrorPage';
-import { ErrorBoundary } from './components/ui/error-boundary/ErrorBoundary';
-import { Toaster } from 'sonner';
-import Contracts from './pages/Contracts';
-import CreateWorkOrder from './pages/CreateWorkOrder';
-import Integrations from './pages/Integrations';
-import ImportExport from './pages/ImportExport';
-import Users from './pages/Users';
+// Page Imports
+import Dashboard from '@/pages/Dashboard';
+import NotFound from '@/pages/NotFound';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import PageLayout from '@/components/ui/layout/PageLayout';
+import Loader from '@/components/ui/loader';
+
+// Lazy-loaded page components
+const Clients = lazy(() => import('@/pages/Clients'));
+const ClientDetail = lazy(() => import('@/pages/ClientDetail'));
+const Sites = lazy(() => import('@/pages/Sites'));
+const SiteDetail = lazy(() => import('@/pages/SiteDetail'));
+const CreateSite = lazy(() => import('@/pages/CreateSite'));
+const EditSite = lazy(() => import('@/pages/EditSite'));
+const Users = lazy(() => import('@/pages/Users'));
+const Contractors = lazy(() => import('@/pages/Contractors'));
+const ContractorDetail = lazy(() => import('@/pages/ContractorDetail'));
+const CreateContractor = lazy(() => import('@/pages/CreateContractor'));
+const EditContractor = lazy(() => import('@/pages/EditContractor'));
+const Quotes = lazy(() => import('@/pages/Quotes'));
+const CreateQuote = lazy(() => import('@/pages/CreateQuote'));
+const EditQuote = lazy(() => import('@/pages/EditQuote'));
+const QuoteDetail = lazy(() => import('@/pages/QuoteDetail'));
+const Reports = lazy(() => import('@/pages/Reports'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Help = lazy(() => import('@/pages/Help'));
+const Invoices = lazy(() => import('@/pages/Invoices'));
+const WorkOrders = lazy(() => import('@/pages/WorkOrders'));
+const WorkOrderDetails = lazy(() => import('@/pages/WorkOrderDetails'));
 
 function App() {
   return (
-    <ErrorBoundary
-      showToast={true}
-      fallback={<ErrorPage />}
-    >
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={
+    <Routes>
+      <Route
+        path="/"
+        element={
           <ProtectedRoute>
-            <Dashboard />
+            <PageLayout>
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
+        }
+      />
+
+      {/* Client Routes */}
+      <Route
+        path="/clients"
+        element={
           <ProtectedRoute>
-            <Dashboard />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Clients />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/sites" element={
+        }
+      />
+      <Route
+        path="/clients/:clientId"
+        element={
           <ProtectedRoute>
-            <Sites />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <ClientDetail />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/sites/:siteId" element={
+        }
+      />
+
+      {/* Site Routes */}
+      <Route
+        path="/sites"
+        element={
           <ProtectedRoute>
-            <SiteDetails />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Sites />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/sites/create" element={
+        }
+      />
+      <Route
+        path="/sites/create"
+        element={
           <ProtectedRoute>
-            <CreateSite />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <CreateSite />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-         <Route path="/sites/edit/:siteId" element={
+        }
+      />
+      <Route
+        path="/sites/:siteId"
+        element={
           <ProtectedRoute>
-            <EditSite />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <SiteDetail />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/clients" element={
+        }
+      />
+      <Route
+        path="/sites/:siteId/edit"
+        element={
           <ProtectedRoute>
-            <Clients />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <EditSite />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-         <Route path="/clients/:clientId" element={
+        }
+      />
+
+      {/* Quote Routes */}
+      <Route
+        path="/quotes"
+        element={
           <ProtectedRoute>
-            <ClientDetails />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Quotes />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/clients/create" element={
+        }
+      />
+      <Route
+        path="/quotes/create"
+        element={
           <ProtectedRoute>
-            <CreateClient />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <CreateQuote />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/clients/edit/:clientId" element={
+        }
+      />
+      <Route
+        path="/quotes/:quoteId"
+        element={
           <ProtectedRoute>
-            <EditClient />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <QuoteDetail />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/workorders/:siteId" element={
+        }
+      />
+      <Route
+        path="/quotes/:quoteId/edit"
+        element={
           <ProtectedRoute>
-            <WorkOrders />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <EditQuote />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/workorders" element={
+        }
+      />
+
+      {/* Other pages would be similar structure */}
+      <Route
+        path="/quote-details/:quoteId"
+        element={
           <ProtectedRoute>
-            <WorkOrders />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  {/* Fixed to use the route parameter */}
+                  {({ params }) => <QuoteDetail quoteId={params.quoteId} />}
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/workorders/create" element={
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
           <ProtectedRoute>
-            <CreateWorkOrder />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Users />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/subcontractors/:siteId" element={
+        }
+      />
+
+      <Route
+        path="/contractors"
+        element={
           <ProtectedRoute>
-            <Subcontractors />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Contractors />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
+        }
+      />
+
+      <Route
+        path="/contractors/create"
+        element={
           <ProtectedRoute>
-            <Settings />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <CreateContractor />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/quoting" element={
+        }
+      />
+
+      <Route
+        path="/contractors/:contractorId"
+        element={
           <ProtectedRoute>
-            <QuotingTool />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <ContractorDetail />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/quoting/create" element={
+        }
+      />
+
+      <Route
+        path="/contractors/:contractorId/edit"
+        element={
           <ProtectedRoute>
-            <CreateQuote />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <EditContractor />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/quoting/:quoteId" element={
+        }
+      />
+
+      <Route
+        path="/reports"
+        element={
           <ProtectedRoute>
-            <QuoteDetails />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Reports />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/quoting/edit/:quoteId" element={
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
           <ProtectedRoute>
-            <EditQuote />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Settings />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/award-calculator" element={
+        }
+      />
+
+      <Route
+        path="/help"
+        element={
           <ProtectedRoute>
-            <AwardCalculator />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Help />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/contracts" element={
+        }
+      />
+
+      <Route
+        path="/invoices"
+        element={
           <ProtectedRoute>
-            <Contracts />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <Invoices />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/integrations" element={
+        }
+      />
+
+      <Route
+        path="/work-orders"
+        element={
           <ProtectedRoute>
-            <Integrations />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <WorkOrders />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/import-export" element={
+        }
+      />
+
+      <Route
+        path="/work-orders/:workOrderId"
+        element={
           <ProtectedRoute>
-            <ImportExport />
+            <PageLayout>
+              <ErrorBoundary>
+                <Suspense fallback={<Loader />}>
+                  <WorkOrderDetails />
+                </Suspense>
+              </ErrorBoundary>
+            </PageLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/users" element={
-          <ProtectedRoute>
-            <Users />
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<GlobalErrorPage statusCode="404" message="Page not found" />} />
-      </Routes>
-      <Toaster position="top-right" closeButton />
-    </ErrorBoundary>
+        }
+      />
+
+      {/* Default and 404 routes */}
+      <Route path="/404" element={<NotFound />} />
+      <Route path="*" element={<Navigate to="/404" replace />} />
+    </Routes>
   );
 }
 

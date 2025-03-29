@@ -3,19 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { mapFromDb } from '@/lib/utils/mappers';
 import { Frequency } from '@/types/common';
-
-interface QuoteSubcontractor {
-  id: string;
-  quoteId: string;
-  name: string;
-  description?: string;
-  cost: number;
-  frequency: Frequency;
-  email?: string;
-  phone?: string;
-  notes?: string;
-  service?: string;
-}
+import type { QuoteSubcontractor } from '@/types/models';
 
 /**
  * Hook to fetch and manage subcontractors associated with a given quote.
@@ -39,9 +27,17 @@ export function useQuoteSubcontractors(quoteId: string) {
       if (error) {
         throw new Error(error.message);
       } else {
-        // Transform snake_case to camelCase
-        const formattedData = data ? data.map(subcontractor => mapFromDb(subcontractor)) : [];
-        setSubcontractors(formattedData as QuoteSubcontractor[]);
+        // Transform data and ensure we have both snake_case and camelCase properties
+        const formattedData = (data || []).map(subcontractor => {
+          const camelCaseSubcontractor = mapFromDb(subcontractor) as any;
+          // Ensure we have all properties in both formats
+          return {
+            ...subcontractor,
+            ...camelCaseSubcontractor,
+            quoteId: subcontractor.quote_id
+          } as QuoteSubcontractor;
+        });
+        setSubcontractors(formattedData);
       }
     } catch (err: any) {
       setError(err);
@@ -70,7 +66,12 @@ export function useQuoteSubcontractors(quoteId: string) {
       if (error) throw new Error(error.message);
       
       await fetchSubcontractors(); // Refresh the subcontractors
-      return mapFromDb(data[0]);
+      const camelCaseSubcontractor = mapFromDb(data[0]) as any;
+      return {
+        ...data[0],
+        ...camelCaseSubcontractor,
+        quoteId: data[0].quote_id
+      } as QuoteSubcontractor;
     } catch (err: any) {
       setError(err);
       throw err;
@@ -93,7 +94,12 @@ export function useQuoteSubcontractors(quoteId: string) {
       if (error) throw new Error(error.message);
       
       await fetchSubcontractors(); // Refresh the subcontractors
-      return mapFromDb(data[0]);
+      const camelCaseSubcontractor = mapFromDb(data[0]) as any;
+      return {
+        ...data[0],
+        ...camelCaseSubcontractor,
+        quoteId: data[0].quote_id
+      } as QuoteSubcontractor;
     } catch (err: any) {
       setError(err);
       throw err;

@@ -7,6 +7,7 @@ import { useQuoteSubcontractors } from '@/hooks/quotes/useQuoteSubcontractors';
 import { useQuote } from '@/hooks/useQuote';
 import { useAwardEngine } from '@/hooks/useAwardEngine';
 import { mapFromDb } from '@/lib/mappers';
+import type { QuoteShift } from '@/types/models';
 
 interface QuoteDetailsProps {
   quoteId: string;
@@ -33,28 +34,28 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({ quoteId }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h2>Basic Information</h2>
-          <p>Client: {quote.client_name}</p>
-          <p>Site: {quote.site_name}</p>
+          <p>Client: {quote.client_name || quote.clientName}</p>
+          <p>Site: {quote.site_name || quote.siteName}</p>
           <p>Status: {quote.status}</p>
         </div>
         
         <div>
           <h2>Financial Details</h2>
-          <p>Total Price: ${quote.total_price}</p>
-          <p>Labor Cost: ${quote.labor_cost}</p>
-          <p>Subcontractor Cost: ${quote.subcontractor_cost}</p>
+          <p>Total Price: ${quote.total_price || quote.totalPrice}</p>
+          <p>Labor Cost: ${quote.labor_cost || quote.laborCost}</p>
+          <p>Subcontractor Cost: ${quote.subcontractor_cost || quote.subcontractorCost}</p>
         </div>
       </div>
       
       <div className="mt-6">
         <h2>Shifts</h2>
-        {shifts.length > 0 ? (
+        {shifts && shifts.length > 0 ? (
           <div className="grid gap-2">
             {shifts.map((shift) => (
               <div key={shift.id} className="p-2 border rounded">
                 <p>Day: {shift.day}</p>
-                <p>Time: {shift.start_time} - {shift.end_time}</p>
-                <p>Cleaners: {shift.number_of_cleaners}</p>
+                <p>Time: {shift.startTime || shift.start_time} - {shift.endTime || shift.end_time}</p>
+                <p>Cleaners: {shift.numberOfCleaners || shift.number_of_cleaners}</p>
               </div>
             ))}
           </div>

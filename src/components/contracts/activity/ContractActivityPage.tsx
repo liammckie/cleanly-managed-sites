@@ -4,6 +4,7 @@ import ContractActivityFeed from './ContractActivityFeed';
 import { useContractActivities } from '@/hooks/useContractActivities';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { ContractActivity } from '@/types/models';
 
 export function ContractActivityPage() {
   const { activities, isLoading, error } = useContractActivities({ limit: 10 });
@@ -37,7 +38,7 @@ export function ContractActivityPage() {
             </Card>
           ) : (
             <ContractActivityFeed 
-              activities={activities}
+              activities={activities as ContractActivity[]}
               title="All Contract Activities"
               description="Complete history of contract changes and updates"
             />
@@ -46,7 +47,7 @@ export function ContractActivityPage() {
         
         <TabsContent value="recent">
           <ContractActivityFeed 
-            activities={activities.slice(0, 5)}
+            activities={activities.slice(0, 5) as ContractActivity[]}
             title="Recent Activities"
             description="Activities from the last 7 days"
           />
@@ -54,7 +55,7 @@ export function ContractActivityPage() {
         
         <TabsContent value="important">
           <ContractActivityFeed 
-            activities={activities.filter(a => a.action === 'created' || a.action === 'renewed')}
+            activities={activities.filter(a => a.action === 'created' || a.action === 'renewed') as ContractActivity[]}
             title="Important Activities"
             description="Critical contract events requiring attention"
           />

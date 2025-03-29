@@ -31,6 +31,9 @@ export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly
 export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
 export type EmployeeLevel = 1 | 2 | 3 | 4;
 
+// Service Types
+export type ServiceDeliveryType = 'in-house' | 'contractor' | 'hybrid';
+
 // Payment Conditions
 export type PayCondition =
   | 'base'

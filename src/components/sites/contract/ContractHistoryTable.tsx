@@ -3,8 +3,8 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContractHistoryEntry } from '@/hooks/useSiteContractHistory';
-import { Json } from '@/types';
+import { ContractHistoryEntry } from '@/types/models';
+import { Json } from '@/types/common';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ContractHistoryTableProps {

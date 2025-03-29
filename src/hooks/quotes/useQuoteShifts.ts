@@ -3,22 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { mapFromDb } from '@/lib/utils/mappers';
 import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
-
-interface QuoteShift {
-  id: string;
-  quoteId: string;
-  day: Day;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: EmploymentType;
-  level: EmployeeLevel;
-  location?: string;
-  notes?: string;
-  allowances?: string[];
-  estimatedCost: number;
-}
+import type { QuoteShift } from '@/types/models';
 
 /**
  * Hook to fetch and manage shifts associated with a given quote.
@@ -42,9 +27,23 @@ export function useQuoteShifts(quoteId: string) {
       if (error) {
         throw new Error(error.message);
       } else {
-        // Transform snake_case to camelCase
-        const formattedData = data ? data.map(shift => mapFromDb(shift)) : [];
-        setShifts(formattedData as QuoteShift[]);
+        // Transform data and ensure we have both snake_case and camelCase properties
+        const formattedData = (data || []).map(shift => {
+          const camelCaseShift = mapFromDb(shift) as any;
+          // Ensure we have all properties in both formats
+          return {
+            ...shift,
+            ...camelCaseShift,
+            quoteId: shift.quote_id,
+            startTime: shift.start_time,
+            endTime: shift.end_time,
+            breakDuration: shift.break_duration,
+            numberOfCleaners: shift.number_of_cleaners,
+            employmentType: shift.employment_type,
+            estimatedCost: shift.estimated_cost
+          } as QuoteShift;
+        });
+        setShifts(formattedData);
       }
     } catch (err: any) {
       setError(err);
@@ -64,23 +63,34 @@ export function useQuoteShifts(quoteId: string) {
         .insert([{ 
           quote_id: quoteId,
           day: shiftData.day,
-          start_time: shiftData.startTime,
-          end_time: shiftData.endTime,
-          break_duration: shiftData.breakDuration,
-          number_of_cleaners: shiftData.numberOfCleaners,
-          employment_type: shiftData.employmentType,
+          start_time: shiftData.startTime || shiftData.start_time,
+          end_time: shiftData.endTime || shiftData.end_time,
+          break_duration: shiftData.breakDuration || shiftData.break_duration,
+          number_of_cleaners: shiftData.numberOfCleaners || shiftData.number_of_cleaners,
+          employment_type: shiftData.employmentType || shiftData.employment_type,
           level: shiftData.level,
           location: shiftData.location,
           notes: shiftData.notes,
           allowances: shiftData.allowances,
-          estimated_cost: shiftData.estimatedCost
+          estimated_cost: shiftData.estimatedCost || shiftData.estimated_cost
         }])
         .select();
         
       if (error) throw new Error(error.message);
       
       await fetchShifts(); // Refresh the shifts
-      return mapFromDb(data[0]);
+      const camelCaseShift = mapFromDb(data[0]) as any;
+      return {
+        ...data[0],
+        ...camelCaseShift,
+        quoteId: data[0].quote_id,
+        startTime: data[0].start_time,
+        endTime: data[0].end_time,
+        breakDuration: data[0].break_duration,
+        numberOfCleaners: data[0].number_of_cleaners,
+        employmentType: data[0].employment_type,
+        estimatedCost: data[0].estimated_cost
+      } as QuoteShift;
     } catch (err: any) {
       setError(err);
       throw err;
@@ -94,16 +104,16 @@ export function useQuoteShifts(quoteId: string) {
         .from('quote_shifts')
         .update({
           day: shiftData.day,
-          start_time: shiftData.startTime,
-          end_time: shiftData.endTime,
-          break_duration: shiftData.breakDuration,
-          number_of_cleaners: shiftData.numberOfCleaners,
-          employment_type: shiftData.employmentType,
+          start_time: shiftData.startTime || shiftData.start_time,
+          end_time: shiftData.endTime || shiftData.end_time,
+          break_duration: shiftData.breakDuration || shiftData.break_duration,
+          number_of_cleaners: shiftData.numberOfCleaners || shiftData.number_of_cleaners,
+          employment_type: shiftData.employmentType || shiftData.employment_type,
           level: shiftData.level,
           location: shiftData.location,
           notes: shiftData.notes,
           allowances: shiftData.allowances,
-          estimated_cost: shiftData.estimatedCost
+          estimated_cost: shiftData.estimatedCost || shiftData.estimated_cost
         })
         .eq('id', shiftId)
         .select();
@@ -111,7 +121,18 @@ export function useQuoteShifts(quoteId: string) {
       if (error) throw new Error(error.message);
       
       await fetchShifts(); // Refresh the shifts
-      return mapFromDb(data[0]);
+      const camelCaseShift = mapFromDb(data[0]) as any;
+      return {
+        ...data[0],
+        ...camelCaseShift,
+        quoteId: data[0].quote_id,
+        startTime: data[0].start_time,
+        endTime: data[0].end_time,
+        breakDuration: data[0].break_duration,
+        numberOfCleaners: data[0].number_of_cleaners,
+        employmentType: data[0].employment_type,
+        estimatedCost: data[0].estimated_cost
+      } as QuoteShift;
     } catch (err: any) {
       setError(err);
       throw err;
