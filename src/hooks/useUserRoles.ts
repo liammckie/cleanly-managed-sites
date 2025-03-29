@@ -2,8 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/types/models';
-import { adaptUserRole, adaptUserRoleToApi } from '@/utils/typeAdapters';
+import { UserRole } from '@/utils/userTypeAdapter';
+import { adaptUserRole, adaptUserRoleToApi } from '@/utils/userTypeAdapter';
 
 // Fetch all roles
 const fetchRoles = async (): Promise<UserRole[]> => {

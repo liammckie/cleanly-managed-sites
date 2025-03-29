@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserRole } from '@/types/db';
+import { UserRole } from '@/utils/userTypeAdapter';
 
 interface UserRoleCardProps {
   role: UserRole;

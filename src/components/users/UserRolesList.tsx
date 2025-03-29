@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useRoles } from '@/hooks/useRoles';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useNavigate } from 'react-router-dom';
 
 export const UserRolesList: React.FC = () => {
-  const { roles, isLoading, error, deleteRole } = useRoles();
+  const { roles, isLoading, error, deleteRole } = useUserRoles();
   const navigate = useNavigate();
 
   const handleEdit = (roleId: string) => {
