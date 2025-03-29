@@ -5,41 +5,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
+import { adaptQuoteShiftToDb } from '@/utils/typeAdapters';
 
 // Add adapter function to convert frontend shift to backend shift
 const adaptShiftToBackend = (shift: any): QuoteShift => {
-  return {
-    id: shift.id,
-    quote_id: shift.quoteId,
-    day: shift.day,
-    start_time: shift.startTime,
-    end_time: shift.endTime,
-    break_duration: shift.breakDuration,
-    number_of_cleaners: shift.numberOfCleaners,
-    employment_type: shift.employmentType,
-    level: shift.level,
-    allowances: shift.allowances,
-    estimated_cost: shift.estimatedCost,
-    location: shift.location,
-    notes: shift.notes,
-    // Add camelCase aliases
-    quoteId: shift.quoteId,
-    startTime: shift.startTime,
-    endTime: shift.endTime,
-    breakDuration: shift.breakDuration,
-    numberOfCleaners: shift.numberOfCleaners,
-    employmentType: shift.employmentType,
-    estimatedCost: shift.estimatedCost
-  };
+  return adaptQuoteShiftToDb(shift);
 };
 
 export default function QuoteBuilder() {
   const [quote, setQuote] = useState<Partial<Quote>>({
     id: crypto.randomUUID(),
-    // Use clientName instead of client_name
-    clientName: '',
+    client_name: '', // Use snake_case for DB properties
     status: 'draft',
-    totalPrice: 0,    // Changed from total_price to totalPrice
+    total_price: 0,
+    labor_cost: 0,
+    subcontractor_cost: 0,
+    margin_percentage: 20,
+    overhead_percentage: 15,
+    clientName: '', // Add camelCase alias for UI
+    totalPrice: 0,
     laborCost: 0,
     subcontractorCost: 0,
     marginPercentage: 20,
@@ -52,7 +36,7 @@ export default function QuoteBuilder() {
   const addShift = () => {
     const newShift: QuoteShift = adaptShiftToBackend({
       id: crypto.randomUUID(),
-      quoteId: quote.id,
+      quote_id: quote.id,
       day: 'monday' as Day,
       startTime: '09:00',
       endTime: '17:00',

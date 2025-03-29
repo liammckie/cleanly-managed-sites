@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { ContractDetails } from '@/types/contracts';
@@ -47,6 +46,14 @@ const initialState: SiteFormData = {
     scopeNotes: ''
   }
 };
+
+export interface UseSiteFormReturn {
+  formData: any; // Replace with your actual type
+  setFormData: (data: any) => void;
+  handleSubmit: (event: React.FormEvent) => void;
+  handleChange: (field: string, value: any) => void;
+  // Add any other properties that this hook returns
+}
 
 export function useSiteForm(initialData?: Partial<SiteFormData>) {
   const [formState, setFormState] = useState<SiteFormData>({

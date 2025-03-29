@@ -280,8 +280,8 @@ export function EmployeeContactForm({
                     <FormItem className="flex flex-col">
                       <FormLabel>Start Date</FormLabel>
                       <DatePicker
-                        date={field.value}
-                        onSelect={field.onChange}
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                       <FormMessage />
                     </FormItem>

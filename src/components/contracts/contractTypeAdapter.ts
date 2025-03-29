@@ -1,5 +1,4 @@
-
-import type { Contract } from '@/types/models';
+import { Contract } from '@/types/models';
 
 /**
  * Adapt a contract object from database (snake_case) to app format (camelCase).
