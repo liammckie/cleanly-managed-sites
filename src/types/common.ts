@@ -1,3 +1,4 @@
+
 // JSON & utility types
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -14,7 +15,8 @@ export type QuoteStatus =
   | 'approved'
   | 'in-progress'
   | 'declined'
-  | 'submitted';
+  | 'submitted'
+  | 'completed';
 export type ContractStatus = 'draft' | 'active' | 'expired' | 'terminated' | 'inactive';
 
 // Date & Time
@@ -27,6 +29,7 @@ export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly
 
 // Employment
 export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
+export type EmployeeLevel = 1 | 2 | 3 | 4;
 
 // Payment Conditions
 export type PayCondition =
