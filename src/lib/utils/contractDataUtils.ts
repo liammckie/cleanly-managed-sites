@@ -78,3 +78,170 @@ export function normalizeContractData(contractDetails: ContractDetails): Json {
 
   return normalizedDetails as Json;
 }
+
+/**
+ * Get the start date from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns Start date string or null if not found
+ */
+export function getContractStartDate(contractDetails: Json | ContractDetails | null | undefined): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If it's a JSON object (from DB)
+    if (typeof contractDetails === 'object') {
+      return (contractDetails as any).startDate || (contractDetails as any).start_date || null;
+    }
+    
+    // If it's a string (JSON string)
+    if (typeof contractDetails === 'string') {
+      try {
+        const parsed = JSON.parse(contractDetails);
+        return parsed.startDate || parsed.start_date || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting contract start date:', error);
+    return null;
+  }
+}
+
+/**
+ * Get the end date from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns End date string or null if not found
+ */
+export function getContractEndDate(contractDetails: Json | ContractDetails | null | undefined): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If it's a JSON object (from DB)
+    if (typeof contractDetails === 'object') {
+      return (contractDetails as any).endDate || (contractDetails as any).end_date || null;
+    }
+    
+    // If it's a string (JSON string)
+    if (typeof contractDetails === 'string') {
+      try {
+        const parsed = JSON.parse(contractDetails);
+        return parsed.endDate || parsed.end_date || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting contract end date:', error);
+    return null;
+  }
+}
+
+/**
+ * Get the contract type from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns Contract type string or null if not found
+ */
+export function getContractType(contractDetails: Json | ContractDetails | null | undefined): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If it's a JSON object (from DB)
+    if (typeof contractDetails === 'object') {
+      return (contractDetails as any).contractType || 
+             (contractDetails as any).contract_type || 
+             (contractDetails as any).type || 
+             'Standard';
+    }
+    
+    // If it's a string (JSON string)
+    if (typeof contractDetails === 'string') {
+      try {
+        const parsed = JSON.parse(contractDetails);
+        return parsed.contractType || parsed.contract_type || parsed.type || 'Standard';
+      } catch (e) {
+        return 'Standard';
+      }
+    }
+    
+    return 'Standard';
+  } catch (error) {
+    console.error('Error getting contract type:', error);
+    return 'Standard';
+  }
+}
+
+/**
+ * Get the contract number from contract details
+ * @param contractDetails Contract details object or JSON
+ * @returns Contract number string or null if not found
+ */
+export function getContractNumber(contractDetails: Json | ContractDetails | null | undefined): string | null {
+  if (!contractDetails) return null;
+  
+  try {
+    // If it's a JSON object (from DB)
+    if (typeof contractDetails === 'object') {
+      return (contractDetails as any).contractNumber || (contractDetails as any).contract_number || null;
+    }
+    
+    // If it's a string (JSON string)
+    if (typeof contractDetails === 'string') {
+      try {
+        const parsed = JSON.parse(contractDetails);
+        return parsed.contractNumber || parsed.contract_number || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting contract number:', error);
+    return null;
+  }
+}
+
+/**
+ * Get a specific field value from contract details
+ * @param contractDetails Contract details object or JSON
+ * @param fieldName The field name to retrieve
+ * @param defaultValue Default value if field not found
+ * @returns Field value or default if not found
+ */
+export function getContractField<T>(
+  contractDetails: Json | ContractDetails | null | undefined,
+  fieldName: string,
+  defaultValue: T
+): T {
+  if (!contractDetails) return defaultValue;
+  
+  try {
+    // Convert to object if it's a string
+    const details = typeof contractDetails === 'string' 
+      ? JSON.parse(contractDetails) 
+      : contractDetails;
+    
+    // Try camelCase and snake_case versions of the field name
+    const camelCaseField = fieldName;
+    const snakeCaseField = fieldName.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    
+    // Check both possible field name formats
+    if (details[camelCaseField] !== undefined) {
+      return details[camelCaseField] as unknown as T;
+    }
+    
+    if (details[snakeCaseField] !== undefined) {
+      return details[snakeCaseField] as unknown as T;
+    }
+    
+    return defaultValue;
+  } catch (error) {
+    console.error(`Error getting contract field ${fieldName}:`, error);
+    return defaultValue;
+  }
+}
