@@ -17,7 +17,7 @@ export interface DbContract {
   monthly_revenue?: number;
   contract_details?: Json;
   auto_renewal?: boolean;
-  renewal_period?: string | number;
+  renewal_period?: string; // Changed from string | number to string
   renewal_notice_days?: number;
   termination_period?: string;
   billing_cycle?: BillingFrequency;
@@ -45,7 +45,7 @@ export interface Contract {
   monthlyRevenue?: number;
   contractDetails?: any;
   autoRenewal?: boolean;
-  renewalPeriod?: string | number;
+  renewalPeriod?: string; // Changed from string | number to string
   renewalNoticeDays?: number;
   terminationPeriod?: string;
   billingCycle?: BillingFrequency;
@@ -74,7 +74,7 @@ export interface ContractDetailsForm {
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
-  renewalPeriod?: string | number;
+  renewalPeriod?: string; // Changed from string | number to string
   renewalNoticeDays?: number;
   noticeUnit?: string;
   terminationPeriod?: string;
@@ -160,4 +160,48 @@ export interface ContractActivity {
     field?: string;
     notes?: string;
   };
+}
+
+/**
+ * UserRole and permissions
+ */
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
+}
+
+export interface UserPermission {
+  id: string;
+  name: string;
+  description?: string;
+  module: string;
+}
+
+/**
+ * User profile
+ */
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;
+  territories?: string[];
+  status: UserStatus;
+  role_id?: string;
+  role?: UserRole;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  daily_summary?: boolean;
 }

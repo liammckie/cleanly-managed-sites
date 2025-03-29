@@ -1,13 +1,14 @@
 
 import { supabase } from '@/lib/supabase';
 import { dbToContract } from '@/lib/api/contracts/contractAdapter';
+import { Contract } from '@/types/db';
 
 // Adapter functions
-export const adaptContract = (contract: any) => {
+export const adaptContract = (contract: any): Contract => {
   return dbToContract(contract);
 };
 
-export const adaptContracts = (contracts: any[]) => {
+export const adaptContracts = (contracts: any[]): Contract[] => {
   return contracts.map(dbToContract);
 };
 

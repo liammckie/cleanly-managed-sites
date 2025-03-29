@@ -37,7 +37,7 @@ export interface ContractDetails {
   renewalTerms?: string;
   contractLength?: number;
   contractLengthUnit?: string;
-  renewalPeriod?: number;
+  renewalPeriod?: string; // Changed from number to string
   renewalNotice?: number;
   noticeUnit?: string;
   serviceFrequency?: string;

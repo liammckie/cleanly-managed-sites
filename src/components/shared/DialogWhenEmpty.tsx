@@ -13,12 +13,14 @@ import {
 interface DialogWhenEmptyProps {
   title: string;
   description: string;
-  isVisible: boolean;
-  onClose: () => void;
+  isVisible?: boolean;
+  onClose?: () => void;
   onAction: () => void;
-  actionText: string;
+  actionText?: string;
   cancelText?: string;
   children?: ReactNode;
+  icon?: ReactNode;
+  buttonText?: string; // Added to match usage in UserRolesList
 }
 
 export function DialogWhenEmpty({
@@ -28,9 +30,33 @@ export function DialogWhenEmpty({
   onClose,
   onAction,
   actionText,
+  buttonText, // Added to match usage
   cancelText = "Cancel",
-  children
+  children,
+  icon
 }: DialogWhenEmptyProps) {
+  // Use buttonText as fallback for actionText
+  const finalActionText = actionText || buttonText || "Continue";
+  
+  // For inline usage without dialog
+  if (icon && !isVisible) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center rounded-lg border border-dashed">
+        {icon}
+        <h3 className="mt-4 text-lg font-medium">{title}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {description}
+        </p>
+        <Button
+          onClick={onAction}
+          className="mt-4"
+        >
+          {finalActionText}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Dialog open={isVisible} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -52,7 +78,7 @@ export function DialogWhenEmpty({
             {cancelText}
           </Button>
           <Button onClick={onAction}>
-            {actionText}
+            {finalActionText}
           </Button>
         </DialogFooter>
       </DialogContent>

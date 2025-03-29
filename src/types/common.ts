@@ -14,7 +14,7 @@ export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 export type ServiceDeliveryType = 'direct' | 'contractor' | 'mixed';
 
 // Employment types
-export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract';
+export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
 
 // Employee levels for award calculations
 export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;

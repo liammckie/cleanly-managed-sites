@@ -2,8 +2,7 @@
 /**
  * Type mapping utilities for translating between different representations of the same data
  */
-import { EmploymentType } from '@/types/common';
-import { QuoteStatus } from '@/types/common';
+import { EmploymentType, QuoteStatus } from '@/types/common';
 
 /**
  * Maps internal employment type values to external API values
@@ -12,7 +11,8 @@ export const employmentTypeToApi: Record<EmploymentType, string> = {
   'full-time': 'full-time',
   'part-time': 'part-time',
   'casual': 'casual',
-  'contract': 'contract'
+  'contract': 'contract',
+  'intern': 'intern'
 };
 
 /**
@@ -30,6 +30,8 @@ export const apiToEmploymentType = (apiValue: string): EmploymentType => {
       return 'casual';
     case 'contract':
       return 'contract';
+    case 'intern':
+      return 'intern';
     default:
       return 'casual'; // Default value
   }

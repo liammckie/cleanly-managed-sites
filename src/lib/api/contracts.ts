@@ -1,8 +1,10 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { extractContractData, normalizeContractData } from '@/lib/utils/contractDataUtils';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 import { SiteRecord } from '@/lib/types';
 import { isAfter, isBefore, parseISO, addMonths, isValid } from 'date-fns';
+import { adaptContractDetailsToDb } from './contracts/adaptContractTypes';
 
 interface ContractFilters {
   status?: string;
@@ -108,8 +110,15 @@ export async function fetchContractHistory(siteId: string) {
  */
 export async function updateSiteContract(siteId: string, contractDetails: ContractDetails) {
   try {
+    // Adapt contract details to DB format with renewal period as string
+    const adaptedDetails = adaptContractDetailsToDb(contractDetails);
+    
     // Normalize contract data before saving
-    const normalizedContract = normalizeContractData(contractDetails);
+    const normalizedContract = normalizeContractData({
+      ...contractDetails,
+      // Ensure renewal period is a string
+      renewalPeriod: contractDetails.renewalPeriod?.toString()
+    });
     
     const { data, error } = await supabase
       .from('sites')

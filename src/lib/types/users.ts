@@ -20,3 +20,13 @@ export interface UserRoleSummary {
 export interface UserProfileWithRole extends UserRoleType {
   role?: UserRoleType;
 }
+
+// Define UserStatus type since it's missing
+export type UserStatus = "active" | "pending" | "inactive";
+
+export interface UserPermission {
+  id: string;
+  name: string;
+  description?: string;
+  module: string;
+}

@@ -4,7 +4,7 @@ import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { UserRole } from '@/lib/api/users';
+import { UserRole } from '@/types/db';
 import { PlusCircle, Edit, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -96,7 +96,7 @@ export default function UserRolesList() {
                     <TableCell>
                       <Badge variant="outline">
                         <Users className="h-3 w-3 mr-1" />
-                        {role.user_count || 0}
+                        {(role as any).user_count || 0}
                       </Badge>
                     </TableCell>
                     <TableCell className="space-x-2">
