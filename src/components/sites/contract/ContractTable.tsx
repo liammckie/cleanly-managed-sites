@@ -1,16 +1,9 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Contract } from '@/lib/types';
+import { Contract } from '@/lib/types/contractTypes';
 
 interface ContractTableProps {
   contracts: Contract[];
@@ -35,30 +28,28 @@ export function ContractTable({ contracts }: ContractTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contracts.map((contract) => {
-            return (
-              <TableRow key={contract.id}>
-                <TableCell className="font-medium">{contract.siteName}</TableCell>
-                <TableCell>{contract.clientName}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {contract.contractNumber}
-                </TableCell>
-                <TableCell className="text-right">
-                  ${contract.monthlyRevenue?.toLocaleString() || '0'}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {contract.endDate ? 
-                    format(new Date(contract.endDate), 'dd/MM/yyyy') : 
-                    'N/A'}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getStatusVariant(contract.status)}>
-                    {contract.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {contracts.map((contract) => (
+            <TableRow key={contract.id}>
+              <TableCell className="font-medium">{contract.siteName}</TableCell>
+              <TableCell>{contract.clientName}</TableCell>
+              <TableCell className="hidden md:table-cell">
+                {contract.contract_number}
+              </TableCell>
+              <TableCell className="text-right">
+                ${contract.monthly_revenue?.toLocaleString() || '0'}
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                {contract.end_date ? 
+                  format(new Date(contract.end_date), 'dd/MM/yyyy') : 
+                  'N/A'}
+              </TableCell>
+              <TableCell>
+                <Badge variant={getStatusVariant(contract.status)}>
+                  {contract.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </div>
@@ -80,3 +71,4 @@ function getStatusVariant(status: string): "default" | "success" | "destructive"
       return 'default';
   }
 }
+
