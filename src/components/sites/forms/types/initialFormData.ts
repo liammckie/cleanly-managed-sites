@@ -1,7 +1,7 @@
 
 import { SiteFormData } from './siteFormData';
+import { SiteStatus } from '@/types/common';
 
-// Create initial form data for new site creation
 export function getInitialFormData(): SiteFormData {
   return {
     name: '',
@@ -9,48 +9,40 @@ export function getInitialFormData(): SiteFormData {
     city: '',
     state: '',
     postalCode: '',
+    postcode: '',  // Include both for compatibility
     country: 'Australia',
-    status: 'active',
-    phone: '',
-    email: '',
-    representative: '',
-    customId: '',
+    status: 'pending' as SiteStatus,
+    siteId: '',
     contacts: [],
-    contractDetails: {
+    contract_details: {
       contractNumber: '',
       startDate: '',
       endDate: '',
       autoRenewal: false,
-      renewalPeriod: '12',
+      renewalPeriod: '12 months',
       renewalNoticeDays: 30,
-      terminationPeriod: '30 days'
+      terminationPeriod: '30 days',
+      billingCycle: 'monthly',
+      serviceFrequency: 'weekly',
+      serviceDeliveryMethod: 'on-site',
+      terms: []
     },
     billingDetails: {
-      billingFrequency: 'monthly',
-      billingLines: []
+      billingLines: [],
+      useClientInfo: false,
+      billingMethod: '',
+      paymentTerms: '',
+      billingEmail: '',
+      billingAddress: {
+        line1: '',
+        city: '',
+        state: '',
+        postcode: '',
+        country: 'Australia'
+      },
+      serviceDeliveryType: 'direct',
+      contacts: []
     },
-    subcontractors: [],
-    replenishables: {
-      stock: [],
-      supplies: [],
-      notes: ''
-    },
-    periodicals: {
-      items: []
-    },
-    securityDetails: {
-      alarmCode: '',
-      keyLocation: '',
-      accessNotes: ''
-    },
-    jobSpecifications: {
-      daysPerWeek: 5,
-      hoursPerDay: 8,
-      directEmployees: 0,
-      cleaningFrequency: 'daily',
-      serviceDays: '',
-      serviceTime: '',
-      scopeNotes: ''
-    }
+    subcontractors: []
   };
 }

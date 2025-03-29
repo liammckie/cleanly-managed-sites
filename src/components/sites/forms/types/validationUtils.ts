@@ -1,79 +1,42 @@
-
 import { SiteFormData } from './siteFormData';
 
-export interface FormValidationErrors {
-  name?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-  clientId?: string;
-  status?: string;
-  [key: string]: string | undefined;
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
 }
 
-// Alias for backward compatibility
-export type SiteFormValidationErrors = FormValidationErrors;
+export const validateBasicInfo = (formData: SiteFormData): boolean => {
+  return !!(formData.name && formData.address && formData.city && formData.state);
+};
 
-export function validateBasicInfo(formData: Partial<SiteFormData>): FormValidationErrors {
-  const errors: FormValidationErrors = {};
-
-  if (!formData.name?.trim()) {
-    errors.name = 'Site name is required';
-  }
-
-  if (!formData.address?.trim()) {
-    errors.address = 'Address is required';
-  }
-
-  if (!formData.city?.trim()) {
-    errors.city = 'City is required';
-  }
-
-  if (!formData.state?.trim()) {
-    errors.state = 'State is required';
-  }
-
-  if (!formData.postalCode?.trim()) {
-    errors.postalCode = 'Postal code is required';
-  }
-
-  if (!formData.client_id) {
-    errors.clientId = 'Client is required';
-  }
-
-  return errors;
-}
-
-export function validateContacts(formData: Partial<SiteFormData>): FormValidationErrors {
-  const errors: FormValidationErrors = {};
+export const validateSiteForm = (formData: SiteFormData): ValidationResult => {
+  const errors: string[] = [];
   
-  if (!formData.contacts || formData.contacts.length === 0) {
-    errors.contacts = 'At least one contact is required';
+  // Basic information validation
+  if (!formData.name) {
+    errors.push('Site name is required');
   }
   
-  return errors;
-}
-
-export function validateContractDetails(formData: Partial<SiteFormData>): FormValidationErrors {
-  const errors: FormValidationErrors = {};
-  
-  if (!formData.contract_details?.startDate) {
-    errors.contractStartDate = 'Contract start date is required';
+  if (!formData.address) {
+    errors.push('Address is required');
   }
   
-  return errors;
-}
-
-export function validateSiteForm(formData: Partial<SiteFormData>): FormValidationErrors {
-  const basicErrors = validateBasicInfo(formData);
-  const contactErrors = validateContacts(formData);
-  const contractErrors = validateContractDetails(formData);
+  if (!formData.city) {
+    errors.push('City is required');
+  }
+  
+  if (!formData.state) {
+    errors.push('State is required');
+  }
+  
+  if (!formData.postalCode && !formData.postcode) {
+    errors.push('Postal code is required');
+  }
+  
+  // Add more validation as needed for other sections
   
   return {
-    ...basicErrors,
-    ...contactErrors,
-    ...contractErrors
+    isValid: errors.length === 0,
+    errors
   };
-}
+};

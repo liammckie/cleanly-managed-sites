@@ -21,45 +21,34 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        // Using a raw query with PostgreSQL to avoid type issues
-        // The contract_activities table exists in the database but not in the TypeScript definitions
-        let { data, error: apiError } = await supabase
-          .rpc('get_contract_activities', {
-            contract_id_param: contractIdString || null,
-            limit_param: limit
-          });
-
-        if (apiError) {
-          // Fallback if RPC doesn't exist, use direct query
-          const query = supabase
-            .from('contract_activities')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(limit || 20);
-          
-          // Only filter by contract_id if it's provided
-          if (contractIdString) {
-            query.eq('contract_id', contractIdString);
-          }
-
-          const result = await query;
-          
-          if (result.error) throw new Error(result.error.message);
-          data = result.data;
+        // Using a direct query since we likely don't have an RPC for this
+        const query = supabase
+          .from('contract_activities')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(limit || 20);
+        
+        // Only filter by contract_id if it's provided
+        if (contractIdString) {
+          query.eq('contract_id', contractIdString);
         }
 
+        const { data, error: queryError } = await query;
+        
+        if (queryError) throw new Error(queryError.message);
+        
         // Map the raw data to our ContractActivity type
         const mappedActivities: ContractActivity[] = (data || []).map(item => ({
           id: item.id,
           contractId: item.contract_id,
           contract_id: item.contract_id,
-          action: item.activity_type, // Map activity_type to action
+          action: item.activity_type, 
           activity_type: item.activity_type,
-          timestamp: item.created_at, // Map created_at to timestamp
+          timestamp: item.created_at,
           created_at: item.created_at,
-          userName: item.metadata?.user_name || 'System', // Get user name from metadata
+          userName: item.user_name || 'System',
           created_by: item.created_by,
-          details: item.metadata || {}, // Map metadata to details
+          details: item.details || {},
           metadata: item.metadata || {},
           description: item.description || ''
         }));
@@ -87,7 +76,9 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
           contract_id: contractIdString,
           activity_type: activity.action || activity.activity_type,
           description: activity.description || '',
-          metadata: activity.metadata || activity.details || {}
+          details: activity.details || {},
+          metadata: activity.metadata || {},
+          user_name: activity.userName || 'System'
         })
         .select()
         .single();
@@ -103,9 +94,9 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
         activity_type: data.activity_type,
         timestamp: data.created_at,
         created_at: data.created_at,
-        userName: data.metadata?.user_name || 'System',
+        userName: data.user_name || 'System',
         created_by: data.created_by || null,
-        details: data.metadata || {},
+        details: data.details || {},
         metadata: data.metadata || {},
         description: data.description || ''
       };

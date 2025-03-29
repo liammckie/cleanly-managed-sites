@@ -1,67 +1,96 @@
 
-import React from 'react';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { SiteFormData } from './types/siteFormData';
+import { siteFormSteps } from './siteFormConfig';
 
-interface SiteFormStepperProps {
-  step: number;
-  setStep: (step: number) => void;
-  validateStep?: (step: number) => boolean;
-  completionPercentage: number;
+export interface SiteFormStepperProps {
+  formData: SiteFormData;
+  onChange: <K extends keyof SiteFormData>(field: K, value: SiteFormData[K]) => void; 
+  onNestedChange: (section: string, field: string, value: any) => void;
+  onDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
+  mode: 'create' | 'edit';
 }
 
-export function SiteFormStepper({ 
-  step, 
-  setStep, 
-  validateStep,
-  completionPercentage
-}: SiteFormStepperProps) {
-  const steps = [
-    'Basic Info',
-    'Contacts',
-    'Contract',
-    'Billing',
-    'Subcontractors',
-    'Specifications',
-    'Additional'
-  ];
+export const SiteFormStepper: React.FC<SiteFormStepperProps> = ({
+  formData,
+  onChange,
+  onNestedChange,
+  onDoubleNestedChange,
+  mode
+}) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const totalSteps = siteFormSteps.length;
 
-  const handleStepClick = (newStep: number) => {
-    // Don't allow skipping ahead if validation is required
-    if (newStep > step && validateStep) {
-      const isValid = validateStep(step);
-      if (!isValid) return;
+  const goToNextStep = () => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(prev => prev + 1);
     }
-    setStep(newStep);
   };
 
+  const goToPrevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const CurrentStepComponent = siteFormSteps[currentStep].component;
+
   return (
-    <div className="mb-8 space-y-4">
-      <div className="flex justify-between">
-        <h2 className="text-lg font-semibold">
-          Step {step + 1}: {steps[step]}
+    <div className="space-y-8">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-xl font-semibold">
+          {siteFormSteps[currentStep].title}
         </h2>
-        <span className="text-sm text-muted-foreground">
-          {completionPercentage}% Complete
-        </span>
+        <div className="text-sm text-muted-foreground">
+          Step {currentStep + 1} of {totalSteps}
+        </div>
       </div>
-      
-      <Progress value={completionPercentage} className="h-2" />
-      
-      <div className="flex flex-wrap gap-2">
-        {steps.map((stepName, index) => (
-          <Button
-            key={index}
-            variant={index === step ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleStepClick(index)}
-            className="rounded-full"
+
+      <div className="mb-8">
+        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-primary h-full transition-all duration-300"
+            style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+          ></div>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <CurrentStepComponent 
+          formData={formData}
+          handleChange={onChange}
+          handleNestedChange={onNestedChange}
+          handleDoubleNestedChange={onDoubleNestedChange}
+        />
+      </div>
+
+      <div className="flex justify-between">
+        <button
+          type="button"
+          onClick={goToPrevStep}
+          disabled={currentStep === 0}
+          className="px-4 py-2 border rounded text-gray-700 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        
+        {currentStep < totalSteps - 1 ? (
+          <button
+            type="button"
+            onClick={goToNextStep}
+            className="px-4 py-2 bg-primary text-white rounded"
           >
-            {index + 1}
-          </Button>
-        ))}
+            Next
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="px-4 py-2 bg-primary text-white rounded"
+          >
+            {mode === 'create' ? 'Create Site' : 'Save Changes'}
+          </button>
+        )}
       </div>
     </div>
   );
-}
+};

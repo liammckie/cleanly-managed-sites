@@ -1,38 +1,70 @@
 
-import { useMutation } from '@tanstack/react-query';
-import { sitesApi } from '@/lib/api/sites';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { SiteRecord } from '@/lib/types';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { ServiceDeliveryType } from '@/types/common';
+import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
-export function useSiteUpdate() {
-  // Create the mutation
-  const mutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: SiteFormData }) => {
-      // Handle billing details type casting to ensure serviceDeliveryType is "direct" or "contractor"
-      if (data.billingDetails?.serviceDeliveryType) {
-        data.billingDetails.serviceDeliveryType = 
-          data.billingDetails.serviceDeliveryType === 'contractor' 
-            ? 'contractor' as ServiceDeliveryType 
-            : 'direct' as ServiceDeliveryType;
-      }
-      
-      return await sitesApi.updateSite(id, data);
-    },
-    onSuccess: () => {
-      toast.success('Site updated successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Error updating site: ${error.message}`);
+interface UpdateSiteParams {
+  id: string;
+  data: SiteFormData;
+}
+
+export function useSiteUpdate(id?: string) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const updateSite = async (params: UpdateSiteParams) => {
+    const siteId = id || params.id;
+    if (!siteId) {
+      throw new Error("Site ID is required for updates");
     }
-  });
-
-  return {
-    updateSite: mutation.mutate,
-    isUpdating: mutation.isPending,
-    error: mutation.error,
-    // Add back updateSiteMutation for compatibility with existing code
-    updateSiteMutation: mutation  
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const formData = params.data;
+      
+      const updateData = {
+        name: formData.name,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postcode: formData.postalCode || formData.postcode,
+        country: formData.country,
+        status: formData.status,
+        email: formData.email,
+        phone: formData.phone,
+        contract_details: formData.contract_details || {},
+        billing_details: formData.billingDetails || {},
+        // Additional fields as needed
+      };
+      
+      const { data, error: updateError } = await supabase
+        .from('sites')
+        .update(updateData)
+        .eq('id', siteId)
+        .select()
+        .single();
+        
+      if (updateError) throw new Error(updateError.message);
+      
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error during site update';
+      setError(new Error(errorMessage));
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const updateSiteMutation = {
+    mutateAsync: updateSite,
+    isLoading,
+    error
+  };
+
+  return { updateSite, updateSiteMutation };
 }

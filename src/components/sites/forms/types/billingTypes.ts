@@ -1,5 +1,5 @@
 
-import { BillingLine, BillingContact, BillingAddress, BillingDetails } from '@/types/models';
+import { BillingLine, BillingContact, BillingDetails } from '@/types/models';
 
 // Define a standardized BillingAddress interface
 export interface BillingAddress {
@@ -9,10 +9,7 @@ export interface BillingAddress {
   state: string;
   postcode: string;
   country?: string;
-  // Aliases for compatibility with existing code
-  street?: string;
-  postalCode?: string;
 }
 
 // Re-export the types correctly for TypeScript with isolatedModules
-export type { BillingLine, BillingContact, BillingAddress, BillingDetails };
+export type { BillingLine, BillingContact, BillingDetails };

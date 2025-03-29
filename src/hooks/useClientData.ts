@@ -1,73 +1,50 @@
 
 import { useState, useEffect } from 'react';
-import { stringToAddressObject } from '@/utils/typeAdapters';
-import { ClientRecord } from '@/lib/types';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { supabase } from '@/lib/supabase';
+import { BillingAddress } from '@/components/sites/forms/types/billingTypes';
 
-export const useClientData = (clientId?: string, fetchOnMount = true) => {
-  const [client, setClient] = useState<ClientRecord | null>(null);
-  const [loading, setLoading] = useState(false);
+export function useClientData(clientId?: string) {
+  const [clientData, setClientData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (fetchOnMount && clientId) {
-      fetchClient(clientId);
-    }
-  }, [clientId, fetchOnMount]);
+    if (!clientId) return;
 
-  const fetchClient = async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Implementation will depend on your API/data layer
-      // For now we'll just mock it
-      const clientData = { id, name: 'Sample Client' } as ClientRecord;
-      setClient(clientData);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch client'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchClientData = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('id', clientId)
+          .single();
 
-  const populateSiteForm = (setSiteForm: React.Dispatch<React.SetStateAction<SiteFormData>>) => {
-    if (!client) return;
+        if (fetchError) throw new Error(fetchError.message);
 
-    setSiteForm((prev) => {
-      // Create a proper billingDetails object that matches the expected type
-      const billingDetails: BillingDetails = {
-        billingAddress: {
-          street: client.address || '',
-          city: client.city || '',
-          state: client.state || '',
-          postcode: client.postcode || '',
-          country: 'Australia'
-        },
-        billingEmail: client.email || '',
-        contacts: [],
-        useClientInfo: true,
-        billingMethod: '',
-        paymentTerms: '',
-        billingLines: []
-      };
+        // Format billing address correctly
+        const billingAddress: BillingAddress = {
+          line1: data.address || '',
+          city: data.city || '',
+          state: data.state || '',
+          postcode: data.postcode || '',
+          country: data.country || 'Australia'
+        };
 
-      return {
-        ...prev,
-        client_id: client.id,
-        client_name: client.name,
-        billingDetails
-      };
-    });
-  };
+        setClientData({
+          ...data,
+          billingAddress
+        });
+      } catch (err) {
+        console.error('Error fetching client data:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch client data'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  return {
-    client,
-    loading,
-    error,
-    fetchClient,
-    populateSiteForm
-  };
-};
+    fetchClientData();
+  }, [clientId]);
 
-export default useClientData;
+  return { clientData, isLoading, error };
+}

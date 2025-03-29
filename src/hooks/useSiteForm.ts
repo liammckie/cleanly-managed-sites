@@ -1,6 +1,7 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
 import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
@@ -28,7 +29,6 @@ export interface UseSiteFormReturn {
 
 export function useSiteForm(initialData: Partial<SiteFormData> = {}, mode: 'create' | 'edit' = 'create'): UseSiteFormReturn {
   const navigate = useNavigate();
-  const { toast } = useToast();
   
   // Extract siteId from initialData if it exists
   const siteId = initialData.siteId || '';
@@ -43,7 +43,7 @@ export function useSiteForm(initialData: Partial<SiteFormData> = {}, mode: 'crea
   const [errors, setErrors] = useState<string[]>([]);
   
   const { createSite } = useSiteCreate();
-  const { updateSite } = useSiteUpdate(siteId);
+  const { updateSite } = useSiteUpdate();
 
   const handleChange = useCallback(<K extends keyof SiteFormData>(field: K, value: SiteFormData[K]) => {
     setFormData(prev => ({
@@ -147,7 +147,7 @@ export function useSiteForm(initialData: Partial<SiteFormData> = {}, mode: 'crea
       const validationResult = validateSiteForm(formData);
       
       if (!validationResult.isValid) {
-        setErrors(validationResult.errors);
+        setErrors(validationResult.errors || []);
         setIsSubmitting(false);
         return;
       }
@@ -155,20 +155,15 @@ export function useSiteForm(initialData: Partial<SiteFormData> = {}, mode: 'crea
       if (mode === 'create') {
         const result = await createSite(formData);
         if (result?.id) {
-          toast({
-            title: "Site Created",
-            description: `${formData.name} has been successfully created.`,
-            variant: "success" as any
-          });
+          toast.success(`${formData.name} has been successfully created.`);
           navigate(`/sites/${result.id}`);
         }
-      } else {
-        const result = await updateSite(formData);
-        toast({
-          title: "Site Updated",
-          description: `${formData.name} has been successfully updated.`,
-          variant: "success" as any
+      } else if (siteId) {
+        const result = await updateSite({
+          id: siteId,
+          data: formData
         });
+        toast.success(`${formData.name} has been successfully updated.`);
       }
     } catch (error) {
       console.error('Error saving site:', error);

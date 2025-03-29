@@ -1,5 +1,15 @@
 
-import { UserProfileWithRole, UserRole, UserRoleObject } from '@/types/models';
+import { UserProfileWithRole, UserRoleObject } from '@/types/models';
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+  user_count: number;
+}
 
 export function adaptUserRole(dbRole: any): UserRole {
   return {
