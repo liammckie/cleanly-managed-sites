@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { ContractDetails, BillingDetails } from '@/components/sites/forms/types/siteFormData';
+import { ContractDetails, BillingDetails } from '@/components/sites/forms/types/index';
 
 export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
   const [formState, setFormState] = useState<SiteFormData>({
@@ -10,13 +10,14 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     city: '',
     state: '',
     postcode: '',
+    country: 'Australia',
     client_id: '',
     representative: '',
     status: 'active',
     phone: '',
     email: '',
     custom_id: '',
-    contractDetails: {
+    contract_details: {
       contractNumber: '',
       startDate: '',
       endDate: '',
@@ -28,6 +29,7 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     billingDetails: {
       billingLines: [],
     },
+    contacts: [],
     ...initialData
   });
 
@@ -38,8 +40,8 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
   const updateContractDetails = (updates: Partial<ContractDetails>) => {
     setFormState(prev => ({
       ...prev,
-      contractDetails: {
-        ...prev.contractDetails,
+      contract_details: {
+        ...prev.contract_details,
         ...updates
       }
     }));
@@ -55,7 +57,6 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     }));
   };
 
-  // For backward compatibility
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     updateForm({ [name]: value } as any);
@@ -86,6 +87,34 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     updateForm({ [parentKey]: updatedParent } as any);
   };
 
+  const resetForm = () => setFormState({
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    postcode: '',
+    country: 'Australia',
+    client_id: '',
+    representative: '',
+    status: 'active',
+    phone: '',
+    email: '',
+    custom_id: '',
+    contract_details: {
+      contractNumber: '',
+      startDate: '',
+      endDate: '',
+      autoRenewal: false,
+      terminationPeriod: '',
+      renewalTerms: '',
+      status: 'active',
+    },
+    billingDetails: {
+      billingLines: [],
+    },
+    contacts: [],
+  });
+
   return {
     formState,
     updateForm,
@@ -98,30 +127,6 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    resetForm: () => setFormState({
-      name: '',
-      address: '',
-      city: '',
-      state: '',
-      postcode: '',
-      client_id: '',
-      representative: '',
-      status: 'active',
-      phone: '',
-      email: '',
-      custom_id: '',
-      contractDetails: {
-        contractNumber: '',
-        startDate: '',
-        endDate: '',
-        autoRenewal: false,
-        terminationPeriod: '',
-        renewalTerms: '',
-        status: 'active',
-      },
-      billingDetails: {
-        billingLines: [],
-      },
-    })
+    resetForm
   };
 };

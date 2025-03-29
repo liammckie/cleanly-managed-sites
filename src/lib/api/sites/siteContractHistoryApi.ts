@@ -50,14 +50,12 @@ export const contractHistoryApi = {
     notes?: string
   ): Promise<ContractHistoryEntry> {
     try {
-      // Since version_number is required but auto-managed by a trigger, we need to provide a dummy value
-      // The actual number will be set by the database trigger
-      const entry: Partial<ContractHistoryEntry> = {
+      // Since version_number is managed by a database trigger, we don't need to provide it here
+      const entry = {
         site_id: siteId,
         contract_details: contractDetails,
         notes,
         created_by: (await supabase.auth.getUser()).data.user?.id,
-        version_number: 1 // This will be overwritten by the database trigger
       };
 
       const { data, error } = await supabase
@@ -79,4 +77,5 @@ export const contractHistoryApi = {
   }
 };
 
+// Export the type for use in other files
 export type { ContractHistoryEntry };

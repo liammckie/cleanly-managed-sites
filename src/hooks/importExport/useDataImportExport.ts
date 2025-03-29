@@ -56,8 +56,11 @@ export function useDataImportExport() {
       
       toast.success('Test data generated successfully');
       setIsGenerated(true);
+      
+      return { success: true };
     } catch (error: any) {
       toast.error(`Failed to generate test data: ${error.message}`);
+      return { success: false, error: error.message };
     } finally {
       setIsGenerating(false);
     }

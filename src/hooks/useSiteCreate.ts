@@ -23,14 +23,14 @@ export function useSiteCreate() {
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        postcode: formData.postcode,
+        postcode: formData.postcode || formData.postalCode,
         status: formData.status,
         client_id: formData.client_id,
         representative: formData.representative,
         phone: formData.phone,
         email: formData.email,
-        custom_id: formData.custom_id,
-        contract_details: formData.contractDetails,
+        custom_id: formData.custom_id || formData.customId,
+        contract_details: formData.contract_details || formData.contractDetails,
         billing_details: formData.billingDetails,
         user_id: user.id
       };
