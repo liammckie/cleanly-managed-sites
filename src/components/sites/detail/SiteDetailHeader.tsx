@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,24 +13,8 @@ import { BadgeVariant } from '@/types/ui';
 
 interface SiteDetailHeaderProps {
   site: SiteRecord;
-  actions: any;
   isLoading: boolean;
 }
-
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'active':
-      return 'success';
-    case 'inactive':
-      return 'secondary';
-    case 'pending':
-      return 'warning';
-    case 'on-hold':
-      return 'destructive';
-    default:
-      return 'secondary';
-  }
-};
 
 const SiteDetailHeaderSkeleton = () => (
   <Card className="mb-6">
@@ -49,7 +34,7 @@ const SiteDetailHeaderSkeleton = () => (
   </Card>
 );
 
-export default function SiteDetailHeader({ site, actions, isLoading }: SiteDetailHeaderProps) {
+export const SiteDetailHeader = ({ site, isLoading }: SiteDetailHeaderProps) => {
   if (isLoading) {
     return <SiteDetailHeaderSkeleton />;
   }
@@ -69,12 +54,10 @@ export default function SiteDetailHeader({ site, actions, isLoading }: SiteDetai
     }
   };
 
-  const contractStartDate = getContractField(site?.contract_details, 'startDate', '');
-  const contractEndDate = getContractField(site?.contract_details, 'endDate', '');
+  const contractStartDate = getContractField(site?.contract_details, 'startDate');
+  const contractEndDate = getContractField(site?.contract_details, 'endDate');
 
   const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details, 60);
-
-  const statusColor = getStatusColor(site?.status || 'inactive');
 
   return (
     <Card className="mb-6">
@@ -112,3 +95,6 @@ export default function SiteDetailHeader({ site, actions, isLoading }: SiteDetai
     </Card>
   );
 };
+
+// Export default for backward compatibility
+export default SiteDetailHeader;
