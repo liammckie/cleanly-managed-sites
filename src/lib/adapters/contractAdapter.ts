@@ -1,12 +1,11 @@
 
-import { mapToDb, mapFromDb } from '../mappers';
-import { Contract } from '@/types/db';
+import { Contract, DbContract, ContractDetails } from '@/lib/types/contracts';
 
 /**
  * Convert a contract object from API/DB format to frontend format
  */
-export const adaptContractToFrontend = (contract: any) => {
-  const frontendContract = {
+export const adaptContractToFrontend = (contract: DbContract | any): Contract => {
+  return {
     id: contract.id,
     siteId: contract.site_id,
     clientId: contract.client_id,
@@ -29,16 +28,14 @@ export const adaptContractToFrontend = (contract: any) => {
     createdAt: contract.created_at,
     updatedAt: contract.updated_at,
     status: contract.status,
-    type: contract.type
+    contractType: contract.contract_type || contract.type
   };
-  
-  return frontendContract;
 };
 
 /**
  * Convert a contract object from frontend format to API/DB format
  */
-export const adaptContractToDb = (contract: any) => {
+export const adaptContractToDb = (contract: Contract | any): DbContract => {
   return {
     id: contract.id,
     site_id: contract.siteId,
@@ -47,6 +44,7 @@ export const adaptContractToDb = (contract: any) => {
     start_date: contract.startDate,
     end_date: contract.endDate,
     value: contract.value,
+    monthly_revenue: contract.monthlyRevenue,
     contract_details: contract.contractDetails,
     auto_renewal: contract.autoRenewal,
     renewal_period: contract.renewalPeriod,
@@ -59,7 +57,7 @@ export const adaptContractToDb = (contract: any) => {
     created_at: contract.createdAt,
     updated_at: contract.updatedAt,
     status: contract.status,
-    type: contract.type
+    contract_type: contract.contractType || contract.type
   };
 };
 
@@ -67,14 +65,52 @@ export const adaptContractToDb = (contract: any) => {
  * Convert contract details object to format suitable for storing in the database
  */
 export const adaptContractDetailsToDb = (contractDetails: any) => {
-  return mapToDb(contractDetails);
+  return {
+    contractNumber: contractDetails.contractNumber,
+    startDate: contractDetails.startDate,
+    endDate: contractDetails.endDate,
+    autoRenewal: contractDetails.autoRenewal,
+    renewalPeriod: contractDetails.renewalPeriod,
+    renewalNoticeDays: contractDetails.renewalNoticeDays,
+    terminationPeriod: contractDetails.terminationPeriod,
+    renewalTerms: contractDetails.renewalTerms,
+    contractLength: contractDetails.contractLength,
+    contractLengthUnit: contractDetails.contractLengthUnit,
+    serviceFrequency: contractDetails.serviceFrequency,
+    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod,
+    contractType: contractDetails.contractType || contractDetails.type,
+    value: contractDetails.value,
+    billingCycle: contractDetails.billingCycle,
+    notes: contractDetails.notes,
+    status: contractDetails.status,
+  };
 };
 
 /**
  * Convert contract details from DB format to frontend format
  */
-export const adaptContractDetailsFromDb = (contractDetails: any) => {
-  return mapFromDb(contractDetails);
+export const adaptContractDetailsFromDb = (contractDetails: any): ContractDetails => {
+  if (!contractDetails) return {};
+  
+  return {
+    contractNumber: contractDetails.contractNumber,
+    startDate: contractDetails.startDate,
+    endDate: contractDetails.endDate,
+    autoRenewal: contractDetails.autoRenewal,
+    renewalPeriod: contractDetails.renewalPeriod,
+    renewalNoticeDays: contractDetails.renewalNoticeDays,
+    terminationPeriod: contractDetails.terminationPeriod,
+    renewalTerms: contractDetails.renewalTerms,
+    contractLength: contractDetails.contractLength,
+    contractLengthUnit: contractDetails.contractLengthUnit,
+    serviceFrequency: contractDetails.serviceFrequency,
+    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod,
+    contractType: contractDetails.contractType || contractDetails.type,
+    value: contractDetails.value,
+    billingCycle: contractDetails.billingCycle,
+    notes: contractDetails.notes,
+    status: contractDetails.status,
+  };
 };
 
 /**
@@ -83,3 +119,4 @@ export const adaptContractDetailsFromDb = (contractDetails: any) => {
 export const contractToDb = adaptContractToDb;
 export const dbToContract = adaptContractToFrontend;
 export const contractDetailsToDb = adaptContractDetailsToDb;
+export const contractDetailsFromDb = adaptContractDetailsFromDb;

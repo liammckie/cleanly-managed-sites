@@ -10,10 +10,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { ContractData } from '@/lib/types/contracts';
+import { Contract } from '@/lib/types';
 
 interface ContractTableProps {
-  contracts: ContractData[];
+  contracts: Contract[];
 }
 
 export function ContractTable({ contracts }: ContractTableProps) {
@@ -36,29 +36,19 @@ export function ContractTable({ contracts }: ContractTableProps) {
         </TableHeader>
         <TableBody>
           {contracts.map((contract) => {
-            let contractDetails = { contractNumber: 'N/A', endDate: null };
-            
-            // Safely extract contract details
-            if (contract.contract_details && typeof contract.contract_details === 'object') {
-              // Cast to any to avoid TypeScript errors
-              const details = contract.contract_details as any;
-              contractDetails.contractNumber = details.contractNumber || 'N/A';
-              contractDetails.endDate = details.endDate || null;
-            }
-            
             return (
               <TableRow key={contract.id}>
-                <TableCell className="font-medium">{contract.site_name}</TableCell>
-                <TableCell>{contract.client_name}</TableCell>
+                <TableCell className="font-medium">{contract.siteName}</TableCell>
+                <TableCell>{contract.clientName}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {contractDetails.contractNumber}
+                  {contract.contractNumber}
                 </TableCell>
                 <TableCell className="text-right">
-                  ${contract.monthly_revenue?.toLocaleString() || '0'}
+                  ${contract.monthlyRevenue?.toLocaleString() || '0'}
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {contractDetails.endDate ? 
-                    format(new Date(contractDetails.endDate), 'dd/MM/yyyy') : 
+                  {contract.endDate ? 
+                    format(new Date(contract.endDate), 'dd/MM/yyyy') : 
                     'N/A'}
                 </TableCell>
                 <TableCell>

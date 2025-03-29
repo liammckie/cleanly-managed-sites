@@ -8,5 +8,18 @@ export * from './common';
 export * from './exportTypes';
 export * from './importTypes';
 
-// Reexport the JSON type for convenience
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+// Re-export types from the contract adapter for backward compatibility
+export { 
+  adaptContractToFrontend, 
+  adaptContractToDb, 
+  adaptContractDetailsToDb, 
+  adaptContractDetailsFromDb 
+} from '@/lib/adapters/contractAdapter';
+
+// Re-export user adapter functions for backward compatibility
+export {
+  adaptUserFromDb,
+  adaptUserToDb,
+  adaptUserRoleFromDb,
+  adaptUserRoleToDb
+} from './users';

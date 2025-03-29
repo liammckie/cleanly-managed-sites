@@ -42,6 +42,19 @@ export interface SystemUser {
 }
 
 /**
+ * Database user role with permissions array (from database)
+ */
+export interface DbUserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[] | Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
+}
+
+/**
  * Convert database user to system user
  */
 export function adaptUserFromDb(dbUser: any): SystemUser {
@@ -59,7 +72,7 @@ export function adaptUserFromDb(dbUser: any): SystemUser {
     territories: dbUser.territories || [],
     status: dbUser.status || 'active',
     role_id: dbUser.role_id,
-    role: dbUser.role,
+    role: dbUser.role ? adaptUserRoleFromDb(dbUser.role) : undefined,
     created_at: dbUser.created_at,
     updated_at: dbUser.updated_at,
     last_login: dbUser.last_login,
@@ -68,7 +81,7 @@ export function adaptUserFromDb(dbUser: any): SystemUser {
 }
 
 /**
- * Adapter to convert system user to database format
+ * Convert system user to database format
  */
 export function adaptUserToDb(user: SystemUser): any {
   return {
@@ -89,5 +102,58 @@ export function adaptUserToDb(user: SystemUser): any {
     updated_at: user.updated_at,
     last_login: user.last_login,
     daily_summary: user.daily_summary
+  };
+}
+
+/**
+ * Convert database user role to frontend format
+ */
+export function adaptUserRoleFromDb(dbRole: DbUserRole): UserRole {
+  // Convert permissions array to permissions object for frontend
+  const permissionsObject: Record<string, boolean> = {};
+  
+  // If dbRole.permissions is an array, convert it to object
+  if (Array.isArray(dbRole.permissions)) {
+    dbRole.permissions.forEach(permission => {
+      permissionsObject[permission] = true;
+    });
+  } else if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
+    // If it's already an object, use it directly
+    Object.assign(permissionsObject, dbRole.permissions);
+  }
+  
+  return {
+    id: dbRole.id,
+    name: dbRole.name,
+    description: dbRole.description,
+    permissions: permissionsObject,
+    created_at: dbRole.created_at,
+    updated_at: dbRole.updated_at,
+    user_count: 'user_count' in dbRole ? (dbRole as any).user_count : undefined
+  };
+}
+
+/**
+ * Convert frontend user role to database format
+ */
+export function adaptUserRoleToDb(role: UserRole): DbUserRole {
+  // Convert permissions object to array for backend
+  const permissionsArray: string[] = [];
+  
+  // Extract all permissions set to true
+  Object.entries(role.permissions).forEach(([key, value]) => {
+    if (value) {
+      permissionsArray.push(key);
+    }
+  });
+  
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description || '',
+    permissions: permissionsArray,
+    created_at: role.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user_count: role.user_count
   };
 }

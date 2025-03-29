@@ -6,6 +6,7 @@ export interface ImportOptions {
   updateExisting?: boolean;
   dryRun?: boolean;
   type?: string;
+  format?: string;
 }
 
 export interface ImportResult {
