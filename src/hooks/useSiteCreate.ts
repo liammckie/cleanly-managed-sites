@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { Json } from '@/types/common';
 
 export function useSiteCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,15 +24,15 @@ export function useSiteCreate() {
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        postcode: formData.postcode || formData.postalCode,
+        postcode: formData.postalCode || formData.postcode,
         status: formData.status,
         client_id: formData.client_id,
         representative: formData.representative,
         phone: formData.phone,
         email: formData.email,
-        custom_id: formData.custom_id || formData.customId,
-        contract_details: formData.contract_details || formData.contractDetails,
-        billing_details: formData.billingDetails,
+        custom_id: formData.customId,
+        contract_details: formData.contractDetails || formData.contract_details as Json,
+        billing_details: formData.billingDetails as unknown as Json,
         user_id: user.id
       };
 

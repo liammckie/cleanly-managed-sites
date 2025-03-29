@@ -1,60 +1,83 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
+import { ContractHistoryEntry } from '@/types/contracts';
+import { Json } from '@/types/common';
 
 export const contractHistoryApi = {
+  async fetchContractHistory(siteId: string): Promise<ContractHistoryEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .select('*')
+        .eq('site_id', siteId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching contract history:', error);
+        throw new Error(error.message);
+      }
+
+      return data as ContractHistoryEntry[];
+    } catch (error) {
+      console.error('Failed to fetch contract history:', error);
+      throw error;
+    }
+  },
+
+  async getContractVersion(versionId: string): Promise<ContractHistoryEntry | null> {
+    try {
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .select('*')
+        .eq('id', versionId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching contract version:', error);
+        throw new Error(error.message);
+      }
+
+      return data as ContractHistoryEntry;
+    } catch (error) {
+      console.error('Failed to fetch contract version:', error);
+      throw error;
+    }
+  },
+
   async saveContractVersion(
     siteId: string,
-    contractDetails: any,
-    notes: string = ''
-  ): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Even though the version_number is automatically set by a database trigger,
-    // the TypeScript type requires us to provide it. We'll set it to 0 as a placeholder
-    // and the database trigger will override it with the correct value.
-    const { error } = await supabase
-      .from('site_contract_history')
-      .insert({
+    contractDetails: Json,
+    notes?: string
+  ): Promise<ContractHistoryEntry> {
+    try {
+      // Since version_number is managed by a database trigger, we don't provide it
+      const entry = {
         site_id: siteId,
         contract_details: contractDetails,
-        notes: notes,
-        created_by: user?.id,
-        version_number: 0  // This value will be overridden by the database trigger
-      });
+        notes,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        // Use a default version_number that will be replaced by the trigger
+        version_number: 1
+      };
 
-    if (error) {
-      console.error('Error saving contract history:', error);
+      const { data, error } = await supabase
+        .from('site_contract_history')
+        .insert(entry)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving contract version:', error);
+        throw new Error(error.message);
+      }
+
+      return data as ContractHistoryEntry;
+    } catch (error) {
+      console.error('Failed to save contract version:', error);
       throw error;
     }
-  },
-
-  async getContractHistory(siteId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('site_id', siteId)
-      .order('version_number', { ascending: false });
-
-    if (error) {
-      console.error(`Error fetching contract history for site ${siteId}:`, error);
-      throw error;
-    }
-
-    return data || [];
-  },
-
-  async getContractVersion(versionId: string): Promise<any> {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('id', versionId)
-      .single();
-
-    if (error) {
-      console.error(`Error fetching contract version ${versionId}:`, error);
-      throw error;
-    }
-
-    return data;
   }
 };
+
+// Export the type for use in other files
+export type { ContractHistoryEntry };

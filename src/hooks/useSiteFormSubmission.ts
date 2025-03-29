@@ -18,11 +18,9 @@ export function useSiteFormSubmission(siteId?: string) {
       if (siteId) {
         // Update existing site
         result = await updateSite({ id: siteId, data: formData });
-        toast.success('Site updated successfully');
       } else {
         // Create new site
         result = await createSite(formData);
-        toast.success('Site created successfully');
       }
       
       if (onSuccess) {
@@ -38,12 +36,8 @@ export function useSiteFormSubmission(siteId?: string) {
     }
   };
   
-  // For backward compatibility
-  const isCreating = !siteId && isSubmitting;
-  
   return { 
     handleSubmit, 
-    isSubmitting, 
-    isCreating 
+    isSubmitting 
   };
 }

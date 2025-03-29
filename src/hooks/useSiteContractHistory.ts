@@ -1,102 +1,78 @@
 
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { ContractHistoryEntry } from '@/types/contracts';
+import { useState, useEffect } from 'react';
+import { contractHistoryApi, ContractHistoryEntry } from '@/lib/api/sites/contractHistoryApi';
 import { Json } from '@/types/common';
+import { toast } from 'sonner';
 
-// Export the ContractHistoryEntry type for components to use
-export type { ContractHistoryEntry };
+export function useSiteContractHistory(siteId?: string) {
+  const [history, setHistory] = useState<ContractHistoryEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-// Define API functions for contract history
-export const contractHistoryApi = {
-  fetchContractHistory: async (siteId: string): Promise<ContractHistoryEntry[]> => {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('site_id', siteId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw new Error(`Error fetching contract history: ${error.message}`);
+  const fetchHistory = async () => {
+    if (!siteId) return;
+    
+    try {
+      setIsLoading(true);
+      setIsError(false);
+      
+      const data = await contractHistoryApi.fetchContractHistory(siteId);
+      setHistory(data);
+    } catch (error) {
+      console.error('Error fetching contract history:', error);
+      setIsError(true);
+      toast.error('Failed to load contract history');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return data as ContractHistoryEntry[];
-  },
+  useEffect(() => {
+    fetchHistory();
+  }, [siteId]);
 
-  getContractVersion: async (versionId: string): Promise<ContractHistoryEntry> => {
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .select('*')
-      .eq('id', versionId)
-      .single();
-
-    if (error) {
-      throw new Error(`Error fetching contract version: ${error.message}`);
+  const getContractVersion = async (versionId: string): Promise<ContractHistoryEntry | null> => {
+    try {
+      return await contractHistoryApi.getContractVersion(versionId);
+    } catch (error) {
+      console.error('Error fetching contract version:', error);
+      toast.error('Failed to load contract version');
+      return null;
     }
+  };
 
-    return data as ContractHistoryEntry;
-  },
-
-  saveContractVersion: async (
-    siteId: string,
+  const saveContractVersion = async (
     contractDetails: Json,
     notes?: string
-  ): Promise<ContractHistoryEntry> => {
-    // Since we need to let the database trigger handle version_number,
-    // we'll omit it from our insert and let the trigger handle it
-    const entry = {
-      site_id: siteId,
-      contract_details: contractDetails,
-      notes,
-      created_by: (await supabase.auth.getUser()).data.user?.id,
-    };
-
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .insert(entry)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Error saving contract version: ${error.message}`);
+  ): Promise<ContractHistoryEntry | null> => {
+    if (!siteId) return null;
+    
+    try {
+      const result = await contractHistoryApi.saveContractVersion(
+        siteId, 
+        contractDetails, 
+        notes
+      );
+      
+      // Refresh the history
+      fetchHistory();
+      
+      return result;
+    } catch (error) {
+      console.error('Error saving contract version:', error);
+      toast.error('Failed to save contract version');
+      return null;
     }
-
-    return data as ContractHistoryEntry;
-  }
-};
-
-export function useSiteContractHistory(siteId: string) {
-  const {
-    data: contractHistory,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['contractHistory', siteId],
-    queryFn: () => contractHistoryApi.fetchContractHistory(siteId),
-    enabled: !!siteId
-  });
-
-  const saveVersionMutation = useMutation({
-    mutationFn: (params: { 
-      contractDetails: Json; 
-      notes?: string 
-    }) => contractHistoryApi.saveContractVersion(
-      siteId, 
-      params.contractDetails, 
-      params.notes
-    ),
-    onSuccess: () => {
-      refetch();
-    }
-  });
+  };
 
   return {
-    contractHistory: contractHistory || [],
+    history,
     isLoading,
-    error: error as Error | null,
-    saveVersion: saveVersionMutation.mutate,
-    isSaving: saveVersionMutation.isPending,
-    refetch
+    isError,
+    fetchHistory,
+    getContractVersion,
+    saveContractVersion
   };
 }
+
+export type { ContractHistoryEntry };

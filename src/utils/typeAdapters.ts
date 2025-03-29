@@ -1,189 +1,270 @@
-import { QuoteStatus, Day, Frequency } from '@/types/common';
 
-// Type definitions
+import { ContractData, ContractDetails } from '@/types/contracts';
+import { Contract } from '@/types/db';
+import { EmploymentType } from '@/types/common';
+import { mapToDb, mapFromDb } from '@/lib/utils/mappers';
+
+// Define interface for overhead profiles
+export interface RawOverheadProfile {
+  id: string;
+  name: string;
+  labor_percentage: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface OverheadProfile {
   id: string;
   name: string;
   laborPercentage: number;
-  description?: string;
-}
-
-interface RawOverheadProfile {
-  id: string;
-  name: string;
-  labor_percentage: number;
-  description?: string;
-}
-
-export interface QuoteShift {
-  id: string;
-  quoteId: string;
-  day: Day;
-  startTime: string;
-  endTime: string;
-  breakDuration: number;
-  numberOfCleaners: number;
-  employmentType: string;
-  level: number;
-  allowances: string[];
-  estimatedCost: number;
-  location?: string;
-  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ApiQuote {
   id: string;
   name: string;
+  client_id?: string;
+  site_id?: string;
   client_name: string;
   site_name?: string;
-  status: string;
+  start_date?: string;
+  end_date?: string;
+  expiry_date?: string;
   overhead_percentage: number;
   margin_percentage: number;
+  status: string;
   total_price: number;
   labor_cost: number;
-  supplies_cost?: number;
-  equipment_cost?: number;
   subcontractor_cost: number;
+  margin_amount: number;
   created_at: string;
   updated_at: string;
-  // Other properties...
 }
 
 export interface FrontendQuote {
   id: string;
   name: string;
+  clientId?: string;
+  siteId?: string;
   clientName: string;
   siteName?: string;
-  status: QuoteStatus;
+  startDate?: string;
+  endDate?: string;
+  expiryDate?: string;
   overheadPercentage: number;
   marginPercentage: number;
+  status: string;
   totalPrice: number;
   laborCost: number;
-  suppliesCost?: number;
-  equipmentCost?: number;
   subcontractorCost: number;
+  marginAmount: number;
   createdAt: string;
   updatedAt: string;
-  // Other properties...
 }
 
-export interface UserRole {
-  id: string;
-  name: string;
-  description?: string;
-  permissions: Record<string, boolean>;
-}
+export type QuoteDTO = Partial<FrontendQuote>;
 
 export interface ApiUserRole {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   permissions: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
 }
 
-// Adapter functions
-export const adaptOverheadProfile = (profile: RawOverheadProfile): OverheadProfile => {
+// Contract adapters
+export function adaptContractToFrontend(contract: Contract): ContractData {
+  return {
+    id: contract.id,
+    site_id: contract.site_id,
+    client_id: contract.client_id,
+    contract_number: contract.contract_number,
+    start_date: contract.start_date,
+    end_date: contract.end_date,
+    value: contract.value,
+    auto_renewal: contract.auto_renewal,
+    renewal_period: contract.renewal_period,
+    renewal_notice_days: contract.renewal_notice_days,
+    termination_period: contract.termination_period,
+    billing_cycle: contract.billing_cycle,
+    contract_type: contract.contract_type,
+    service_frequency: contract.service_frequency,
+    service_delivery_method: contract.service_delivery_method,
+    created_at: contract.created_at,
+    updated_at: contract.updated_at,
+    notes: contract.notes,
+    status: contract.status
+  };
+}
+
+export function adaptContractToApi(details: ContractDetails): Contract {
+  return {
+    id: details.id || '',
+    site_id: '',  // This must be populated when using this function
+    contract_number: details.contractNumber,
+    start_date: details.startDate,
+    end_date: details.endDate,
+    auto_renewal: details.autoRenewal,
+    renewal_period: details.renewalPeriod,
+    renewal_notice_days: details.renewalNoticeDays,
+    termination_period: details.terminationPeriod,
+    billing_cycle: details.billingCycle,
+    service_frequency: details.serviceFrequency,
+    service_delivery_method: details.serviceDeliveryMethod,
+    value: details.value,
+    notes: details.notes,
+    created_at: '',  // Will be set by the database
+    updated_at: '',  // Will be set by the database
+    status: details.status,
+    contract_type: details.contractType
+  };
+}
+
+// Overhead profile adapters
+export function adaptOverheadProfile(profile: RawOverheadProfile): OverheadProfile {
   return {
     id: profile.id,
     name: profile.name,
     laborPercentage: profile.labor_percentage,
-    description: profile.description
+    createdAt: profile.created_at,
+    updatedAt: profile.updated_at
   };
-};
+}
 
-export const adaptQuote = (apiQuote: ApiQuote): FrontendQuote => {
+// Employment type adapter
+export function adaptEmploymentType(type: string): EmploymentType {
+  switch(type) {
+    case 'full_time':
+      return 'full-time';
+    case 'part_time':
+      return 'part-time';
+    case 'casual':
+      return 'casual';
+    default:
+      return 'full-time';
+  }
+}
+
+// Quote adapters
+export function adaptQuoteToFrontend(quote: ApiQuote): FrontendQuote {
   return {
-    id: apiQuote.id,
-    name: apiQuote.name,
-    clientName: apiQuote.client_name,
-    siteName: apiQuote.site_name,
-    status: apiQuote.status as QuoteStatus,
-    overheadPercentage: apiQuote.overhead_percentage,
-    marginPercentage: apiQuote.margin_percentage,
-    totalPrice: apiQuote.total_price,
-    laborCost: apiQuote.labor_cost,
-    suppliesCost: apiQuote.supplies_cost,
-    equipmentCost: apiQuote.equipment_cost,
-    subcontractorCost: apiQuote.subcontractor_cost,
-    createdAt: apiQuote.created_at,
-    updatedAt: apiQuote.updated_at
+    id: quote.id,
+    name: quote.name,
+    clientId: quote.client_id,
+    siteId: quote.site_id,
+    clientName: quote.client_name,
+    siteName: quote.site_name,
+    startDate: quote.start_date,
+    endDate: quote.end_date,
+    expiryDate: quote.expiry_date,
+    overheadPercentage: quote.overhead_percentage,
+    marginPercentage: quote.margin_percentage,
+    status: quote.status,
+    totalPrice: quote.total_price,
+    laborCost: quote.labor_cost,
+    subcontractorCost: quote.subcontractor_cost,
+    marginAmount: quote.margin_amount,
+    createdAt: quote.created_at,
+    updatedAt: quote.updated_at
   };
-};
+}
 
-export const adaptQuoteToFrontend = adaptQuote;
-
-export const adaptQuoteToApi = (frontendQuote: FrontendQuote): ApiQuote => {
+export function adaptQuoteToApi(quote: FrontendQuote): ApiQuote {
   return {
-    id: frontendQuote.id,
-    name: frontendQuote.name,
-    client_name: frontendQuote.clientName,
-    site_name: frontendQuote.siteName,
-    status: frontendQuote.status,
-    overhead_percentage: frontendQuote.overheadPercentage,
-    margin_percentage: frontendQuote.marginPercentage,
-    total_price: frontendQuote.totalPrice,
-    labor_cost: frontendQuote.laborCost,
-    supplies_cost: frontendQuote.suppliesCost,
-    equipment_cost: frontendQuote.equipmentCost,
-    subcontractor_cost: frontendQuote.subcontractorCost,
-    created_at: frontendQuote.createdAt,
-    updated_at: frontendQuote.updatedAt
+    id: quote.id,
+    name: quote.name,
+    client_id: quote.clientId,
+    site_id: quote.siteId,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    expiry_date: quote.expiryDate,
+    overhead_percentage: quote.overheadPercentage,
+    margin_percentage: quote.marginPercentage,
+    status: quote.status,
+    total_price: quote.totalPrice,
+    labor_cost: quote.laborCost,
+    subcontractor_cost: quote.subcontractorCost,
+    margin_amount: quote.marginAmount,
+    created_at: quote.createdAt,
+    updated_at: quote.updatedAt
   };
-};
+}
 
-export const adaptUserRole = (apiRole: ApiUserRole): UserRole => {
+// Helper function to handle address conversions
+export function stringToAddressObject(addressString: string) {
+  if (!addressString) return { street: '', city: '', state: '', postcode: '', country: 'Australia' };
+  
+  // Simple split by commas or attempt to parse the address
+  const parts = addressString.split(',').map(part => part.trim());
+  
   return {
-    id: apiRole.id,
-    name: apiRole.name,
-    description: apiRole.description,
-    permissions: apiRole.permissions
+    street: parts[0] || '',
+    city: parts[1] || '',
+    state: parts[2] || '',
+    postcode: parts[3] || '',
+    country: parts[4] || 'Australia'
   };
-};
+}
 
-export const adaptUserRoleToApi = (role: UserRole): ApiUserRole => {
+// User adapter functions
+export function adaptUserRole(role: any): ApiUserRole {
+  // Parse permissions from JSON if needed
+  let permissions: Record<string, boolean> = {};
+  if (typeof role.permissions === 'string') {
+    try {
+      permissions = JSON.parse(role.permissions);
+    } catch (e) {
+      permissions = {};
+    }
+  } else if (role.permissions && typeof role.permissions === 'object') {
+    permissions = role.permissions;
+  }
+
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description || '',
+    permissions,
+    created_at: role.created_at,
+    updated_at: role.updated_at,
+    user_count: role.user_count
+  };
+}
+
+export function adaptUserRoleToApi(role: ApiUserRole) {
   return {
     id: role.id,
     name: role.name,
     description: role.description,
-    permissions: role.permissions
+    permissions: role.permissions,
+    created_at: role.created_at,
+    updated_at: role.updated_at
   };
-};
+}
 
-export const adaptQuoteShift = (shift: any): QuoteShift => {
-  return {
-    id: shift.id,
-    quoteId: shift.quoteId || shift.quote_id,
-    day: shift.day as Day,
-    startTime: shift.startTime || shift.start_time,
-    endTime: shift.endTime || shift.end_time,
-    breakDuration: shift.breakDuration || shift.break_duration,
-    numberOfCleaners: shift.numberOfCleaners || shift.number_of_cleaners,
-    employmentType: shift.employmentType || shift.employment_type,
-    level: shift.level,
-    allowances: shift.allowances || [],
-    estimatedCost: shift.estimatedCost || shift.estimated_cost,
-    location: shift.location,
-    notes: shift.notes
-  };
-};
-
-export const adaptSystemUser = (user: any) => {
+export function adaptSystemUser(user: any) {
   return {
     id: user.id,
     email: user.email,
-    fullName: user.full_name,
-    firstName: user.first_name,
-    lastName: user.last_name,
+    firstName: user.first_name || '',
+    lastName: user.last_name || '',
+    fullName: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
     avatarUrl: user.avatar_url,
-    role: user.role,
-    status: user.status,
-    territories: user.territories || [],
-    title: user.title,
-    phone: user.phone,
+    roleId: user.role_id,
     createdAt: user.created_at,
     updatedAt: user.updated_at,
+    title: user.title || '',
+    phone: user.phone || '',
+    status: user.status || 'active',
     lastLogin: user.last_login,
-    customId: user.custom_id,
+    customId: user.custom_id || '',
+    note: user.note || '',
+    territories: user.territories || [],
     permissions: user.permissions || {}
   };
-};
+}

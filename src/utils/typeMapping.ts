@@ -1,30 +1,29 @@
 
-import { EmploymentType } from '@/types/common';
+import { EmployeeLevel, QuoteStatus } from '@/types/common';
 
-export function mapEmploymentType(type: string): EmploymentType {
-  switch (type.toLowerCase()) {
-    case 'full_time':
-    case 'full-time':
-      return 'full-time';
-    case 'part_time':
-    case 'part-time':
-      return 'part-time';
-    case 'casual':
-      return 'casual';
-    case 'contract':
-      return 'contract';
-    case 'intern':
-      return 'intern';
-    default:
-      return 'casual'; // Default fallback
+export function validateEmployeeLevel(level: number): EmployeeLevel {
+  if (level >= 1 && level <= 4) {
+    return level as EmployeeLevel;
+  }
+  return 1;
+}
+
+export function apiToQuoteStatus(status: string): QuoteStatus {
+  switch (status) {
+    case 'draft': return 'draft';
+    case 'sent': return 'sent';
+    case 'accepted': return 'accepted';
+    case 'rejected': return 'rejected';
+    case 'expired': return 'expired';
+    case 'in_progress': return 'in-progress';
+    case 'completed': return 'completed';
+    default: return 'draft';
   }
 }
 
-// Map employment type to database format
-export const employmentTypeToDatabaseFormat: Record<EmploymentType, string> = {
-  'full-time': 'full_time',
-  'part-time': 'part_time',
-  'casual': 'casual',
-  'contract': 'contract',
-  'intern': 'intern'
-};
+export function quoteStatusToApi(status: QuoteStatus): string {
+  switch (status) {
+    case 'in-progress': return 'in_progress';
+    default: return status;
+  }
+}

@@ -10,21 +10,21 @@ export function CreateSiteForm() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   const {
-    formData,
+    formState,
     errors,
     isSubmitting,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    handleSubmit: submitForm
+    handleSubmit
   } = useSiteForm('create');
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
     // Reset validation errors
     setValidationErrors({});
     
     // Validate with Zod
-    const result = siteFormSchema.safeParse(formData);
+    const result = siteFormSchema.safeParse(formState);
     
     if (!result.success) {
       // Format Zod errors for field-level feedback
@@ -40,18 +40,18 @@ export function CreateSiteForm() {
     }
     
     // If validation passes, proceed with form submission
-    submitForm();
+    handleSubmit();
   };
 
   return (
     <Card>
       <CardContent className="pt-6">
         <SiteForm
-          formData={formData}
+          formData={formState}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleDoubleNestedChange={handleDoubleNestedChange}
-          handleSubmit={handleSubmit}
+          handleSubmit={onSubmit}
           isSubmitting={isSubmitting}
           error={errors['general']}
           validationErrors={validationErrors}

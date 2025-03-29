@@ -25,7 +25,6 @@ export function JobCostCalculator() {
     base: 38,
     saturday: 0,
     sunday: 0,
-    publicHoliday: 0,
     earlyMorning: 0,
     evening: 0,
     overnight: 0,

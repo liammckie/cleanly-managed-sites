@@ -121,12 +121,17 @@ export function UserRolesList() {
   }, [supabase]);
 
   // Create a new role with the correct permissions type
-  const handleCreateRole = async (role: Pick<UserRole, 'name' | 'description'>) => {
+  const createUserRole = ({ name, description }: { name: string; description?: string; }) => {
+    if (!name) {
+      toast.error("Role name is required");
+      return;
+    }
+    
     setIsCreating(true);
     try {
       const newRole = {
-        name: role.name,
-        description: role.description || '',
+        name: name,
+        description: description || '',
         permissions: {} as Record<string, boolean>
       };
       
@@ -142,7 +147,7 @@ export function UserRolesList() {
         // Convert to the correct type
         const adaptedRole = adaptUserRole(data);
         setRoles(prev => [...prev, adaptedRole]);
-        toast.success(`Role "${role.name}" created successfully`);
+        toast.success(`Role "${name}" created successfully`);
       }
     } catch (error) {
       console.error('Error creating role:', error);
@@ -153,7 +158,7 @@ export function UserRolesList() {
   };
 
   function onSubmit(values: z.infer<typeof roleSchema>) {
-    handleCreateRole(values);
+    createUserRole(values);
     setOpen(false);
   }
 

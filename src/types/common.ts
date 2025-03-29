@@ -1,90 +1,39 @@
 
-// Common type definitions for the application
+// Basic types
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-// Site status options
+// Status types
 export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold' | 'lost';
+export type UserStatus = 'active' | 'inactive' | 'pending';
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'in-progress' | 'completed';
 
-// Employment types
-export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
-
-// Employee levels (1-5)
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
-
-// Common JSON type for flexible contract data
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-
-// JsonValue type for API operations
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-
-// Contract status options
-export type ContractStatus = 'active' | 'pending' | 'expired' | 'cancelled' | 'draft';
-
-// Billing frequency options
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually';
-
-// Days of the week
+// Date and time related
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type UnifiedDay = Day | 'weekday' | 'weekend';
 
-// Unified day format (alternative name for compatibility)
-export type UnifiedDay = Day;
+// Frequency options
+export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
 
-// Quote frequency options
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'yearly' | 'once';
-
-// Quote status options
-export type QuoteStatus = 'draft' | 'sent' | 'pending' | 'approved' | 'rejected' | 'expired' | 'accepted' | 'declined' | 'submitted';
-
-// Service delivery types
-export type ServiceDeliveryType = 'in-house' | 'contractor' | 'mixed' | 'other';
-
-// Pay condition options for award calculations
+// Payment and billing
 export type PayCondition = 
   'base' | 
-  'standard' | 
-  'weekday' | 
-  'shift-early-late' | 
   'saturday' | 
   'sunday' | 
-  'public_holiday' | 
-  'early_morning' | 
+  'publicHoliday' | 
+  'earlyMorning' | 
   'evening' | 
-  'night' | 
   'overnight' | 
-  'overtime-first-2-hours' | 
-  'overtime-after-2-hours' | 
-  'overtime-sunday' | 
-  'overtime-public-holiday' |
-  'monday' | 
-  'tuesday' | 
-  'wednesday' | 
-  'thursday' | 
-  'friday';
+  'overtime1' | 
+  'overtime2' | 
+  'overtime3';
 
-// User status options
-export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+// Employment related
+export type EmployeeLevel = 1 | 2 | 3 | 4;
+export type EmploymentType = 'full-time' | 'part-time' | 'casual';
 
-// User role options
-export type UserRole = 'admin' | 'manager' | 'staff' | 'client';
+// Service related
+export type ServiceDeliveryType = 'direct' | 'contractor' | 'mixed';
 
-// User permission options
-export type UserPermission = 
-  | 'read:clients'
-  | 'write:clients'
-  | 'read:sites'
-  | 'write:sites'
-  | 'read:contracts'
-  | 'write:contracts'
-  | 'read:users'
-  | 'write:users'
-  | 'read:workorders'
-  | 'write:workorders';
-
-// Basic user profile
-export interface UserProfile {
-  id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  role?: string;
-  status?: UserStatus;
-}
+// Common utility types
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+export type Nullable<T> = T | null;

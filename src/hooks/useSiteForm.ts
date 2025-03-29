@@ -1,47 +1,50 @@
 
-import { useState } from 'react';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { ContractDetails, BillingDetails } from '@/components/sites/forms/types/index';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SiteFormData } from '@/components/sites/forms/types';
+import { useSiteFormSubmission } from './useSiteFormSubmission';
+import { ContractDetails, BillingDetails } from '@/components/sites/forms/types';
+import { toast } from 'sonner';
 
-export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
+export function useSiteForm(mode: 'create' | 'edit', initialData?: any) {
+  const navigate = useNavigate();
   const [formState, setFormState] = useState<SiteFormData>({
     name: '',
     address: '',
     city: '',
     state: '',
-    postcode: '',
+    postalCode: '',
     country: 'Australia',
-    client_id: '',
-    representative: '',
     status: 'active',
-    phone: '',
-    email: '',
-    custom_id: '',
-    contract_details: {
-      contractNumber: '',
-      startDate: '',
-      endDate: '',
-      autoRenewal: false,
-      terminationPeriod: '',
-      renewalTerms: '',
-      status: 'active',
-    },
-    billingDetails: {
-      billingLines: [],
-    },
+    customId: '',
     contacts: [],
-    ...initialData
+    ...(initialData || {})
   });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { handleSubmit: submitForm, isSubmitting } = useSiteFormSubmission(initialData?.id);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormState(prev => ({
+        ...prev,
+        ...initialData
+      }));
+    }
+  }, [initialData]);
 
   const updateForm = (updates: Partial<SiteFormData>) => {
-    setFormState(prev => ({ ...prev, ...updates }));
+    setFormState(prev => ({
+      ...prev,
+      ...updates
+    }));
   };
 
   const updateContractDetails = (updates: Partial<ContractDetails>) => {
     setFormState(prev => ({
       ...prev,
-      contract_details: {
-        ...prev.contract_details,
+      contractDetails: {
+        ...(prev.contractDetails || {}),
         ...updates
       }
     }));
@@ -51,7 +54,7 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     setFormState(prev => ({
       ...prev,
       billingDetails: {
-        ...prev.billingDetails,
+        ...(prev.billingDetails || {}),
         ...updates
       }
     }));
@@ -62,58 +65,75 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     updateForm({ [name]: value } as any);
   };
 
-  const handleNestedChange = (parentKey: keyof SiteFormData, field: string, value: any) => {
-    const updatedParent = {
-      ...formState[parentKey],
-      [field]: value
-    };
-    updateForm({ [parentKey]: updatedParent } as any);
+  const handleNestedChange = (section: keyof SiteFormData, field: string, value: any) => {
+    if (!section) return;
+    
+    setFormState(prev => ({
+      ...prev,
+      [section]: {
+        ...(prev[section] as object || {}),
+        [field]: value
+      }
+    }));
   };
 
   const handleDoubleNestedChange = (
-    parentKey: keyof SiteFormData,
-    childKey: string,
+    section: keyof SiteFormData,
+    subsection: string,
     field: string,
     value: any
   ) => {
-    const parent = formState[parentKey] as any;
-    const updatedParent = {
-      ...parent,
-      [childKey]: {
-        ...parent[childKey],
-        [field]: value
-      }
-    };
-    updateForm({ [parentKey]: updatedParent } as any);
+    if (!section) return;
+    
+    setFormState(prev => {
+      const sectionData = prev[section] as any || {};
+      return {
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [subsection]: {
+            ...(sectionData[subsection] || {}),
+            [field]: value
+          }
+        }
+      };
+    });
   };
 
-  const resetForm = () => setFormState({
-    name: '',
-    address: '',
-    city: '',
-    state: '',
-    postcode: '',
-    country: 'Australia',
-    client_id: '',
-    representative: '',
-    status: 'active',
-    phone: '',
-    email: '',
-    custom_id: '',
-    contract_details: {
-      contractNumber: '',
-      startDate: '',
-      endDate: '',
-      autoRenewal: false,
-      terminationPeriod: '',
-      renewalTerms: '',
+  const handleSubmit = async () => {
+    try {
+      // Clear previous errors
+      setErrors({});
+      
+      // Call the submission handler
+      const result = await submitForm(formState);
+      
+      // Navigate to the site detail page on success
+      if (result && result.id) {
+        toast.success(mode === 'create' ? 'Site created successfully' : 'Site updated successfully');
+        navigate(`/sites/${result.id}`);
+      }
+    } catch (error: any) {
+      setErrors({
+        'general': error.message || 'Failed to save site'
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormState({
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'Australia',
       status: 'active',
-    },
-    billingDetails: {
-      billingLines: [],
-    },
-    contacts: [],
-  });
+      customId: '',
+      contacts: []
+    });
+    setErrors({});
+  };
 
   return {
     formState,
@@ -121,12 +141,12 @@ export const useSiteForm = (initialData?: Partial<SiteFormData>) => {
     updateContractDetails,
     updateBillingDetails,
     setFormState,
-    // For backward compatibility
-    formData: formState,
-    setFormData: setFormState,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    resetForm
+    handleSubmit,
+    resetForm,
+    errors,
+    isSubmitting
   };
-};
+}

@@ -8,7 +8,6 @@ import { useSite } from '@/hooks/useSite';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
 import { siteFormSchema } from '@/lib/validation/siteSchema';
-import { ZodError } from 'zod';
 
 export function EditSiteForm() {
   const { siteId } = useParams<{ siteId: string }>();
@@ -16,21 +15,21 @@ export function EditSiteForm() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   const {
-    formData,
+    formState,
     errors,
     isSubmitting,
     handleChange,
     handleNestedChange,
     handleDoubleNestedChange,
-    handleSubmit: submitForm
+    handleSubmit
   } = useSiteForm('edit', site);
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
     // Reset validation errors
     setValidationErrors({});
     
     // Validate with Zod
-    const result = siteFormSchema.safeParse(formData);
+    const result = siteFormSchema.safeParse(formState);
     
     if (!result.success) {
       // Format Zod errors for field-level feedback
@@ -46,7 +45,7 @@ export function EditSiteForm() {
     }
     
     // If validation passes, proceed with form submission
-    submitForm();
+    handleSubmit();
   };
 
   if (isLoading) {
@@ -61,11 +60,11 @@ export function EditSiteForm() {
     <Card>
       <CardContent className="pt-6">
         <SiteForm
-          formData={formData}
+          formData={formState}
           handleChange={handleChange}
           handleNestedChange={handleNestedChange}
           handleDoubleNestedChange={handleDoubleNestedChange}
-          handleSubmit={handleSubmit}
+          handleSubmit={onSubmit}
           isSubmitting={isSubmitting}
           error={errors['general']}
           validationErrors={validationErrors}
