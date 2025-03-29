@@ -3,7 +3,7 @@
  * Common type definitions used across the application
  */
 
-// Basic JSON type
+// Basic JSON type that works with DB serialization
 export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
 export type Json = JsonValue;
 
@@ -24,4 +24,12 @@ export interface BaseRecord {
   id: string;
   created_at: string;
   updated_at: string;
+}
+
+// Standard API response format
+export interface ApiResponse<T = any> {
+  data?: T;
+  error?: string;
+  message?: string;
+  success: boolean;
 }

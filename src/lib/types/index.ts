@@ -11,7 +11,7 @@ export type {
 } from './userTypes';
 
 // Export status enums
-export { UserStatus } from './userTypes';
+export { UserStatus } from './common';
 
 // Export domain types
 export * from './clientTypes';
@@ -46,11 +46,16 @@ export type {
   ImportResult,
   ValidationError,
   ValidationResult,
+  ValidationMessage,
   ClientImportItem,
   ContractorImportItem,
   InvoiceImportItem,
   InvoiceLineItem
 } from './importExport';
+
+// Export validation types
+export * from './validationTypes';
+export * from './formTypes';
 
 // Export adapter functions
 export { 
@@ -70,3 +75,4 @@ export {
 
 // Export WorkOrderRecord type
 export type { WorkOrderRecord } from '../api/workorders/types';
+

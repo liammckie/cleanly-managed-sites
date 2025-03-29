@@ -1,27 +1,27 @@
 
 import { useState } from 'react';
 import { validateWithZod } from '@/lib/validation';
-import { z } from 'zod';
+import { clientFormSchema } from '@/lib/validation/schemas';
 
 /**
- * Generic form validation hook that can be used with any Zod schema
+ * Custom hook for client form validation
  */
-export function useFormValidation<T>(schema: z.ZodSchema<T>) {
+export function useClientFormValidation() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const validateForm = (formData: any): { isValid: boolean; data?: T } => {
+  const validateForm = (formData: any): { isValid: boolean; data?: any } => {
     // Reset validation errors
     setValidationErrors({});
     
     // Validate with Zod schema
-    const result = validateWithZod<T>(schema, formData);
+    const result = validateWithZod(clientFormSchema, formData);
     
     if (!result.success && result.errors) {
       setValidationErrors(result.errors);
       return { isValid: false };
     }
     
-    return { isValid: true, data: result.data as T };
+    return { isValid: true, data: result.data };
   };
 
   const clearErrors = () => {
