@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BillingDetailsStep } from './BillingDetailsStep';
 import { BillingDetailsDTO } from '@/types/dto';
@@ -29,7 +28,7 @@ export function BillingDetailsStepWrapper({
     paymentTerms: '',
     billingEmail: '',
     billingAddress: {
-      street: '',
+      line1: '',
       city: '',
       state: '',
       postcode: '',

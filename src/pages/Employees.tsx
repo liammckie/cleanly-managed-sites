@@ -1,266 +1,386 @@
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { Card } from '@/components/ui/card';
-import { ContactDialog } from '@/components/contacts/ContactDialog';
 import { useContacts } from '@/hooks/useContacts';
 import { ContactRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { 
-  Search, 
-  Plus, 
-  Briefcase, 
-  Calendar, 
-  Clock, 
-  FileText 
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Plus, Pencil, Trash } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { toast } from "@/components/ui/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createContact, updateContact, deleteContact } from '@/lib/api/contacts';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Helmet } from 'react-helmet-async';
 
-const Employees = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('directory');
+const contactSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }).optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
+  role: z.string().min(2, {
+    message: "Role must be at least 2 characters.",
+  }),
+  department: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
+});
+
+type ContactSchemaType = z.infer<typeof contactSchema>;
+
+const Employees: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ContactRecord | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { contacts, isLoading, error } = useContacts('internal');
+  const queryClient = useQueryClient();
 
-  const { 
-    contacts, 
-    isLoading, 
-    addContact,
-    updateContact,
-    deleteContact,
-    setFilters
-  } = useContacts({ entityType: 'internal' });
+  const form = useForm<ContactSchemaType>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      role: "",
+      department: "",
+      notes: "",
+    },
+  });
 
-  const filteredEmployees = contacts?.filter(employee => 
-    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (employee.department && employee.department.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const { mutate: createContactMutation, isLoading: isCreateLoading } = useMutation(createContact, {
+    onSuccess: () => {
+      toast({
+        title: "Contact Created",
+        description: "The contact has been successfully created.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contacts', 'internal'] });
+      setOpen(false);
+      form.reset();
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create contact.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleOpenDialog = (contact?: ContactRecord) => {
-    setEditingContact(contact || null);
-    setDialogOpen(true);
-  };
+  const { mutate: updateContactMutation, isLoading: isUpdateLoading } = useMutation(updateContact, {
+    onSuccess: () => {
+      toast({
+        title: "Contact Updated",
+        description: "The contact has been successfully updated.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contacts', 'internal'] });
+      setOpen(false);
+      form.reset();
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update contact.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleSubmitContact = async (contactData: Partial<ContactRecord>): Promise<void> => {
-    try {
-      if (contactData.id) {
-        await updateContact(contactData.id, contactData);
-        toast.success('Employee updated successfully');
-      } else {
-        await addContact(contactData as Omit<ContactRecord, 'id' | 'created_at' | 'updated_at'>);
-        toast.success('Employee added successfully');
-      }
-      setDialogOpen(false);
-    } catch (error) {
-      console.error('Error handling employee:', error);
-      toast.error('Failed to save employee');
-      throw error;
+  const { mutate: deleteContactMutation, isLoading: isDeleteLoading } = useMutation(deleteContact, {
+    onSuccess: () => {
+      toast({
+        title: "Contact Deleted",
+        description: "The contact has been successfully deleted.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['contacts', 'internal'] });
+      setOpen(false);
+      form.reset();
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = async (values: ContactSchemaType) => {
+    const contactData = {
+      ...values,
+      entity_type: 'internal',
+    };
+
+    if (isEditMode && selectedContact) {
+      updateContactMutation({ id: selectedContact.id!, contactData });
+    } else {
+      createContactMutation(contactData);
     }
   };
 
-  const handleDeleteContact = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
-      try {
-        await deleteContact(id);
-        toast.success('Employee deleted successfully');
-      } catch (error) {
-        console.error('Error deleting employee:', error);
-        toast.error('Failed to delete employee');
-      }
-    }
+  const handleEditContact = (contact: ContactRecord) => {
+    setIsEditMode(true);
+    setSelectedContact(contact);
+    form.setValue("name", contact.name);
+    form.setValue("email", contact.email || "");
+    form.setValue("phone", contact.phone || "");
+    form.setValue("role", contact.role);
+    form.setValue("department", contact.department || "");
+    form.setValue("notes", contact.notes || "");
+    setOpen(true);
+  };
+
+  const handleDeleteContact = (contact: ContactRecord) => {
+    setSelectedContact(contact);
+    setOpen(true);
+  };
+
+  const handleCreateContact = () => {
+    setIsEditMode(false);
+    setSelectedContact(null);
+    form.reset();
+    setOpen(true);
   };
 
   return (
     <PageLayout>
-      <div className="container py-6">
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Employee Management</h1>
-            <Button onClick={() => handleOpenDialog()} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Employee
-            </Button>
+      <Helmet>
+        <title>Employees | CleanMap</title>
+      </Helmet>
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Employees</h1>
+            <p className="text-muted-foreground">Manage your internal employees</p>
           </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="directory" className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4" />
-                Employee Directory
-              </TabsTrigger>
-              <TabsTrigger value="roster" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Roster
-              </TabsTrigger>
-              <TabsTrigger value="leave" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Leave Management
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Documents
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="directory">
-              <div className="flex justify-between items-center mb-4">
-                <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search employees..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <Card>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Employment</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-4">Loading employees...</TableCell>
-                        </TableRow>
-                      ) : filteredEmployees && filteredEmployees.length > 0 ? (
-                        filteredEmployees.map(employee => {
-                          const services = employee.services as any || {};
-                          return (
-                            <TableRow key={employee.id}>
-                              <TableCell className="font-medium">{employee.name}</TableCell>
-                              <TableCell>{services.position || employee.role}</TableCell>
-                              <TableCell>{employee.department || '-'}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-col">
-                                  {employee.email && <span className="text-sm">{employee.email}</span>}
-                                  {employee.phone && <span className="text-sm">{employee.phone}</span>}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {services.employmentType && (
-                                  <span className="capitalize">{services.employmentType.replace('-', ' ')}</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => handleOpenDialog(employee)}
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={() => handleDeleteContact(employee.id)}
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-4">
-                            {searchQuery ? 'No employees match your search.' : 'No employees found.'}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="roster">
-              <Card className="p-6">
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="text-center">
-                    <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">Roster Management</h3>
-                    <p className="mt-2 text-muted-foreground max-w-md">
-                      Create and manage employee schedules, shifts, and assignments. 
-                      Assign Client Service Managers to sites.
-                    </p>
-                    <Button className="mt-4" disabled>Coming Soon</Button>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="leave">
-              <Card className="p-6">
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="text-center">
-                    <Clock className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">Leave Management</h3>
-                    <p className="mt-2 text-muted-foreground max-w-md">
-                      Track and manage employee leave requests, approvals, and balances.
-                      View leave history and plan for upcoming absences.
-                    </p>
-                    <Button className="mt-4" disabled>Coming Soon</Button>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="documents">
-              <Card className="p-6">
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="text-center">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">Document Management</h3>
-                    <p className="mt-2 text-muted-foreground max-w-md">
-                      Upload, store, and manage employee documents such as contracts,
-                      certifications, and performance reviews.
-                    </p>
-                    <Button className="mt-4" disabled>Coming Soon</Button>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Button onClick={handleCreateContact}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Employee
+          </Button>
         </div>
 
+        {isLoading ? (
+          <div>Loading employees...</div>
+        ) : error ? (
+          <div>Error: {error.message}</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {contacts?.map((contact) => (
+              <Card key={contact.id} className="bg-white shadow-sm rounded-md">
+                <CardHeader>
+                  <CardTitle>{contact.name}</CardTitle>
+                  <CardDescription>{contact.role}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {contact.email}
+                    <br />
+                    {contact.phone}
+                  </p>
+                  <div className="flex justify-end mt-4 space-x-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditContact(contact)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteContact(contact)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
         <ContactDialog
-          isOpen={open} 
-          onClose={() => setOpen(false)}
-          contact={selectedContact} 
+          contact={selectedContact || {
+            name: "",
+            email: "",
+            phone: "",
+            role: "",
+            department: "",
+            notes: "",
+          }}
           entityType="internal"
-          onSubmit={handleSubmitContact}
-          isSubmitting={isSubmitting}
-          title="Add New Employee"
+          onSubmit={onSubmit}
+          isSubmitting={isCreateLoading || isUpdateLoading || isDeleteLoading}
+          title={isEditMode ? "Edit Employee" : "Create Employee"}
+          isOpen={open}
+          onClose={() => setOpen(false)}
         />
       </div>
     </PageLayout>
+  );
+};
+
+// Fix the ContactDialog props
+const ContactDialog = ({ 
+  contact, 
+  entityType,
+  onSubmit, 
+  isSubmitting,
+  title,
+  isOpen,
+  onClose
+}: {
+  contact: ContactRecord;
+  entityType: "internal";
+  onSubmit: (contactData: Partial<ContactRecord>) => Promise<void>;
+  isSubmitting: boolean;
+  title: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  const form = useForm<ContactSchemaType>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: contact.name,
+      email: contact.email || "",
+      phone: contact.phone || "",
+      role: contact.role,
+      department: contact.department || "",
+      notes: contact.notes || "",
+    },
+  });
+
+  const handleClose = () => {
+    onClose();
+    form.reset();
+  };
+
+  const submitHandler = async (values: ContactSchemaType) => {
+    await onSubmit(values);
+    form.reset();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {title === "Edit Employee"
+              ? "Make changes to your employee here. Click save when you're done."
+              : "Create a new employee here. Click save when you're done."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(submitHandler)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Employee name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="mail@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Employee role" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Department" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Notes" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end space-x-2">
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

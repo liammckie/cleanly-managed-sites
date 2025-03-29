@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,14 +34,11 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
     addBillingLine();
   };
 
-  // Ensure billingDetails exists and is properly typed
   const billingDetails = formData.billingDetails || {} as BillingDetails;
-  // Ensure billingLines exists
   const billingLines = billingDetails.billingLines || [];
 
   return (
     <div className="space-y-4">
-      {/* Use Client's Billing Info */}
       <div className="flex items-center space-x-2">
         <Checkbox 
           id="useClientInfo" 
@@ -52,7 +48,6 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
         <Label htmlFor="useClientInfo">Use client billing information</Label>
       </div>
 
-      {/* Billing Method */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="billingMethod">Billing Method</Label>
@@ -92,7 +87,6 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
         </div>
       </div>
 
-      {/* Billing Email */}
       <div className="space-y-2">
         <Label htmlFor="billingEmail">Billing Email</Label>
         <Input 
@@ -103,7 +97,6 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
         />
       </div>
 
-      {/* Billing Address */}
       <Card>
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Billing Address</h3>
@@ -111,11 +104,11 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="billingAddress.street">Street Address</Label>
+                <Label htmlFor="billingAddress.line1">Street Address</Label>
                 <Input 
-                  id="billingAddress.street"
-                  value={(billingDetails.billingAddress?.street || '')}
-                  onChange={(e) => handleDoubleNestedChange('billingDetails', 'billingAddress', 'street', e.target.value)}
+                  id="billingAddress.line1"
+                  value={(billingDetails.billingAddress?.line1 || '')}
+                  onChange={(e) => handleDoubleNestedChange('billingDetails', 'billingAddress', 'line1', e.target.value)}
                   placeholder="123 Main St"
                 />
               </div>
@@ -167,7 +160,6 @@ export const BillingDetailsStep: React.FC<BillingDetailsStepProps> = ({
         </CardContent>
       </Card>
 
-      {/* Billing Lines */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-4">

@@ -3,10 +3,10 @@ import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
 
 // Default billing address
 export const defaultBillingAddress = {
-  street: '',
+  line1: '',
   city: '',
   state: '',
-  postalCode: '',
+  postcode: '',
   country: 'Australia'
 };
 

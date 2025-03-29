@@ -5,7 +5,7 @@ import { useSiteForm, UseSiteFormReturn } from '@/hooks/useSiteForm';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SiteFormData } from './types/siteFormData';
-import SiteFormStepper from './SiteFormStepper';
+import { SiteFormStepper } from './SiteFormStepper';
 import { Loader2 } from 'lucide-react';
 
 interface EditSiteFormProps {
@@ -14,8 +14,12 @@ interface EditSiteFormProps {
 }
 
 const EditSiteForm: React.FC<EditSiteFormProps> = ({ initialData, siteId }) => {
-  // Pass initialData correctly
-  const siteForm: UseSiteFormReturn = useSiteForm({ ...initialData, id: siteId }, 'edit');
+  // Pass initialData correctly with siteId
+  const siteForm: UseSiteFormReturn = useSiteForm({ 
+    ...initialData, 
+    // Add siteId instead of id to match the expected type
+    siteId: siteId 
+  }, 'edit');
   
   const {
     formData,

@@ -5,7 +5,7 @@ import { useSiteForm, UseSiteFormReturn } from '@/hooks/useSiteForm';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SiteFormData } from './types/siteFormData';
-import SiteFormStepper from './SiteFormStepper';
+import { SiteFormStepper } from './SiteFormStepper';
 import { Loader2 } from 'lucide-react';
 
 const CreateSiteForm: React.FC = () => {

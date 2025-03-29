@@ -20,6 +20,7 @@ export interface SiteFormData {
   email?: string;
   representative?: string;
   customId?: string;
+  siteId?: string; // Added siteId for edit mode
   contacts: {
     id?: string;
     name: string;

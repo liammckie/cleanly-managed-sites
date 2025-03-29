@@ -1,191 +1,197 @@
-
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-import { ChangeEvent } from 'react';
+import { validateSiteForm } from '@/components/sites/forms/types/validationUtils';
+import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
 import { useSiteCreate } from './useSiteCreate';
 import { useSiteUpdate } from './useSiteUpdate';
-import { toast } from '@/components/ui/use-toast';
+import { SiteContact } from '@/lib/types';
+import { BillingLine } from '@/types/models';
 
 export interface UseSiteFormReturn {
   formData: SiteFormData;
-  setFormData: (data: SiteFormData) => void;
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  handleChange: (field: keyof SiteFormData, value: any) => void;
-  updateForm: (updates: Partial<SiteFormData>) => void;
-  updateContractDetails: (updates: Partial<ContractDetails>) => void;
-  updateBillingDetails: (updates: any) => void;
-  updatePeriodicals: (updates: any) => void;
-  resetForm: () => void;
-  isSubmitting: boolean;
+  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>;
+  handleChange: <K extends keyof SiteFormData>(field: K, value: SiteFormData[K]) => void;
+  handleNestedChange: (section: string, field: string, value: any) => void;
+  handleDoubleNestedChange: (section: string, subsection: string, field: string, value: any) => void;
+  addContact: (contact: SiteContact) => void;
+  removeContact: (contactId: string) => void;
+  updateContact: (contactId: string, field: string, value: any) => void;
+  addBillingLine: () => void;
+  removeBillingLine: (lineId: string) => void;
+  updateBillingLine: (lineId: string, field: string, value: any) => void;
   errors: string[];
-  handleNestedChange: (field: string, nestedField: string, value: any) => void;
-  handleDoubleNestedChange: (field: string, nestedField: string, subField: string, value: any) => void;
+  isSubmitting: boolean;
+  handleSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => Promise<void>;
 }
 
-// Default form data - used for new site creation
-const defaultFormData: SiteFormData = {
-  name: '',
-  address: '',
-  city: '',
-  state: '',
-  postalCode: '',
-  country: 'Australia',
-  status: 'active',
-  phone: '',
-  email: '',
-  representative: '',
-  contacts: [],
-  billingDetails: {
-    useClientInfo: false,
-    contacts: [],
-    billingLines: []
-  }
-};
-
-export const useSiteForm = (initialData?: Partial<SiteFormData>, mode: 'create' | 'edit' = 'create'): UseSiteFormReturn => {
-  const [formData, setFormData] = useState<SiteFormData>(initialData ? { ...defaultFormData, ...initialData } : defaultFormData);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+export function useSiteForm(initialData: Partial<SiteFormData> = {}, mode: 'create' | 'edit' = 'create'): UseSiteFormReturn {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Extract siteId from initialData if it exists
+  const siteId = initialData.siteId || '';
+  
+  // Use getInitialFormData to ensure the form data has all required properties
+  const [formData, setFormData] = useState<SiteFormData>({
+    ...getInitialFormData(),
+    ...initialData
+  });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   
   const { createSite } = useSiteCreate();
-  const { updateSite } = useSiteUpdate();
+  const { updateSite } = useSiteUpdate(siteId);
 
-  // Handler for form submission
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChange = useCallback(<K extends keyof SiteFormData>(field: K, value: SiteFormData[K]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  const handleNestedChange = useCallback((section: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+  }, []);
+
+  const handleDoubleNestedChange = useCallback((section: string, subsection: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [subsection]: {
+          ...prev[section][subsection],
+          [field]: value
+        }
+      }
+    }));
+  }, []);
+
+  const addContact = useCallback((contact: SiteContact) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: [...(prev.contacts || []), contact]
+    }));
+  }, []);
+
+  const removeContact = useCallback((contactId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: (prev.contacts || []).filter(contact => contact.id !== contactId)
+    }));
+  }, []);
+
+  const updateContact = useCallback((contactId: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      contacts: (prev.contacts || []).map(contact =>
+        contact.id === contactId ? { ...contact, [field]: value } : contact
+      )
+    }));
+  }, []);
+
+  const addBillingLine = useCallback(() => {
+    const newLine: BillingLine = {
+      id: Date.now().toString(), // Temporary ID
+      description: '',
+      amount: 0,
+      frequency: 'monthly',
+      isRecurring: true,
+      onHold: false
+    };
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: [...(prev.billingDetails?.billingLines || []), newLine]
+      }
+    }));
+  }, []);
+
+  const removeBillingLine = useCallback((lineId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: (prev.billingDetails?.billingLines || []).filter(line => line.id !== lineId)
+      }
+    }));
+  }, []);
+
+  const updateBillingLine = useCallback((lineId: string, field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        billingLines: (prev.billingDetails?.billingLines || []).map(line =>
+          line.id === lineId ? { ...line, [field]: value } : line
+        )
+      }
+    }));
+  }, []);
+
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors([]);
-    
+
     try {
+      const validationResult = validateSiteForm(formData);
+      
+      if (!validationResult.isValid) {
+        setErrors(validationResult.errors);
+        setIsSubmitting(false);
+        return;
+      }
+
       if (mode === 'create') {
-        await createSite(formData);
-        toast({
-          title: "Site created",
-          description: "The site has been created successfully.",
-          variant: "success"
-        });
+        const result = await createSite(formData);
+        if (result?.id) {
+          toast({
+            title: "Site Created",
+            description: `${formData.name} has been successfully created.`,
+            variant: "success" as any
+          });
+          navigate(`/sites/${result.id}`);
+        }
       } else {
-        await updateSite({ id: formData.id as string, data: formData });
+        const result = await updateSite(formData);
         toast({
-          title: "Site updated",
-          description: "The site has been updated successfully.",
-          variant: "success"
+          title: "Site Updated",
+          description: `${formData.name} has been successfully updated.`,
+          variant: "success" as any
         });
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-      setErrors([errorMessage]);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      console.error('Error saving site:', error);
+      setErrors(['An error occurred while saving the site. Please try again.']);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Update the whole form or a section
-  const updateForm = (updates: Partial<SiteFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
-  };
-
-  // Handle basic input changes
-  const handleChange = (field: keyof SiteFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Handle event-based input changes (for use with form controls)
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Update contract details specifically
-  const updateContractDetails = (updates: Partial<ContractDetails>) => {
-    setFormData(prev => ({
-      ...prev,
-      contractDetails: {
-        ...prev.contractDetails,
-        ...updates
-      }
-    }));
-  };
-
-  // Update billing details specifically
-  const updateBillingDetails = (updates: any) => {
-    setFormData(prev => ({
-      ...prev,
-      billingDetails: {
-        ...prev.billingDetails,
-        ...updates
-      }
-    }));
-  };
-
-  // Update periodicals specifically
-  const updatePeriodicals = (updates: any) => {
-    setFormData(prev => ({
-      ...prev,
-      periodicals: {
-        ...prev.periodicals,
-        ...updates
-      }
-    }));
-  };
-
-  // Reset the form to defaults or initial data
-  const resetForm = () => {
-    setFormData(initialData ? { ...defaultFormData, ...initialData } : defaultFormData);
-    setErrors([]);
-  };
-
-  // Handle updates to nested objects in form data
-  const handleNestedChange = (field: string, nestedField: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: {
-        ...prev[field as keyof SiteFormData],
-        [nestedField]: value
-      }
-    }));
-  };
-
-  // Handle updates to doubly-nested objects
-  const handleDoubleNestedChange = (field: string, nestedField: string, subField: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: {
-        ...prev[field as keyof SiteFormData],
-        [nestedField]: {
-          ...prev[field as keyof SiteFormData]?.[nestedField as any],
-          [subField]: value
-        }
-      }
-    }));
-  };
-
   return {
     formData,
     setFormData,
-    handleSubmit,
     handleChange,
-    updateForm,
-    updateContractDetails,
-    updateBillingDetails,
-    updatePeriodicals,
-    resetForm,
-    isSubmitting,
-    errors,
     handleNestedChange,
-    handleDoubleNestedChange
+    handleDoubleNestedChange,
+    addContact,
+    removeContact,
+    updateContact,
+    addBillingLine,
+    removeBillingLine,
+    updateBillingLine,
+    errors,
+    isSubmitting,
+    handleSubmit
   };
-};
+}

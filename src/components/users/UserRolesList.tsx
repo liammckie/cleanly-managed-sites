@@ -1,259 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { UserRole } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
-import DialogWhenEmpty from '@/components/shared/DialogWhenEmpty';
-import { PlusCircledIcon } from '@radix-ui/react-icons';
+import { Plus, Search, Trash2, Edit, Users, Shield } from 'lucide-react';
+import { UserRole } from '@/types/users';
+import UserRoleCard from './UserRoleCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
-const roleSchema = z.object({
-  name: z.string().min(2, {
-    message: "Role name must be at least 2 characters.",
-  }),
-  description: z.string().optional(),
-})
+interface UserRolesListProps {
+  roles?: UserRole[];
+  isLoading?: boolean;
+  onRoleClick?: (role: UserRole) => void;
+  onAddClick?: (role: Partial<UserRole>) => void;
+  onDeleteClick?: (role: UserRole) => void;
+  onEditClick?: (role: UserRole) => void;
+}
 
-// Convert Json permissions to Record<string, boolean>
-const adaptUserRole = (role: any): UserRole => {
-  let permissions: Record<string, boolean> = {};
-  
-  if (role.permissions) {
-    // If permissions is a string, try to parse it as JSON
-    if (typeof role.permissions === 'string') {
-      try {
-        permissions = JSON.parse(role.permissions);
-      } catch (e) {
-        console.error('Error parsing permissions:', e);
-        permissions = {};
-      }
-    } 
-    // If permissions is an object, convert it to Record<string, boolean>
-    else if (typeof role.permissions === 'object') {
-      Object.entries(role.permissions).forEach(([key, value]) => {
-        permissions[key] = Boolean(value);
-      });
-    }
-  }
-  
-  return {
-    id: role.id,
-    name: role.name,
-    description: role.description,
-    permissions,
-    created_at: role.created_at,
-    updated_at: role.updated_at
-  };
-};
+const UserRolesList = ({ roles = [], isLoading, onRoleClick, onAddClick, onDeleteClick, onEditClick }: UserRolesListProps) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
-export function UserRolesList() {
-  const [open, setOpen] = React.useState(false)
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-
-  const form = useForm<z.infer<typeof roleSchema>>({
-    resolver: zodResolver(roleSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-    },
-  })
-
-  const calculatedValues = {
-    totalRoles: roles.length,
-    activeRoles: roles.filter(role => role.name).length,
-  }
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('*');
-      
-        if (error) throw error;
-      
-        if (data) {
-          // Convert roles to the correct type
-          const adaptedRoles = data.map(adaptUserRole);
-          setRoles(adaptedRoles);
-        }
-      } catch (error) {
-        console.error('Error fetching roles:', error);
-        toast.error('Failed to load user roles');
-      } finally {
-        setIsLoading(false);
-      }
+  // Fix the async/await issue
+  const handleAddRole = () => {
+    // Create a properly typed name field
+    const newRole = {
+      name: 'New Role', // Required field
+      description: 'Role description'
     };
-    
-    fetchRoles();
-  }, [supabase]);
+    onAddClick(newRole);
+  };
 
-  // Create a new role with the correct permissions type
-  const createUserRole = ({ name, description }: { name: string; description?: string; }) => {
-    if (!name) {
-      toast.error("Role name is required");
-      return;
-    }
-    
-    setIsCreating(true);
-    try {
-      const newRole = {
-        name: name,
-        description: description || '',
-        permissions: {} as Record<string, boolean>
-      };
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .insert(newRole)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        // Convert to the correct type
-        const adaptedRole = adaptUserRole(data);
-        setRoles(prev => [...prev, adaptedRole]);
-        toast.success(`Role "${name}" created successfully`);
-      }
-    } catch (error) {
-      console.error('Error creating role:', error);
-      toast.error('Failed to create role');
-    } finally {
-      setIsCreating(false);
+  const filteredRoles = roles.filter(role => 
+    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleRoleClick = (role: UserRole) => {
+    setSelectedRoleId(role.id);
+    if (onRoleClick) {
+      onRoleClick(role);
     }
   };
 
-  function onSubmit(values: z.infer<typeof roleSchema>) {
-    createUserRole(values);
-    setOpen(false);
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">User Roles</h2>
+          <Button disabled>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Role
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-6 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-9 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div className="md:flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">User Roles</h2>
-        <Button onClick={() => setOpen(true)}>
-          <PlusCircledIcon className="mr-2 h-4 w-4" />
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-2xl font-bold">User Roles</h2>
+        <Button onClick={handleAddRole}>
+          <Plus className="mr-2 h-4 w-4" />
           Add Role
         </Button>
       </div>
 
-      {isLoading ? (
-        <p>Loading user roles...</p>
-      ) : roles.length === 0 ? (
-        <DialogWhenEmpty
-          title="No User Roles"
-          description="Looks like you haven't created any user roles yet. Create one to get started."
-          isVisible={!isLoading && roles.length === 0}
-          onAction={() => setOpen(true)}
-          buttonText="Create First Role"
-          icon={<PlusCircledIcon className="h-6 w-6 text-muted-foreground" />}
-        />
-      ) : (
-        <Table>
-          <TableCaption>A list of your user roles.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell className="font-medium">{role.name}</TableCell>
-                <TableCell>{role.description}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {roles.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search roles..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add User Role</DialogTitle>
-            <DialogDescription>
-              Create a new role to manage user permissions.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Administrator" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Full access to all features" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="submit" disabled={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create Role'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {filteredRoles.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRoles.map((role) => (
+            <UserRoleCard
+              key={role.id}
+              role={role}
+              onClick={handleRoleClick}
+              onEditClick={onEditClick}
+              onDeleteClick={onDeleteClick}
+              isActive={role.id === selectedRoleId}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={<Shield className="h-12 w-12 text-muted-foreground" />}
+          title="No roles found"
+          description={
+            searchTerm
+              ? "No roles match your search criteria"
+              : "Get started by adding your first user role"
+          }
+          action={
+            searchTerm ? (
+              <Button variant="outline" onClick={() => setSearchTerm("")}>
+                Clear search
+              </Button>
+            ) : (
+              <Button onClick={handleAddRole}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Role
+              </Button>
+            )
+          }
+        />
+      )}
     </div>
-  )
-}
+  );
+};
+
+export default UserRolesList;

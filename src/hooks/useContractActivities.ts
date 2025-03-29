@@ -1,8 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { ContractActivity } from '@/types/models';
-import { mapFromDb } from '@/lib/utils/mappers';
+import { ContractActivity } from '@/types/contractActivities';
 
 /**
  * Hook to fetch contract activity data
@@ -22,21 +21,33 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        let query = supabase
-          .from('contract_activities')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(limit || 20);
-        
-        // Only filter by contract_id if it's provided
-        if (contractIdString) {
-          query = query.eq('contract_id', contractIdString);
+        // Using a raw query with PostgreSQL to avoid type issues
+        // The contract_activities table exists in the database but not in the TypeScript definitions
+        let { data, error: apiError } = await supabase
+          .rpc('get_contract_activities', {
+            contract_id_param: contractIdString || null,
+            limit_param: limit
+          });
+
+        if (apiError) {
+          // Fallback if RPC doesn't exist, use direct query
+          const query = supabase
+            .from('contract_activities')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit || 20);
+          
+          // Only filter by contract_id if it's provided
+          if (contractIdString) {
+            query.eq('contract_id', contractIdString);
+          }
+
+          const result = await query;
+          
+          if (result.error) throw new Error(result.error.message);
+          data = result.data;
         }
 
-        const { data, error: apiError } = await query;
-
-        if (apiError) throw new Error(apiError.message);
-        
         // Map the raw data to our ContractActivity type
         const mappedActivities: ContractActivity[] = (data || []).map(item => ({
           id: item.id,
@@ -49,8 +60,8 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
           userName: item.metadata?.user_name || 'System', // Get user name from metadata
           created_by: item.created_by,
           details: item.metadata || {}, // Map metadata to details
-          metadata: item.metadata,
-          description: item.description
+          metadata: item.metadata || {},
+          description: item.description || ''
         }));
         
         setActivities(mappedActivities);
@@ -69,12 +80,13 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
     if (!contractIdString && typeof contractId !== 'object') return null;
     
     try {
+      // Insert directly to the contract_activities table
       const { data, error: apiError } = await supabase
         .from('contract_activities')
         .insert({
           contract_id: contractIdString,
           activity_type: activity.action || activity.activity_type,
-          description: activity.details || activity.description,
+          description: activity.description || '',
           metadata: activity.metadata || activity.details || {}
         })
         .select()
@@ -92,10 +104,10 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
         timestamp: data.created_at,
         created_at: data.created_at,
         userName: data.metadata?.user_name || 'System',
-        created_by: data.created_by,
+        created_by: data.created_by || null,
         details: data.metadata || {},
-        metadata: data.metadata,
-        description: data.description
+        metadata: data.metadata || {},
+        description: data.description || ''
       };
       
       // Update the local state

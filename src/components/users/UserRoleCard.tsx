@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,12 +5,13 @@ import { UserRole } from '@/lib/types/users';
 
 interface UserRoleCardProps {
   role: UserRole;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onClick?: (role: UserRole) => void;
+  onEditClick?: (role: UserRole) => void;
+  onDeleteClick?: (role: UserRole) => void;
+  isActive?: boolean;
 }
 
-const UserRoleCard: React.FC<UserRoleCardProps> = ({ role, onEdit, onDelete }) => {
-  // Convert permissions array or object to a count
+const UserRoleCard = ({ role, onClick, onEditClick, onDeleteClick, isActive = false }: UserRoleCardProps) => {
   const getPermissionCount = (permissions: string[] | Record<string, boolean>) => {
     if (Array.isArray(permissions)) {
       return permissions.length;
@@ -45,14 +45,14 @@ const UserRoleCard: React.FC<UserRoleCardProps> = ({ role, onEdit, onDelete }) =
         </div>
       </CardContent>
       
-      {(onEdit || onDelete) && (
+      {(onEditClick || onDeleteClick) && (
         <CardFooter className="pt-0 flex justify-end gap-2">
-          {onEdit && <Button size="sm" variant="outline" onClick={onEdit}>Edit</Button>}
-          {onDelete && (
+          {onEditClick && <Button size="sm" variant="outline" onClick={() => onEditClick(role)}>Edit</Button>}
+          {onDeleteClick && (
             <Button 
               size="sm" 
               variant="destructive" 
-              onClick={onDelete}
+              onClick={() => onDeleteClick(role)}
               disabled={role.user_count ? role.user_count > 0 : false}
             >
               Delete
