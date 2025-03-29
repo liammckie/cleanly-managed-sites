@@ -30,7 +30,7 @@ export interface SystemUser {
   title?: string;
   phone?: string;
   custom_id?: string;
-  notes?: string;
+  notes?: string; // Standardized to 'notes', not 'note'
   territories?: string[];
   status: UserStatus;
   role_id?: string;
@@ -55,10 +55,10 @@ export interface DbUserRole {
 }
 
 /**
- * User role with count of users (for admin displays)
+ * User profile with role (for UI displays)
  */
-export interface UserRoleWithCount extends UserRole {
-  user_count: number;
+export interface UserProfileWithRole extends SystemUser {
+  role: UserRole;
 }
 
 /**
@@ -70,6 +70,13 @@ export interface UserProfile {
   name: string;
   role: string;
   status: UserStatus;
+}
+
+/**
+ * For creating a new user
+ */
+export interface SystemUserInsert extends Omit<SystemUser, 'id' | 'created_at' | 'updated_at'> {
+  id?: string;
 }
 
 /**
@@ -86,7 +93,7 @@ export function adaptUserFromDb(dbUser: any): SystemUser {
     title: dbUser.title,
     phone: dbUser.phone,
     custom_id: dbUser.custom_id,
-    notes: dbUser.notes,
+    notes: dbUser.notes || dbUser.note, // Handle both note and notes for compatibility
     territories: dbUser.territories || [],
     status: dbUser.status || 'active',
     role_id: dbUser.role_id,
@@ -112,7 +119,7 @@ export function adaptUserToDb(user: SystemUser): any {
     title: user.title,
     phone: user.phone,
     custom_id: user.custom_id,
-    notes: user.notes,
+    notes: user.notes, // Always use notes, not note
     territories: user.territories,
     status: user.status,
     role_id: user.role_id,
@@ -138,6 +145,20 @@ export function adaptUserRoleFromDb(dbRole: DbUserRole): UserRole {
   } else if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
     // If it's already an object, use it directly
     Object.assign(permissionsObject, dbRole.permissions);
+  } else if (typeof dbRole.permissions === 'string') {
+    // If it's a JSON string (from Supabase), parse it
+    try {
+      const parsedPermissions = JSON.parse(dbRole.permissions);
+      if (Array.isArray(parsedPermissions)) {
+        parsedPermissions.forEach(permission => {
+          permissionsObject[permission] = true;
+        });
+      } else if (typeof parsedPermissions === 'object') {
+        Object.assign(permissionsObject, parsedPermissions);
+      }
+    } catch (e) {
+      console.error('Error parsing permissions:', e);
+    }
   }
   
   return {
@@ -175,3 +196,6 @@ export function adaptUserRoleToDb(role: UserRole): DbUserRole {
     user_count: role.user_count
   };
 }
+
+// Alias for backward compatibility
+export const dbUserToSystemUser = adaptUserFromDb;

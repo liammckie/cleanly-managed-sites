@@ -1,237 +1,209 @@
 
-import { Json } from './common';
-
 /**
- * Contract model that follows the database schema (snake_case)
- */
-export interface DbContract {
-  id: string;
-  site_id: string;
-  client_id?: string;
-  contract_number?: string;
-  start_date?: string;
-  end_date?: string;
-  value?: number;
-  monthly_revenue?: number;
-  contract_details?: Json;
-  auto_renewal?: boolean;
-  renewal_period?: string;
-  renewal_notice_days?: number;
-  termination_period?: string;
-  billing_cycle?: string;
-  service_frequency?: string;
-  service_delivery_method?: string;
-  is_primary?: boolean;
-  created_at: string;
-  updated_at: string;
-  status?: string;
-  contract_type?: string;
-  type?: string;
-}
-
-/**
- * Contract model with camelCase properties for frontend use
- */
-export interface Contract {
-  id: string;
-  siteId: string;
-  clientId?: string;
-  siteName?: string;
-  clientName?: string;
-  contractNumber?: string;
-  startDate?: string;
-  endDate?: string;
-  value?: number;
-  monthlyRevenue?: number;
-  contractDetails?: any;
-  autoRenewal?: boolean;
-  renewalPeriod?: string;
-  renewalNoticeDays?: number;
-  terminationPeriod?: string;
-  billingCycle?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  isPrimary?: boolean;
-  createdAt: string;
-  updatedAt: string;
-  status?: string;
-  contractType?: string;
-  type?: string;
-}
-
-/**
- * Contract term model
+ * Contract term interface
  */
 export interface ContractTerm {
-  id?: string;
-  name: string;
+  id: string;
+  term: string;
   description?: string;
-  startDate?: string;
-  endDate?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
-  autoRenew?: boolean;
 }
 
 /**
- * Contract details model
+ * Contract details interface
  */
 export interface ContractDetails {
   id?: string;
   contractNumber?: string;
+  type?: string;
+  status?: string;
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
-  renewalPeriod?: string;
   renewalNoticeDays?: number;
-  noticeUnit?: string;
+  renewalPeriod?: string;
+  renewalLengthMonths?: number;
   terminationPeriod?: string;
-  renewalTerms?: string;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  terms?: ContractTerm[];
-  contractType?: string;
+  terminationPeriodDays?: number;
   value?: number;
+  valueType?: string;
+  valueFrequency?: string;
+  termsOfPayment?: string;
   billingCycle?: string;
+  billingDay?: number;
+  lastBillingDate?: string;
+  nextBillingDate?: string;
+  contractLength?: string;
+  contractLengthMonths?: number;
+  renewalTerms?: string;
   notes?: string;
-  status?: string;
-  type?: string;
+  terms?: ContractTerm[];
 }
 
 /**
- * Contract activity model
+ * Contract interface
  */
-export interface ContractActivity {
+export interface Contract {
   id: string;
-  contract_id: string;
-  contractId?: string;
-  activity_type: string;
-  action?: string;
-  description: string;
-  created_at: string;
-  createdAt?: string;
-  created_by?: string;
-  createdBy?: string;
-  metadata?: Json;
-  timestamp?: string;
-  userName?: string;
-  details?: any;
-}
-
-/**
- * Contract summary data
- */
-export interface ContractSummaryData {
-  id?: string;
-  totalValue: number;
-  expiringWithin30Days: number;
-  renewalRate: number;
-  activeCount?: number;
-  pendingCount?: number;
-  totalContracts?: number;
-  expiringThisMonth?: number;
-  expiringNext3Months?: number;
-  expiringNext6Months?: number;
-  valueExpiringThisMonth?: number;
-  valueExpiringNext3Months?: number;
-  valueExpiringNext6Months?: number;
-}
-
-/**
- * Contract history entry
- */
-export interface ContractHistoryEntry {
-  id: string;
-  site_id: string;
-  contract_details: Json;
-  notes?: string;
-  created_at: string;
-  created_by?: string;
-  version_number: number;
-}
-
-/**
- * Grouped contracts by status
- */
-export interface GroupedContracts {
-  active: Contract[];
-  expiring: Contract[];
-  expired: Contract[];
-  renewing: Contract[];
-}
-
-/**
- * Contract forecast data for charts
- */
-export interface ContractForecast {
-  month: string;
+  contractNumber: string;
+  type: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  autoRenewal: boolean;
+  renewalNoticeDays: number;
+  terminationPeriod: string;
   value: number;
-  cumulative: number;
-  revenue?: number;
-  cost?: number;
-  profit?: number;
-  contractCount?: number;
-  activeContracts?: number;
-  expiringContracts?: number;
-  renewingContracts?: number;
+  valueType: string;
+  valueFrequency: string;
+  termsOfPayment: string;
+  billingCycle: string;
+  contractLength: string;
+  renewalTerms: string;
+  notes: string;
+  terms: ContractTerm[];
 }
 
 /**
- * Convert a database contract to a frontend contract
+ * Contract data for front-end display
  */
-export function dbToContract(dbContract: DbContract): Contract {
+export interface ContractData {
+  id: string;
+  contractNumber: string;
+  type: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  autoRenewal: boolean;
+  renewalNoticeDays: number;
+  terminationPeriod: string;
+  value: number;
+  valueType: string;
+  valueFrequency: string;
+  termsOfPayment: string;
+  billingCycle: string;
+  contractLength: string;
+  renewalTerms: string;
+  notes: string;
+  terms: ContractTerm[];
+  site_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Convert database contract to frontend format
+ */
+export function adaptContractToFrontend(dbContract: any): Contract {
   return {
     id: dbContract.id,
-    siteId: dbContract.site_id,
-    clientId: dbContract.client_id,
-    contractNumber: dbContract.contract_number,
-    startDate: dbContract.start_date,
-    endDate: dbContract.end_date,
-    value: dbContract.value,
-    monthlyRevenue: dbContract.monthly_revenue,
-    contractDetails: dbContract.contract_details,
-    autoRenewal: dbContract.auto_renewal,
-    renewalPeriod: dbContract.renewal_period,
-    renewalNoticeDays: dbContract.renewal_notice_days,
-    terminationPeriod: dbContract.termination_period,
-    billingCycle: dbContract.billing_cycle,
-    serviceFrequency: dbContract.service_frequency,
-    serviceDeliveryMethod: dbContract.service_delivery_method,
-    isPrimary: dbContract.is_primary,
-    createdAt: dbContract.created_at,
-    updatedAt: dbContract.updated_at,
-    status: dbContract.status,
-    contractType: dbContract.contract_type || dbContract.type,
+    contractNumber: dbContract.contract_number || '',
+    type: dbContract.contract_type || '',
+    status: dbContract.status || 'active',
+    startDate: dbContract.start_date || '',
+    endDate: dbContract.end_date || '',
+    autoRenewal: dbContract.auto_renew || false,
+    renewalNoticeDays: dbContract.renewal_notice_days || 0,
+    terminationPeriod: dbContract.termination_period || '',
+    value: dbContract.value || 0,
+    valueType: dbContract.value_type || '',
+    valueFrequency: dbContract.value_frequency || '',
+    termsOfPayment: dbContract.terms_of_payment || '',
+    billingCycle: dbContract.billing_cycle || '',
+    contractLength: dbContract.contract_length || '',
+    renewalTerms: dbContract.renewal_terms || '',
+    notes: dbContract.notes || '',
+    terms: dbContract.terms || []
   };
 }
 
 /**
- * Convert a frontend contract to a database contract
+ * Convert frontend contract to database format
  */
-export function contractToDb(contract: Contract): DbContract {
+export function adaptContractToDb(contract: Contract): any {
   return {
     id: contract.id,
-    site_id: contract.siteId,
-    client_id: contract.clientId,
     contract_number: contract.contractNumber,
+    contract_type: contract.type,
+    status: contract.status,
     start_date: contract.startDate,
     end_date: contract.endDate,
-    value: contract.value,
-    monthly_revenue: contract.monthlyRevenue,
-    contract_details: contract.contractDetails,
-    auto_renewal: contract.autoRenewal,
-    renewal_period: contract.renewalPeriod,
+    auto_renew: contract.autoRenewal,
     renewal_notice_days: contract.renewalNoticeDays,
     termination_period: contract.terminationPeriod,
+    value: contract.value,
+    value_type: contract.valueType,
+    value_frequency: contract.valueFrequency,
+    terms_of_payment: contract.termsOfPayment,
     billing_cycle: contract.billingCycle,
-    service_frequency: contract.serviceFrequency,
-    service_delivery_method: contract.serviceDeliveryMethod,
-    is_primary: contract.isPrimary,
-    created_at: contract.createdAt,
-    updated_at: contract.updatedAt,
-    status: contract.status,
-    contract_type: contract.contractType || contract.type,
+    contract_length: contract.contractLength,
+    renewal_terms: contract.renewalTerms,
+    notes: contract.notes,
+    terms: contract.terms
+  };
+}
+
+/**
+ * Convert contract details to database format
+ */
+export function adaptContractDetailsToDb(contractDetails: ContractDetails): any {
+  return {
+    id: contractDetails.id,
+    contract_number: contractDetails.contractNumber,
+    contract_type: contractDetails.type,
+    status: contractDetails.status,
+    start_date: contractDetails.startDate,
+    end_date: contractDetails.endDate,
+    auto_renew: contractDetails.autoRenewal,
+    renewal_notice_days: contractDetails.renewalNoticeDays,
+    renewal_period: contractDetails.renewalPeriod,
+    renewal_length_months: contractDetails.renewalLengthMonths,
+    termination_period: contractDetails.terminationPeriod,
+    termination_period_days: contractDetails.terminationPeriodDays,
+    value: contractDetails.value,
+    value_type: contractDetails.valueType,
+    value_frequency: contractDetails.valueFrequency,
+    terms_of_payment: contractDetails.termsOfPayment,
+    billing_cycle: contractDetails.billingCycle,
+    billing_day: contractDetails.billingDay,
+    last_billing_date: contractDetails.lastBillingDate,
+    next_billing_date: contractDetails.nextBillingDate,
+    contract_length: contractDetails.contractLength,
+    contract_length_months: contractDetails.contractLengthMonths,
+    renewal_terms: contractDetails.renewalTerms,
+    notes: contractDetails.notes,
+    terms: contractDetails.terms
+  };
+}
+
+/**
+ * Convert database contract details to frontend format
+ */
+export function adaptContractDetailsFromDb(dbContract: any): ContractDetails {
+  return {
+    id: dbContract.id,
+    contractNumber: dbContract.contract_number || '',
+    type: dbContract.contract_type || '',
+    status: dbContract.status || 'active',
+    startDate: dbContract.start_date || '',
+    endDate: dbContract.end_date || '',
+    autoRenewal: dbContract.auto_renew || false,
+    renewalNoticeDays: dbContract.renewal_notice_days || 0,
+    renewalPeriod: dbContract.renewal_period || '',
+    renewalLengthMonths: dbContract.renewal_length_months || 0,
+    terminationPeriod: dbContract.termination_period || '',
+    terminationPeriodDays: dbContract.termination_period_days || 0,
+    value: dbContract.value || 0,
+    valueType: dbContract.value_type || '',
+    valueFrequency: dbContract.value_frequency || '',
+    termsOfPayment: dbContract.terms_of_payment || '',
+    billingCycle: dbContract.billing_cycle || '',
+    billingDay: dbContract.billing_day || 1,
+    lastBillingDate: dbContract.last_billing_date || '',
+    nextBillingDate: dbContract.next_billing_date || '',
+    contractLength: dbContract.contract_length || '',
+    contractLengthMonths: dbContract.contract_length_months || 0,
+    renewalTerms: dbContract.renewal_terms || '',
+    notes: dbContract.notes || '',
+    terms: dbContract.terms || []
   };
 }

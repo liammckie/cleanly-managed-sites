@@ -28,7 +28,7 @@ export function useClientData(clientId?: string) {
           city: data.city || '',
           state: data.state || '',
           postcode: data.postcode || '',
-          country: data.country || 'Australia'
+          country: 'Australia' // Default to Australia if country is missing
         };
 
         setClientData({

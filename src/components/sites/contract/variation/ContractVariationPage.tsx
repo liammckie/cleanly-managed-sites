@@ -1,109 +1,96 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BillingVariationForm } from './billing';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
+import { BillingVariationForm } from './billing/BillingVariationForm';
 import { ContractorChangeForm } from './ContractorChangeForm';
 import { useSite } from '@/hooks/useSite';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-// Component to display different variation options for selection
-const ContractVariationSelector = ({ siteId }: { siteId: string }) => {
+/**
+ * Component props including siteId
+ */
+interface ContractVariationPageProps {
+  siteId?: string;
+}
+
+/**
+ * Contract Variation Page component
+ * Displays tabs for different types of contract variations
+ */
+export const ContractVariationPage: React.FC<ContractVariationPageProps> = ({ siteId: propSiteId }) => {
+  // Get site ID from props or URL params
+  const { siteId: urlSiteId } = useParams<{ siteId: string }>();
+  const siteId = propSiteId || urlSiteId;
   const navigate = useNavigate();
   
+  const { site, isLoading } = useSite(siteId);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!site) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Site Not Found</CardTitle>
+          <CardDescription>
+            The requested site could not be found.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => navigate('/sites')}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Sites
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const handleBack = () => {
+    navigate(`/sites/${siteId}`);
+  };
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Select Contract Variation Type</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Button 
-          onClick={() => navigate(`/sites/${siteId}/contract-variations/billing`)}
-          className="h-auto py-6 flex flex-col items-center justify-center"
-          variant="outline"
-        >
-          <span className="text-lg">Billing Variation</span>
-          <span className="text-sm text-muted-foreground mt-2">
-            Change contract value or billing frequency
-          </span>
-        </Button>
-        
-        <Button 
-          onClick={() => navigate(`/sites/${siteId}/contract-variations/contractor`)}
-          className="h-auto py-6 flex flex-col items-center justify-center"
-          variant="outline"
-        >
-          <span className="text-lg">Contractor Change</span>
-          <span className="text-sm text-muted-foreground mt-2">
-            Reassign the contract to a different contractor
-          </span>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Contract Variation</h1>
+          <p className="text-muted-foreground">
+            Site: {site.name} | Client: {site.client_name}
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleBack}>
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back to Site
         </Button>
       </div>
+
+      <Tabs defaultValue="billing" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="billing">Billing Variation</TabsTrigger>
+          <TabsTrigger value="contractor">Contractor Change</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="billing">
+          <BillingVariationForm />
+        </TabsContent>
+        
+        <TabsContent value="contractor">
+          <ContractorChangeForm />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export function ContractVariationPage() {
-  const { siteId, variationType } = useParams<{ siteId: string; variationType?: string }>();
-  const navigate = useNavigate();
-  const { site, isLoading } = useSite(siteId!);
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  if (!site) {
-    return (
-      <div className="text-center py-8">
-        <p>Site not found</p>
-        <Button onClick={() => navigate('/sites')} className="mt-4">
-          Return to Sites
-        </Button>
-      </div>
-    );
-  }
-  
-  // Back button handler
-  const handleBack = () => {
-    if (variationType) {
-      // If we're on a specific variation type, go back to the selection screen
-      navigate(`/sites/${siteId}/contract-variations`);
-    } else {
-      // If we're on the selection screen, go back to the site detail
-      navigate(`/sites/${siteId}`);
-    }
-  };
-  
-  // Render the appropriate component based on variation type
-  const renderVariationContent = () => {
-    switch (variationType) {
-      case 'billing':
-        return <BillingVariationForm siteId={siteId!} />;
-      case 'contractor':
-        return <ContractorChangeForm siteId={siteId!} />;
-      default:
-        // If no specific variation or unknown, show the selector
-        return <ContractVariationSelector siteId={siteId!} />;
-    }
-  };
-  
-  return (
-    <div className="container py-6">
-      <div className="mb-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleBack}
-          className="flex items-center"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> 
-          Back
-        </Button>
-      </div>
-      
-      {renderVariationContent()}
-    </div>
-  );
-}
+export default ContractVariationPage;

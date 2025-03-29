@@ -1,121 +1,97 @@
 
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { validateWithZod } from '@/lib/validation';
 import { ImportOptions, ImportResult } from './types';
 import { processClientImport } from './clientImport';
-import { importSites } from './siteImport';
-import { importContractors } from './contractorImport';
-import { importContracts } from './contractImport';
+import { processSiteImport } from './siteImport';
+import { processContractorImport } from './contractorImport';
+import { processContractImport } from './contractImport';
+import { processInvoiceImport } from './invoiceImport';
 
-// Generic function to check if entities exist in the database
-export async function checkExistingEntities(
-  tableName: string,
-  field: string,
-  values: string[]
-): Promise<string[]> {
-  if (!values.length) return [];
-
-  try {
-    // List of known tables for type safety
-    const knownTables = [
-      'business_locations', 'contractors', 'sites', 'work_orders', 'invoices', 
-      'clients', 'quotes', 'user_roles', 'subcontractors', 'allowances', 
-      'business_details', 'business_documents', 'contacts', 'contractor_documents',
-      'contractor_history', 'contractor_payments', 'contractor_site_assignments',
-      'invoice_line_items', 'overhead_profiles', 'quote_shifts', 'quote_subcontractors',
-      'site_additional_contracts', 'site_billing_lines', 'site_contract_history',
-      'user_integrations', 'user_profiles'
-    ];
-    
-    // Safety check
-    if (!knownTables.includes(tableName)) {
-      console.error(`Unknown table: ${tableName}`);
-      return [];
-    }
-    
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(field)
-      .in(field, values);
-
-    if (error) {
-      console.error(`Error checking existing ${tableName}:`, error);
-      return [];
-    }
-
-    return data.map(item => item[field]);
-  } catch (error) {
-    console.error(`Error in checkExistingEntities for ${tableName}:`, error);
-    return [];
-  }
-}
-
-// Import clients
-export async function importClients(
-  data: any[],
-  options: ImportOptions = {}
-): Promise<ImportResult> {
-  return processClientImport(data);
-}
-
-// Import sites
-export async function importSites(
-  data: any[],
-  options: ImportOptions = {}
-): Promise<ImportResult> {
-  return importSites(data);
-}
-
-// Import contractors
-export async function importContractors(
-  data: any[],
-  options: ImportOptions = {}
-): Promise<ImportResult> {
-  return importContractors(data);
-}
-
-// Import contracts
-export async function importContracts(
-  data: any[],
-  options: ImportOptions = {}
-): Promise<ImportResult> {
-  return importContracts(data);
-}
-
-// Import invoices
-export async function importInvoices(
-  data: any[],
-  options: ImportOptions = {}
-): Promise<ImportResult> {
-  // This would be implemented similar to other import functions
-  return {
-    success: false,
-    message: 'Invoice import not yet implemented',
-    count: 0
-  };
-}
-
-// Generic import based on type
+/**
+ * Generic import function that delegates to specific import implementations
+ */
 export async function importData(
-  type: 'client' | 'site' | 'contractor' | 'contract' | 'invoice',
   data: any[],
+  tableName: string,
   options: ImportOptions = {}
 ): Promise<ImportResult> {
-  switch (type) {
-    case 'client':
-      return importClients(data, options);
-    case 'site':
-      return importSites(data, options);
-    case 'contractor':
-      return importContractors(data, options);
-    case 'contract':
-      return importContracts(data, options);
-    case 'invoice':
-      return importInvoices(data, options);
-    default:
-      return {
-        success: false,
-        message: `Unknown import type: ${type}`,
-        count: 0
-      };
+  console.log(`Starting import for ${tableName}`, { data, options });
+  
+  try {
+    switch (tableName) {
+      case 'clients':
+        return await processClientImport(data, options);
+      case 'sites':
+        return await processSiteImport(data, options);
+      case 'contractors':
+        return await processContractorImport(data, options);
+      case 'contracts':
+        return await processContractImport(data, options);
+      case 'invoices':
+        return await processInvoiceImport(data, options);
+      default:
+        return await genericImport(data, tableName, options);
+    }
+  } catch (error: any) {
+    console.error(`Error during import to ${tableName}:`, error);
+    toast.error(`Import failed: ${error.message || 'Unknown error'}`);
+    
+    return {
+      success: false,
+      message: `Import failed: ${error.message || 'Unknown error'}`,
+      count: 0,
+      failures: [error]
+    };
   }
 }
+
+/**
+ * Generic import implementation for tables without specialized logic
+ */
+async function genericImport(
+  data: any[],
+  tableName: string,
+  options: ImportOptions
+): Promise<ImportResult> {
+  if (!data || data.length === 0) {
+    return {
+      success: false,
+      message: 'No data to import',
+      count: 0
+    };
+  }
+  
+  try {
+    // Use the actual table name for the insertion
+    const { data: insertedData, error } = await supabase
+      .from(tableName as any)
+      .insert(data);
+      
+    if (error) throw error;
+    
+    return {
+      success: true,
+      message: `Successfully imported ${data.length} records to ${tableName}`,
+      count: data.length,
+      data: insertedData
+    };
+  } catch (error: any) {
+    console.error(`Error importing data to ${tableName}:`, error);
+    
+    return {
+      success: false,
+      message: `Import failed: ${error.message}`,
+      count: 0,
+      failures: [error]
+    };
+  }
+}
+
+// Export specific import functions for direct use
+export const importClients = processClientImport;
+export const importSites = processSiteImport;
+export const importContractors = processContractorImport;
+export const importContracts = processContractImport;
+export const importInvoices = processInvoiceImport;
