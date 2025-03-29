@@ -1,112 +1,135 @@
 
 import { supabase } from '@/lib/supabase';
-import { getCurrentUser } from '@/lib/utils/auth';
-import { validateSites } from './validation/siteValidation';
-import { checkExistingClients } from './validation/clientValidation';
-import { toast } from 'sonner';
+import { SiteRecord } from '@/lib/types/sites';
+import { ImportOptions, ImportResult } from './types';
+import { validateSiteData } from './validation/siteValidation';
+import { recordExistsByField } from './validation/commonValidation';
 
-// Site import interface
-interface SiteImportItem {
-  name: string;
-  client_id?: string;
-  client_name?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postcode?: string;
-  status?: string;
-  email?: string;
-  phone?: string;
-  representative?: string;
-  monthly_revenue?: number;
-  custom_id?: string;
-  notes?: string;
-}
-
-export const importSites = async (siteData: any[]) => {
+/**
+ * Process site import data
+ * @param data Array of site data objects to import
+ * @param options Import options
+ * @returns Import result
+ */
+export async function processSiteImport(data: any[], options: ImportOptions = {}): Promise<ImportResult> {
+  console.log('Processing site import', { data, options });
+  
   try {
-    // First validate the data
-    const validationResult = await validateSites(siteData);
-    
-    if (!validationResult.valid || !validationResult.data) {
-      const errorMessages = validationResult.errors?.map(err => err.message) || ['Validation failed'];
-      return {
-        success: false,
-        message: 'Validation errors: ' + errorMessages.join(', '),
-        count: 0
-      };
-    }
-    
-    const validSites = validationResult.data as SiteImportItem[];
-    
-    // Check if clients exist for each site
-    const clientIds = validSites
-      .filter(site => site.client_id)
-      .map(site => site.client_id as string);
+    // Validate site data
+    if (!options.skipValidation) {
+      const validationResult = await validateSiteData(data);
+      if (!validationResult.valid) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          count: 0,
+          failures: validationResult.errors
+        };
+      }
       
-    const clientNames = validSites
-      .filter(site => !site.client_id && site.client_name)
-      .map(site => site.client_name as string);
+      // Use validated data
+      data = validationResult.validData || data;
+    }
     
-    const existingClientsById = await checkExistingClients(clientIds, []);
+    // Check for existing sites by custom_id if not skipping
+    if (!options.skipExistingCheck) {
+      for (const site of data) {
+        if (site.custom_id) {
+          const exists = await recordExistsByField('sites', 'custom_id', site.custom_id);
+          if (exists && !options.updateExisting) {
+            return {
+              success: false,
+              message: `Site with custom ID ${site.custom_id} already exists`,
+              count: 0,
+              failures: [{
+                field: 'custom_id',
+                message: `Site with custom ID ${site.custom_id} already exists`,
+                value: site.custom_id
+              }]
+            };
+          }
+        }
+      }
+    }
     
-    // Get user ID for proper ownership of records
-    const user = await getCurrentUser();
-    const userId = user?.id;
-    
-    if (!userId) {
-      return {
-        success: false,
-        message: 'User not authenticated',
-        count: 0
+    // Insert or update sites
+    let result;
+    if (options.updateExisting) {
+      // Update existing sites based on custom_id
+      // This would require individual updates for each site
+      // Simplified for now
+      result = { count: 0, data: [] };
+      for (const site of data) {
+        if (site.custom_id) {
+          const { data: existingSite } = await supabase
+            .from('sites')
+            .select('id')
+            .eq('custom_id', site.custom_id)
+            .maybeSingle();
+            
+          if (existingSite) {
+            const { data: updatedSite, error } = await supabase
+              .from('sites')
+              .update(site)
+              .eq('id', existingSite.id)
+              .select();
+              
+            if (!error && updatedSite) {
+              result.count++;
+              result.data?.push(updatedSite[0]);
+            }
+          } else {
+            const { data: newSite, error } = await supabase
+              .from('sites')
+              .insert(site)
+              .select();
+              
+            if (!error && newSite) {
+              result.count++;
+              result.data?.push(newSite[0]);
+            }
+          }
+        } else {
+          const { data: newSite, error } = await supabase
+            .from('sites')
+            .insert(site)
+            .select();
+            
+          if (!error && newSite) {
+            result.count++;
+            result.data?.push(newSite[0]);
+          }
+        }
+      }
+    } else {
+      // Insert new sites
+      const { data: insertedData, error } = await supabase
+        .from('sites')
+        .insert(data)
+        .select();
+        
+      if (error) throw error;
+      
+      result = {
+        count: insertedData?.length || 0,
+        data: insertedData
       };
     }
     
-    // Prepare sites for insert
-    const sitesToInsert = validSites.map(site => ({
-      user_id: userId,
-      name: site.name,
-      client_id: site.client_id,
-      address: site.address,
-      city: site.city,
-      state: site.state,
-      postcode: site.postcode,
-      status: site.status || 'active',
-      email: site.email,
-      phone: site.phone,
-      representative: site.representative,
-      monthly_revenue: site.monthly_revenue,
-      custom_id: site.custom_id,
-      notes: site.notes
-    }));
-    
-    // Insert sites
-    const { data, error } = await supabase
-      .from('sites')
-      .insert(sitesToInsert);
-    
-    if (error) {
-      console.error('Error inserting sites:', error);
-      return {
-        success: false,
-        message: `Error importing sites: ${error.message}`,
-        count: 0
-      };
-    }
-    
-    // Return success result
     return {
       success: true,
-      message: `Successfully imported ${sitesToInsert.length} sites`,
-      count: sitesToInsert.length,
-      data: data
+      message: `Successfully imported ${result.count} sites`,
+      count: result.count,
+      data: result.data
     };
-  } catch (error) {
-    console.error('Error in importSites:', error);
+  } catch (error: any) {
+    console.error('Error importing sites:', error);
+    
     return {
       success: false,
-      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      count: 0
+      message: `Import failed: ${error.message}`,
+      count: 0,
+      failures: [error]
     };
   }
-};
+}

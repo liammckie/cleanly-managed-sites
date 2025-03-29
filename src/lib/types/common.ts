@@ -1,62 +1,12 @@
 
-/**
- * Generic JSON type
- */
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+// JSON type for use in database operations
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+export type Json = JsonValue;
 
-/**
- * Status types
- */
-export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold' | 'lost';
-export type UserStatus = 'active' | 'inactive' | 'pending';
-export type QuoteStatus =
-  | 'pending'
-  | 'draft'
-  | 'sent'
-  | 'accepted'
-  | 'rejected'
-  | 'expired'
-  | 'approved'
-  | 'in-progress'
-  | 'declined'
-  | 'submitted'
-  | 'completed';
-export type ContractStatus = 'draft' | 'active' | 'expired' | 'terminated' | 'inactive';
-
-/**
- * Date & Time
- */
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-export type UnifiedDay = Day | 'weekday' | 'weekend';
-
-/**
- * Frequency / Billing
- */
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
-export type BillingFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once-off';
-
-/**
- * Employment
- */
-export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
+// Common status types used across the application
+export type SiteStatus = 'active' | 'pending' | 'inactive' | 'lost' | 'on-hold';
+export type QuoteStatus = 'draft' | 'pending' | 'sent' | 'approved' | 'accepted' | 'rejected' | 'expired';
+export type WorkOrderStatus = 'draft' | 'assigned' | 'in-progress' | 'completed' | 'cancelled';
+export type WorkOrderPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type EmploymentType = 'full_time' | 'part_time' | 'casual' | 'contract' | 'intern';
 export type EmployeeLevel = 1 | 2 | 3 | 4;
-
-/**
- * Service Types
- */
-export type ServiceDeliveryType = 'in-house' | 'contractor' | 'hybrid';
-
-/**
- * Payment Conditions
- */
-export type PayCondition =
-  | 'base'
-  | 'saturday'
-  | 'sunday'
-  | 'publicHoliday'
-  | 'earlyMorning'
-  | 'evening'
-  | 'overnight'
-  | 'overtime1'
-  | 'overtime2'
-  | 'overtime3';

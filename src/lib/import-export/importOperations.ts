@@ -3,11 +3,11 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { validateWithZod } from '@/lib/validation';
 import { ImportOptions, ImportResult } from './types';
-import { processClientImport } from './clientImport';
 import { processSiteImport } from './siteImport';
 import { processContractorImport } from './contractorImport';
 import { processContractImport } from './contractImport';
 import { processInvoiceImport } from './invoiceImport';
+import { processClientImport } from './clientImport';
 
 /**
  * Generic import function that delegates to specific import implementations
@@ -66,7 +66,7 @@ async function genericImport(
   try {
     // Use the actual table name for the insertion
     const { data: insertedData, error } = await supabase
-      .from(tableName as any)
+      .from(tableName)
       .insert(data);
       
     if (error) throw error;

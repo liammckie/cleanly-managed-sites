@@ -1,72 +1,82 @@
 
-import { z } from 'zod';
-
-// Type for validation error
+/**
+ * Error format for validation errors
+ */
 export interface ValidationError {
   field: string;
   message: string;
+  rowIndex?: number;
+  value?: any;
 }
 
-// Type for validation message
+/**
+ * Message format for validation messages
+ */
 export interface ValidationMessage {
   type: 'error' | 'warning' | 'info';
   message: string;
   field?: string;
+  rowIndex?: number;
 }
 
-// Type for validation result
-export interface ValidationResult<T> {
+/**
+ * Options for validation functions
+ */
+export interface ValidationOptions {
+  checkExisting?: boolean;
+  isUpdate?: boolean;
+}
+
+/**
+ * Result from validation functions
+ */
+export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
-  data: T[];
+  warnings?: ValidationMessage[];
+  validData?: any[];
 }
 
-// Validation options
-export interface ValidationOptions {
-  skipRequiredFields?: boolean;
-  allowUnknownFields?: boolean;
+/**
+ * Result from Zod validation
+ */
+export interface ZodValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings?: ValidationMessage[];
+  validData?: any[];
 }
 
-// Legacy validation format
+/**
+ * Legacy validation result format for backward compatibility
+ */
 export interface LegacyValidationResult {
-  isValid: boolean;
-  messages: ValidationMessage[];
-  data: any;
+  valid: boolean;
+  errors: string[];
+  data?: any[];
 }
 
-// Zod validation result
-export interface ZodValidationResult<T> {
-  success: boolean;
-  data?: T;
-  error?: z.ZodError;
-}
-
-// Convert between validation formats
-export function legacyToNewValidationResult<T>(legacy: LegacyValidationResult): ValidationResult<T> {
-  const errors = legacy.messages
-    .filter(m => m.type === 'error')
-    .map(m => ({
-      field: m.field || '',
-      message: m.message
-    }));
-  
+/**
+ * Convert from legacy validation format to new format
+ */
+export function legacyToNewValidationResult(legacy: LegacyValidationResult): ValidationResult {
   return {
-    valid: legacy.isValid,
-    errors,
-    data: legacy.data
+    valid: legacy.valid,
+    errors: legacy.errors.map(error => ({
+      field: 'general',
+      message: error
+    })),
+    validData: legacy.data
   };
 }
 
-export function newToLegacyValidationResult<T>(result: ValidationResult<T>): LegacyValidationResult {
-  const messages = result.errors.map(err => ({
-    type: 'error' as const,
-    message: err.message,
-    field: err.field
-  }));
-  
+/**
+ * Convert from new validation format to legacy format
+ */
+export function newToLegacyValidationResult(result: ValidationResult): LegacyValidationResult {
   return {
-    isValid: result.valid,
-    messages,
-    data: result.data
+    valid: result.valid,
+    errors: result.errors.map(error => `${error.field}: ${error.message}`),
+    data: result.validData
   };
 }

@@ -1,188 +1,214 @@
 
 import { supabase } from '@/lib/supabase';
+import { ValidationError, ValidationResult } from '../types';
 import { z } from 'zod';
 
 /**
- * Validate email format
+ * Check if an email is valid
+ * @param email Email to validate
+ * @returns True if valid
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 /**
- * Validate date format (YYYY-MM-DD)
+ * Check if a date is in valid format (YYYY-MM-DD)
+ * @param dateStr Date string to validate
+ * @returns True if valid
  */
-export function isValidDateFormat(date: string): boolean {
-  if (!date) return true; // Allow empty
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(date)) return false;
-  
-  // Check if it's a valid date
-  const parsedDate = new Date(date);
-  return !isNaN(parsedDate.getTime());
+export function isValidDateFormat(dateStr: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 }
 
 /**
- * Check if a record exists by field value
+ * Check if a record exists by a specific field value
+ * @param table Database table name
+ * @param field Field name to check
+ * @param value Value to check
+ * @returns True if exists
  */
-export async function recordExistsByField<T>(
-  table: string,
-  field: string,
-  value: string | number
-): Promise<boolean> {
-  if (!value) return false;
-  
+export async function recordExistsByField(table: string, field: string, value: any): Promise<boolean> {
   try {
-    const { count, error } = await supabase
+    const { data, error, count } = await supabase
       .from(table)
-      .select('*', { count: 'exact', head: true })
-      .eq(field, value);
+      .select('id', { count: 'exact' })
+      .eq(field, value)
+      .limit(1);
       
-    if (error) {
-      console.error(`Error checking if ${field}=${value} exists in ${table}:`, error);
-      return false;
-    }
+    if (error) throw error;
     
     return (count || 0) > 0;
   } catch (error) {
-    console.error(`Error checking if ${field}=${value} exists in ${table}:`, error);
+    console.error(`Error checking if ${field} exists in ${table}:`, error);
     return false;
   }
 }
 
-// Simple helper to validate required fields
-export function validateRequiredFields(data: Record<string, any>, requiredFields: string[]): Record<string, string> {
-  const errors: Record<string, string> = {};
+/**
+ * Check if multiple records exist by a specific field value
+ * @param table Database table name
+ * @param field Field name to check
+ * @param values Array of values to check
+ * @returns Array of values that exist
+ */
+export async function recordsExistByField(table: string, field: string, values: any[]): Promise<any[]> {
+  if (!values || values.length === 0) return [];
+  
+  try {
+    const { data, error } = await supabase
+      .from(table)
+      .select(field)
+      .in(field, values);
+      
+    if (error) throw error;
+    
+    return data?.map(item => item[field]) || [];
+  } catch (error) {
+    console.error(`Error checking if ${field} values exist in ${table}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Validate required fields in an object
+ * @param obj Object to validate
+ * @param requiredFields Array of required field names
+ * @returns Array of validation errors
+ */
+export function validateRequiredFields(obj: any, requiredFields: string[]): ValidationError[] {
+  const errors: ValidationError[] = [];
   
   for (const field of requiredFields) {
-    if (!data[field]) {
-      errors[field] = `${field} is required`;
+    if (obj[field] === undefined || obj[field] === null || obj[field] === '') {
+      errors.push({
+        field,
+        message: `${field} is required`,
+        value: obj[field]
+      });
     }
   }
   
   return errors;
 }
 
-// Generic validation function using Zod schema
-export function validateWithZod<T>(schema: z.ZodType<T>, data: any): { success: boolean; data?: T; errors?: z.ZodError } {
-  const result = schema.safeParse(data);
-  if (result.success) {
-    return { success: true, data: result.data };
-  } else {
-    return { success: false, errors: result.error };
-  }
-}
-
-// Check if records exist by custom field
-export async function recordsExistByField<T>(
-  table: string,
-  field: string,
-  values: (string | number)[]
-): Promise<Record<string, boolean>> {
-  if (!values.length) return {};
-  
-  const uniqueValues = [...new Set(values)]; // Remove duplicates
-  const result: Record<string, boolean> = {};
-  
+/**
+ * Validate data using a Zod schema
+ * @param schema Zod schema
+ * @param data Data to validate
+ * @returns Validation result
+ */
+export function validateWithZod<T>(schema: z.ZodSchema<T>, data: any): ValidationResult {
   try {
-    const { data, error } = await supabase
-      .from(table)
-      .select(field)
-      .in(field, uniqueValues);
-      
-    if (error) {
-      console.error(`Error checking if values exist in ${table}.${field}:`, error);
-      return uniqueValues.reduce((acc, val) => {
-        acc[String(val)] = false;
-        return acc;
-      }, {} as Record<string, boolean>);
+    const validatedData = schema.parse(data);
+    return {
+      valid: true,
+      errors: [],
+      validData: validatedData
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        valid: false,
+        errors: error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+          value: err.path.reduce((obj, key) => obj && obj[key], data)
+        }))
+      };
     }
     
-    // Mark which values exist
-    const existingValues = new Set((data || []).map(item => String(item[field])));
-    
-    return uniqueValues.reduce((acc, val) => {
-      acc[String(val)] = existingValues.has(String(val));
-      return acc;
-    }, {} as Record<string, boolean>);
-  } catch (error) {
-    console.error(`Error checking if values exist in ${table}.${field}:`, error);
-    return uniqueValues.reduce((acc, val) => {
-      acc[String(val)] = false;
-      return acc;
-    }, {} as Record<string, boolean>);
+    return {
+      valid: false,
+      errors: [{
+        field: 'general',
+        message: error instanceof Error ? error.message : 'Validation failed'
+      }]
+    };
   }
 }
 
-// Convert validation errors to simple format
-export function simplifyValidationErrors<T>(errors: z.ZodError): Record<string, string> {
-  const result: Record<string, string> = {};
-  
-  errors.errors.forEach(err => {
-    const path = err.path.join('.');
-    result[path] = err.message;
-  });
-  
-  return result;
+/**
+ * Simplify validation errors into a string array
+ * @param errors Array of validation errors
+ * @returns Array of error strings
+ */
+export function simplifyValidationErrors(errors: ValidationError[]): string[] {
+  return errors.map(err => `${err.field}: ${err.message}`);
 }
 
-// Type for validation error
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-// Type for validation result
-export interface ValidationResult<T> {
-  valid: boolean;
-  errors: ValidationError[];
-  data: T[];
-}
-
-// Wrapper for the above functions to validate generic data
-export function validateGenericData<T>(
-  data: T[],
-  requiredFields: string[],
-  schema?: z.ZodType<T>
-): ValidationResult<T> {
+/**
+ * Generic data validation function
+ * @param data Data to validate
+ * @param schema Zod schema
+ * @param options Validation options
+ * @returns Validation result
+ */
+export async function validateGenericData<T>(
+  data: any[],
+  schema: z.ZodSchema<T>,
+  options?: { tableName?: string, uniqueField?: string }
+): Promise<ValidationResult> {
   const errors: ValidationError[] = [];
   const validData: T[] = [];
   
-  data.forEach((item, index) => {
-    // Check required fields
-    const requiredErrors = validateRequiredFields(item as Record<string, any>, requiredFields);
-    
-    Object.entries(requiredErrors).forEach(([field, message]) => {
-      errors.push({
-        field: `${index}.${field}`,
-        message
-      });
-    });
-    
-    // Validate with schema if provided
-    if (schema) {
-      const schemaResult = schema.safeParse(item);
-      if (!schemaResult.success) {
-        const schemaErrors = simplifyValidationErrors(schemaResult.error);
-        Object.entries(schemaErrors).forEach(([field, message]) => {
+  // Validate each item with the schema
+  for (let i = 0; i < data.length; i++) {
+    try {
+      const validatedItem = schema.parse(data[i]);
+      validData.push(validatedItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        error.errors.forEach(err => {
           errors.push({
-            field: `${index}.${field}`,
-            message
+            field: err.path.join('.'),
+            message: err.message,
+            rowIndex: i,
+            value: err.path.reduce((obj, key) => obj && obj[key], data[i])
           });
+        });
+      } else {
+        errors.push({
+          field: 'general',
+          message: error instanceof Error ? error.message : 'Validation failed',
+          rowIndex: i
         });
       }
     }
-    
-    // If no errors, add to valid data
-    if (Object.keys(requiredErrors).length === 0) {
-      validData.push(item);
+  }
+  
+  // Check for duplicates in the unique field
+  if (options?.uniqueField && options.tableName) {
+    const uniqueValues = data
+      .map(item => item[options.uniqueField!])
+      .filter(value => value !== undefined && value !== null && value !== '');
+      
+    if (uniqueValues.length > 0) {
+      const exists = await recordsExistByField(
+        options.tableName,
+        options.uniqueField,
+        uniqueValues
+      );
+      
+      if (exists.length > 0) {
+        for (let i = 0; i < data.length; i++) {
+          const value = data[i][options.uniqueField!];
+          if (value && exists.includes(value)) {
+            errors.push({
+              field: options.uniqueField,
+              message: `${options.uniqueField} already exists: ${value}`,
+              rowIndex: i,
+              value
+            });
+          }
+        }
+      }
     }
-  });
+  }
   
   return {
     valid: errors.length === 0,
     errors,
-    data: validData
+    validData: errors.length === 0 ? validData : undefined
   };
 }

@@ -1,5 +1,7 @@
 
 import { Json } from './common';
+import { ContractDetails } from './contracts';
+import { BillingDetails } from '../components/sites/forms/types/billingTypes';
 
 /**
  * Site record interface from database
@@ -55,4 +57,12 @@ export interface EnhancedSiteRecord extends SiteRecord {
   total_work_orders?: number;
   tasks_completed?: number;
   tasks_pending?: number;
+}
+
+/**
+ * Site record for form handling with typed contract and billing details
+ */
+export interface TypedSiteRecord extends Omit<SiteRecord, 'contract_details' | 'billing_details'> {
+  contract_details?: ContractDetails;
+  billing_details?: BillingDetails;
 }

@@ -20,7 +20,6 @@ export interface ImportOptions {
   skipExistingCheck?: boolean;
   updateExisting?: boolean;
   dryRun?: boolean;
-  type?: string;
 }
 
 export interface ImportResult {
