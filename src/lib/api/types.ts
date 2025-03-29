@@ -1,5 +1,5 @@
 
-// Re-export specific types from the lib/types.ts file to avoid duplicate exports
+// Re-export specific types from the lib/types index file to avoid duplicate exports
 export type {
   UserRole,
   SystemUser,
@@ -8,7 +8,7 @@ export type {
   SiteRecord,
   ContractorRecord,
   ContractorVersionHistoryEntry
-} from '../types';
+} from '@/lib/types';
 
-// Export WorkOrderRecord directly from here to avoid conflicts
+// Export WorkOrderRecord directly from the workorders types
 export type { WorkOrderRecord } from './workorders/types';

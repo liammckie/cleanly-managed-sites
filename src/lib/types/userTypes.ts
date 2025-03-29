@@ -1,98 +1,71 @@
 
 /**
  * User related type definitions
- * Centralizes all user types
  */
-import { UserStatus } from './common';
 
-/**
- * User role interface with permissions as Record
- */
+// User status enum
+export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+
+// User role
 export interface UserRole {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   permissions: Record<string, boolean>;
-  created_at?: string;
-  updated_at?: string;
-  user_count?: number;
-  
-  // Camel case aliases for frontend use
-  createdAt?: string;
-  updatedAt?: string;
-  userCount?: number;
+  created_at: string;
+  updated_at: string;
+  user_count: number;
 }
 
-/**
- * System user interface 
- */
+// System user with profile
 export interface SystemUser {
   id: string;
   email: string;
+  first_name: string;
+  last_name: string;
   full_name: string;
-  first_name?: string;
-  last_name?: string;
+  role_id: string;
+  role?: UserRole;
+  status: UserStatus;
+  created_at: string;
+  updated_at: string;
+  last_login?: string;
   avatar_url?: string;
-  title?: string;
   phone?: string;
   custom_id?: string;
   notes?: string;
-  territories?: string[];
-  status: UserStatus;
-  role_id?: string;
-  role?: UserRole;
-  created_at?: string;
-  updated_at?: string;
-  last_login?: string;
   daily_summary?: boolean;
-  
-  // Camel case aliases for frontend use
-  fullName?: string;
-  firstName?: string;
-  lastName?: string;
-  avatarUrl?: string;
-  customId?: string;
-  roleId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  lastLogin?: string;
-  dailySummary?: boolean;
 }
 
-/**
- * Database user role with permissions array (from database)
- */
-export interface DbUserRole {
-  id: string;
-  name: string;
-  description?: string;
-  permissions: string[] | Record<string, boolean>;
-  created_at?: string;
-  updated_at?: string;
-  user_count?: number;
-}
-
-/**
- * User profile with role (for UI displays)
- */
+// User profile with role
 export interface UserProfileWithRole extends SystemUser {
   role: UserRole;
 }
 
-/**
- * User profile (simplified user information)
- */
-export interface UserProfile {
-  id: string;
+// User creation data
+export interface UserCreationData {
   email: string;
-  name: string;
-  role: string;
+  first_name: string;
+  last_name: string;
+  role_id: string;
   status: UserStatus;
+  password?: string;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;
+  daily_summary?: boolean;
 }
 
-/**
- * For creating a new user
- */
-export interface SystemUserInsert extends Omit<SystemUser, 'id' | 'created_at' | 'updated_at'> {
-  id?: string;
+// User update data
+export interface UserUpdateData {
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  role_id?: string;
+  status?: UserStatus;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;
+  daily_summary?: boolean;
+  avatar_url?: string;
 }

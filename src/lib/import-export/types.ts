@@ -3,6 +3,8 @@
  * Re-export validation types for easier access
  * This file is maintained for backward compatibility
  */
+
+// Import and re-export all types from the centralized location
 export type { 
   ValidationError,
   ValidationMessage,
@@ -16,12 +18,13 @@ export type {
   DataImportType,
   DataExportType,
   ClientImportItem,
-  ContractorImportItem as ContractorRecord,
-  InvoiceImportItem as InvoiceRecord,
+  ContractorImportItem,
+  InvoiceImportItem,
   InvoiceLineItem
-} from '../types';
+} from '@/lib/types';
 
+// Re-export conversion functions
 export {
   legacyToNewValidationResult,
   newToLegacyValidationResult
-} from '../types/validationTypes';
+} from '@/lib/types/validationTypes';

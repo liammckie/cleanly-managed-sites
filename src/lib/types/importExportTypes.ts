@@ -1,18 +1,20 @@
 
 /**
- * Core import/export type definitions
- * Centralizes all import/export related types
+ * Import/Export types for data migration
  */
+import { Json } from './common';
+import { ValidationError, ValidationResult } from './validationTypes';
 
 // Import options
 export interface ImportOptions {
-  mapping?: Record<string, string>;
-  skipValidation?: boolean;
-  skipExistingCheck?: boolean;
-  updateExisting?: boolean;
+  validateOnly?: boolean;
   dryRun?: boolean;
-  type?: string;
-  format?: string;
+  updateExisting?: boolean;
+  createMissing?: boolean;
+  identifyBy?: string[];
+  batchSize?: number;
+  userId?: string;
+  mode?: 'full' | 'incremental';
 }
 
 // Import result
@@ -20,102 +22,94 @@ export interface ImportResult {
   success: boolean;
   message: string;
   count: number;
-  failures?: any[];
   data?: any[];
+  failures?: any[];
+  errors?: ValidationError[];
+  warnings?: string[];
 }
 
 // Export options
 export interface ExportOptions {
+  format?: 'csv' | 'json' | 'xlsx';
   includeHeaders?: boolean;
-  format?: 'csv' | 'xlsx' | 'json';
-  fileName?: string;
-  fields?: string[];
+  dateFormat?: string;
+  filename?: string;
   filters?: Record<string, any>;
-  sort?: {
-    field: string;
-    direction: 'asc' | 'desc';
-  };
 }
 
 // Export result
 export interface ExportResult {
   success: boolean;
   message: string;
+  count: number;
   data?: any;
-  fileUrl?: string;
-  fileName?: string;
-  format?: string;
-  count?: number;
+  filename?: string;
+  mimeType?: string;
 }
 
 // Data types for import/export
-export type DataExportType = 
-  | 'clients' 
-  | 'sites' 
-  | 'contractors' 
-  | 'contracts' 
-  | 'invoices' 
-  | 'work-orders'
-  | 'quotes';
+export type DataImportType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'invoices' | 'unified';
+export type DataExportType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'invoices' | 'unified';
 
-export type DataImportType = 
-  | 'client' 
-  | 'site' 
-  | 'contractor' 
-  | 'contract' 
-  | 'invoice' 
-  | 'work-order'
-  | 'quote';
-
-// Import item types
+// Client import item
 export interface ClientImportItem {
+  id?: string;
   name: string;
-  contact_name: string;
+  contact_name?: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  status?: string;
+  status?: 'active' | 'inactive' | 'pending' | 'prospect';
   notes?: string;
+  custom_id?: string;
+  xero_contact_id?: string;
 }
 
+// Contractor import item
 export interface ContractorImportItem {
   id?: string;
   business_name: string;
-  contact_name: string;
+  contact_name?: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  abn?: string;
-  contractor_type: string;
-  status?: string;
-  specialty?: string[];
+  status?: 'active' | 'pending' | 'inactive';
   notes?: string;
+  abn?: string;
+  contractor_type?: string;
+  specialty?: string[];
+  hourly_rate?: number;
+  insurance_details?: Json;
 }
 
+// Invoice import item
 export interface InvoiceImportItem {
   id?: string;
   invoice_number: string;
-  client_id: string;
-  site_id?: string;
-  amount: number;
   invoice_date: string;
   due_date?: string;
-  status: string;
+  amount: number;
+  status?: string;
+  client_id?: string;
+  site_id?: string;
   notes?: string;
   line_items?: InvoiceLineItem[];
 }
 
+// Invoice line item
 export interface InvoiceLineItem {
   id?: string;
-  invoice_id?: string;
   description: string;
   quantity: number;
   unit_price: number;
-  tax_type?: string;
+  amount: number;
+  tax_rate?: number;
+  tax_amount?: number;
+  account_code?: string;
 }

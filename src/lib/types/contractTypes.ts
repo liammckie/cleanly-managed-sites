@@ -1,200 +1,94 @@
 
 /**
  * Contract related type definitions
- * Centralizes all contract types
  */
-import { ContractStatus } from './common';
+import { Json } from './common';
 
-/**
- * Contract term interface
- */
-export interface ContractTerm {
+// Basic contract type
+export interface Contract {
   id: string;
-  term: string;
-  name?: string;
+  site_id: string;
+  client_id?: string;
+  title?: string;
+  contractNumber?: string;
   description?: string;
+  type?: string;
+  status?: string;
+  monthlyRevenue?: number;
+  contractDetails?: ContractDetails;
   startDate?: string;
   endDate?: string;
-  renewalTerms?: string;
-  terminationPeriod?: string;
-  autoRenew?: boolean;
-  value?: number | string;
-  unit?: string;
-  type?: string;
+  renewalPeriod?: string;
+  autoRenewal?: boolean;
+  value?: number;
+  billingCycle?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  isPrimary?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-/**
- * Contract details interface
- */
+// Contract details
 export interface ContractDetails {
   id?: string;
   contractNumber?: string;
   type?: string;
-  status?: ContractStatus;
+  status?: string;
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
   renewalNoticeDays?: number;
-  renewalPeriod?: string;
   renewalLengthMonths?: number;
   terminationPeriod?: string;
-  terminationPeriodDays?: number;
-  value?: number;
-  valueType?: string;
-  valueFrequency?: string;
-  termsOfPayment?: string;
-  billingCycle?: string;
-  billingDay?: number;
-  lastBillingDate?: string;
-  nextBillingDate?: string;
-  contractLength?: string;
-  contractLengthUnit?: string;
-  contractLengthMonths?: number;
-  renewalTerms?: string;
+  specificEndDate?: boolean;
   notes?: string;
+  attachments?: string[];
+  value?: number;
+  billingCycle?: string;
+  billingTerms?: string;
+  agreementDate?: string;
+  signedBy?: string;
+  clientContact?: string;
   terms?: ContractTerm[];
-  noticeUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  reviewDate?: string;
-  noticePeriodDays?: number;
-  nextIncreaseDate?: string;
-  specialTerms?: string;
-  terminationClause?: string;
-  annualValue?: number;
-  renewalNotice?: number;
-}
-
-/**
- * Contract interface for frontend use
- */
-export interface Contract {
-  id: string;
-  siteId: string;
-  clientId?: string;
-  contractNumber?: string;
-  status: ContractStatus;
-  startDate?: string;
-  endDate?: string;
-  autoRenewal?: boolean;
+  includeTax?: boolean;
+  taxRate?: number;
+  billingStartDate?: string;
   renewalPeriod?: string;
-  renewalNoticeDays?: number;
-  terminationPeriod?: string;
-  value?: number;
-  valueType?: string;
-  valueFrequency?: string;
-  termsOfPayment?: string;
-  billingCycle?: string;
-  contractLength?: string;
-  renewalTerms?: string;
-  notes?: string;
-  terms?: ContractTerm[];
   serviceFrequency?: string;
   serviceDeliveryMethod?: string;
-  isPrimary?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  contractDetails?: ContractDetails;
-  monthlyRevenue?: number;
-  
-  // Legacy snake_case fields for backward compatibility
-  site_id?: string;
-  client_id?: string;
-  contract_number?: string;
-  start_date?: string;
-  end_date?: string;
-  auto_renewal?: boolean;
-  renewal_period?: string;
-  renewal_notice_days?: number;
-  termination_period?: string;
-  billing_cycle?: string;
-  contract_length?: string;
-  service_frequency?: string;
-  service_delivery_method?: string;
-  is_primary?: boolean;
-  created_at?: string;
-  updated_at?: string;
 }
 
-/**
- * Contract data for database format
- */
-export interface DbContract {
+// Contract term
+export interface ContractTerm {
   id: string;
-  site_id: string;
-  client_id?: string;
-  contract_number?: string;
-  status: string;
-  start_date?: string;
-  end_date?: string;
-  auto_renewal?: boolean;
-  renewal_period?: string;
-  renewal_notice_days?: number;
-  termination_period?: string;
-  value?: number;
-  value_type?: string;
-  value_frequency?: string;
-  terms_of_payment?: string;
-  billing_cycle?: string;
-  contract_length?: string;
-  renewal_terms?: string;
-  notes?: string;
-  terms?: ContractTerm[];
-  service_frequency?: string;
-  service_delivery_method?: string;
-  is_primary?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  contract_details?: any;
-  monthly_revenue?: number;
+  title: string;
+  description: string;
+  isRequired: boolean;
+  isAccepted?: boolean;
+  acceptedDate?: string;
 }
 
-/**
- * Contract history entry interface
- */
+// Contract history entry
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  contract_details: any;
+  contract_details: ContractDetails;
   notes?: string;
   created_at: string;
   created_by?: string;
   version_number: number;
 }
 
-/**
- * Contract activity interface
- */
-export interface ContractActivity {
-  id: string;
-  contract_id: string;
-  activity_type: string;
-  description: string;
-  created_at: string;
-  created_by?: string;
-  metadata?: any;
-  action?: string;
-  timestamp?: string;
-  userName?: string;
-  details?: any;
-}
-
-/**
- * Grouped contracts by status
- */
-export interface GroupedContracts {
-  active: Contract[];
-  expiring: Contract[];
-  expired: Contract[];
-  renewing: Contract[];
-}
-
-/**
- * Contract forecast data point
- */
-export interface ContractForecast {
-  month: string;
-  value: number;
-  cumulative: number;
-  revenue?: number;
+// Contract summary data
+export interface ContractSummaryData {
+  totalContracts: number;
+  activeContracts: number;
+  expiringContracts: number;
+  monthlyRevenue: number;
+  annualRevenue: number;
+  averageContractValue: number;
+  contractsByType: Record<string, number>;
+  contractsByStatus: Record<string, number>;
+  recentChanges: ContractHistoryEntry[];
 }

@@ -1,67 +1,71 @@
 
+/**
+ * Client validation for import operations
+ */
 import { z } from 'zod';
-import { isValidEmail } from './commonValidation';
-import { simplifyValidationErrors, validateRequiredFields, ValidationError } from './commonValidation';
+import { formatZodErrors, checkForDuplicates, createValidationResult } from './commonValidation';
+import { ValidationError, ValidationResult, ValidationOptions, ClientImportItem } from '@/lib/types';
 
-// Schema for client validation
-const clientSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  contact_name: z.string().min(1, "Contact name is required"),
-  email: z.string().email("Invalid email format").optional().nullable(),
-  phone: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  city: z.string().optional().nullable(),
-  state: z.string().optional().nullable(),
-  postcode: z.string().optional().nullable(),
-  status: z.enum(['active', 'inactive', 'pending', 'prospect']).optional(),
-  notes: z.string().optional().nullable()
+// Zod schema for client validation
+export const clientSchema = z.object({
+  name: z.string().min(1, 'Client name is required'),
+  contact_name: z.string().optional(),
+  email: z.string().email('Invalid email format').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postcode: z.string().optional(),
+  status: z.enum(['active', 'pending', 'inactive', 'prospect']).optional(),
+  notes: z.string().optional(),
+  custom_id: z.string().optional()
 });
 
 /**
- * Validate client data
+ * Validate client data for import
  */
-export function validateClientData(clients: any[]) {
-  const errors: ValidationError[] = [];
-  const validClients: any[] = [];
+export async function validateClientData(
+  clients: ClientImportItem[],
+  options: ValidationOptions = {}
+): Promise<ValidationResult & { validClients: ClientImportItem[] }> {
+  const result = createValidationResult();
+  const validClients: ClientImportItem[] = [];
   
-  clients.forEach((client, index) => {
-    // Required fields check
-    const requiredFields = ['name', 'contact_name'];
-    const requiredErrors = validateRequiredFields(client, requiredFields);
+  for (let i = 0; i < clients.length; i++) {
+    const client = clients[i];
     
-    Object.entries(requiredErrors).forEach(([field, message]) => {
-      errors.push({
-        field: `${index}.${field}`,
-        message
-      });
-    });
+    // Basic schema validation
+    const parseResult = clientSchema.safeParse(client);
     
-    // Email validation if present
-    if (client.email && !isValidEmail(client.email)) {
-      errors.push({
-        field: `${index}.email`,
-        message: 'Invalid email format'
-      });
-    }
-    
-    // Schema validation
-    const result = clientSchema.safeParse(client);
-    if (!result.success) {
-      const schemaErrors = simplifyValidationErrors(result.error);
-      Object.entries(schemaErrors).forEach(([field, message]) => {
-        errors.push({
-          field: `${index}.${field}`,
-          message
+    if (!parseResult.success) {
+      // Convert Zod errors to our format and add to result
+      const zodErrors = formatZodErrors(parseResult.error);
+      zodErrors.forEach(error => {
+        result.errors.push({
+          field: `clients[${i}].${error.field}`,
+          message: error.message
         });
       });
-    } else {
-      validClients.push(client);
+      result.valid = false;
+      continue;
     }
-  });
+    
+    // Check for duplicates if needed
+    if (options.checkDuplicates && client.name) {
+      const isDuplicate = await checkForDuplicates('clients', 'name', client.name, 'id', client.id);
+      if (isDuplicate) {
+        result.errors.push({
+          field: `clients[${i}].name`,
+          message: `A client with the name "${client.name}" already exists`
+        });
+        result.valid = false;
+        continue;
+      }
+    }
+    
+    // Add to valid clients if passes all checks
+    validClients.push(client);
+  }
   
-  return {
-    valid: errors.length === 0,
-    errors,
-    validClients
-  };
+  return { ...result, validClients };
 }

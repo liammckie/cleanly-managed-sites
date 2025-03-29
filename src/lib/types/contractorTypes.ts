@@ -1,85 +1,63 @@
 
 /**
  * Contractor related type definitions
- * Centralizes all contractor types
  */
+import { Json } from './common';
 
 /**
- * Contractor record interface from database
+ * Contractor record from database
  */
 export interface ContractorRecord {
   id: string;
   business_name: string;
-  name?: string;
-  contact_name: string;
+  contact_name?: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  status: 'active' | 'inactive' | 'pending';
-  tax_id?: string;
-  user_id: string;
-  hourly_rate?: number;
-  day_rate?: number;
-  rating?: number;
-  created_at?: string;
-  updated_at?: string;
-  abn?: string;
-  contractor_type: string;
-  specialty?: string[];
+  status: 'active' | 'pending' | 'inactive';
   notes?: string;
-  custom_id?: string;
-  services?: string[];
+  abn?: string;
+  contractor_type?: string;
+  specialty?: string[];
+  hourly_rate?: number;
+  insurance_details?: Json;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 /**
- * Contractor history entry
+ * Contractor document
  */
-export interface ContractorHistoryEntry {
+export interface ContractorDocument {
   id: string;
   contractor_id: string;
-  contractor_data: any;
-  notes?: string;
-  version_number: number;
-  created_at: string;
-  created_by?: string;
-}
-
-/**
- * Subcontractor interface (specific to sites)
- */
-export interface Subcontractor {
-  id: string;
-  site_id: string;
-  business_name: string;
-  contact_name: string;
-  email?: string;
-  phone?: string;
-  is_flat_rate?: boolean;
-  monthly_cost?: number;
-  services?: string[] | any;
-  custom_services?: string;
-  contractor_id?: string;
-}
-
-/**
- * Quote subcontractor (specific to quotes)
- */
-export interface QuoteSubcontractor {
-  id: string;
-  quote_id: string;
   name: string;
-  description?: string;
-  cost: number;
-  frequency: string;
-  email?: string;
-  phone?: string;
+  document_type: string;
+  file_path?: string;
+  issue_date?: string;
+  expiry_date?: string;
+  reminder_days?: number;
   notes?: string;
-  service?: string;
-  services?: string[];
-  customServices?: string;
-  monthlyCost?: number;
-  isFlatRate?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Contractor version history entry
+ */
+export interface ContractorVersionHistoryEntry {
+  id: string;
+  contractor_id: string;
+  version_number: number;
+  status: string;
+  hourly_rate?: number;
+  insurance_details?: Json;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  notes?: string;
 }

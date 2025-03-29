@@ -10,9 +10,9 @@ export type {
   ValidationOptions,
   LegacyValidationResult,
   ZodValidationResult
-} from '../../types/validationTypes';
+} from '@/lib/types';
 
 export {
   legacyToNewValidationResult,
   newToLegacyValidationResult
-} from '../../types/validationTypes';
+} from '@/lib/types/validationTypes';

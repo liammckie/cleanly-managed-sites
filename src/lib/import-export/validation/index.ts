@@ -1,22 +1,45 @@
 
-// Export validation functions
-export { validateClientData } from './clientValidation';
-export { validateSiteData } from './siteValidation';
-export { validateContractData } from './contractValidation';
-export { validateContractorData } from './contractorValidation';
-export { validateInvoiceData } from './invoiceValidation';
+/**
+ * Export validation functions and types
+ */
+import { validateClientData } from './clientValidation';
+import { validateSiteData } from './siteValidation';
+import { validateContractorData } from './contractorValidation';
+import { validateContractData } from './contractValidation';
+import { validateInvoiceData } from './invoiceValidation';
+import { validateWithZod } from '@/lib/validation';
 
-// Export common validation helpers
+// Import types from centralized location
+import {
+  ValidationError,
+  ValidationResult,
+  ValidationOptions,
+  ImportOptions
+} from '@/lib/types';
+
+// Export all validation functions
 export {
-  isValidEmail,
-  isValidDateFormat,
-  validateRequiredFields,
-  validateWithZod,
-  recordExistsByField,
-  recordsExistByField,
-  simplifyValidationErrors,
-  validateGenericData
-} from './commonValidation';
+  validateClientData,
+  validateSiteData,
+  validateContractorData,
+  validateContractData,
+  validateInvoiceData,
+  validateWithZod
+};
 
-// Export types
-export type { ValidationError, ValidationResult } from './commonValidation';
+// Re-export types for convenience
+export type {
+  ValidationError,
+  ValidationResult,
+  ValidationOptions,
+  ImportOptions
+};
+
+// Validation function map for dynamic validation
+export const validators = {
+  clients: validateClientData,
+  sites: validateSiteData,
+  contractors: validateContractorData,
+  contracts: validateContractData,
+  invoices: validateInvoiceData
+};

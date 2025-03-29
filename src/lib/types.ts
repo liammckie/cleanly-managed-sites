@@ -4,31 +4,25 @@
  * It is kept for backward compatibility only
  */
 
-// Re-export types from centralized locations
-import {
-  SystemUser,
-  UserRole,
-  UserStatus,
-  Contract,
-  ContractDetails,
-  adaptUserFromDb,
-  adaptUserToDb,
-  adaptUserRoleFromDb,
-  adaptUserRoleToDb,
-  adaptContractFromDb as adaptContractToFrontend,
-  adaptContractToDb,
-  Json
-} from './types';
+// Re-export all types from centralized locations
+export * from './types/index';
 
-// Re-export for backward compatibility
+// Specific re-exports for backward compatibility
 export type {
   SystemUser,
   UserRole,
   UserStatus,
   Contract,
   ContractDetails,
-  Json
-};
+  Json,
+  ClientRecord,
+  SiteRecord,
+  ContactRecord,
+  ContractorRecord,
+  ContractorVersionHistoryEntry,
+  SiteContact,
+  WorkOrderRecord
+} from './types/index';
 
 // Re-export adapters for backward compatibility
 export {
@@ -36,6 +30,6 @@ export {
   adaptUserToDb,
   adaptUserRoleFromDb,
   adaptUserRoleToDb,
-  adaptContractToFrontend,
+  adaptContractFromDb,
   adaptContractToDb
-};
+} from './types/index';

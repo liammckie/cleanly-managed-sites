@@ -32,7 +32,7 @@ export {
 export { processClientImport } from './clientImport';
 
 // Export all types from central types module for easy access
-export {
+export type {
   ImportOptions,
   ImportResult,
   ExportOptions,
@@ -40,15 +40,18 @@ export {
   DataExportType,
   DataImportType,
   ClientImportItem,
-  ContractorImportItem as ContractorRecord,
-  InvoiceImportItem as InvoiceRecord,
+  ContractorImportItem,
+  InvoiceImportItem,
   InvoiceLineItem,
   ValidationError,
   ValidationMessage,
   ValidationResult,
   ValidationOptions,
   LegacyValidationResult,
-  ZodValidationResult,
+  ZodValidationResult
+} from '@/lib/types';
+
+export {
   legacyToNewValidationResult,
   newToLegacyValidationResult
-} from '../types';
+} from '@/lib/types/validationTypes';

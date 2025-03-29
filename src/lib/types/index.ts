@@ -19,7 +19,7 @@ export * from './contractorTypes';
 export * from './importExportTypes';
 export * from './validationTypes';
 
-// Re-export adapters for convenience
+// Export adapter functions for convenience
 export { 
   adaptContractFromDb,
   adaptContractToDb, 
@@ -34,3 +34,6 @@ export {
   adaptUserRoleFromDb,
   adaptUserRoleToDb
 } from '../adapters/userAdapter';
+
+// Export WorkOrderRecord from the API directly to avoid circular dependencies
+export type { WorkOrderRecord } from '../api/workorders/types';
