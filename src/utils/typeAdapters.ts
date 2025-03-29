@@ -1,87 +1,97 @@
 
-import { EmploymentType, ServiceDeliveryType } from '@/types/common';
-import { ContractDetails } from '@/types/contracts';
-import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
+import { Day, Frequency, QuoteStatus } from '@/types/common';
 
-/**
- * Converts a contract details object from form format to API format
- * @param contractDetails Contract details from form
- * @returns Contract details formatted for API
- */
-export function adaptContractDetailsToApi(contractDetails: ContractDetails): any {
-  if (!contractDetails) return null;
-  
+// Adapter for overhead profiles
+export function adaptOverheadProfile(profile: any) {
   return {
-    ...contractDetails,
-    // Convert numeric values to strings if needed by API
-    renewalPeriod: contractDetails.renewalPeriod ? String(contractDetails.renewalPeriod) : undefined,
-    renewalNoticeDays: contractDetails.renewalNoticeDays ? String(contractDetails.renewalNoticeDays) : undefined,
-    contractLength: contractDetails.contractLength ? String(contractDetails.contractLength) : undefined,
+    id: profile.id || '',
+    name: profile.name || '',
+    laborPercentage: profile.labor_percentage || 15,
+    description: profile.description || ''
   };
 }
 
-/**
- * Converts billing details from form format to DTO format
- * @param billingDetails Billing details from form
- * @returns Billing details formatted for DTO
- */
-export function adaptBillingDetailsToDTO(billingDetails: BillingDetails): any {
-  if (!billingDetails) return null;
-  
+// Adapter for quotes
+export function adaptQuote(quote: any) {
   return {
-    ...billingDetails,
-    // Ensure serviceDeliveryType is one of the allowed values
-    serviceDeliveryType: billingDetails.serviceDeliveryType === 'mixed' 
-      ? 'direct' as ServiceDeliveryType 
-      : billingDetails.serviceDeliveryType
+    id: quote.id,
+    name: quote.name,
+    clientName: quote.client_name || quote.clientName,
+    siteName: quote.site_name || quote.siteName,
+    status: quote.status,
+    startDate: quote.start_date || quote.startDate,
+    endDate: quote.end_date || quote.endDate,
+    expiryDate: quote.expiry_date || quote.expiryDate,
+    totalPrice: quote.total_price || quote.totalPrice || 0,
+    createdAt: quote.created_at || quote.createdAt,
+    updatedAt: quote.updated_at || quote.updatedAt
   };
 }
 
-/**
- * Adapts an address object for consistent structure
- * @param address Address object to adapt
- * @returns Properly structured address
- */
-export function adaptAddress(address: any): any {
-  if (!address) return null;
-  
+// Quote adapters for API
+export function adaptQuoteToApi(quote: any) {
   return {
-    street: address.street || '',
-    city: address.city || '',
-    state: address.state || '',
-    postcode: address.postcode || '',
-    country: address.country || 'Australia'
+    id: quote.id,
+    name: quote.name,
+    client_name: quote.clientName,
+    site_name: quote.siteName,
+    status: quote.status,
+    start_date: quote.startDate,
+    end_date: quote.endDate,
+    expiry_date: quote.expiryDate,
+    total_price: quote.totalPrice,
+    created_at: quote.createdAt,
+    updated_at: quote.updatedAt
   };
 }
 
-/**
- * Converts employment type string to enum value
- * @param type Employment type string
- * @returns Valid employment type enum value
- */
-export function adaptEmploymentType(type: string): EmploymentType {
-  if (type === 'full_time') return 'full-time';
-  if (type === 'part_time') return 'part-time';
-  return type as EmploymentType;
+export function adaptQuoteToFrontend(quote: any) {
+  return adaptQuote(quote);
 }
 
-/**
- * Converts a billingAddress string to an object
- * @param addressString Address string to convert
- * @returns Address object
- */
-export function stringToAddressObject(addressString: string): any {
-  if (!addressString) return null;
-  
-  // If it's already an object, return it
-  if (typeof addressString !== 'string') return addressString;
-  
-  // Create default address object
+// User role adapters
+export function adaptUserRole(role: any) {
   return {
-    street: addressString,
-    city: '',
-    state: '',
-    postcode: '',
-    country: 'Australia'
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: typeof role.permissions === 'string' 
+      ? JSON.parse(role.permissions) 
+      : role.permissions,
+    createdAt: role.created_at,
+    updatedAt: role.updated_at,
+    userCount: role.user_count || 0
+  };
+}
+
+export function adaptUserRoleToApi(role: any) {
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: typeof role.permissions === 'object' 
+      ? JSON.stringify(role.permissions) 
+      : role.permissions,
+    created_at: role.createdAt,
+    updated_at: role.updatedAt
+  };
+}
+
+// Helper for fixing the Shift adapters
+export function adaptQuoteShift(shift: any) {
+  // Handle both camelCase and snake_case
+  return {
+    id: shift.id,
+    day: shift.day as Day,
+    startTime: shift.startTime || shift.start_time,
+    endTime: shift.endTime || shift.end_time,
+    breakDuration: shift.breakDuration || shift.break_duration || 30,
+    numberOfCleaners: shift.numberOfCleaners || shift.number_of_cleaners || 1,
+    employmentType: shift.employmentType || shift.employment_type,
+    level: shift.level,
+    location: shift.location,
+    notes: shift.notes,
+    estimatedCost: shift.estimatedCost || shift.estimated_cost || 0,
+    quoteId: shift.quoteId || shift.quote_id
   };
 }

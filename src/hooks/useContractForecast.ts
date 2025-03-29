@@ -1,60 +1,31 @@
+
 import { useState, useEffect } from 'react';
-import { format, addMonths, parseISO } from 'date-fns';
-import { ContractForecast } from '@/components/sites/forms/types/contractTypes';
+import { ContractForecast } from '@/types/contracts';
 
-// Mock implementation for getContractForecast until the actual API function is created
-const mockGetContractForecast = async (siteId: string, months: number = 12): Promise<ContractForecast[]> => {
-  // Create a forecast for the specified number of months
-  const forecast: ContractForecast[] = [];
-  const now = new Date();
+export function useContractForecast() {
+  const [forecastData, setForecastData] = useState<ContractForecast[]>([]);
   
-  for (let i = 0; i < months; i++) {
-    const forecastDate = addMonths(now, i);
-    forecast.push({
-      month: format(forecastDate, 'MMM yyyy'),
-      revenue: 5000 + Math.random() * 1000,
-      cost: 3000 + Math.random() * 800,
-      profit: 2000 + Math.random() * 500
-    });
-  }
-  
-  return new Promise(resolve => {
-    setTimeout(() => resolve(forecast), 500);
-  });
-};
-
-// Add the mock function to contracts API
-const contractsApi = {
-  // ... existing API methods
-  getContractForecast: mockGetContractForecast
-};
-
-export function useContractForecast(siteId: string, months: number = 12) {
-  const [forecast, setForecast] = useState<ContractForecast[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
   useEffect(() => {
-    const fetchForecast = async () => {
-      if (!siteId) return;
-      
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Use the mock function directly until the real API is implemented
-        const data = await mockGetContractForecast(siteId, months);
-        setForecast(data);
-      } catch (err) {
-        console.error('Error fetching contract forecast:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch contract forecast'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchForecast();
-  }, [siteId, months]);
-
-  return { forecast, isLoading, error };
+    // Mock data for the chart
+    const mockForecast: ContractForecast[] = [
+      { month: 'Jan', revenue: 35000, cost: 25000, profit: 10000, contractCount: 12 },
+      { month: 'Feb', revenue: 32000, cost: 24000, profit: 8000, contractCount: 12 },
+      { month: 'Mar', revenue: 38000, cost: 26000, profit: 12000, contractCount: 13 },
+      { month: 'Apr', revenue: 42000, cost: 28000, profit: 14000, contractCount: 14 },
+      { month: 'May', revenue: 45000, cost: 30000, profit: 15000, contractCount: 14 },
+      { month: 'Jun', revenue: 48000, cost: 32000, profit: 16000, contractCount: 15 },
+      { month: 'Jul', revenue: 50000, cost: 33000, profit: 17000, contractCount: 16 },
+      { month: 'Aug', revenue: 52000, cost: 34000, profit: 18000, contractCount: 17 },
+      { month: 'Sep', revenue: 55000, cost: 36000, profit: 19000, contractCount: 18 },
+      { month: 'Oct', revenue: 58000, cost: 38000, profit: 20000, contractCount: 19 },
+      { month: 'Nov', revenue: 60000, cost: 39000, profit: 21000, contractCount: 20 },
+      { month: 'Dec', revenue: 62000, cost: 40000, profit: 22000, contractCount: 22 }
+    ];
+    
+    setForecastData(mockForecast);
+  }, []);
+  
+  return {
+    forecastData
+  };
 }

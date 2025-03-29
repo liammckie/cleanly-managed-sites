@@ -77,3 +77,28 @@ export function getContractType(contractDetails: Json | ContractDetails | null |
 export function getContractNumber(contractDetails: Json | ContractDetails | null | undefined): string | null {
   return getContractField(contractDetails, 'contractNumber', null);
 }
+
+/**
+ * Check if a contract is expiring soon (within 90 days)
+ * @param contractDetails Contract details
+ * @returns True if contract is expiring within 90 days
+ */
+export function isContractExpiringSoon(contractDetails: Json | ContractDetails | null | undefined): boolean {
+  const endDateStr = getContractEndDate(contractDetails);
+  if (!endDateStr) return false;
+  
+  try {
+    const endDate = new Date(endDateStr);
+    const today = new Date();
+    
+    // Calculate the difference in days
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Return true if the contract expires within 90 days
+    return diffDays >= 0 && diffDays <= 90;
+  } catch (error) {
+    console.error("Error checking if contract is expiring soon:", error);
+    return false;
+  }
+}

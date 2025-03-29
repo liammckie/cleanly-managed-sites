@@ -13,8 +13,8 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   // Convert contractDetails to the appropriate format
   const contractDetails = formData.contractDetails || formData.contract_details;
   
-  // Convert contract details to DB format
-  const adaptedContractDetails = contractDetails ? contractDetailsToDb(contractDetails) : undefined;
+  // Convert contract details to DB format using the improved adapter
+  const adaptedContractDetails = contractDetailsToDb(contractDetails);
   
   // Create a compatible billingAddress object if it exists
   const billingAddress = formData.billingDetails?.billingAddress ? {
@@ -26,15 +26,13 @@ const adaptSiteFormToApiData = (formData: SiteFormData): Partial<SiteDTO> => {
   } : undefined;
   
   // Ensure serviceDeliveryType is properly typed
-  const serviceDeliveryType = formData.billingDetails?.serviceDeliveryType === 'contractor' 
-    ? 'contractor' 
-    : 'direct';
+  const serviceDeliveryType = formData.billingDetails?.serviceDeliveryType || 'direct';
   
   // Create a compatible billing details object
   const adaptedBillingDetails = formData.billingDetails ? {
     ...formData.billingDetails,
     billingAddress,
-    serviceDeliveryType,
+    serviceDeliveryType: serviceDeliveryType === 'mixed' ? 'direct' : serviceDeliveryType,
     billingLines: formData.billingDetails.billingLines || []
   } : undefined;
   

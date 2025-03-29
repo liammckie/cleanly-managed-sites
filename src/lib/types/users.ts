@@ -1,55 +1,22 @@
 
-import { UserStatus } from '@/types/common';
+// Re-export with proper type syntax
+export type { 
+  UserRole, 
+  UserProfile,
+  UserStatus,
+  UserPermission
+} from './db';
 
-export { UserStatus } from '@/types/common';
+import { UserRole as UserRoleType } from './db';
 
-export interface SystemUser {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  full_name: string;
-  avatar_url?: string;
-  role_id?: string;
-  role?: UserRole;
-  created_at?: string;
-  updated_at?: string;
-  title?: string;
-  phone?: string;
-  status: UserStatus;
-  last_login?: string;
-  custom_id?: string;
-  note?: string;
-  territories?: string[];
-  permissions?: Record<string, boolean>;
-}
-
-export interface UserRole {
+// Define additional user-related types here
+export interface UserRoleSummary {
   id: string;
   name: string;
-  description?: string;
-  permissions: Record<string, boolean>;
-  created_at?: string;
-  updated_at?: string;
-  user_count?: number;
+  description: string;
+  userCount: number;
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  full_name: string;
-  avatar_url?: string;
-  title?: string;
-  phone?: string;
-  status: UserStatus;
-  role_id?: string;
-  custom_id?: string;
-  notes?: string;
-  territories?: string[];
-  created_at?: string;
-  updated_at?: string;
-  last_login?: string;
-  daily_summary?: boolean;
+export interface UserProfileWithRole extends UserRoleType {
+  role?: UserRoleType;
 }

@@ -68,16 +68,26 @@ export function contractToDb(contract: Contract): DbContract {
  * @param details Contract details from form
  * @returns Contract details for database
  */
-export function contractDetailsToDb(details: ContractDetails): Json {
+export function contractDetailsToDb(details: ContractDetails | null | undefined): Json {
   if (!details) return null;
   
-  // Ensure renewalPeriod is a string (some APIs expect this)
-  const convertedDetails = {
-    ...details,
-    renewalPeriod: details.renewalPeriod !== undefined 
-      ? String(details.renewalPeriod) 
-      : undefined
-  };
+  // Create a deep copy to avoid modifying the original
+  const detailsCopy = JSON.parse(JSON.stringify(details));
   
-  return convertedDetails as Json;
+  // Ensure renewalPeriod is a string (some APIs expect this)
+  if (detailsCopy.renewalPeriod !== undefined) {
+    detailsCopy.renewalPeriod = String(detailsCopy.renewalPeriod);
+  }
+  
+  // Handle terms array if it exists - convert to a serializable format
+  if (Array.isArray(detailsCopy.terms)) {
+    detailsCopy.terms = detailsCopy.terms.map(term => ({
+      ...term,
+      // Ensure any date fields are strings
+      startDate: term.startDate ? String(term.startDate) : undefined,
+      endDate: term.endDate ? String(term.endDate) : undefined
+    }));
+  }
+  
+  return detailsCopy as unknown as Json;
 }
