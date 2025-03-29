@@ -1,43 +1,50 @@
 
 import { SiteFormData } from './siteFormData';
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
+export interface SiteFormValidationErrors {
+  name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  contacts?: string;
+  contractDetails?: string;
 }
 
 export const validateBasicInfo = (formData: SiteFormData): boolean => {
   return !!(formData.name && formData.address && formData.city && formData.state);
 };
 
-export const validateSiteForm = (formData: SiteFormData): ValidationResult => {
-  const errors: string[] = [];
-  
-  // Basic information validation
-  if (!formData.name) {
-    errors.push('Site name is required');
+export const validateContacts = (contacts: any[]): string | null => {
+  if (!contacts || contacts.length === 0) {
+    return 'At least one contact is required';
   }
-  
-  if (!formData.address) {
-    errors.push('Address is required');
+  return null;
+};
+
+export const validateContractDetails = (contractDetails: any): string | null => {
+  // Add specific contract details validation logic
+  if (!contractDetails || Object.keys(contractDetails).length === 0) {
+    return 'Contract details are required';
   }
+  return null;
+};
+
+export const validateSiteForm = (formData: SiteFormData): { isValid: boolean; errors: SiteFormValidationErrors } => {
+  const errors: SiteFormValidationErrors = {};
   
-  if (!formData.city) {
-    errors.push('City is required');
-  }
+  if (!formData.name) errors.name = 'Site name is required';
+  if (!formData.address) errors.address = 'Address is required';
+  if (!formData.city) errors.city = 'City is required';
+  if (!formData.state) errors.state = 'State is required';
   
-  if (!formData.state) {
-    errors.push('State is required');
-  }
+  const contactsError = validateContacts(formData.contacts);
+  if (contactsError) errors.contacts = contactsError;
   
-  if (!formData.postalCode && !formData.postcode) {
-    errors.push('Postal code is required');
-  }
-  
-  // Add more validation as needed for other sections
+  const contractDetailsError = validateContractDetails(formData.contract_details);
+  if (contractDetailsError) errors.contractDetails = contractDetailsError;
   
   return {
-    isValid: errors.length === 0,
+    isValid: Object.keys(errors).length === 0,
     errors
   };
 };
