@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { usersApi } from '@/lib/api/users';
-import { UserRole } from '@/lib/types';
+import { UserRole } from '@/types/db';
 import { validateWithZod } from '@/lib/validation';
 import { userRoleSchema } from '@/lib/validation/userSchema';
 

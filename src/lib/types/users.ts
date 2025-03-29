@@ -7,8 +7,6 @@ export type {
   UserPermission
 } from './db';
 
-import { UserRole as UserRoleType } from './db';
-
 // Define additional user-related types here
 export interface UserRoleSummary {
   id: string;
@@ -17,16 +15,23 @@ export interface UserRoleSummary {
   userCount: number;
 }
 
-export interface UserProfileWithRole extends UserRoleType {
-  role?: UserRoleType;
-}
-
-// Define UserStatus type since it's missing
-export type UserStatus = "active" | "pending" | "inactive";
-
-export interface UserPermission {
+export interface UserProfileWithRole {
   id: string;
-  name: string;
-  description?: string;
-  module: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  title?: string;
+  phone?: string;
+  custom_id?: string;
+  notes?: string;
+  territories?: string[];
+  status: UserStatus;
+  role_id?: string;
+  role?: UserRole;
+  created_at?: string;
+  updated_at?: string;
+  last_login?: string;
+  daily_summary?: boolean;
 }

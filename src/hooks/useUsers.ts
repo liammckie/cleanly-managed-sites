@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { SystemUser, UserRole, UserProfile, UserStatus } from '@/lib/types/users';
+import { UserProfile, UserRole, UserStatus } from '@/types/db';
 import { toast } from 'sonner';
 
 export function useUsers() {
@@ -19,7 +19,7 @@ export function useUsers() {
       
       if (error) throw error;
       
-      // Map the response to our SystemUser type
+      // Map the response to our UserProfile type
       return data.map(user => ({
         id: user.id,
         email: user.email,
@@ -36,8 +36,9 @@ export function useUsers() {
         status: user.status as UserStatus,
         last_login: user.last_login,
         custom_id: user.custom_id,
-        note: user.notes,
-        territories: user.territories
+        notes: user.notes,
+        territories: user.territories,
+        daily_summary: user.daily_summary
       }));
     }
   });
@@ -72,7 +73,7 @@ export function useUsers() {
   
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, ...userData }: Partial<SystemUser> & { id: string }) => {
+    mutationFn: async ({ id, ...userData }: Partial<UserProfile> & { id: string }) => {
       const { data, error } = await supabase
         .from('user_profiles')
         .update(userData)
