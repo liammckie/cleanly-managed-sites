@@ -12,8 +12,8 @@ import { Json } from '@/types/common';
 export function getContractField<T>(
   contractDetails: Json | ContractDetails | null | undefined,
   fieldName: string,
-  defaultValue: T
-): T {
+  defaultValue: T | null = null
+): T | null {
   if (!contractDetails) return defaultValue;
   
   try {
@@ -79,11 +79,15 @@ export function getContractNumber(contractDetails: Json | ContractDetails | null
 }
 
 /**
- * Check if a contract is expiring soon (within 90 days)
+ * Check if a contract is expiring soon
  * @param contractDetails Contract details
- * @returns True if contract is expiring within 90 days
+ * @param daysThreshold Number of days to consider "soon" (default: 90)
+ * @returns True if contract is expiring within the specified days
  */
-export function isContractExpiringSoon(contractDetails: Json | ContractDetails | null | undefined): boolean {
+export function isContractExpiringSoon(
+  contractDetails: Json | ContractDetails | null | undefined,
+  daysThreshold: number = 90
+): boolean {
   const endDateStr = getContractEndDate(contractDetails);
   if (!endDateStr) return false;
   
@@ -95,8 +99,8 @@ export function isContractExpiringSoon(contractDetails: Json | ContractDetails |
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    // Return true if the contract expires within 90 days
-    return diffDays >= 0 && diffDays <= 90;
+    // Return true if the contract expires within the specified days
+    return diffDays >= 0 && diffDays <= daysThreshold;
   } catch (error) {
     console.error("Error checking if contract is expiring soon:", error);
     return false;

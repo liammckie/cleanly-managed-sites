@@ -54,10 +54,12 @@ export const SiteDetailHeader = ({ site, isLoading }: SiteDetailHeaderProps) => 
     }
   };
 
-  const contractStartDate = getContractField(site?.contract_details, 'startDate');
-  const contractEndDate = getContractField(site?.contract_details, 'endDate');
+  // Get contract fields with proper default values
+  const contractStartDate = getContractField(site?.contract_details, 'startDate', null);
+  const contractEndDate = getContractField(site?.contract_details, 'endDate', null);
 
-  const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details, 60);
+  // Check if contract is expiring soon (default 90 days if no days parameter is provided)
+  const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details);
 
   return (
     <Card className="mb-6">
