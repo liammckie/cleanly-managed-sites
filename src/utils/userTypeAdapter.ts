@@ -8,6 +8,7 @@ export interface UserRole {
   permissions: Record<string, boolean>;
   created_at?: string;
   updated_at?: string;
+  user_count?: number;
 }
 
 export const adaptUserRole = (dbRole: DbUserRole): UserRole => {
@@ -30,7 +31,8 @@ export const adaptUserRole = (dbRole: DbUserRole): UserRole => {
     description: dbRole.description,
     permissions: permissionsObject,
     created_at: dbRole.created_at,
-    updated_at: dbRole.updated_at
+    updated_at: dbRole.updated_at,
+    user_count: 'user_count' in dbRole ? (dbRole as any).user_count : undefined
   };
 };
 

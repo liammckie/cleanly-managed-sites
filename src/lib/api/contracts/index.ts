@@ -9,7 +9,7 @@ export {
   contractDetailsToDb
 };
 
-// Add adapter functions to fix the errors
+// Adapter functions to fix the errors
 export const adaptContractData = (contract: any): Contract => {
   return dbToContract(contract);
 };
@@ -17,3 +17,9 @@ export const adaptContractData = (contract: any): Contract => {
 export const adaptContracts = (contracts: any[]): Contract[] => {
   return contracts.map(dbToContract);
 };
+
+// Add any missing type definitions
+export interface ContractAdapterOptions {
+  includeClientData?: boolean;
+  includeSiteData?: boolean;
+}

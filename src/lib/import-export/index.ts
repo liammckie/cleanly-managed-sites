@@ -20,10 +20,6 @@ export {
 
 // Export specific import implementations for backward compatibility
 export { processClientImport } from './clientImport';
-export { importContracts as importContractsLegacy } from './contractImport';
-export { importContractors as importContractorsLegacy } from './contractorImport';
-export { importSites as importSitesLegacy } from './siteImport';
-export { importInvoices as importInvoicesLegacy } from './invoiceImport';
 
 // Export types
 export type {
@@ -39,5 +35,11 @@ export type {
   ValidationMessage,
   ValidationResult,
   ValidationOptions,
-  LegacyValidationResult
+  LegacyValidationResult,
+  ZodValidationResult
+} from './types';
+
+export {
+  legacyToNewValidationResult,
+  newToLegacyValidationResult
 } from './types';

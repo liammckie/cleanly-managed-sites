@@ -127,3 +127,21 @@ export function useUserRoles() {
     refetchRoles: refetch
   };
 }
+
+export function useUserRole(id: string) {
+  return useQuery({
+    queryKey: ['user-role', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      
+      return adaptUserRole(data);
+    },
+    enabled: !!id
+  });
+}

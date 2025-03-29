@@ -1,29 +1,43 @@
 
 import { useState } from 'react';
-import { setupTestData } from '@/lib/import-export/setupTestData';
-import { toast } from 'sonner';
+import { setupTestData } from '@/lib/import-export';
 
 export function useTestData() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isGenerated, setIsGenerated] = useState<boolean>(false);
+  const [results, setResults] = useState<Record<string, any> | null>(null);
 
-  const generateTestData = async () => {
-    setIsGenerating(true);
+  const generateTestData = async (options?: { 
+    clients?: number; 
+    sites?: number; 
+    contractors?: number;
+    includeWorkOrders?: boolean;
+  }) => {
     try {
-      await setupTestData();
-      setIsGenerated(true);
-      toast.success('Test data generated successfully');
+      setIsGenerating(true);
+      setResults(null);
+      
+      const defaultOptions = {
+        clients: 5,
+        sites: 10,
+        contractors: 5,
+        includeWorkOrders: true,
+        ...options
+      };
+      
+      const data = await setupTestData(defaultOptions);
+      setResults(data);
+      return data;
     } catch (error) {
       console.error('Error generating test data:', error);
-      toast.error('Error generating test data');
+      throw error;
     } finally {
       setIsGenerating(false);
     }
   };
 
   return {
+    generateTestData,
     isGenerating,
-    isGenerated,
-    generateTestData
+    results
   };
 }

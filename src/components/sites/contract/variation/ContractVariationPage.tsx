@@ -9,14 +9,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export function ContractVariationPage() {
-  const { siteId } = useParams<{ siteId: string }>();
+  const { siteId, variationType } = useParams<{ siteId: string; variationType?: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { site, isLoading } = useSite(siteId);
-  
-  // Extract the variation type from the URL path
-  const pathParts = location.pathname.split('/');
-  const variationType = pathParts[pathParts.length - 1];
   
   if (isLoading) {
     return (
