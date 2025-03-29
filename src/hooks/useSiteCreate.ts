@@ -5,6 +5,7 @@ import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Json } from '@/types/common';
+import { mapToDb } from '@/lib/utils/mappers';
 
 export function useSiteCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,8 +19,8 @@ export function useSiteCreate() {
         throw new Error('User not authenticated');
       }
 
-      // Prepare the site data for insertion
-      const siteData = {
+      // Prepare payload in camelCase, then convert to snake_case for DB
+      const payload = {
         name: formData.name,
         address: formData.address,
         city: formData.city,
@@ -38,7 +39,7 @@ export function useSiteCreate() {
 
       const { data, error } = await supabase
         .from('sites')
-        .insert(siteData)
+        .insert(payload)
         .select()
         .single();
 

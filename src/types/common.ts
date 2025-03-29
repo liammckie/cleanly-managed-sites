@@ -30,8 +30,8 @@ export type PayCondition =
   'overtime3';
 
 // Employment related
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;  // Added 5 to fix error in awardData.ts
-export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';  // Added extra values used in typeMapping.ts
+export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'intern';
 
 // Service related
 export type ServiceDeliveryType = 'direct' | 'contractor' | 'mixed';
