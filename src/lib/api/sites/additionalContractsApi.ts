@@ -1,155 +1,165 @@
 
 import { supabase } from '@/lib/supabase';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
-import { v4 as uuidv4 } from 'uuid';
 
-// Function to transform contract details for database
-const transformContractForDb = (contract: ContractDetails) => {
-  return {
-    contract_number: contract.contractNumber,
-    start_date: contract.startDate,
-    end_date: contract.endDate,
-    contract_type: contract.contractType,
-    value: Number(contract.value || 0),
-    billing_cycle: contract.billingCycle,
-    auto_renew: contract.autoRenewal,
-    renewal_terms: contract.renewalTerms,
-    termination_period: contract.terminationPeriod,
-    notes: contract.notes
-  };
-};
-
-// Function to transform database contract to UI contract details
-const transformDbToContract = (dbContract: any): ContractDetails => {
-  return {
-    id: dbContract.id,
-    contractNumber: dbContract.contract_number || '',
-    startDate: dbContract.start_date || '',
-    endDate: dbContract.end_date || '',
-    contractType: dbContract.contract_type || '',
-    value: dbContract.value || 0,
-    billingCycle: dbContract.billing_cycle || 'monthly',
-    autoRenewal: dbContract.auto_renew || false,
-    renewalTerms: dbContract.renewal_terms || '',
-    terminationPeriod: dbContract.termination_period || '',
-    renewalPeriod: String(dbContract.renewal_period || '0'),
-    serviceFrequency: dbContract.service_frequency || '',
-    serviceDeliveryMethod: dbContract.service_delivery_method || '',
-    notes: dbContract.notes || ''
-  };
-};
-
-// Function to handle site additional contracts
-export const handleSiteAdditionalContracts = async (
-  siteId: string,
-  additionalContracts: ContractDetails[]
-) => {
-  try {
-    if (!additionalContracts || additionalContracts.length === 0) {
-      return { success: true, message: 'No additional contracts to process' };
-    }
-
-    // Get existing additional contracts
-    const { data: existingContracts, error: fetchError } = await supabase
-      .from('site_additional_contracts')
-      .select('id')
-      .eq('site_id', siteId);
-
-    if (fetchError) {
-      console.error('Error fetching existing contracts:', fetchError);
-      throw fetchError;
-    }
-
-    // Create a map of existing contract IDs
-    const existingContractIds = new Set(existingContracts?.map(c => c.id) || []);
-
-    // Process each additional contract
-    for (const contract of additionalContracts) {
-      const transformedContract = transformContractForDb(contract);
-      
-      // If contract has an ID and it exists in the database, update it
-      if (contract.id && existingContractIds.has(contract.id)) {
-        const { error } = await supabase
-          .from('site_additional_contracts')
-          .update({
-            ...transformedContract,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', contract.id);
-
-        if (error) {
-          console.error('Error updating additional contract:', error);
-          throw error;
-        }
-
-        // Remove this ID from the set as it's been processed
-        existingContractIds.delete(contract.id);
-      } 
-      // If the contract doesn't have an ID or it doesn't exist, create it
-      else {
-        const { error } = await supabase
-          .from('site_additional_contracts')
-          .insert({
-            ...transformedContract,
-            id: contract.id || uuidv4(),
-            site_id: siteId,
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) {
-          console.error('Error creating additional contract:', error);
-          throw error;
-        }
-      }
-    }
-
-    // Delete any contracts that were not included in the update
-    if (existingContractIds.size > 0) {
-      const { error } = await supabase
-        .from('site_additional_contracts')
-        .delete()
-        .in('id', Array.from(existingContractIds));
-
-      if (error) {
-        console.error('Error deleting obsolete contracts:', error);
-        throw error;
-      }
-    }
-
-    return { success: true, message: 'Additional contracts processed successfully' };
-  } catch (error) {
-    console.error('Error handling additional contracts:', error);
-    return { 
-      success: false, 
-      message: `Error handling additional contracts: ${error instanceof Error ? error.message : String(error)}` 
-    };
-  }
-};
-
-// Function to get all additional contracts for a site
-export const getAdditionalContracts = async (siteId: string): Promise<ContractDetails[]> => {
+export const fetchAdditionalContracts = async (siteId: string) => {
   try {
     const { data, error } = await supabase
       .from('site_additional_contracts')
       .select('*')
       .eq('site_id', siteId);
-
+    
     if (error) {
       console.error('Error fetching additional contracts:', error);
-      throw error;
+      throw new Error('Failed to fetch additional contracts');
     }
-
-    return (data || []).map(transformDbToContract);
+    
+    return data.map(contract => ({
+      id: contract.id,
+      contractNumber: contract.contract_number,
+      startDate: contract.start_date,
+      endDate: contract.end_date,
+      contractType: contract.contract_type,
+      value: contract.value,
+      billingCycle: contract.billing_cycle,
+      autoRenewal: contract.auto_renew,
+      renewalTerms: contract.renewal_terms,
+      terminationPeriod: contract.termination_period,
+      notes: contract.notes,
+      renewalPeriod: contract.renewal_period ? String(contract.renewal_period) : '',
+      renewalNoticeDays: contract.renewal_notice,
+      serviceFrequency: contract.service_frequency,
+      serviceDeliveryMethod: contract.service_delivery_method
+    })) as ContractDetails[];
   } catch (error) {
-    console.error('Error in getAdditionalContracts:', error);
-    return [];
+    console.error('Error in fetchAdditionalContracts:', error);
+    throw error;
   }
 };
 
-// Export the API object
-export const additionalContractsApi = {
-  handleSiteAdditionalContracts,
-  getAdditionalContracts
+export const fetchAdditionalContract = async (contractId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .select('*')
+      .eq('id', contractId)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching additional contract:', error);
+      throw new Error('Failed to fetch additional contract');
+    }
+    
+    return {
+      id: data.id,
+      contractNumber: data.contract_number,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      contractType: data.contract_type,
+      value: data.value,
+      billingCycle: data.billing_cycle,
+      autoRenewal: data.auto_renew,
+      renewalTerms: data.renewal_terms,
+      terminationPeriod: data.termination_period,
+      notes: data.notes,
+      renewalPeriod: data.renewal_period ? String(data.renewal_period) : '',
+      renewalNoticeDays: data.renewal_notice,
+      serviceFrequency: data.service_frequency,
+      serviceDeliveryMethod: data.service_delivery_method
+    } as ContractDetails;
+  } catch (error) {
+    console.error('Error in fetchAdditionalContract:', error);
+    throw error;
+  }
+};
+
+export const createAdditionalContract = async (siteId: string, contractDetails: Partial<ContractDetails>) => {
+  try {
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .insert({
+        site_id: siteId,
+        contract_number: contractDetails.contractNumber,
+        start_date: contractDetails.startDate,
+        end_date: contractDetails.endDate,
+        contract_type: contractDetails.contractType,
+        value: contractDetails.value,
+        billing_cycle: contractDetails.billingCycle,
+        auto_renew: contractDetails.autoRenewal,
+        renewal_terms: contractDetails.renewalTerms,
+        termination_period: contractDetails.terminationPeriod,
+        notes: contractDetails.notes,
+        renewal_period: contractDetails.renewalPeriod,
+        renewal_notice: contractDetails.renewalNoticeDays,
+        service_frequency: contractDetails.serviceFrequency,
+        service_delivery_method: contractDetails.serviceDeliveryMethod
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating additional contract:', error);
+      throw new Error('Failed to create additional contract');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in createAdditionalContract:', error);
+    throw error;
+  }
+};
+
+export const updateAdditionalContract = async (contractId: string, contractDetails: Partial<ContractDetails>) => {
+  try {
+    const { data, error } = await supabase
+      .from('site_additional_contracts')
+      .update({
+        contract_number: contractDetails.contractNumber,
+        start_date: contractDetails.startDate,
+        end_date: contractDetails.endDate,
+        contract_type: contractDetails.contractType,
+        value: contractDetails.value,
+        billing_cycle: contractDetails.billingCycle,
+        auto_renew: contractDetails.autoRenewal,
+        renewal_terms: contractDetails.renewalTerms,
+        termination_period: contractDetails.terminationPeriod,
+        notes: contractDetails.notes,
+        renewal_period: contractDetails.renewalPeriod,
+        renewal_notice: contractDetails.renewalNoticeDays,
+        service_frequency: contractDetails.serviceFrequency,
+        service_delivery_method: contractDetails.serviceDeliveryMethod
+      })
+      .eq('id', contractId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating additional contract:', error);
+      throw new Error('Failed to update additional contract');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in updateAdditionalContract:', error);
+    throw error;
+  }
+};
+
+export const deleteAdditionalContract = async (contractId: string) => {
+  try {
+    const { error } = await supabase
+      .from('site_additional_contracts')
+      .delete()
+      .eq('id', contractId);
+    
+    if (error) {
+      console.error('Error deleting additional contract:', error);
+      throw new Error('Failed to delete additional contract');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in deleteAdditionalContract:', error);
+    throw error;
+  }
 };

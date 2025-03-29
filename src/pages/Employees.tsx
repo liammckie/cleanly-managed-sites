@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { Card } from '@/components/ui/card';
@@ -31,7 +30,10 @@ const Employees = () => {
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('directory');
-  
+  const [open, setOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<ContactRecord | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { 
     contacts, 
     isLoading, 
@@ -249,13 +251,13 @@ const Employees = () => {
         </div>
 
         <ContactDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          contact={editingContact || undefined}
+          isOpen={open} 
+          onClose={() => setOpen(false)}
+          contact={selectedContact} 
           entityType="internal"
           onSubmit={handleSubmitContact}
-          isSubmitting={isLoading}
-          title="Employee"
+          isSubmitting={isSubmitting}
+          title="Add New Employee"
         />
       </div>
     </PageLayout>

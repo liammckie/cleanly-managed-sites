@@ -1,166 +1,254 @@
 import React, { useState, useEffect } from 'react';
-import { useRoles } from '@/hooks/useRoles';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { UserRole } from '@/types/db';
-import { PlusCircle, Edit, Trash2, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { DialogWhenEmpty } from '@/components/shared/DialogWhenEmpty';
-import { Json } from '@/types/common';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { UserRole } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
+import DialogWhenEmpty from '@/components/shared/DialogWhenEmpty';
+import { PlusCircledIcon } from '@radix-ui/react-icons';
 
-import EditRoleDialog from './EditRoleDialog';
-import DeleteRoleDialog from './DeleteRoleDialog';
-import CreateRoleDialog from './CreateRoleDialog';
+const roleSchema = z.object({
+  name: z.string().min(2, {
+    message: "Role name must be at least 2 characters.",
+  }),
+  description: z.string().optional(),
+})
 
-const convertJsonToPermissions = (jsonPermissions: Json): Record<string, boolean> => {
-  if (typeof jsonPermissions === 'object' && jsonPermissions !== null && !Array.isArray(jsonPermissions)) {
-    return Object.entries(jsonPermissions).reduce((acc, [key, value]) => {
-      acc[key] = Boolean(value);
-      return acc;
-    }, {} as Record<string, boolean>);
+// Convert Json permissions to Record<string, boolean>
+const adaptUserRole = (role: any): UserRole => {
+  let permissions: Record<string, boolean> = {};
+  
+  if (role.permissions) {
+    // If permissions is a string, try to parse it as JSON
+    if (typeof role.permissions === 'string') {
+      try {
+        permissions = JSON.parse(role.permissions);
+      } catch (e) {
+        console.error('Error parsing permissions:', e);
+        permissions = {};
+      }
+    } 
+    // If permissions is an object, convert it to Record<string, boolean>
+    else if (typeof role.permissions === 'object') {
+      Object.entries(role.permissions).forEach(([key, value]) => {
+        permissions[key] = Boolean(value);
+      });
+    }
   }
-  return {};
+  
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions,
+    created_at: role.created_at,
+    updated_at: role.updated_at
+  };
 };
 
-export default function UserRolesList() {
-  const { roles, isLoading, refetch } = useRoles();
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+export function UserRolesList() {
+  const [open, setOpen] = React.useState(false)
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const form = useForm<z.infer<typeof roleSchema>>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+    },
+  })
+
+  const calculatedValues = {
+    totalRoles: roles.length,
+    activeRoles: roles.filter(role => role.name).length,
+  }
+
   useEffect(() => {
-    // This is a placeholder for real implementation
-    // In a real app, you would fetch user counts for each role from the API
-  }, [roles]);
-  
-  const handleCreateRole = () => {
-    setIsCreateDialogOpen(true);
-  };
-  
-  const handleEditRole = (role: any) => {
-    const roleWithProperPermissions: UserRole = {
-      ...role,
-      permissions: convertJsonToPermissions(role.permissions)
+    const fetchRoles = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('*');
+      
+        if (error) throw error;
+      
+        if (data) {
+          // Convert roles to the correct type
+          const adaptedRoles = data.map(adaptUserRole);
+          setRoles(adaptedRoles);
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+        toast.error('Failed to load user roles');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setSelectedRole(roleWithProperPermissions);
-    setIsEditDialogOpen(true);
+    
+    fetchRoles();
+  }, [supabase]);
+
+  // Create a new role with the correct permissions type
+  const handleCreateRole = async (role: Pick<UserRole, 'name' | 'description'>) => {
+    setIsCreating(true);
+    try {
+      const newRole = {
+        name: role.name,
+        description: role.description || '',
+        permissions: {} as Record<string, boolean>
+      };
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .insert(newRole)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Convert to the correct type
+        const adaptedRole = adaptUserRole(data);
+        setRoles(prev => [...prev, adaptedRole]);
+        toast.success(`Role "${role.name}" created successfully`);
+      }
+    } catch (error) {
+      console.error('Error creating role:', error);
+      toast.error('Failed to create role');
+    } finally {
+      setIsCreating(false);
+    }
   };
-  
-  const handleDeleteRole = (role: any) => {
-    const roleWithProperPermissions: UserRole = {
-      ...role,
-      permissions: convertJsonToPermissions(role.permissions)
-    };
-    setSelectedRole(roleWithProperPermissions);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const handleRoleUpdated = () => {
-    refetch();
-    toast.success('Roles updated successfully');
-  };
-  
+
+  function onSubmit(values: z.infer<typeof roleSchema>) {
+    handleCreateRole(values);
+    setOpen(false);
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">User Roles</h2>
-        <Button onClick={handleCreateRole}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Role
+    <div>
+      <div className="md:flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">User Roles</h2>
+        <Button onClick={() => setOpen(true)}>
+          <PlusCircledIcon className="mr-2 h-4 w-4" />
+          Add Role
         </Button>
       </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Manage Roles</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          ) : !roles || roles.length === 0 ? (
-            <DialogWhenEmpty
-              title="No roles found"
-              description="Create your first role to manage user permissions."
-              buttonText="Create Role"
-              onAction={handleCreateRole}
-              icon={<Users className="h-8 w-8 text-muted-foreground" />}
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Role Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {roles.map((role) => (
-                  <TableRow key={role.id}>
-                    <TableCell className="font-medium">{role.name}</TableCell>
-                    <TableCell className="max-w-md truncate">
-                      {role.description || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        <Users className="h-3 w-3 mr-1" />
-                        {(role as any).user_count || 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRole(role)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteRole(role)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-      
-      <EditRoleDialog
-        isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
-        role={selectedRole}
-        onRoleUpdated={handleRoleUpdated}
-      />
-      
-      <DeleteRoleDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        role={selectedRole}
-        onRoleDeleted={handleRoleUpdated}
-      />
-      
-      <CreateRoleDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onRoleCreated={handleRoleUpdated}
-      />
+
+      {isLoading ? (
+        <p>Loading user roles...</p>
+      ) : roles.length === 0 ? (
+        <DialogWhenEmpty
+          title="No User Roles"
+          description="Looks like you haven't created any user roles yet. Create one to get started."
+          isVisible={!isLoading && roles.length === 0}
+          onAction={() => setOpen(true)}
+          buttonText="Create First Role"
+          icon={<PlusCircledIcon className="h-6 w-6 text-muted-foreground" />}
+        />
+      ) : (
+        <Table>
+          <TableCaption>A list of your user roles.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {roles.map((role) => (
+              <TableRow key={role.id}>
+                <TableCell className="font-medium">{role.name}</TableCell>
+                <TableCell>{role.description}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm">
+                    Edit
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add User Role</DialogTitle>
+            <DialogDescription>
+              Create a new role to manage user permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Administrator" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Full access to all features" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit" disabled={isCreating}>
+                  {isCreating ? 'Creating...' : 'Create Role'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

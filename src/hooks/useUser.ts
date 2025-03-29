@@ -1,53 +1,68 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SystemUser } from '@/lib/types/users';
+import { UserProfileWithRole } from '@/lib/types/users';
 
-export function useUser(userId: string) {
-  const userQuery = useQuery({
-    queryKey: ['users', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+export const useUser = (userId: string) => {
+  const [user, setUser] = useState<UserProfileWithRole | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!userId) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch user profile
+        const { data: userData, error: userError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
         
-      if (error) throw error;
-      
-      return {
-        id: data.id,
-        email: data.email,
-        full_name: data.full_name,
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        phone: data.phone || '',
-        title: data.title || '',
-        status: data.status as 'active' | 'pending' | 'inactive',
-        role_id: data.role_id,
-        avatar_url: data.avatar_url,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        last_login: data.last_login,
-        custom_id: data.custom_id,
-        notes: data.notes,
-        territories: data.territories,
-        daily_summary: data.daily_summary
-      } as SystemUser;
-    },
-    enabled: !!userId,
-    meta: {
-      errorMessage: 'Failed to fetch user'
-    }
-  });
+        if (userError) throw userError;
 
-  return {
-    user: userQuery.data as SystemUser | null,
-    isLoading: userQuery.isLoading,
-    isError: userQuery.isError,
-    error: userQuery.error as Error | null,
-    refetch: userQuery.refetch
-  };
-}
+        // Fetch role if user has one
+        let roleData = null;
+        if (userData.role_id) {
+          const { data, error: roleError } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('id', userData.role_id)
+            .single();
+          
+          if (roleError && roleError.code !== 'PGRST116') { // Not found is OK
+            throw roleError;
+          }
+          
+          roleData = data;
+        }
+
+        // Combine user and role data
+        setUser({
+          ...userData,
+          role: roleData
+        } as UserProfileWithRole);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch user'));
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  return { user, isLoading, error };
+};
+
+export default useUser;

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { SystemUser } from '@/lib/types/users';
+import { UserProfileWithRole } from '@/lib/types/users';
 import { 
   Table,
   TableBody,
@@ -17,12 +16,12 @@ import { PencilIcon, Trash2Icon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface UserTableProps {
-  users: SystemUser[];
+  users: UserProfileWithRole[];
   onDelete?: (userId: string) => void;
 }
 
 export function UserTable({ users, onDelete }: UserTableProps) {
-  const getInitials = (user: SystemUser) => {
+  const getInitials = (user: UserProfileWithRole) => {
     if (user.first_name && user.last_name) {
       return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
     }

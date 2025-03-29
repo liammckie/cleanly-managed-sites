@@ -15,26 +15,25 @@ export async function checkExistingEntities(
   if (!values.length) return [];
 
   try {
-    // Direct use of table names based on what we know exists
-    let queryTable = '';
+    // List of known tables for type safety
+    const knownTables = [
+      'business_locations', 'contractors', 'sites', 'work_orders', 'invoices', 
+      'clients', 'quotes', 'user_roles', 'subcontractors', 'allowances', 
+      'business_details', 'business_documents', 'contacts', 'contractor_documents',
+      'contractor_history', 'contractor_payments', 'contractor_site_assignments',
+      'invoice_line_items', 'overhead_profiles', 'quote_shifts', 'quote_subcontractors',
+      'site_additional_contracts', 'site_billing_lines', 'site_contract_history',
+      'user_integrations', 'user_profiles'
+    ];
     
-    switch(tableName) {
-      case 'clients':
-      case 'sites':
-      case 'contractors':
-      case 'invoices':
-      case 'quotes':
-      case 'user_profiles':
-      case 'user_roles':
-        queryTable = tableName;
-        break;
-      default:
-        console.error(`Unknown table: ${tableName}`);
-        return [];
+    // Safety check
+    if (!knownTables.includes(tableName)) {
+      console.error(`Unknown table: ${tableName}`);
+      return [];
     }
     
     const { data, error } = await supabase
-      .from(queryTable)
+      .from(tableName)
       .select(field)
       .in(field, values);
 

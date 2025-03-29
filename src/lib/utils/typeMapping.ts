@@ -1,79 +1,37 @@
 
-/**
- * Type mapping utilities for translating between different representations of the same data
- */
-import { EmploymentType, QuoteStatus } from '@/types/common';
+import { EmploymentType, EmployeeLevel } from "@/types/common";
 
 /**
- * Maps internal employment type values to external API values
+ * Maps employment types from frontend to backend and vice versa
  */
-export const employmentTypeToApi: Record<EmploymentType, string> = {
-  'full-time': 'full-time',
-  'part-time': 'part-time',
-  'casual': 'casual',
-  'contract': 'contract',
-  'intern': 'intern'
+export const employmentTypeMap: Record<EmploymentType, string> = {
+  'full-time': 'full_time',
+  'part-time': 'part_time',
+  casual: 'casual',
+  contract: 'contract',
+  intern: 'intern'
 };
 
 /**
- * Maps API employment type values to internal values
+ * Maps employment types from backend to frontend
  */
-export const apiToEmploymentType = (apiValue: string): EmploymentType => {
-  switch (apiValue) {
-    case 'full_time':
-    case 'full-time':
-      return 'full-time';
-    case 'part_time':
-    case 'part-time':
-      return 'part-time';
-    case 'casual':
-      return 'casual';
-    case 'contract':
-      return 'contract';
-    case 'intern':
-      return 'intern';
-    default:
-      return 'casual'; // Default value
+export const backendToFrontendEmploymentTypeMap: Record<string, EmploymentType> = {
+  full_time: 'full-time',
+  part_time: 'part-time',
+  casual: 'casual',
+  contract: 'contract',
+  intern: 'intern'
+};
+
+/**
+ * Validates if a value is a valid employee level
+ * @param value Value to validate
+ * @returns Validated employee level or default (1)
+ */
+export function validateEmployeeLevel(value: any): EmployeeLevel {
+  const level = Number(value);
+  if (isNaN(level) || level < 1 || level > 5) {
+    return 1; // Default to level 1 if invalid
   }
-};
-
-/**
- * Validates if the provided level is a valid employee level
- */
-export const validateEmployeeLevel = (level: number): boolean => {
-  return level >= 1 && level <= 5;
-};
-
-/**
- * Maps internal quote status values to API values
- */
-export const quoteStatusToApi: Record<QuoteStatus, string> = {
-  'draft': 'draft',
-  'submitted': 'submitted',
-  'pending': 'pending',
-  'approved': 'approved',
-  'declined': 'declined',
-  'expired': 'expired',
-  'accepted': 'accepted',
-  'sent': 'sent',
-  'rejected': 'rejected'
-};
-
-/**
- * Maps API quote status values to internal values
- */
-export const apiToQuoteStatus = (apiValue: string): QuoteStatus => {
-  const validStatuses: Record<string, QuoteStatus> = {
-    'draft': 'draft',
-    'submitted': 'submitted',
-    'pending': 'pending',
-    'approved': 'approved',
-    'declined': 'declined',
-    'expired': 'expired',
-    'rejected': 'rejected',
-    'sent': 'sent',
-    'accepted': 'accepted'
-  };
-  
-  return validStatuses[apiValue] || 'draft';
-};
+  return level as EmployeeLevel;
+}

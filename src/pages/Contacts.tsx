@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { Card } from '@/components/ui/card';
@@ -20,7 +19,10 @@ const Contacts = () => {
   const [editingContact, setEditingContact] = useState<ContactRecord | null>(null);
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [availableDepartments, setAvailableDepartments] = useState<string[]>([]);
-  
+  const [open, setOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<ContactRecord | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { 
     contacts, 
     contactTypeCount,
@@ -99,7 +101,12 @@ const Contacts = () => {
 
   return (
     <PageLayout>
-      <div className="container py-6">
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Contacts</h1>
+          <Button onClick={() => setOpen(true)}>Add Contact</Button>
+        </div>
+        
         <div className="flex flex-col gap-6">
           <ContactsPageHeader onAddContact={() => handleOpenDialog()} />
 
@@ -134,13 +141,13 @@ const Contacts = () => {
         </div>
       </div>
       
-      <ContactDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        contact={editingContact || undefined}
+      <ContactDialog 
+        isOpen={open} 
+        onClose={() => setOpen(false)}
+        contact={selectedContact} 
         onSubmit={handleSubmitContact}
-        isSubmitting={isLoading}
-        title="Contact"
+        isSubmitting={isSubmitting}
+        title="Add New Contact"
       />
     </PageLayout>
   );

@@ -69,6 +69,9 @@ export default function SiteDetailHeader({ site, actions, isLoading }: SiteDetai
     }
   };
 
+  const contractStartDate = getContractField(site?.contract_details, 'startDate', '');
+  const contractEndDate = getContractField(site?.contract_details, 'endDate', '');
+
   const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details, 60);
 
   const statusColor = getStatusColor(site?.status || 'inactive');

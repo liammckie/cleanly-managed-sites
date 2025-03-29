@@ -1,68 +1,75 @@
 
 import { supabase } from '@/lib/supabase';
-import { validateClientImport } from './validation/clientValidation';
-import { ValidationResult } from './types';
+import { getCurrentUser } from '@/lib/utils/auth';
+import { ClientImportItem, ImportResult, ValidationResult } from './types';
+import { validateClients } from './validation/clientValidation';
 
-export interface ClientImportItem {
-  name: string;
-  contact_name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postcode?: string;
-  status?: string;
-  notes?: string;
-}
-
-export async function processClientImport(clients: ClientImportItem[]) {
+/**
+ * Process client import from validated data
+ */
+export async function processClientImport(clientsData: any[]): Promise<ImportResult> {
   try {
-    if (!clients.length) {
-      return { success: false, message: 'No clients to import', count: 0 };
-    }
-
-    // Validate the clients
-    const validationResult: ValidationResult<ClientImportItem> = validateClientImport(clients);
-    if (!validationResult.success) {
-      return { 
-        success: false, 
-        message: 'Validation failed', 
-        errors: validationResult.errors,
-        count: 0 
+    // First validate the data
+    const validationResult = await validateClients(clientsData);
+    
+    if (!validationResult.valid || !validationResult.data) {
+      const errorMessages = validationResult.errors?.map(err => err.message) || ['Validation failed'];
+      return {
+        success: false,
+        message: 'Validation errors: ' + errorMessages.join(', '),
+        count: 0
       };
     }
-
-    // Get the current user
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
-
-    // Insert the clients with the user ID
+    
+    // Cast to the right type - this is safe because we validated the data
+    const validatedData = validationResult.data as unknown as ClientImportItem[];
+    
+    // Get user ID for proper ownership of records
+    const user = await getCurrentUser();
+    const userId = user?.id;
+    
+    if (!userId) {
+      return {
+        success: false,
+        message: 'User not authenticated',
+        count: 0
+      };
+    }
+    
+    // Prepare clients for insert
+    const clientsToInsert = validatedData.map(client => ({
+      ...client,
+      user_id: userId,
+      status: client.status || 'active'
+    }));
+    
+    // Insert clients
     const { data, error } = await supabase
       .from('clients')
-      .insert(clients.map(client => ({
-        ...client,
-        user_id: userId
-      })))
-      .select();
-
+      .insert(clientsToInsert);
+    
     if (error) {
-      console.error('Error importing clients:', error);
-      throw error;
+      console.error('Error inserting clients:', error);
+      return {
+        success: false,
+        message: `Error importing clients: ${error.message}`,
+        count: 0
+      };
     }
-
-    return { 
-      success: true, 
-      message: `Successfully imported ${clients.length} clients`, 
-      count: clients.length,
-      data
+    
+    // Return success result
+    return {
+      success: true,
+      message: `Successfully imported ${clientsToInsert.length} clients`,
+      count: clientsToInsert.length,
+      data: data
     };
   } catch (error) {
-    console.error('Client import failed:', error);
-    return { 
-      success: false, 
-      message: `Client import failed: ${error instanceof Error ? error.message : String(error)}`, 
-      count: 0 
+    console.error('Error in processClientImport:', error);
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      count: 0
     };
   }
 }

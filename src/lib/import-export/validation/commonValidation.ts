@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { ValidationResult } from './types';
 
@@ -105,3 +104,41 @@ export function createValidationResult<T>(
     data
   };
 }
+
+export const checkExistingRecords = async (table: string, field: string, values: string[]): Promise<string[]> => {
+  if (!values.length) return [];
+  
+  try {
+    // Use dynamic table name but with explicit type safety for known tables
+    const knownTables = [
+      'business_locations', 'contractors', 'sites', 'work_orders', 'invoices', 
+      'clients', 'quotes', 'user_roles', 'subcontractors', 'allowances', 
+      'business_details', 'business_documents', 'contacts', 'contractor_documents',
+      'contractor_history', 'contractor_payments', 'contractor_site_assignments',
+      'invoice_line_items', 'overhead_profiles', 'quote_shifts', 'quote_subcontractors',
+      'site_additional_contracts', 'site_billing_lines', 'site_contract_history',
+      'user_integrations', 'user_profiles'
+    ];
+    
+    // Safety check
+    if (!knownTables.includes(table)) {
+      console.error(`Unknown table: ${table}`);
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from(table)
+      .select(field)
+      .in(field, values);
+      
+    if (error) {
+      console.error(`Error checking existing records in ${table}:`, error);
+      return [];
+    }
+    
+    return data.map(item => item[field]);
+  } catch (error) {
+    console.error(`Error in checkExistingRecords for ${table}:`, error);
+    return [];
+  }
+};

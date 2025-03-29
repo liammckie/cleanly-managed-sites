@@ -1,76 +1,81 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { getInitialFormData } from '@/components/sites/forms/types/initialFormData';
-import { SiteRecord } from '@/lib/types';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
-export function useSiteFormState(mode: 'create' | 'edit', initialData?: SiteRecord) {
-  // Initialize form data with defaults and any provided initialData
-  const [formData, setFormData] = useState<SiteFormData>(() => {
-    const defaultData = getInitialFormData();
-    
-    if (mode === 'edit' && initialData) {
-      // Convert the initialData to a SiteFormData object
-      return {
-        ...defaultData,
-        name: initialData.name,
-        address: initialData.address || '',
-        city: initialData.city || '',
-        state: initialData.state || '',
-        postalCode: initialData.postcode || '',
-        country: initialData.country || 'Australia',
-        status: initialData.status as any,
-        phone: initialData.phone || '',
-        email: initialData.email || '',
-        representative: initialData.representative || '',
-        customId: initialData.custom_id || '',
-        client_id: initialData.client_id,
-        // Ensure contract_details is properly typed or defaulted
-        contractDetails: initialData.contract_details || {},
-        // Ensure billing_details is properly typed or defaulted
-        billingDetails: initialData.billing_details || defaultData.billingDetails,
-        notes: initialData.notes || '',
-      };
-    }
-    
-    return defaultData;
+// Create initial state that conforms to SiteFormData
+const initialSiteFormState: SiteFormData = {
+  name: '',
+  address: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'Australia',
+  status: 'active',
+  phone: '',
+  email: '',
+  representative: '',
+  customId: '',
+  contacts: [],
+  contract_details: {} as ContractDetails,
+  contractDetails: {} as ContractDetails,
+  billingDetails: {
+    billingLines: [],
+    useClientInfo: false,
+    billingMethod: '',
+    paymentTerms: '',
+    billingEmail: '',
+    contacts: []
+  }
+};
+
+export const useSiteFormState = (
+  initialState?: Partial<SiteFormData>
+) => {
+  const [formState, setFormState] = useState<SiteFormData>({
+    ...initialSiteFormState,
+    ...initialState
   });
 
-  // Direct field change handler
-  const handleChange = (field: keyof SiteFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-  
-  // Nested field change handler (e.g., for contract_details)
-  const handleNestedChange = (section: string, field: string, value: any) => {
-    setFormData(prev => ({
+  const updateForm = useCallback((updates: Partial<SiteFormData>) => {
+    setFormState(prev => ({
       ...prev,
-      [section]: {
-        ...(prev[section as keyof SiteFormData] || {}),
-        [field]: value
+      ...updates
+    }));
+  }, []);
+
+  const updateContractDetails = useCallback((updates: Partial<ContractDetails>) => {
+    setFormState(prev => ({
+      ...prev,
+      contractDetails: {
+        ...prev.contractDetails,
+        ...updates
+      } as ContractDetails,
+      // Also update contract_details for backward compatibility
+      contract_details: {
+        ...prev.contract_details,
+        ...updates
+      } as ContractDetails
+    }));
+  }, []);
+
+  const updateBillingDetails = useCallback((updates: Partial<typeof formState.billingDetails>) => {
+    setFormState(prev => ({
+      ...prev,
+      billingDetails: {
+        ...prev.billingDetails,
+        ...updates
       }
     }));
-  };
-  
-  // Double nested field change handler (e.g., for billingDetails.billingAddress)
-  const handleDoubleNestedChange = (section: string, subsection: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section as keyof SiteFormData] || {}),
-        [subsection]: {
-          ...((prev[section as keyof SiteFormData] as any)?.[subsection] || {}),
-          [field]: value
-        }
-      }
-    }));
-  };
+  }, []);
 
   return {
-    formData,
-    setFormData,
-    handleChange,
-    handleNestedChange,
-    handleDoubleNestedChange
+    formState,
+    updateForm,
+    updateContractDetails,
+    updateBillingDetails,
+    setFormState
   };
-}
+};
+
+export default useSiteFormState;

@@ -1,6 +1,4 @@
 
-import { parse } from 'papaparse';
-
 /**
  * Takes a CSV file and returns the parsed data as an array of objects
  * @param file The CSV file to parse
@@ -19,17 +17,22 @@ export async function parseCSV(file: File, options: any = {}) {
       
       const csv = e.target.result as string;
       
-      parse(csv, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (header) => header.trim().toLowerCase(),
-        complete: (results) => {
-          resolve(results.data);
-        },
-        error: (error) => {
-          reject(error);
-        },
-        ...options
+      // Import parse from papaparse dynamically to avoid type errors
+      import('papaparse').then(({ parse }) => {
+        parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim().toLowerCase(),
+          complete: (results) => {
+            resolve(results.data);
+          },
+          error: (error) => {
+            reject(error);
+          },
+          ...options
+        });
+      }).catch(err => {
+        reject(new Error('Error loading CSV parser: ' + err.message));
       });
     };
     

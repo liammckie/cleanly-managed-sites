@@ -1,80 +1,78 @@
 
 import { supabase } from '@/lib/supabase';
-import { validateContractorImport } from './validation/contractorValidation';
-import { v4 as uuidv4 } from 'uuid';
+import { getCurrentUser } from '@/lib/utils/auth';
+import { ContractorRecord } from './types';
+import { validateContractors } from './validation/contractorValidation';
 
-// Define the ContractorRecord interface to match table schema
-interface ContractorImportRecord {
-  business_name: string;
-  contact_name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postcode?: string;
-  contractor_type: string;
-  status?: string;
-  abn?: string;
-  hourly_rate?: number;
-  day_rate?: number;
-  notes?: string;
-  specialty?: string[];
-}
-
-export async function importContractors(contractors: ContractorImportRecord[]) {
+export const importContractors = async (contractorsData: any[]) => {
   try {
-    if (!contractors.length) {
-      return { success: false, message: 'No contractors to import', count: 0 };
-    }
-
-    // Validate the contractors
-    const validationResult = validateContractorImport(contractors);
-    if (!validationResult.success) {
-      return { 
-        success: false, 
-        message: 'Validation failed', 
-        errors: validationResult.errors,
-        count: 0 
+    // First validate the data
+    const validationResult = await validateContractors(contractorsData);
+    
+    if (!validationResult.valid || !validationResult.data) {
+      const errorMessages = validationResult.errors?.map(err => err.message) || ['Validation failed'];
+      return {
+        success: false,
+        message: 'Validation errors: ' + errorMessages.join(', '),
+        count: 0
       };
     }
-
-    // Get the current user
-    const user = await supabase.auth.getUser();
-    const userId = user.data.user?.id;
+    
+    // Cast to the right type - this is safe because we validated the data
+    const validContractors = validationResult.data as unknown as ContractorRecord[];
+    
+    // Get user ID for proper ownership of records
+    const user = await getCurrentUser();
+    const userId = user?.id;
+    
     if (!userId) {
-      return { success: false, message: 'User not authenticated', count: 0 };
+      return {
+        success: false,
+        message: 'User not authenticated',
+        count: 0
+      };
     }
-
-    // Insert each contractor with userId
-    for (const contractor of contractors) {
-      const { error } = await supabase
+    
+    // Prepare contractors for insert
+    const contractorsToInsert = validContractors.map(contractor => ({
+      ...contractor,
+      user_id: userId,
+      status: contractor.status || 'active'
+    }));
+    
+    // Insert contractors one by one to avoid issues
+    const results = [];
+    for (const contractor of contractorsToInsert) {
+      const { data, error } = await supabase
         .from('contractors')
-        .insert({
-          ...contractor,
-          id: uuidv4(),
-          user_id: userId, 
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-        
+        .insert(contractor)
+        .select();
+      
       if (error) {
-        console.error('Error importing contractor:', error);
-        throw error;
+        console.error('Error inserting contractor:', error);
+        return {
+          success: false,
+          message: `Error importing contractors: ${error.message}`,
+          count: 0
+        };
       }
+      
+      results.push(data);
     }
-
-    return { 
-      success: true, 
-      message: `Successfully imported ${contractors.length} contractors`, 
-      count: contractors.length 
+    
+    // Return success result
+    return {
+      success: true,
+      message: `Successfully imported ${contractorsToInsert.length} contractors`,
+      count: contractorsToInsert.length,
+      data: results
     };
   } catch (error) {
-    console.error('Contractor import failed:', error);
-    return { 
-      success: false, 
-      message: `Contractor import failed: ${error instanceof Error ? error.message : String(error)}`, 
-      count: 0 
+    console.error('Error in importContractors:', error);
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      count: 0
     };
   }
-}
+};

@@ -37,4 +37,4 @@ export interface UserProfileWithRole {
 }
 
 // For backward compatibility
-export type SystemUser = UserProfile;
+export type SystemUser = UserProfileWithRole;

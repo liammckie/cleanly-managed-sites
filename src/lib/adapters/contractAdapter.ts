@@ -1,80 +1,93 @@
 
 import { Contract } from '@/types/db';
-import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
+import { ContractDetails } from '@/types/contracts';
+import { Json } from '@/types/common';
 
 /**
- * Converts a database contract record to a contract model for UI
+ * Convert a database contract to a frontend contract
+ * @param dbContract Contract from database
+ * @returns Contract for frontend
  */
 export function dbToContract(dbContract: any): Contract {
   return {
     id: dbContract.id,
-    site_id: dbContract.site_id,
-    contract_number: dbContract.contract_number,
-    start_date: dbContract.start_date,
-    end_date: dbContract.end_date,
-    value: dbContract.value,
-    billing_cycle: dbContract.billing_cycle,
+    siteId: dbContract.site_id,
+    clientId: dbContract.client_id,
     status: dbContract.status,
-    created_at: dbContract.created_at,
-    updated_at: dbContract.updated_at,
-    contract_type: dbContract.contract_type,
-    auto_renewal: dbContract.auto_renewal,
-    renewal_terms: dbContract.renewal_terms,
-    termination_period: dbContract.termination_period
+    contractNumber: dbContract.contract_number,
+    startDate: dbContract.start_date,
+    endDate: dbContract.end_date,
+    value: dbContract.value,
+    monthlyRevenue: dbContract.monthly_revenue,
+    contractDetails: dbContract.contract_details,
+    autoRenewal: dbContract.auto_renewal,
+    renewalPeriod: dbContract.renewal_period,
+    renewalNoticeDays: dbContract.renewal_notice_days,
+    terminationPeriod: dbContract.termination_period,
+    billingCycle: dbContract.billing_cycle,
+    serviceFrequency: dbContract.service_frequency,
+    serviceDeliveryMethod: dbContract.service_delivery_method,
+    isPrimary: dbContract.is_primary,
+    createdAt: dbContract.created_at,
+    updatedAt: dbContract.updated_at
   };
 }
 
 /**
- * Prepares a contract model for database insertion
+ * Convert a frontend contract to a database contract
+ * @param contract Contract from frontend
+ * @returns Contract for database
  */
-export function contractToDb(contract: Partial<Contract>): any {
+export function contractToDb(contract: Contract): any {
   return {
-    site_id: contract.site_id,
-    contract_number: contract.contract_number,
-    start_date: contract.start_date,
-    end_date: contract.end_date,
+    id: contract.id,
+    site_id: contract.siteId,
+    client_id: contract.clientId,
+    status: contract.status,
+    contract_number: contract.contractNumber,
+    start_date: contract.startDate,
+    end_date: contract.endDate,
     value: contract.value,
-    billing_cycle: contract.billing_cycle,
-    status: contract.status || 'active',
-    contract_type: contract.contract_type,
-    auto_renewal: contract.auto_renewal,
-    renewal_terms: contract.renewal_terms,
-    termination_period: contract.termination_period
+    monthly_revenue: contract.monthlyRevenue,
+    contract_details: contract.contractDetails,
+    auto_renewal: contract.autoRenewal,
+    renewal_period: contract.renewalPeriod,
+    renewal_notice_days: contract.renewalNoticeDays,
+    termination_period: contract.terminationPeriod,
+    billing_cycle: contract.billingCycle,
+    service_frequency: contract.serviceFrequency,
+    service_delivery_method: contract.serviceDeliveryMethod,
+    is_primary: contract.isPrimary,
+    created_at: contract.createdAt,
+    updated_at: contract.updatedAt
   };
 }
 
 /**
- * Converts contract details to database JSON format
+ * Convert contract details to a database-friendly format
+ * @param details Contract details from form
+ * @returns Contract details for database
  */
-export function contractDetailsToDb(contractDetails: ContractDetails): any {
-  if (!contractDetails) {
-    return {};
+export function contractDetailsToDb(details: ContractDetails | null | undefined): Json {
+  if (!details) return null;
+  
+  // Create a deep copy to avoid modifying the original
+  const detailsCopy = JSON.parse(JSON.stringify(details));
+  
+  // Ensure renewalPeriod is a string (some APIs expect this)
+  if (detailsCopy.renewalPeriod !== undefined) {
+    detailsCopy.renewalPeriod = String(detailsCopy.renewalPeriod);
   }
-
-  return {
-    contractNumber: contractDetails.contractNumber || '',
-    startDate: contractDetails.startDate || '',
-    endDate: contractDetails.endDate || '',
-    autoRenewal: contractDetails.autoRenewal || false,
-    renewalPeriod: contractDetails.renewalPeriod || 0,
-    renewalNotice: contractDetails.renewalNotice || 0,
-    noticeUnit: contractDetails.noticeUnit || 'days',
-    terminationPeriod: contractDetails.terminationPeriod || '',
-    renewalTerms: contractDetails.renewalTerms || '',
-    contractLength: contractDetails.contractLength || 0,
-    contractLengthUnit: contractDetails.contractLengthUnit || 'months',
-    contractType: contractDetails.contractType || '',
-    serviceFrequency: contractDetails.serviceFrequency || ''
-  };
-}
-
-/**
- * Maps fields between different contract formats, handles empty objects
- */
-export function mapContractFields(contractData: any = {}) {
-  return {
-    ...contractData,
-    startDate: contractData.startDate || contractData.start_date || '',
-    endDate: contractData.endDate || contractData.end_date || ''
-  };
+  
+  // Handle terms array if it exists - convert to a serializable format
+  if (Array.isArray(detailsCopy.terms)) {
+    detailsCopy.terms = detailsCopy.terms.map(term => ({
+      ...term,
+      // Ensure any date fields are strings
+      startDate: term.startDate ? String(term.startDate) : undefined,
+      endDate: term.endDate ? String(term.endDate) : undefined
+    }));
+  }
+  
+  return detailsCopy as unknown as Json;
 }

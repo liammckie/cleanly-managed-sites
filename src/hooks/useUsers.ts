@@ -1,109 +1,138 @@
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { UserProfile, UserRole, UserStatus } from '@/types/db';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { UserProfileWithRole } from '@/lib/types/users';
+import { UserRole } from '@/types/db';
 
 export function useUsers() {
-  const queryClient = useQueryClient();
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Fetch users
-  const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const [users, setUsers] = useState<UserProfileWithRole[]>([]);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useAuth();
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch users
+      const { data: usersData, error: usersError } = await supabase
         .from('user_profiles')
-        .select('*, user_roles(*)');
+        .select('*');
       
-      if (error) throw error;
+      if (usersError) throw usersError;
       
-      // Map the response to our UserProfile type
-      return data.map(user => ({
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        full_name: user.full_name,
-        avatar_url: user.avatar_url,
-        role_id: user.role_id,
-        role: user.user_roles as UserRole,
-        created_at: user.created_at,
-        updated_at: user.updated_at,
-        title: user.title,
-        phone: user.phone,
-        status: user.status as UserStatus,
-        last_login: user.last_login,
-        custom_id: user.custom_id,
-        notes: user.notes,
-        territories: user.territories,
-        daily_summary: user.daily_summary
-      }));
+      // Fetch roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      if (rolesError) throw rolesError;
+      
+      // Map roles to users and convert to UserProfileWithRole
+      const usersWithRoles = usersData.map(userProfile => {
+        const userRole = rolesData.find(role => role.id === userProfile.role_id);
+        
+        return {
+          ...userProfile,
+          role: userRole || undefined
+        } as UserProfileWithRole;
+      });
+      
+      setUsers(usersWithRoles);
+      setRoles(rolesData as UserRole[]);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setIsLoading(false);
     }
-  });
-  
-  // Create user mutation
-  const createUserMutation = useMutation({
-    mutationFn: async (userData: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => {
-      // Ensure status is set
-      const userWithStatus = {
-        ...userData,
-        id: uuidv4(), // Generate a UUID for new user
-        status: userData.status || 'active' as UserStatus
-      };
+  }, []);
+
+  const refreshUsers = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchUsers();
+    setIsRefreshing(false);
+  }, [fetchUsers]);
+
+  const updateUser = useCallback(async (userId: string, userData: Partial<UserProfileWithRole>) => {
+    try {
+      // Remove role from userData before sending to API
+      const { role, ...userDataWithoutRole } = userData;
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('user_profiles')
-        .insert(userWithStatus)
-        .select()
-        .single();
+        .update(userDataWithoutRole)
+        .eq('id', userId);
       
       if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('User created successfully');
-    },
-    onError: (error: Error) => {
-      setError(error);
-      toast.error(`Failed to create user: ${error.message}`);
-    }
-  });
-  
-  // Update user mutation
-  const updateUserMutation = useMutation({
-    mutationFn: async ({ id, ...userData }: Partial<UserProfile> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(userData)
-        .eq('id', id)
-        .select()
-        .single();
       
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId ? { ...user, ...userData } : user
+        )
+      );
+      
       toast.success('User updated successfully');
-    },
-    onError: (error: Error) => {
-      setError(error);
-      toast.error(`Failed to update user: ${error.message}`);
+      return true;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
+      return false;
     }
-  });
-  
+  }, []);
+
+  const createUser = useCallback(async (userData: Omit<UserProfileWithRole, 'id'>) => {
+    try {
+      // Remove role from userData before sending to API
+      const { role, ...userDataWithoutRole } = userData;
+      
+      // Add id field for Supabase insert
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .insert({
+          ...userDataWithoutRole,
+          id: crypto.randomUUID() // Generate a new UUID
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Add role back to user data for local state
+      const newUser = {
+        ...data,
+        role
+      } as UserProfileWithRole;
+      
+      // Update local state
+      setUsers(prev => [...prev, newUser]);
+      
+      toast.success('User created successfully');
+      return true;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Failed to create user');
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchUsers();
+    }
+  }, [user, fetchUsers]);
+
   return {
     users,
+    roles,
     isLoading,
-    error,
-    refetch,
-    createUser: createUserMutation.mutate,
-    updateUser: updateUserMutation.mutate,
-    isCreating: createUserMutation.isPending,
-    isUpdating: updateUserMutation.isPending
+    isRefreshing,
+    refreshUsers,
+    updateUser,
+    createUser
   };
 }
