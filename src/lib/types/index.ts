@@ -8,22 +8,25 @@
 export * from './common';
 
 // Resolve potential naming conflicts with explicit re-exports
-export { 
+export type { 
   UserRole, 
   UserStatus, 
-  SystemUser 
+  SystemUser,
+  UserProfile,
+  UserProfileWithRole
 } from './userTypes';
 
 // Export domain-specific types
-export * from './clientTypes';
-export * from './siteTypes';
-export * from './contractTypes';
-export * from './contactTypes';
-export * from './contractorTypes';
+export type * from './clientTypes';
+export type * from './siteTypes';
+export type * from './contractTypes';
+export type * from './contactTypes';
+export type * from './contractorTypes';
 
 // Export import/export types
-export * from './importExportTypes';
-export * from './validationTypes';
+export type * from './importExportTypes';
+export type * from './validationTypes';
+export type * from './billingTypes';
 
 // Export adapter functions for convenience
 export { 
@@ -40,6 +43,12 @@ export {
   adaptUserRoleFromDb,
   adaptUserRoleToDb
 } from '../adapters/userAdapter';
+
+// Export validation conversion functions
+export {
+  legacyToNewValidationResult,
+  newToLegacyValidationResult
+} from './validationTypes';
 
 // Export WorkOrderRecord from the API directly to avoid circular dependencies
 export type { WorkOrderRecord } from '../api/workorders/types';

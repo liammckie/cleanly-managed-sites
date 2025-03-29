@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContractSummaryData } from '@/lib/types/contracts';
+import { ContractSummaryData } from '@/lib/types/contractTypes';
 import { format } from 'date-fns';
 
 interface ContractDashboardProps {

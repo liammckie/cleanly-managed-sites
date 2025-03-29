@@ -21,7 +21,8 @@ export type {
   ContractorRecord,
   ContractorVersionHistoryEntry,
   SiteContact,
-  WorkOrderRecord
+  WorkOrderRecord,
+  ContractSummaryData
 } from './types/index';
 
 // Re-export adapters for backward compatibility
@@ -31,5 +32,7 @@ export {
   adaptUserRoleFromDb,
   adaptUserRoleToDb,
   adaptContractFromDb,
-  adaptContractToDb
+  adaptContractToDb,
+  adaptContractDetailsToDb,
+  adaptContractDetailsFromDb
 } from './types/index';

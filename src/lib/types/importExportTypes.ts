@@ -1,115 +1,160 @@
 
-/**
- * Import/Export types for data migration
- */
 import { Json } from './common';
-import { ValidationError, ValidationResult } from './validationTypes';
 
-// Import options
+/**
+ * Import options
+ */
 export interface ImportOptions {
-  validateOnly?: boolean;
-  dryRun?: boolean;
+  mapping?: Record<string, string>;
+  skipValidation?: boolean;
+  skipExistingCheck?: boolean;
   updateExisting?: boolean;
-  createMissing?: boolean;
-  identifyBy?: string[];
-  batchSize?: number;
-  userId?: string;
+  dryRun?: boolean;
+  format?: string;
   mode?: 'full' | 'incremental';
+  type?: 'clients' | 'sites' | 'contracts' | 'unified';
 }
 
-// Import result
+/**
+ * Import result
+ */
 export interface ImportResult {
   success: boolean;
   message: string;
   count: number;
   data?: any[];
   failures?: any[];
-  errors?: ValidationError[];
-  warnings?: string[];
 }
 
-// Export options
+/**
+ * Export options
+ */
 export interface ExportOptions {
   format?: 'csv' | 'json' | 'xlsx';
-  includeHeaders?: boolean;
-  dateFormat?: string;
-  filename?: string;
+  includeIds?: boolean;
   filters?: Record<string, any>;
 }
 
-// Export result
-export interface ExportResult {
-  success: boolean;
+/**
+ * Data types that can be imported/exported
+ */
+export type DataImportType = 'clients' | 'sites' | 'contractors' | 'contracts' | 'invoices' | 'unified';
+export type DataExportType = DataImportType;
+
+/**
+ * Validation related types
+ */
+export interface ValidationError {
+  field: string;
   message: string;
-  count: number;
-  data?: any;
-  filename?: string;
-  mimeType?: string;
+  code?: string;
 }
 
-// Data types for import/export
-export type DataImportType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'invoices' | 'unified';
-export type DataExportType = 'clients' | 'sites' | 'contracts' | 'contractors' | 'invoices' | 'unified';
+export interface ValidationMessage {
+  field: string;
+  message: string;
+  type?: 'error' | 'warning' | 'info';
+}
 
-// Client import item
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings?: ValidationMessage[];
+  message?: string;
+}
+
+export interface ValidationOptions {
+  skipRequiredFields?: boolean;
+  additionalValidation?: (data: any) => ValidationError[];
+}
+
+/**
+ * Legacy validation types for backward compatibility
+ */
+export interface LegacyValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings?: string[];
+}
+
+/**
+ * Zod-based validation result
+ */
+export interface ZodValidationResult {
+  success: boolean;
+  errors?: ValidationError[];
+  data?: any;
+}
+
+/**
+ * Convert between validation result formats
+ */
+export function legacyToNewValidationResult(legacy: LegacyValidationResult): ValidationResult {
+  return {
+    valid: legacy.isValid,
+    errors: legacy.errors.map(msg => ({ field: 'unknown', message: msg })),
+    warnings: legacy.warnings?.map(msg => ({ field: 'unknown', message: msg, type: 'warning' }))
+  };
+}
+
+export function newToLegacyValidationResult(result: ValidationResult): LegacyValidationResult {
+  return {
+    isValid: result.valid,
+    errors: result.errors.map(err => `${err.field}: ${err.message}`),
+    warnings: result.warnings?.map(warn => `${warn.field}: ${warn.message}`)
+  };
+}
+
+/**
+ * Import item types
+ */
 export interface ClientImportItem {
-  id?: string;
   name: string;
-  contact_name?: string;
+  contact_name: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  status?: 'active' | 'inactive' | 'pending' | 'prospect';
+  status?: 'active' | 'inactive' | 'pending';
   notes?: string;
   custom_id?: string;
-  xero_contact_id?: string;
 }
 
-// Contractor import item
 export interface ContractorImportItem {
-  id?: string;
   business_name: string;
-  contact_name?: string;
+  contact_name: string;
   email?: string;
   phone?: string;
   address?: string;
   city?: string;
   state?: string;
   postcode?: string;
-  status?: 'active' | 'pending' | 'inactive';
-  notes?: string;
-  abn?: string;
   contractor_type?: string;
   specialty?: string[];
   hourly_rate?: number;
-  insurance_details?: Json;
+  abn?: string;
+  status?: 'active' | 'pending' | 'inactive';
+  notes?: string;
 }
 
-// Invoice import item
 export interface InvoiceImportItem {
-  id?: string;
   invoice_number: string;
-  invoice_date: string;
-  due_date?: string;
-  amount: number;
-  status?: string;
-  client_id?: string;
+  client_id: string;
   site_id?: string;
+  invoice_date: string;
+  due_date: string;
+  amount: number;
+  status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   notes?: string;
   line_items?: InvoiceLineItem[];
 }
 
-// Invoice line item
 export interface InvoiceLineItem {
-  id?: string;
   description: string;
   quantity: number;
   unit_price: number;
-  amount: number;
-  tax_rate?: number;
-  tax_amount?: number;
+  tax_type?: string;
   account_code?: string;
 }

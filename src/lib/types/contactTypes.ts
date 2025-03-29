@@ -1,84 +1,85 @@
 
 /**
  * Contact related type definitions
- * Centralizes all contact types
  */
+import { Json } from './common';
 
 /**
- * Contact record interface from database
+ * Contact record from database
  */
 export interface ContactRecord {
   id: string;
   name: string;
+  role: string;
+  department?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  is_primary: boolean;
   entity_id: string;
   entity_type: string;
-  email: string;
-  phone: string;
-  role: string;
-  department?: string;
-  is_primary: boolean;
-  notes?: string;
-  is_flat_rate?: boolean;
-  hourly_rate?: number;
-  monthly_cost?: number;
+  user_id?: string;
   created_at: string;
   updated_at: string;
-  user_id: string;
-  services?: any;
+  services?: Json;
+  monthly_cost?: number;
+  is_flat_rate?: boolean;
 }
 
 /**
- * Contact filters for searching/filtering contacts
+ * Enum for entity types
  */
-export interface ContactFilters {
-  entity_type?: string;
-  entity_id?: string;
-  search?: string;
-  department?: string;
-  role?: string;
-}
+export type EntityType = 'client' | 'site' | 'supplier' | 'internal';
 
 /**
- * Contact for forms
+ * Enum for assignment types
  */
-export interface ContactFormData {
-  id?: string;
+export type AssignmentType = 'single' | 'all_sites' | 'all_clients';
+
+/**
+ * Contact form data
+ */
+export interface ContactFormValues {
   name: string;
-  entity_id?: string;
-  entity_type?: string;
-  email?: string;
-  phone?: string;
   role: string;
   department?: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
   is_primary?: boolean;
-  notes?: string;
-  services?: any;
 }
 
 /**
- * Site contact (specific to sites)
+ * Full contact form with entity information
  */
-export interface SiteContact {
-  id: string;
-  site_id: string;
-  name: string;
-  role: string;
-  email?: string;
-  phone?: string;
-  is_primary: boolean;
-  notes?: string;
-  department?: string;
+export interface FullContactFormValues extends ContactFormValues {
+  entity_id: string;
+  entity_type: EntityType;
+  assignment_type?: AssignmentType;
 }
 
 /**
- * Billing contact interface
+ * Employee specific data
  */
-export interface BillingContact {
-  id?: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  role?: string;
-  department?: string;
-  isPrimary?: boolean;
+export interface EmployeeServicesValues {
+  position?: string;
+  employmentType?: 'full-time' | 'part-time' | 'contract' | 'casual' | 'intern';
+  startDate?: string;
+  employeeId?: string;
+  reportingTo?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+}
+
+/**
+ * Employee form values
+ */
+export interface EmployeeFormValues extends ContactFormValues {
+  position?: string;
+  employmentType?: 'full-time' | 'part-time' | 'contract' | 'casual' | 'intern';
+  startDate?: Date | string;
+  employeeId?: string;
+  reportingTo?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
 }

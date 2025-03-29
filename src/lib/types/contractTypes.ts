@@ -4,91 +4,171 @@
  */
 import { Json } from './common';
 
-// Basic contract type
+/**
+ * Contract term details
+ */
+export interface ContractTerm {
+  id: string;
+  name: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  autoRenew?: boolean;
+  value?: number | string;
+  unit?: string;
+  type?: string;
+}
+
+/**
+ * Contract details structure
+ */
+export interface ContractDetails {
+  id?: string;
+  contractNumber?: string;
+  startDate?: string;
+  endDate?: string;
+  autoRenewal?: boolean;
+  renewalPeriod?: string | number;
+  renewalNoticeDays?: number;
+  terminationPeriod?: string;
+  billingCycle?: string;
+  serviceFrequency?: string;
+  serviceDeliveryMethod?: string;
+  contractType?: string;
+  value?: number;
+  notes?: string;
+  status?: string;
+  terms?: ContractTerm[];
+  noticeUnit?: string;
+  contractLength?: number;
+  contractLengthUnit?: string;
+  type?: string;
+  renewalTerms?: string;
+  reviewDate?: string;
+  noticePeriodDays?: number;
+  nextIncreaseDate?: string;
+  specialTerms?: string;
+  terminationClause?: string;
+  annualValue?: number;
+  renewalLengthMonths?: number;
+}
+
+/**
+ * Contract record from database
+ */
 export interface Contract {
   id: string;
   site_id: string;
   client_id?: string;
-  title?: string;
-  contractNumber?: string;
-  description?: string;
-  type?: string;
-  status?: string;
-  monthlyRevenue?: number;
-  contractDetails?: ContractDetails;
-  startDate?: string;
-  endDate?: string;
-  renewalPeriod?: string;
-  autoRenewal?: boolean;
+  contract_number?: string;
+  start_date?: string;
+  end_date?: string;
   value?: number;
-  billingCycle?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  isPrimary?: boolean;
+  auto_renewal?: boolean;
+  renewal_period?: string | number;
+  renewal_notice_days?: number;
+  termination_period?: string;
+  billing_cycle?: string;
+  contract_type?: string;
+  service_frequency?: string;
+  service_delivery_method?: string;
   created_at: string;
   updated_at: string;
-}
-
-// Contract details
-export interface ContractDetails {
-  id?: string;
-  contractNumber?: string;
-  type?: string;
+  notes?: string;
   status?: string;
+  monthly_revenue?: number;
+  contract_details?: Json;
+  is_primary?: boolean;
+  // Frontend-compatible properties
+  siteId?: string;
+  clientId?: string;
+  siteName?: string;
+  clientName?: string;
+  contractNumber?: string;
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
+  renewalPeriod?: string | number;
   renewalNoticeDays?: number;
-  renewalLengthMonths?: number;
   terminationPeriod?: string;
-  specificEndDate?: boolean;
-  notes?: string;
-  attachments?: string[];
-  value?: number;
   billingCycle?: string;
-  billingTerms?: string;
-  agreementDate?: string;
-  signedBy?: string;
-  clientContact?: string;
-  terms?: ContractTerm[];
-  includeTax?: boolean;
-  taxRate?: number;
-  billingStartDate?: string;
-  renewalPeriod?: string;
   serviceFrequency?: string;
   serviceDeliveryMethod?: string;
+  monthlyRevenue?: number;
+  contractDetails?: any;
+  isPrimary?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  contractType?: string;
+  type?: string;
 }
 
-// Contract term
-export interface ContractTerm {
-  id: string;
-  title: string;
-  description: string;
-  isRequired: boolean;
-  isAccepted?: boolean;
-  acceptedDate?: string;
-}
-
-// Contract history entry
+/**
+ * Contract history entry
+ */
 export interface ContractHistoryEntry {
   id: string;
   site_id: string;
-  contract_details: ContractDetails;
-  notes?: string;
-  created_at: string;
-  created_by?: string;
+  contract_details: Json;
   version_number: number;
+  notes?: string;
+  created_by?: string;
+  created_at: string;
 }
 
-// Contract summary data
+/**
+ * Contract summary data for analytics
+ */
 export interface ContractSummaryData {
+  totalCount: number;
+  activeCount: number;
+  pendingCount: number;
+  totalValue: number;
   totalContracts: number;
-  activeContracts: number;
-  expiringContracts: number;
-  monthlyRevenue: number;
-  annualRevenue: number;
-  averageContractValue: number;
-  contractsByType: Record<string, number>;
-  contractsByStatus: Record<string, number>;
-  recentChanges: ContractHistoryEntry[];
+  expiringWithin30Days: number;
+  expiringThisMonth: number;
+  expiringNext3Months: number;
+  expiringNext6Months: number;
+  expiringThisYear: number;
+  valueExpiringThisMonth: number;
+  valueExpiringNext3Months: number;
+  valueExpiringNext6Months: number;
+  valueExpiringThisYear: number;
+  profitMargin: number;
+  avgContractValue: number;
+  expiredCount?: number;
+  renewalRate?: number;
+  id?: string;
+}
+
+/**
+ * Contract activity record
+ */
+export interface ContractActivity {
+  id: string;
+  contract_id: string;
+  activity_type: string;
+  description: string;
+  created_at: string;
+  created_by?: string;
+  metadata?: Json;
+  details?: Json;
+  // Frontend-compatible properties
+  contractId?: string;
+  action?: string;
+  timestamp?: string;
+  userName?: string;
+}
+
+/**
+ * Grouped contracts by status
+ */
+export interface GroupedContracts {
+  active?: Contract[];
+  expiring?: Contract[];
+  expired?: Contract[];
+  renewing?: Contract[];
+  [key: string]: Contract[] | undefined;
 }

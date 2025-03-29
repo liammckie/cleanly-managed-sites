@@ -1,69 +1,77 @@
 
 /**
- * Validation types for import/export and form validation
+ * Validation related type definitions
  */
 
-// Basic validation error
+/**
+ * Error record for validation failures
+ */
 export interface ValidationError {
   field: string;
   message: string;
   code?: string;
 }
 
-// Validation message with type
+/**
+ * Validation message with type (error, warning, info)
+ */
 export interface ValidationMessage {
-  type: 'error' | 'warning' | 'info';
+  field: string;
   message: string;
-  field?: string;
+  type?: 'error' | 'warning' | 'info';
 }
 
-// Basic validation result
+/**
+ * Standard validation result
+ */
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
   warnings?: ValidationMessage[];
+  message?: string;
 }
 
-// Options for validation
+/**
+ * Options for validation
+ */
 export interface ValidationOptions {
-  validateOnly?: boolean;
-  strictMode?: boolean;
-  ignoreWarnings?: boolean;
-  checkDuplicates?: boolean;
+  skipRequiredFields?: boolean;
+  additionalValidation?: (data: any) => ValidationError[];
 }
 
-// Legacy validation result type for backward compatibility
+/**
+ * Legacy validation result format (for backward compatibility)
+ */
 export interface LegacyValidationResult {
   isValid: boolean;
-  messages: ValidationMessage[];
+  errors: string[];
+  warnings?: string[];
 }
 
-// Zod validation result for schema-based validation
-export interface ZodValidationResult<T = any> {
+/**
+ * Zod-based validation result
+ */
+export interface ZodValidationResult {
   success: boolean;
-  data?: T;
   errors?: ValidationError[];
+  data?: any;
 }
 
-// Conversion functions between validation result formats
+/**
+ * Convert between validation result formats
+ */
 export function legacyToNewValidationResult(legacy: LegacyValidationResult): ValidationResult {
   return {
     valid: legacy.isValid,
-    errors: legacy.messages
-      .filter(m => m.type === 'error')
-      .map(m => ({ field: m.field || '', message: m.message })),
-    warnings: legacy.messages.filter(m => m.type !== 'error')
+    errors: legacy.errors.map(msg => ({ field: 'unknown', message: msg })),
+    warnings: legacy.warnings?.map(msg => ({ field: 'unknown', message: msg, type: 'warning' }))
   };
 }
 
 export function newToLegacyValidationResult(result: ValidationResult): LegacyValidationResult {
-  const messages: ValidationMessage[] = [
-    ...result.errors.map(e => ({ type: 'error' as const, message: e.message, field: e.field })),
-    ...(result.warnings || [])
-  ];
-  
   return {
     isValid: result.valid,
-    messages
+    errors: result.errors.map(err => `${err.field}: ${err.message}`),
+    warnings: result.warnings?.map(warn => `${warn.field}: ${warn.message}`)
   };
 }
