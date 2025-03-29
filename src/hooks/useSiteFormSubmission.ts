@@ -14,13 +14,19 @@ export function useSiteFormSubmission(siteId?: string) {
     try {
       setIsSubmitting(true);
       
+      // Make sure the customId is properly mapped to custom_id for API compatibility
+      const preparedData = {
+        ...formData,
+        custom_id: formData.customId,
+      };
+      
       let result;
       if (siteId) {
         // Update existing site
-        result = await updateSite({ id: siteId, data: formData });
+        result = await updateSite({ id: siteId, data: preparedData });
       } else {
         // Create new site
-        result = await createSite(formData);
+        result = await createSite(preparedData);
       }
       
       if (onSuccess) {

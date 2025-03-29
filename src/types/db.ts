@@ -1,4 +1,3 @@
-
 import { Json } from './common';
 
 export interface Contract {
@@ -23,6 +22,16 @@ export interface Contract {
   status?: string;
 }
 
+export interface ContractActivity {
+  id: string;
+  contract_id: string;
+  activity_type: string;
+  description: string;
+  created_at: string;
+  created_by?: string;
+  metadata?: Json;
+}
+
 export interface ContractDetailsForm {
   contractNumber?: string;
   startDate?: string;
@@ -37,14 +46,4 @@ export interface ContractDetailsForm {
   contractType?: string;
   value?: number;
   notes?: string;
-}
-
-export interface ContractActivity {
-  id: string;
-  contract_id: string;
-  activity_type: string;
-  description: string;
-  created_at: string;
-  created_by?: string;
-  metadata?: Json;
 }

@@ -1,127 +1,43 @@
 
 import { toast } from 'sonner';
 
-export interface ApiError extends Error {
-  status?: number;
-  code?: string;
-  data?: any;
-}
-
 /**
- * Creates a standardized API error with additional metadata
- */
-export function createApiError(message: string, status?: number, code?: string, data?: any): ApiError {
-  const error = new Error(message) as ApiError;
-  error.status = status;
-  error.code = code;
-  error.data = data;
-  return error;
-}
-
-/**
- * Handle errors from API calls consistently
- */
-export async function handleApiError<T>(
-  promise: Promise<T>,
-  {
-    errorMessage = 'An error occurred',
-    showToast = true,
-    rethrow = true,
-    logError = true,
-  }: {
-    errorMessage?: string;
-    showToast?: boolean;
-    rethrow?: boolean;
-    logError?: boolean;
-  } = {}
-): Promise<T | null> {
-  try {
-    return await promise;
-  } catch (error: any) {
-    // Format error message
-    const status = error.status || (error.response?.status ? `${error.response.status}` : undefined);
-    const code = error.code || error.errorCode || 'ERROR';
-    const errorDetail = error.message || (typeof error === 'string' ? error : 'Unknown error');
-    const fullMessage = `${errorMessage}: ${errorDetail}`;
-    
-    // Log error
-    if (logError) {
-      console.error(`API Error [${code}${status ? ` ${status}` : ''}]:`, error);
-    }
-    
-    // Show toast notification
-    if (showToast) {
-      toast.error(errorMessage, {
-        description: errorDetail,
-        duration: 5000,
-      });
-    }
-    
-    // Create standardized error
-    const apiError = createApiError(
-      fullMessage,
-      typeof status === 'string' ? parseInt(status, 10) : undefined,
-      code,
-      error.data || error.response?.data
-    );
-    
-    // Rethrow or return null
-    if (rethrow) {
-      throw apiError;
-    }
-    
-    return null;
-  }
-}
-
-/**
- * Utility function to create a wrapper that adds error handling to API functions
+ * Wraps a function with error handling
+ * @param fn The function to wrap
+ * @param errorMessage Default error message to show
  */
 export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(
   fn: T,
-  defaultErrorMessage: string
-): (...args: Parameters<T>) => Promise<ReturnType<T> | null> {
-  return async (...args: Parameters<T>): Promise<ReturnType<T> | null> => {
+  errorMessage = 'An error occurred'
+): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+  return async (...args: Parameters<T>) => {
     try {
       return await fn(...args);
-    } catch (error: any) {
-      return handleApiError(
-        Promise.reject(error),
-        { errorMessage: defaultErrorMessage, rethrow: true }
-      );
+    } catch (error) {
+      handleApiError(error, errorMessage);
+      throw error;
     }
   };
 }
 
 /**
- * Parse error from different sources into a standard format
+ * Handles API errors consistently
+ * @param error The caught error
+ * @param defaultMessage Default message if error doesn't have one
  */
-export function parseError(error: any): ApiError {
-  if (!error) {
-    return createApiError('Unknown error occurred');
-  }
+export function handleApiError(error: unknown, defaultMessage = 'An error occurred') {
+  console.error('API Error:', error);
+  
+  let errorMessage = defaultMessage;
   
   if (error instanceof Error) {
-    return error as ApiError;
+    errorMessage = error.message;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+  } else if (error && typeof error === 'object' && 'message' in error) {
+    errorMessage = String((error as any).message);
   }
   
-  if (typeof error === 'string') {
-    return createApiError(error);
-  }
-  
-  if (error.message) {
-    return createApiError(
-      error.message,
-      error.status || error.statusCode,
-      error.code || error.errorCode,
-      error.data
-    );
-  }
-  
-  return createApiError(
-    JSON.stringify(error).substring(0, 100),
-    undefined,
-    undefined,
-    error
-  );
+  toast.error(errorMessage);
+  return errorMessage;
 }

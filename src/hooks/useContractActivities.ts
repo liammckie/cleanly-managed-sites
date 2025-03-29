@@ -1,96 +1,76 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { ContractActivity } from '@/types/db';
 
-interface UseContractActivitiesProps {
-  contractId?: string;
-  limit?: number;
-}
-
-/**
- * Hook to fetch contract activities for the activity feed
- */
-export function useContractActivities({ 
-  contractId, 
-  limit = 10 
-}: UseContractActivitiesProps = {}) {
+export function useContractActivities(contractId?: string) {
   const [activities, setActivities] = useState<ContractActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchActivities = async () => {
+    if (!contractId) return;
+
+    async function fetchContractActivities() {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        // This would be a real API call in production
-        // For now, use mock data
-        const mockActivities: ContractActivity[] = [
-          {
-            id: '1',
-            contractId: contractId || '1',
-            action: 'created',
-            timestamp: new Date().toISOString(),
-            userId: 'user1',
-            userName: 'John Doe',
-            details: {
-              notes: 'Contract was created'
-            }
-          },
-          {
-            id: '2',
-            contractId: contractId || '1',
-            action: 'updated',
-            timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            userId: 'user1',
-            userName: 'John Doe',
-            details: {
-              field: 'value',
-              oldValue: '$1000',
-              newValue: '$1200'
-            }
-          },
-          {
-            id: '3',
-            contractId: contractId || '1',
-            action: 'renewed',
-            timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-            userId: 'user2',
-            userName: 'Jane Smith',
-            details: {
-              notes: 'Contract renewed for another year'
-            }
-          }
-        ];
-        
-        // Filter by contractId if provided
-        const filteredActivities = contractId 
-          ? mockActivities.filter(a => a.contractId === contractId)
-          : mockActivities;
-          
-        // Limit the number of activities if specified
-        const limitedActivities = limit > 0
-          ? filteredActivities.slice(0, limit)
-          : filteredActivities;
-          
-        setActivities(limitedActivities);
+        const { data, error: fetchError } = await supabase
+          .from('contract_activity')
+          .select('*')
+          .eq('contract_id', contractId)
+          .order('created_at', { ascending: false });
+
+        if (fetchError) {
+          throw new Error(`Error fetching contract activities: ${fetchError.message}`);
+        }
+
+        setActivities(data as ContractActivity[]);
       } catch (err) {
-        console.error('Error fetching contract activities:', err);
-        setError(err instanceof Error ? err : new Error(String(err)));
+        console.error('Error in useContractActivities:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+        toast.error('Failed to load contract activities');
       } finally {
         setIsLoading(false);
       }
-    };
-    
-    fetchActivities();
-  }, [contractId, limit]);
-  
+    }
+
+    fetchContractActivities();
+  }, [contractId]);
+
+  const addActivity = async (activityData: Omit<ContractActivity, 'id' | 'created_at'>) => {
+    try {
+      const { data, error: insertError } = await supabase
+        .from('contract_activity')
+        .insert([{
+          contract_id: contractId,
+          activity_type: activityData.activity_type,
+          description: activityData.description,
+          created_by: activityData.created_by,
+          metadata: activityData.metadata
+        }])
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error(`Error adding contract activity: ${insertError.message}`);
+      }
+
+      setActivities(prev => [data as ContractActivity, ...prev]);
+      return data;
+    } catch (err) {
+      console.error('Error adding contract activity:', err);
+      toast.error('Failed to record contract activity');
+      throw err;
+    }
+  };
+
   return {
     activities,
     isLoading,
     error,
+    addActivity
   };
 }
-
-export default useContractActivities;
