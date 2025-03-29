@@ -1,10 +1,10 @@
 
 export interface AdHocWorkAuthorization {
-  canAuthorize?: boolean;
-  authorizationLimit?: number;
-  authorizationContact?: string;
-  authorizationEmail?: string;
-  authorizationPhone?: string;
-  authorizationNotes?: string;
+  approvalLimit?: number;
+  requirePurchaseOrder?: boolean;
   purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  approvalMethod?: string;
+  approvalContact?: string;
+  notes?: string;
 }

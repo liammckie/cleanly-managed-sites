@@ -1,9 +1,11 @@
+
 import { 
   Day, 
   EmploymentType, 
   EmployeeLevel, 
   Frequency, 
-  QuoteStatus 
+  QuoteStatus,
+  Json
 } from '@/types/common';
 
 // Quote and related types
@@ -73,6 +75,22 @@ export interface Quote {
   terms?: string;
 }
 
+export interface FrontendQuoteShift {
+  id: string;
+  quoteId: string;
+  day: Day;
+  startTime: string;
+  endTime: string;
+  breakDuration: number;
+  numberOfCleaners: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
+  allowances: string[];
+  estimatedCost: number;
+  location: string;
+  notes: string;
+}
+
 export interface QuoteShift {
   id: string;
   quote_id: string;
@@ -135,18 +153,74 @@ export interface ContractSummaryData {
   expiredCount?: number;
 }
 
-export interface ContractData {
+export interface Contract {
   id: string;
-  name: string;
-  client_id: string;
   site_id: string;
-  start_date: string;
-  end_date: string;
-  value: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  siteId?: string;
+  client_id?: string;
+  clientId?: string;
+  siteName?: string;
+  clientName?: string;
+  contract_number?: string;
+  contractNumber?: string;
+  start_date?: string;
+  startDate?: string;
+  end_date?: string;
+  endDate?: string;
+  value?: number;
+  monthly_revenue?: number;
+  monthlyRevenue?: number;
+  contract_details?: Json;
+  contractDetails?: any;
+  auto_renewal?: boolean;
+  autoRenewal?: boolean;
+  renewal_period?: string | number;
+  renewalPeriod?: string | number;
+  renewal_notice_days?: number;
+  renewalNoticeDays?: number;
+  termination_period?: string;
+  terminationPeriod?: string;
+  billing_cycle?: string;
+  billingCycle?: string;
+  service_frequency?: string;
+  serviceFrequency?: string;
+  service_delivery_method?: string;
+  serviceDeliveryMethod?: string;
   is_primary?: boolean;
+  isPrimary?: boolean;
+  created_at: string;
+  createdAt?: string;
+  updated_at: string;
+  updatedAt?: string;
+  contract_type?: string;
+  contractType?: string;
+  type?: string;
+  status?: string;
+}
+
+export interface ContractActivity {
+  id: string;
+  contract_id: string;
+  contractId: string;
+  activity_type: string;
+  action: string;
+  timestamp: string;
+  created_at: string;
+  created_by?: string;
+  userName: string;
+  details: any;
+  metadata?: any;
+  description?: string;
+}
+
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: any;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
+  version_number: number;
 }
 
 // Define BillingDetails and related types
@@ -156,6 +230,7 @@ export interface BillingAddress {
   city: string;
   state: string;
   postcode: string;
+  postalCode?: string;
   country?: string;
 }
 
@@ -168,19 +243,63 @@ export interface BillingContact {
   isPrimary?: boolean;
 }
 
-export interface BillingDetails {
-  billingAddress: BillingAddress;
-  useClientInfo: boolean;
-  billingMethod: string;
-  paymentTerms: string;
-  billingEmail: string;
-  billingLines: any[];
-  contacts: BillingContact[];
-  billingCity?: string;
-  billingState?: string;
-  billingPostcode?: string;
+export interface BillingLine {
+  id: string;
+  description: string;
+  amount: number;
+  frequency: Frequency;
+  isRecurring: boolean;
+  is_recurring?: boolean;
+  onHold: boolean;
+  on_hold?: boolean;
+  weeklyAmount?: number;
+  weekly_amount?: number;
+  monthlyAmount?: number;
+  monthly_amount?: number;
+  annualAmount?: number;
+  annual_amount?: number;
   notes?: string;
+}
+
+export interface BillingDetails {
+  billingAddress?: BillingAddress;
+  useClientInfo?: boolean;
+  billingMethod?: string;
+  paymentTerms?: string;
+  billingEmail?: string;
+  billingLines?: BillingLine[];
+  contacts?: BillingContact[];
+  invoiceFrequency?: string;
+  invoiceDay?: number;
+  invoiceEmail?: string;
+  invoiceAddressLine1?: string;
+  invoiceAddressLine2?: string;
+  invoiceCity?: string;
+  invoiceState?: string;
+  invoicePostalCode?: string;
+  weeklyRevenue?: number;
+  monthlyRevenue?: number;
+  annualRevenue?: number;
+  totalWeeklyAmount?: number;
+  totalMonthlyAmount?: number;
   totalAnnualAmount?: number;
+  serviceDeliveryType?: string;
+  weeklyBudget?: number;
+  annualContractorCost?: number;
+  serviceType?: string;
+  deliveryMethod?: string;
+  contractorCostFrequency?: string;
+  weeklyContractorCost?: number;
+  monthlyContractorCost?: number;
+  contractorInvoiceFrequency?: string;
+  xeroContactId?: string;
+  rate?: number;
+  invoiceMethod?: string;
+  accountNumber?: string;
+  billingFrequency?: string;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  notes?: string;
 }
 
 // Interface for SiteFormData
@@ -218,30 +337,24 @@ export interface ValidationResult {
 }
 
 // Add missing ContractActivity interface
-export interface ContractActivity {
-  id: string;
-  contractId: string;
-  contract_id: string;
+export interface ContractActivityWithDetails extends ContractActivity {
   action: string;
-  activity_type: string;
   timestamp: string;
-  created_at: string;
   userName: string;
-  created_by?: string;
   details: any;
   metadata?: any;
   description?: string;
 }
 
-// Add missing ContractHistoryEntry interface
-export interface ContractHistoryEntry {
-  id: string;
-  site_id: string;
-  contract_details: any;
+// Extend AdHocWorkAuthorization with missing properties
+export interface AdHocWorkAuthorization {
+  approvalLimit?: number;
+  requirePurchaseOrder?: boolean;
+  purchaseOrderRequired?: boolean;
+  purchaseOrderNumber?: string;
+  approvalMethod?: string;
+  approvalContact?: string;
   notes?: string;
-  created_at: string;
-  created_by?: string;
-  version_number: number;
 }
 
 // Export UserStatus enum properly
@@ -259,4 +372,43 @@ export interface ImportOptions {
   skipExistingCheck?: boolean;
   updateExisting?: boolean;
   dryRun?: boolean;
+  format?: string;
+}
+
+// User profile and role types
+export interface UserProfileWithRole {
+  id: string;
+  email: string;
+  full_name: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  role_id?: string;
+  role?: UserRole;
+  created_at?: string;
+  updated_at?: string;
+  title?: string;
+  phone?: string;
+  status?: UserStatus;
+  last_login?: string;
+  custom_id?: string;
+  notes?: string;
+  territories?: string[];
+}
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[] | Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
+}
+
+export interface UserRoleObject {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
 }

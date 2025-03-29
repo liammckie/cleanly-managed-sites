@@ -18,13 +18,13 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
   const navigate = useNavigate();
   
   // Convert user to SystemUser type if it's from the DB
-  const systemUser: SystemUser = user.first_name !== undefined ? dbUserToSystemUser(user) : user;
+  const systemUser: SystemUser = user;
   
   const getInitials = () => {
-    if (systemUser.firstName && systemUser.lastName) {
-      return `${systemUser.firstName.charAt(0)}${systemUser.lastName.charAt(0)}`;
+    if (systemUser.first_name && systemUser.last_name) {
+      return `${systemUser.first_name.charAt(0)}${systemUser.last_name.charAt(0)}`;
     }
-    return systemUser.fullName ? systemUser.fullName.charAt(0) : systemUser.email.charAt(0).toUpperCase();
+    return systemUser.full_name ? systemUser.full_name.charAt(0) : systemUser.email.charAt(0).toUpperCase();
   };
   
   const getUserStatusColor = () => {
@@ -53,22 +53,22 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-24 w-24">
-                {systemUser.avatarUrl ? (
-                  <AvatarImage src={systemUser.avatarUrl} alt={systemUser.fullName || 'User'} />
+                {systemUser.avatar_url ? (
+                  <AvatarImage src={systemUser.avatar_url} alt={systemUser.full_name || 'User'} />
                 ) : (
                   <AvatarFallback className="text-xl">{getInitials()}</AvatarFallback>
                 )}
               </Avatar>
               
               <div className="text-center">
-                <h3 className="font-semibold text-lg">{systemUser.fullName || `${systemUser.email}`}</h3>
+                <h3 className="font-semibold text-lg">{systemUser.full_name || `${systemUser.email}`}</h3>
                 <div className="flex items-center justify-center mt-1">
                   <div className={`w-2 h-2 rounded-full ${getUserStatusColor()} mr-2`}></div>
                   <span className="text-sm capitalize">{systemUser.status}</span>
                 </div>
               </div>
               
-              {typeof systemUser.role === 'object' && systemUser.role.name ? (
+              {typeof systemUser.role === 'object' && systemUser.role?.name ? (
                 <Badge variant="outline" className="px-3 py-1">
                   {systemUser.role.name}
                 </Badge>
@@ -111,12 +111,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
                     </div>
                   )}
                   
-                  {systemUser.customId && (
+                  {systemUser.custom_id && (
                     <div className="flex items-start">
                       <DollarSign className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">Employee ID</p>
-                        <p className="text-sm text-muted-foreground">{systemUser.customId}</p>
+                        <p className="text-sm text-muted-foreground">{systemUser.custom_id}</p>
                       </div>
                     </div>
                   )}
@@ -130,16 +130,16 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
                     <div className="w-5 mr-2">&nbsp;</div>
                     <div>
                       <p className="font-medium">Created</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(systemUser.createdAt)}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(systemUser.created_at || '')}</p>
                     </div>
                   </div>
                   
-                  {systemUser.lastLogin && (
+                  {systemUser.last_login && (
                     <div className="flex items-start">
                       <div className="w-5 mr-2">&nbsp;</div>
                       <div>
                         <p className="font-medium">Last Login</p>
-                        <p className="text-sm text-muted-foreground">{formatDate(systemUser.lastLogin)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(systemUser.last_login)}</p>
                       </div>
                     </div>
                   )}
@@ -162,7 +162,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({ user, onEdit }) => {
                 </div>
               </div>
               
-              {typeof systemUser.role === 'object' && systemUser.role.description && (
+              {typeof systemUser.role === 'object' && systemUser.role?.description && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Role Description</h4>
                   <p className="text-sm">{systemUser.role.description}</p>
