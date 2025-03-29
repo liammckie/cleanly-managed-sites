@@ -1,42 +1,28 @@
 
-import { ContractData as ContractColumns } from '@/components/contracts/ContractColumns';
-import { ContractData as ContractTypes } from '@/types/contracts';
-import { asJsonObject, jsonToString } from '@/lib/utils/json';
+import type { Contract } from '@/types/models';
 
 /**
- * Converts a ContractData from lib/types/contracts to the format expected by ContractColumns
- * @param contractData Contract data from the API/database
- * @returns Contract data formatted for UI components
+ * Adapt a contract object from database (snake_case) to app format (camelCase).
  */
-export function adaptContractData(contractData: ContractTypes): ContractColumns {
-  // Make sure we have default values if contractDetails is null or undefined
-  const contractDetails = contractData.contractDetails ? 
-    asJsonObject(contractData.contractDetails, { startDate: '', endDate: '' }) : 
-    { startDate: '', endDate: '' };
-  
+export function adaptContract(dbContract: any): Contract {
   return {
-    id: contractData.id,
-    site: { 
-      id: contractData.siteId || contractData.site?.id || '', 
-      name: contractData.siteName || contractData.site?.name || '' 
-    },
-    client: { 
-      id: contractData.clientId || contractData.client?.id || '', 
-      name: contractData.clientName || contractData.client?.name || '' 
-    },
-    value: contractData.monthlyRevenue || contractData.value || 0,
-    startDate: jsonToString(contractDetails.startDate) || '',
-    endDate: jsonToString(contractDetails.endDate) || '',
-    status: contractData.status === 'active' ? 'active' : 
-            contractData.status === 'pending' ? 'pending' : 'expired'
+    id: dbContract.id,
+    siteId: dbContract.site_id,
+    clientId: dbContract.client_id,
+    contractNumber: dbContract.contract_number,
+    startDate: dbContract.start_date,
+    endDate: dbContract.end_date,
+    monthlyRevenue: dbContract.monthly_revenue,
+    contractDetails: dbContract.contract_details,
+    autoRenewal: dbContract.auto_renewal,
+    renewalPeriod: dbContract.renewal_period,
+    renewalNoticeDays: dbContract.renewal_notice_days,
+    terminationPeriod: dbContract.termination_period,
+    billingCycle: dbContract.billing_cycle,
+    serviceFrequency: dbContract.service_frequency,
+    serviceDeliveryMethod: dbContract.service_delivery_method,
+    isPrimary: dbContract.is_primary,
+    createdAt: dbContract.created_at,
+    updatedAt: dbContract.updated_at,
   };
-}
-
-/**
- * Converts an array of ContractData objects
- * @param contractData Array of contract data from API/database
- * @returns Array of contract data formatted for UI components
- */
-export function adaptContractDataArray(contractData: ContractTypes[]): ContractColumns[] {
-  return contractData.map(adaptContractData);
 }

@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Day, EmploymentType } from '@/types/common';
 
 interface QuoteShiftFormProps {
   quoteId?: string;
@@ -33,13 +31,15 @@ const QuoteShiftForm: React.FC<QuoteShiftFormProps> = ({
 }) => {
   const isEditMode = !!shift;
   const defaultValues = shift || {
-    day: 'monday',
+    day: 'monday' as Day,
     startTime: '09:00',
     endTime: '17:00',
     breakDuration: 30,
     numberOfCleaners: 1,
-    employmentType: 'casual',
-    level: 1
+    employmentType: 'casual' as EmploymentType,
+    level: 1,
+    allowances: [],
+    estimatedCost: 0
   };
 
   const [formValues, setFormValues] = useState(defaultValues);
@@ -81,45 +81,7 @@ const QuoteShiftForm: React.FC<QuoteShiftFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="startTime">Start Time</Label>
-          <Input 
-            id="startTime"
-            type="time"
-            value={formValues.startTime}
-            onChange={(e) => handleChange('startTime', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="endTime">End Time</Label>
-          <Input 
-            id="endTime"
-            type="time"
-            value={formValues.endTime}
-            onChange={(e) => handleChange('endTime', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="breakDuration">Break Duration (minutes)</Label>
-          <Input 
-            id="breakDuration"
-            type="number"
-            min="0"
-            step="5"
-            value={formValues.breakDuration}
-            onChange={(e) => handleChange('breakDuration', parseInt(e.target.value) || 0)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="numberOfCleaners">Number of Cleaners</Label>
-          <Input 
-            id="numberOfCleaners"
-            type="number"
-            min="1"
-            value={formValues.numberOfCleaners}
-            onChange={(e) => handleChange('numberOfCleaners', parseInt(e.target.value) || 1)}
-          />
-        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="employmentType">Employment Type</Label>
           <Select 
@@ -136,10 +98,58 @@ const QuoteShiftForm: React.FC<QuoteShiftFormProps> = ({
             </SelectContent>
           </Select>
         </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="startTime">Start Time</Label>
+          <Input 
+            id="startTime"
+            type="time"
+            value={formValues.startTime}
+            onChange={(e) => handleChange('startTime', e.target.value)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="endTime">End Time</Label>
+          <Input 
+            id="endTime"
+            type="time"
+            value={formValues.endTime}
+            onChange={(e) => handleChange('endTime', e.target.value)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="breakDuration">Break Duration (minutes)</Label>
+          <Input 
+            id="breakDuration"
+            type="number"
+            min="0"
+            step="5"
+            value={formValues.breakDuration}
+            onChange={(e) => handleChange('breakDuration', parseInt(e.target.value) || 0)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="numberOfCleaners">Number of Cleaners</Label>
+          <Input 
+            id="numberOfCleaners"
+            type="number"
+            min="1"
+            value={formValues.numberOfCleaners}
+            onChange={(e) => handleChange('numberOfCleaners', parseInt(e.target.value) || 1)}
+            required
+          />
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="level">Level</Label>
           <Select 
-            value={String(formValues.level)} 
+            value={formValues.level.toString()} 
             onValueChange={(value) => handleChange('level', parseInt(value))}
           >
             <SelectTrigger>
@@ -150,25 +160,21 @@ const QuoteShiftForm: React.FC<QuoteShiftFormProps> = ({
               <SelectItem value="2">Level 2</SelectItem>
               <SelectItem value="3">Level 3</SelectItem>
               <SelectItem value="4">Level 4</SelectItem>
+              <SelectItem value="5">Level 5</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="location">Location</Label>
+        
+        <div className="space-y-2">
+          <Label htmlFor="estimatedCost">Estimated Cost ($)</Label>
           <Input 
-            id="location"
-            value={formValues.location || ''}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="e.g. Office Area, Kitchen, Main Building"
-          />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="notes">Notes</Label>
-          <Input 
-            id="notes"
-            value={formValues.notes || ''}
-            onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Additional information about this shift"
+            id="estimatedCost"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formValues.estimatedCost}
+            onChange={(e) => handleChange('estimatedCost', parseFloat(e.target.value) || 0)}
+            required
           />
         </div>
       </div>

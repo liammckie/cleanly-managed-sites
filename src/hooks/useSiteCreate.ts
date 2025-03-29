@@ -1,52 +1,33 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { Json } from '@/types/common';
-import { mapToDb } from '@/lib/utils/mappers';
+import { mapToDb } from '@/lib/mappers';
+import type { Json } from '@/types/common';
 
-export function useSiteCreate() {
+export interface SiteFormData {
+  name: string;
+  address?: string;
+  email?: string;
+  customId?: string;
+  contractDetails?: Json;
+  billingDetails?: Json;
+  // Add other fields as required
+}
+
+export function useSiteCreate(user: { id: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
 
   const createSite = async (formData: SiteFormData) => {
     try {
       setIsSubmitting(true);
-
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Prepare payload in camelCase, then convert to snake_case for DB
-      const payload = {
-        name: formData.name,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        postcode: formData.postalCode || formData.postcode,
-        status: formData.status,
-        client_id: formData.client_id,
-        representative: formData.representative,
-        phone: formData.phone,
-        email: formData.email,
-        custom_id: formData.customId,
-        contract_details: formData.contractDetails || formData.contract_details as Json,
-        billing_details: formData.billingDetails as unknown as Json,
-        user_id: user.id
-      };
-
+      const payload = { ...formData, userId: user.id };
       const { data, error } = await supabase
         .from('sites')
-        .insert(payload)
+        .insert(mapToDb(payload))
         .select()
         .single();
-
-      if (error) {
-        throw new Error(`Error creating site: ${error.message}`);
-      }
-
+      if (error) throw new Error(error.message);
       toast.success('Site created successfully');
       return data;
     } catch (error: any) {

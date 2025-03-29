@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { mapFromDb } from '@/lib/utils/mappers';
+import { mapFromDb } from '@/lib/mappers';
 import { toast } from 'sonner';
 
 export function useQuote(quoteId: string | undefined) {

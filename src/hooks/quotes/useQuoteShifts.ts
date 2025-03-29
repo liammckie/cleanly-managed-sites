@@ -2,17 +2,18 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { mapFromDb } from '@/lib/utils/mappers';
+import { Day, EmployeeLevel, EmploymentType } from '@/types/common';
 
 interface QuoteShift {
   id: string;
   quoteId: string;
-  day: string;
+  day: Day;
   startTime: string;
   endTime: string;
   breakDuration: number;
   numberOfCleaners: number;
-  employmentType: string;
-  level: number;
+  employmentType: EmploymentType;
+  level: EmployeeLevel;
   location?: string;
   notes?: string;
   allowances?: string[];

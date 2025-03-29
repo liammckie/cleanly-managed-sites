@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import {
 import { Frequency } from '@/types/common';
 
 interface QuoteSubcontractorFormProps {
+  quoteId: string;
   onSubmit?: (subcontractorData: any) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -21,7 +23,8 @@ interface QuoteSubcontractorFormProps {
 /**
  * A form component for managing quote subcontractors.
  */
-const QuoteSubcontractorForm: React.FC<QuoteSubcontractorFormProps> = ({ 
+export const QuoteSubcontractorForm: React.FC<QuoteSubcontractorFormProps> = ({ 
+  quoteId, 
   onSubmit, 
   open, 
   onOpenChange,
@@ -138,6 +141,4 @@ const QuoteSubcontractorForm: React.FC<QuoteSubcontractorFormProps> = ({
   return content;
 };
 
-// Export the component both as default and named export
 export default QuoteSubcontractorForm;
-export { QuoteSubcontractorForm };
