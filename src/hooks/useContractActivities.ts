@@ -46,7 +46,7 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
           activity_type: item.activity_type,
           timestamp: item.created_at,
           created_at: item.created_at,
-          userName: item.user_name || 'System',
+          userName: item.created_by ? 'User' : 'System', // We'd need another query to get the user name
           created_by: item.created_by,
           details: item.details || {},
           metadata: item.metadata || {},
@@ -78,7 +78,7 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
           description: activity.description || '',
           details: activity.details || {},
           metadata: activity.metadata || {},
-          user_name: activity.userName || 'System'
+          created_by: activity.created_by
         })
         .select()
         .single();
@@ -94,7 +94,7 @@ export function useContractActivities(contractId?: string | { limit?: number }) 
         activity_type: data.activity_type,
         timestamp: data.created_at,
         created_at: data.created_at,
-        userName: data.user_name || 'System',
+        userName: data.created_by ? 'User' : 'System', 
         created_by: data.created_by || null,
         details: data.details || {},
         metadata: data.metadata || {},

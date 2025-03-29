@@ -1,136 +1,80 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React from 'react';
+import { useRoles } from '@/hooks/useRoles';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, Search, Trash2, Edit, Users, Shield } from 'lucide-react';
-import { UserRole } from '@/types/users';
-import UserRoleCard from './UserRoleCard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, Loader2 } from 'lucide-react';
+import UserRoleCard from '@/components/users/UserRoleCard';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useNavigate } from 'react-router-dom';
 
-interface UserRolesListProps {
-  roles?: UserRole[];
-  isLoading?: boolean;
-  onRoleClick?: (role: UserRole) => void;
-  onAddClick?: (role: Partial<UserRole>) => void;
-  onDeleteClick?: (role: UserRole) => void;
-  onEditClick?: (role: UserRole) => void;
-}
+export const UserRolesList: React.FC = () => {
+  const { roles, isLoading, error, deleteRole } = useRoles();
+  const navigate = useNavigate();
 
-const UserRolesList = ({ roles = [], isLoading, onRoleClick, onAddClick, onDeleteClick, onEditClick }: UserRolesListProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
-
-  // Fix the async/await issue
-  const handleAddRole = () => {
-    // Create a properly typed name field
-    const newRole = {
-      name: 'New Role', // Required field
-      description: 'Role description'
-    };
-    onAddClick(newRole);
+  const handleEdit = (roleId: string) => {
+    navigate(`/user-roles/${roleId}`);
   };
 
-  const filteredRoles = roles.filter(role => 
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleRoleClick = (role: UserRole) => {
-    setSelectedRoleId(role.id);
-    if (onRoleClick) {
-      onRoleClick(role);
+  const handleDelete = async (roleId: string) => {
+    if (window.confirm('Are you sure you want to delete this role?')) {
+      try {
+        await deleteRole(roleId);
+      } catch (error) {
+        console.error('Failed to delete role:', error);
+      }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">User Roles</h2>
-          <Button disabled>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Role
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <Skeleton className="h-6 w-24" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-3/4" />
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-9 w-full" />
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-destructive">Error loading roles: {error.message}</div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">User Roles</h2>
-        <Button onClick={handleAddRole}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Role
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">User Roles</h2>
+        <Button onClick={() => navigate('/user-roles/new')}>
+          <Plus className="mr-2 h-4 w-4" /> Create Role
         </Button>
       </div>
-
-      {roles.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search roles..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      )}
-
-      {filteredRoles.length > 0 ? (
+      
+      {!roles || roles.length === 0 ? (
+        <EmptyState
+          title="No roles found"
+          description="Create your first role to manage user permissions"
+          icon={<Plus className="h-12 w-12" />}
+          action={
+            <Button onClick={() => navigate('/user-roles/new')}>
+              <Plus className="mr-2 h-4 w-4" /> Create Role
+            </Button>
+          }
+        />
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredRoles.map((role) => (
+          {roles.map((role) => (
             <UserRoleCard
               key={role.id}
               role={role}
-              onClick={handleRoleClick}
-              onEditClick={onEditClick}
-              onDeleteClick={onDeleteClick}
-              isActive={role.id === selectedRoleId}
+              onEditClick={() => handleEdit(role.id)}
+              onDeleteClick={() => handleDelete(role.id)}
             />
           ))}
         </div>
-      ) : (
-        <EmptyState
-          icon={<Shield className="h-12 w-12 text-muted-foreground" />}
-          title="No roles found"
-          description={
-            searchTerm
-              ? "No roles match your search criteria"
-              : "Get started by adding your first user role"
-          }
-          action={
-            searchTerm ? (
-              <Button variant="outline" onClick={() => setSearchTerm("")}>
-                Clear search
-              </Button>
-            ) : (
-              <Button onClick={handleAddRole}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Role
-              </Button>
-            )
-          }
-        />
       )}
     </div>
   );

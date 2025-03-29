@@ -323,6 +323,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_activities: {
+        Row: {
+          activity_type: string
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          details: Json | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          activity_type: string
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          details?: Json | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          activity_type?: string
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          details?: Json | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       contractor_documents: {
         Row: {
           contractor_id: string
@@ -610,6 +643,48 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          document_type: string
+          entity_id: string
+          entity_type: string
+          expires_at: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          status: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          document_type: string
+          entity_id: string
+          entity_type: string
+          expires_at?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          document_type?: string
+          entity_id?: string
+          entity_type?: string
+          expires_at?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          status?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -735,6 +810,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       overhead_profiles: {
         Row: {
@@ -1276,6 +1384,51 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: []
+      }
       user_integrations: {
         Row: {
           access_token: string
@@ -1385,6 +1538,7 @@ export type Database = {
           name: string
           permissions: Json
           updated_at: string
+          user_count: number | null
         }
         Insert: {
           created_at?: string
@@ -1393,6 +1547,7 @@ export type Database = {
           name: string
           permissions?: Json
           updated_at?: string
+          user_count?: number | null
         }
         Update: {
           created_at?: string
@@ -1401,6 +1556,7 @@ export type Database = {
           name?: string
           permissions?: Json
           updated_at?: string
+          user_count?: number | null
         }
         Relationships: []
       }

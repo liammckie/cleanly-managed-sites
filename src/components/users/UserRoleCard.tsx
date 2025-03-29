@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserRole } from '@/lib/types/users';
+import { UserRole } from '@/types/db';
 
 interface UserRoleCardProps {
   role: UserRole;
@@ -12,12 +13,8 @@ interface UserRoleCardProps {
 }
 
 const UserRoleCard = ({ role, onClick, onEditClick, onDeleteClick, isActive = false }: UserRoleCardProps) => {
-  const getPermissionCount = (permissions: string[] | Record<string, boolean>) => {
-    if (Array.isArray(permissions)) {
-      return permissions.length;
-    } else {
-      return Object.values(permissions).filter(value => value === true).length;
-    }
+  const getPermissionCount = (permissions: Record<string, boolean>) => {
+    return Object.values(permissions).filter(value => value === true).length;
   };
 
   return (
