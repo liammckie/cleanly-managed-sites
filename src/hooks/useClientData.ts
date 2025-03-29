@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useClient } from './useClient';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
+import { BillingDetails } from '@/components/sites/forms/types/billingTypes';
 import { stringToAddressObject } from '@/utils/typeAdapters';
 
 interface UseClientDataProps {
@@ -33,12 +34,15 @@ export function useClientData({ clientId, setFormData }: UseClientDataProps) {
       };
 
       // Create a new billingDetails object with client data
-      const updatedBillingDetails = {
+      const updatedBillingDetails: BillingDetails = {
         ...(prev.billingDetails || {}),
         billingAddress,
         billingEmail: client.email || '',
         contacts: [],
-        useClientInfo: true
+        useClientInfo: true,
+        // Add missing required properties
+        billingLines: prev.billingDetails?.billingLines || [],
+        serviceDeliveryType: prev.billingDetails?.serviceDeliveryType || 'direct'
       };
 
       // Add primary client contact to billing contacts if available

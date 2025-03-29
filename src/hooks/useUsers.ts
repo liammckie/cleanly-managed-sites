@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, UserRole, UserStatus } from '@/types/db';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useUsers() {
   const queryClient = useQueryClient();
@@ -49,6 +50,7 @@ export function useUsers() {
       // Ensure status is set
       const userWithStatus = {
         ...userData,
+        id: uuidv4(), // Generate a UUID for new user
         status: userData.status || 'active' as UserStatus
       };
       

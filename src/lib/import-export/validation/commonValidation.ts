@@ -1,150 +1,107 @@
 
-import { ValidationError, ValidationResult } from './types';
+import { supabase } from '@/lib/supabase';
+import { ValidationResult } from './types';
 
 /**
- * Validates email format
- * @param email Email to validate
- * @param field Field name
- * @param row Row number (for CSV import)
- * @returns Validation error if invalid, null if valid
+ * Validates if a string is a valid email
  */
-export function validateEmail(email: string, field: string, row?: number): ValidationError | null {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return {
-      path: field,
-      message: 'Invalid email format',
-      row,
-      value: email
-    };
-  }
-  return null;
+export function isValidEmail(email: string): boolean {
+  if (!email) return true; // Allow empty
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(String(email).toLowerCase());
 }
 
 /**
- * Validates date format (YYYY-MM-DD)
- * @param date Date string to validate
- * @param field Field name
- * @param row Row number (for CSV import)
- * @returns Validation error if invalid, null if valid
+ * Validates if a value is not empty
  */
-export function validateDateFormat(date: string, field: string, row?: number): ValidationError | null {
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!dateRegex.test(date)) {
-    return {
-      path: field,
-      message: 'Invalid date format (should be YYYY-MM-DD)',
-      row,
-      value: date
-    };
-  }
-  
-  // Check if it's a valid date
-  const parsed = new Date(date);
-  if (isNaN(parsed.getTime())) {
-    return {
-      path: field,
-      message: 'Invalid date',
-      row,
-      value: date
-    };
-  }
-  
-  return null;
+export function isNotEmpty(value: string): boolean {
+  return value !== undefined && value !== null && value.trim() !== '';
 }
 
 /**
- * Checks for existing items in the database by ID
- * @param table Table name
- * @param ids Array of IDs to check
- * @returns Array of IDs that exist in the database
+ * Validates if a value is a valid number
  */
-export async function checkExistingItems(table: string, ids: string[]): Promise<string[]> {
-  if (!ids.length) return [];
-  
+export function isValidNumber(value: string | number): boolean {
+  if (value === undefined || value === null || value === '') return true; // Allow empty
+  return !isNaN(Number(value));
+}
+
+/**
+ * Validates if a value is a valid date
+ */
+export function isValidDate(value: string): boolean {
+  if (!value) return true; // Allow empty
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+}
+
+/**
+ * Validates if a value is a valid status
+ */
+export function isValidStatus(value: string, validStatuses: string[]): boolean {
+  if (!value) return true; // Allow empty
+  return validStatuses.includes(value.toLowerCase());
+}
+
+/**
+ * Checks if an entity exists in the database
+ */
+export async function entityExists(entityType: string, field: string, value: string): Promise<boolean> {
   try {
-    const { supabase } = await import('@/lib/supabase');
-    const { data } = await supabase
-      .from(table)
-      .select('id')
-      .in('id', ids);
+    if (!value) return false;
     
-    return data ? data.map(item => item.id) : [];
+    // Use direct table name instead of dynamic parameter
+    let tableName = '';
+    
+    // Map entityType to actual table names
+    switch(entityType) {
+      case 'client':
+        tableName = 'clients';
+        break;
+      case 'site':
+        tableName = 'sites';
+        break;
+      case 'contractor':
+        tableName = 'contractors';
+        break;
+      case 'user':
+        tableName = 'user_profiles';
+        break;
+      default:
+        console.error(`Unknown entity type: ${entityType}`);
+        return false;
+    }
+    
+    // Check if entity exists
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('id')
+      .eq(field, value)
+      .limit(1);
+      
+    if (error) {
+      console.error(`Error checking if ${entityType} exists:`, error);
+      return false;
+    }
+    
+    return data && data.length > 0;
   } catch (error) {
-    console.error(`Error checking existing items in ${table}:`, error);
-    return [];
+    console.error(`Error in entityExists for ${entityType}:`, error);
+    return false;
   }
 }
 
 /**
- * Generic validation function for imported data
- * @param data Data to validate
- * @param requiredFields Array of required field names
- * @param customValidation Optional function for additional validation
- * @returns Validation result
+ * Creates a validation result
  */
-export function validateGenericData<T>(
-  data: any[],
-  requiredFields: string[],
-  customValidation?: (item: any, index: number) => ValidationError[]
-): ValidationResult<T[]> {
-  if (!Array.isArray(data)) {
-    return {
-      valid: false,
-      errors: [{ path: '', message: 'Invalid data format: must be an array' }]
-    };
-  }
-  
-  if (data.length === 0) {
-    return {
-      valid: false,
-      errors: [{ path: '', message: 'No data to import' }]
-    };
-  }
-  
-  const errors: ValidationError[] = [];
-  const validItems: any[] = [];
-  
-  data.forEach((item, index) => {
-    if (!item || typeof item !== 'object') {
-      errors.push({
-        path: '',
-        message: 'Invalid item: must be an object',
-        row: index
-      });
-      return;
-    }
-    
-    const itemErrors: ValidationError[] = [];
-    
-    // Check required fields
-    requiredFields.forEach(field => {
-      if (item[field] === undefined || item[field] === null || item[field] === '') {
-        itemErrors.push({
-          path: field,
-          message: `Missing required field: ${field}`,
-          row: index,
-          value: item[field]
-        });
-      }
-    });
-    
-    // Run custom validation if provided
-    if (customValidation) {
-      const customErrors = customValidation(item, index);
-      itemErrors.push(...customErrors);
-    }
-    
-    if (itemErrors.length > 0) {
-      errors.push(...itemErrors);
-    } else {
-      validItems.push(item);
-    }
-  });
-  
+export function createValidationResult<T>(
+  success: boolean, 
+  errors: Record<string, string> = {},
+  data?: T[]
+): ValidationResult<T> {
   return {
-    valid: errors.length === 0,
-    data: validItems as T[],
-    errors: errors.length > 0 ? errors : undefined
+    success,
+    errors,
+    data
   };
 }

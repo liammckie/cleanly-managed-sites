@@ -1,68 +1,52 @@
 
-import { ContractHistoryEntry } from '@/components/sites/forms/types/contractTypes';
-import { ValidationResult } from './types';
-import { validateContractData } from './validation/contractValidation';
 import { supabase } from '@/lib/supabase';
+import { ContractHistoryEntry } from '@/types/contracts';
+import { Json } from '@/types/common';
+import { convertStringToNumeric } from '@/utils/importExportUtils';
 
-export async function importContracts(
-  contracts: Partial<ContractHistoryEntry>[]
-): Promise<{ success: boolean; count: number; errors?: any[] }> {
+export async function importContracts(contracts: Partial<ContractHistoryEntry>[]) {
   try {
-    // Validate the contracts
-    const validation = validateContractData(contracts);
-    
-    if (!validation.valid) {
-      return {
-        success: false,
-        count: 0,
-        errors: validation.errors,
-      };
+    if (!contracts.length) {
+      return { success: false, message: 'No contracts to import', count: 0 };
     }
-    
-    const validContracts = validation.data || [];
-    
-    // Insert valid contracts
-    const { data, error } = await supabase
-      .from('site_contract_history')
-      .insert(validContracts)
-      .select();
-    
-    if (error) {
-      console.error('Error importing contracts:', error);
+
+    // Convert contract details to JSON format
+    const preparedContracts = contracts.map(contract => {
+      // Convert numeric string values to numbers
+      const contractDetails = convertStringToNumeric(contract.contract_details || {});
+      
       return {
-        success: false,
-        count: 0,
-        errors: [{ message: error.message }]
+        site_id: contract.site_id,
+        contract_details: contractDetails as Json,
+        notes: contract.notes || 'Imported contract',
+        created_by: contract.created_by,
+        // Version number will be automatically set by the trigger
       };
+    });
+
+    // Insert each contract individually to handle different validation rules
+    for (const contract of preparedContracts) {
+      const { error } = await supabase
+        .from('site_contract_history')
+        .insert(contract);
+        
+      if (error) {
+        console.error('Error importing contract:', error, contract);
+        throw error;
+      }
     }
-    
-    return {
-      success: true,
-      count: data?.length || validContracts.length,
+
+    return { 
+      success: true, 
+      message: `Successfully imported ${contracts.length} contracts`, 
+      count: contracts.length 
     };
   } catch (error) {
-    console.error('Error importing contracts:', error);
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }],
+    console.error('Contract import failed:', error);
+    return { 
+      success: false, 
+      message: `Contract import failed: ${error instanceof Error ? error.message : String(error)}`, 
+      count: 0 
     };
   }
-}
-
-export function convertCSVToContractFormat(csvData: any[]): Partial<ContractHistoryEntry>[] {
-  return csvData.map(row => {
-    // Convert the CSV row to the ContractHistoryEntry format
-    const contractDetails = typeof row.contract_details === 'string' 
-      ? JSON.parse(row.contract_details) 
-      : row.contract_details || {};
-      
-    return {
-      site_id: row.site_id || '',
-      contract_details: contractDetails,
-      notes: row.notes || '',
-      created_by: row.created_by || '',
-      version_number: Number(row.version_number) || 0
-    };
-  });
 }

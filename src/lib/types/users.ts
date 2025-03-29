@@ -5,7 +5,7 @@ export type {
   UserProfile,
   UserStatus,
   UserPermission
-} from './db';
+} from '@/types/db';
 
 // Define additional user-related types here
 export interface UserRoleSummary {
@@ -35,3 +35,6 @@ export interface UserProfileWithRole {
   last_login?: string;
   daily_summary?: boolean;
 }
+
+// For backward compatibility
+export type SystemUser = UserProfile;

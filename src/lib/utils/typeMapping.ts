@@ -38,6 +38,13 @@ export const apiToEmploymentType = (apiValue: string): EmploymentType => {
 };
 
 /**
+ * Validates if the provided level is a valid employee level
+ */
+export const validateEmployeeLevel = (level: number): boolean => {
+  return level >= 1 && level <= 5;
+};
+
+/**
  * Maps internal quote status values to API values
  */
 export const quoteStatusToApi: Record<QuoteStatus, string> = {

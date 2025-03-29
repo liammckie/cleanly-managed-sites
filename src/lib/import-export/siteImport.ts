@@ -1,91 +1,102 @@
 
-import { supabase } from '../supabase';
-import { SiteRecord } from '../types';
-import { validateSiteData } from './validation/siteValidation';
-import { checkExistingItems } from './validation/commonValidation';
+import { supabase } from '@/lib/supabase';
+import { validateSiteImport } from './validation/siteValidation';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
-// Import sites
-export const importSites = async (sites: Partial<SiteRecord>[]): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> => {
+// Define the SiteImportItem interface
+export interface SiteImportItem {
+  name: string;
+  client_id: string;
+  address: string;
+  city: string;
+  state: string;
+  postcode: string;
+  status?: string;
+  email?: string;
+  phone?: string;
+  representative?: string;
+  monthly_revenue?: number;
+  custom_id?: string;
+  notes?: string;
+}
+
+export async function importSites(sites: SiteImportItem[]) {
   try {
-    // Validate site data
-    const validationResult = validateSiteData(sites);
-    
-    if (!validationResult.valid) {
-      console.error('Invalid site data:', validationResult.errors);
-      return {
-        success: false,
-        count: 0,
-        errors: validationResult.errors
+    if (!sites.length) {
+      return { success: false, message: 'No sites to import', count: 0 };
+    }
+
+    // Validate the sites
+    const validationResult = validateSiteImport(sites);
+    if (!validationResult.success) {
+      return { 
+        success: false, 
+        message: 'Validation failed', 
+        errors: validationResult.errors,
+        count: 0 
       };
     }
-    
-    const validData = validationResult.data || [];
-    
-    // Check for existing sites by ID to avoid duplicates
-    const sitesWithIds = validData.filter(site => site.id);
-    const existingIds = sitesWithIds.length > 0 ? 
-      await checkExistingItems('sites', sitesWithIds.map(site => site.id!)) : 
-      [];
-    
-    const sitesToInsert = validData.filter(site => !site.id || !existingIds.includes(site.id!));
-    const sitesToUpdate = validData.filter(site => site.id && existingIds.includes(site.id!));
-    
-    let insertCount = 0;
-    let updateCount = 0;
-    
-    // Insert new sites
-    if (sitesToInsert.length > 0) {
-      // Add user_id to each site
-      const sitesWithUserId = sitesToInsert.map(site => ({
-        ...site,
-        user_id: supabase.auth.getUser().then(res => res.data.user?.id) || null
-      }));
-      
-      const { data, error: insertError } = await supabase
-        .from('sites')
-        .insert(sitesWithUserId)
-        .select();
-      
-      if (insertError) {
-        console.error('Error inserting sites:', insertError);
-        return {
-          success: false,
-          count: 0,
-          errors: [{ message: insertError.message }]
-        };
-      }
-      
-      insertCount = data?.length || 0;
+
+    // Get the current user
+    const user = await supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    if (!userId) {
+      return { success: false, message: 'User not authenticated', count: 0 };
     }
-    
-    // Update existing sites
-    for (const site of sitesToUpdate) {
-      const { error: updateError } = await supabase
+
+    // Prepare sites for import with generated IDs for linking
+    const preparedSites = sites.map(site => ({
+      ...site,
+      generatedId: uuidv4(),
+      user_id: userId
+    }));
+
+    // Insert the sites
+    const sitesToInsert = preparedSites.map(site => ({
+      id: site.generatedId,
+      name: site.name,
+      client_id: site.client_id,
+      address: site.address,
+      city: site.city,
+      state: site.state,
+      postcode: site.postcode,
+      status: site.status || 'active',
+      email: site.email,
+      phone: site.phone,
+      representative: site.representative || '',
+      monthly_revenue: site.monthly_revenue,
+      custom_id: site.custom_id,
+      notes: site.notes,
+      user_id: userId
+    }));
+
+    // Insert in batches of 10 to avoid potential issues
+    const batchSize = 10;
+    for (let i = 0; i < sitesToInsert.length; i += batchSize) {
+      const batch = sitesToInsert.slice(i, i + batchSize);
+      const { error } = await supabase
         .from('sites')
-        .update(site)
-        .eq('id', site.id!);
+        .insert(batch);
       
-      if (updateError) {
-        console.error(`Error updating site ${site.id}:`, updateError);
-      } else {
-        updateCount++;
+      if (error) {
+        console.error('Error importing sites batch:', error);
+        throw error;
       }
     }
-    
-    return {
-      success: true,
-      count: insertCount + updateCount
+
+    return { 
+      success: true, 
+      message: `Successfully imported ${sites.length} sites`, 
+      count: sites.length,
+      siteIds: preparedSites.map(site => site.generatedId)
     };
   } catch (error) {
-    console.error('Error importing sites:', error);
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
+    console.error('Site import failed:', error);
+    return { 
+      success: false, 
+      message: `Site import failed: ${error instanceof Error ? error.message : String(error)}`, 
+      count: 0 
     };
   }
-};
+}

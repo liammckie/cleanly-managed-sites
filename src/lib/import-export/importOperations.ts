@@ -1,145 +1,122 @@
 
 import { supabase } from '@/lib/supabase';
-import { 
-  validateClientData, 
-  validateSiteData, 
-  validateContractorData, 
-  validateContractData,
-  validateInvoiceData
-} from './validation';
-import { 
-  ImportOptions, 
-  ImportResult, 
-  DataType 
-} from './types';
+import { ImportOptions, ImportResult } from './types';
+import { processClientImport } from './clientImport';
+import { importSites } from './siteImport';
+import { importContractors } from './contractorImport';
+import { importContracts } from './contractImport';
 
-/**
- * Generic import function that can handle different entity types
- * @param data The data to import
- * @param type The type of data (client, site, etc.)
- * @param options Import options
- * @returns Import result
- */
-export async function importData<T>(
-  data: any[],
-  type: DataType,
-  options: ImportOptions = {}
-): Promise<ImportResult> {
+// Generic function to check if entities exist in the database
+export async function checkExistingEntities(
+  tableName: string,
+  field: string,
+  values: string[]
+): Promise<string[]> {
+  if (!values.length) return [];
+
   try {
-    // Validate the data based on type
-    let validationResult: any;
+    // Direct use of table names based on what we know exists
+    let queryTable = '';
     
-    switch (type) {
-      case 'client':
-        validationResult = validateClientData(data);
-        break;
-      case 'site':
-        validationResult = validateSiteData(data);
-        break;
-      case 'contractor':
-        validationResult = validateContractorData(data);
-        break;
-      case 'contract':
-        validationResult = validateContractData(data);
-        break;
-      case 'invoice':
-        validationResult = validateInvoiceData(data);
+    switch(tableName) {
+      case 'clients':
+      case 'sites':
+      case 'contractors':
+      case 'invoices':
+      case 'quotes':
+      case 'user_profiles':
+      case 'user_roles':
+        queryTable = tableName;
         break;
       default:
-        return {
-          success: false,
-          message: `Unsupported data type: ${type}`,
-          count: 0
-        };
+        console.error(`Unknown table: ${tableName}`);
+        return [];
     }
     
-    if (!validationResult.valid) {
-      return {
-        success: false,
-        message: `Validation failed for ${type} import`,
-        count: 0,
-        failures: validationResult.errors
-      };
-    }
-    
-    // If dry run, return success without inserting
-    if (options.dryRun) {
-      return {
-        success: true,
-        message: `Dry run completed for ${type} import`,
-        count: validationResult.data?.length || 0,
-        data: validationResult.data
-      };
-    }
-    
-    // Insert the data into the database
-    const table = getTableNameForType(type);
-    const { data: insertedData, error } = await supabase
-      .from(table)
-      .insert(validationResult.data)
-      .select();
-    
+    const { data, error } = await supabase
+      .from(queryTable)
+      .select(field)
+      .in(field, values);
+
     if (error) {
-      console.error(`Error importing ${type}:`, error);
-      return {
-        success: false,
-        message: error.message,
-        count: 0,
-        failures: [{ message: error.message }]
-      };
+      console.error(`Error checking existing ${tableName}:`, error);
+      return [];
     }
-    
-    return {
-      success: true,
-      message: `Successfully imported ${insertedData?.length || 0} ${type}(s)`,
-      count: insertedData?.length || 0,
-      data: insertedData
-    };
+
+    return data.map(item => item[field]);
   } catch (error) {
-    console.error(`Error during ${type} import:`, error);
-    return {
-      success: false,
-      message: (error as Error).message,
-      count: 0,
-      failures: [{ message: (error as Error).message }]
-    };
+    console.error(`Error in checkExistingEntities for ${tableName}:`, error);
+    return [];
   }
 }
 
-/**
- * Gets the table name for a data type
- * @param type The data type
- * @returns The table name
- */
-function getTableNameForType(type: DataType): string {
+// Import clients
+export async function importClients(
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
+  return processClientImport(data);
+}
+
+// Import sites
+export async function importSites(
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
+  return importSites(data);
+}
+
+// Import contractors
+export async function importContractors(
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
+  return importContractors(data);
+}
+
+// Import contracts
+export async function importContracts(
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
+  return importContracts(data);
+}
+
+// Import invoices
+export async function importInvoices(
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
+  // This would be implemented similar to other import functions
+  return {
+    success: false,
+    message: 'Invoice import not yet implemented',
+    count: 0
+  };
+}
+
+// Generic import based on type
+export async function importData(
+  type: 'client' | 'site' | 'contractor' | 'contract' | 'invoice',
+  data: any[],
+  options: ImportOptions = {}
+): Promise<ImportResult> {
   switch (type) {
     case 'client':
-      return 'clients';
+      return importClients(data, options);
     case 'site':
-      return 'sites';
+      return importSites(data, options);
     case 'contractor':
-      return 'contractors';
+      return importContractors(data, options);
     case 'contract':
-      return 'site_contract_history';
+      return importContracts(data, options);
     case 'invoice':
-      return 'invoices';
+      return importInvoices(data, options);
     default:
-      throw new Error(`Unsupported data type: ${type}`);
+      return {
+        success: false,
+        message: `Unknown import type: ${type}`,
+        count: 0
+      };
   }
 }
-
-// Specific import functions for different entity types
-export const importClients = (data: any[], options?: ImportOptions) => 
-  importData(data, 'client', options);
-
-export const importSites = (data: any[], options?: ImportOptions) => 
-  importData(data, 'site', options);
-
-export const importContractors = (data: any[], options?: ImportOptions) => 
-  importData(data, 'contractor', options);
-
-export const importContracts = (data: any[], options?: ImportOptions) => 
-  importData(data, 'contract', options);
-
-export const importInvoices = (data: any[], options?: ImportOptions) => 
-  importData(data, 'invoice', options);

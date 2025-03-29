@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +12,25 @@ import { BadgeVariant } from '@/types/ui';
 
 interface SiteDetailHeaderProps {
   site: SiteRecord;
+  actions: any;
   isLoading: boolean;
 }
 
-// Skeleton component for loading state
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'active':
+      return 'success';
+    case 'inactive':
+      return 'secondary';
+    case 'pending':
+      return 'warning';
+    case 'on-hold':
+      return 'destructive';
+    default:
+      return 'secondary';
+  }
+};
+
 const SiteDetailHeaderSkeleton = () => (
   <Card className="mb-6">
     <CardContent className="pt-6">
@@ -35,7 +49,7 @@ const SiteDetailHeaderSkeleton = () => (
   </Card>
 );
 
-export const SiteDetailHeader: React.FC<SiteDetailHeaderProps> = ({ site, isLoading }) => {
+export default function SiteDetailHeader({ site, actions, isLoading }: SiteDetailHeaderProps) {
   if (isLoading) {
     return <SiteDetailHeaderSkeleton />;
   }
@@ -55,8 +69,9 @@ export const SiteDetailHeader: React.FC<SiteDetailHeaderProps> = ({ site, isLoad
     }
   };
 
-  // Check if contract is expiring soon
   const contractIsExpiringSoon = isContractExpiringSoon(site.contract_details, 60);
+
+  const statusColor = getStatusColor(site?.status || 'inactive');
 
   return (
     <Card className="mb-6">

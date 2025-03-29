@@ -1,67 +1,49 @@
 
-import { SiteFormData } from '@/components/sites/forms/siteFormTypes';
+import { useState, useEffect } from 'react';
 import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
-export const useSiteFormAdditionalContracts = (
-  formData: SiteFormData,
-  setFormData: React.Dispatch<React.SetStateAction<SiteFormData>>
-) => {
-  // Add a new additional contract
-  const addAdditionalContract = () => {
-    const newContract: ContractDetails = {
-      startDate: '',
-      endDate: '',
-      autoRenewal: false,
-      renewalPeriod: 0,
-      renewalNotice: 0,
-      noticeUnit: 'months',
-      serviceFrequency: '',
-      serviceDeliveryMethod: '',
-      contractNumber: '',
-      renewalTerms: '',
-      terminationPeriod: '',
-      contractType: 'cleaning',
-      contractLength: 0,
-      contractLengthUnit: 'months',
-      terms: []
-    };
-    
-    setFormData(prev => ({
+export function useSiteFormAdditionalContracts() {
+  const [additionalContracts, setAdditionalContracts] = useState<ContractDetails[]>([]);
+
+  const addContract = () => {
+    setAdditionalContracts(prev => [
       ...prev,
-      additionalContracts: [...(prev.additionalContracts || []), newContract]
-    }));
+      {
+        id: Math.random().toString(36).substring(2, 11),
+        contractNumber: '',
+        startDate: '',
+        endDate: '',
+        contractType: 'service',
+        value: 0,
+        billingCycle: 'monthly',
+        autoRenewal: false,
+        renewalTerms: '',
+        terminationPeriod: '',
+        renewalPeriod: '12', // Store as string to match ContractDetails type
+        contractLength: 12,
+        contractLengthUnit: 'months',
+        notes: ''
+      }
+    ]);
   };
-  
-  // Remove an additional contract
-  const removeAdditionalContract = (index: number) => {
-    setFormData(prev => {
-      const updatedContracts = [...(prev.additionalContracts || [])];
-      updatedContracts.splice(index, 1);
-      return {
-        ...prev,
-        additionalContracts: updatedContracts
-      };
-    });
+
+  const updateContract = (id: string, field: keyof ContractDetails, value: any) => {
+    setAdditionalContracts(prev => 
+      prev.map(contract => 
+        contract.id === id ? { ...contract, [field]: value } : contract
+      )
+    );
   };
-  
-  // Update an additional contract field
-  const updateAdditionalContract = (index: number, field: string, value: any) => {
-    setFormData(prev => {
-      const updatedContracts = [...(prev.additionalContracts || [])];
-      updatedContracts[index] = {
-        ...updatedContracts[index],
-        [field]: value
-      };
-      return {
-        ...prev,
-        additionalContracts: updatedContracts
-      };
-    });
+
+  const removeContract = (id: string) => {
+    setAdditionalContracts(prev => prev.filter(contract => contract.id !== id));
   };
-  
+
   return {
-    addAdditionalContract,
-    removeAdditionalContract,
-    updateAdditionalContract
+    additionalContracts,
+    addContract,
+    updateContract,
+    removeContract,
+    setAdditionalContracts
   };
-};
+}

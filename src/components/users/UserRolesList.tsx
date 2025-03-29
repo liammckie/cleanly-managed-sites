@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
@@ -10,10 +9,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { DialogWhenEmpty } from '@/components/shared/DialogWhenEmpty';
+import { Json } from '@/types/common';
 
 import EditRoleDialog from './EditRoleDialog';
 import DeleteRoleDialog from './DeleteRoleDialog';
 import CreateRoleDialog from './CreateRoleDialog';
+
+const convertJsonToPermissions = (jsonPermissions: Json): Record<string, boolean> => {
+  if (typeof jsonPermissions === 'object' && jsonPermissions !== null && !Array.isArray(jsonPermissions)) {
+    return Object.entries(jsonPermissions).reduce((acc, [key, value]) => {
+      acc[key] = Boolean(value);
+      return acc;
+    }, {} as Record<string, boolean>);
+  }
+  return {};
+};
 
 export default function UserRolesList() {
   const { roles, isLoading, refetch } = useRoles();
@@ -23,7 +33,6 @@ export default function UserRolesList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  // Get user counts for each role (in a real app, this would come from the API)
   useEffect(() => {
     // This is a placeholder for real implementation
     // In a real app, you would fetch user counts for each role from the API
@@ -33,13 +42,21 @@ export default function UserRolesList() {
     setIsCreateDialogOpen(true);
   };
   
-  const handleEditRole = (role: UserRole) => {
-    setSelectedRole(role);
+  const handleEditRole = (role: any) => {
+    const roleWithProperPermissions: UserRole = {
+      ...role,
+      permissions: convertJsonToPermissions(role.permissions)
+    };
+    setSelectedRole(roleWithProperPermissions);
     setIsEditDialogOpen(true);
   };
   
-  const handleDeleteRole = (role: UserRole) => {
-    setSelectedRole(role);
+  const handleDeleteRole = (role: any) => {
+    const roleWithProperPermissions: UserRole = {
+      ...role,
+      permissions: convertJsonToPermissions(role.permissions)
+    };
+    setSelectedRole(roleWithProperPermissions);
     setIsDeleteDialogOpen(true);
   };
   

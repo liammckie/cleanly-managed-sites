@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { dbToContract } from '@/lib/api/contracts/contractAdapter';
+import { dbToContract } from '@/lib/adapters/contractAdapter';
 import { Contract } from '@/types/db';
 
 // Adapter functions
@@ -15,7 +15,7 @@ export const adaptContracts = (contracts: any[]): Contract[] => {
 // API functions
 export const fetchContractsBySiteId = async (siteId: string) => {
   const { data, error } = await supabase
-    .from('contracts')
+    .from('site_additional_contracts')
     .select('*')
     .eq('site_id', siteId);
   
@@ -29,7 +29,7 @@ export const fetchContractsBySiteId = async (siteId: string) => {
 
 export const fetchContractById = async (contractId: string) => {
   const { data, error } = await supabase
-    .from('contracts')
+    .from('site_additional_contracts')
     .select('*')
     .eq('id', contractId)
     .single();

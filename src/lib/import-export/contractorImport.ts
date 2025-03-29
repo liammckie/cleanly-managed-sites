@@ -1,68 +1,80 @@
 
 import { supabase } from '@/lib/supabase';
-import { ContractorRecord } from './types';
-import { validateContractorData } from './validation/contractorValidation';
+import { validateContractorImport } from './validation/contractorValidation';
+import { v4 as uuidv4 } from 'uuid';
 
-export const importContractors = async (contractors: any[]): Promise<{
-  success: boolean;
-  count: number;
-  errors?: any[];
-}> => {
+// Define the ContractorRecord interface to match table schema
+interface ContractorImportRecord {
+  business_name: string;
+  contact_name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  contractor_type: string;
+  status?: string;
+  abn?: string;
+  hourly_rate?: number;
+  day_rate?: number;
+  notes?: string;
+  specialty?: string[];
+}
+
+export async function importContractors(contractors: ContractorImportRecord[]) {
   try {
-    console.log(`Starting contractor import with ${contractors.length} records`);
-    
-    // Validate contractor data
-    const validationResult = validateContractorData(contractors);
-    
-    if (!validationResult.valid) {
-      console.error('Contractor validation errors:', validationResult.errors);
-      return {
-        success: false,
-        count: 0,
+    if (!contractors.length) {
+      return { success: false, message: 'No contractors to import', count: 0 };
+    }
+
+    // Validate the contractors
+    const validationResult = validateContractorImport(contractors);
+    if (!validationResult.success) {
+      return { 
+        success: false, 
+        message: 'Validation failed', 
         errors: validationResult.errors,
+        count: 0 
       };
     }
-    
-    if (validationResult.warnings && validationResult.warnings.length > 0) {
-      console.warn('Contractor validation warnings:', validationResult.warnings);
+
+    // Get the current user
+    const user = await supabase.auth.getUser();
+    const userId = user.data.user?.id;
+    if (!userId) {
+      return { success: false, message: 'User not authenticated', count: 0 };
     }
-    
-    const validContractors = validationResult.data || [];
-    console.log(`Validated ${validContractors.length} contractors`);
-    
-    if (validContractors.length === 0) {
-      return {
-        success: true,
-        count: 0
-      };
+
+    // Insert each contractor with userId
+    for (const contractor of contractors) {
+      const { error } = await supabase
+        .from('contractors')
+        .insert({
+          ...contractor,
+          id: uuidv4(),
+          user_id: userId, 
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        
+      if (error) {
+        console.error('Error importing contractor:', error);
+        throw error;
+      }
     }
-    
-    // Insert contractors
-    const { data, error } = await supabase
-      .from('contractors')
-      .insert(validContractors)
-      .select();
-    
-    if (error) {
-      console.error('Error inserting contractors:', error);
-      return {
-        success: false,
-        count: 0,
-        errors: [{ message: error.message }]
-      };
-    }
-    
-    console.log('Contractor import completed successfully');
-    return {
-      success: true,
-      count: data?.length || validContractors.length
+
+    return { 
+      success: true, 
+      message: `Successfully imported ${contractors.length} contractors`, 
+      count: contractors.length 
     };
   } catch (error) {
-    console.error('Error during contractor import:', error);
-    return {
-      success: false,
-      count: 0,
-      errors: [{ message: (error as Error).message }]
+    console.error('Contractor import failed:', error);
+    return { 
+      success: false, 
+      message: `Contractor import failed: ${error instanceof Error ? error.message : String(error)}`, 
+      count: 0 
     };
   }
-};
+}

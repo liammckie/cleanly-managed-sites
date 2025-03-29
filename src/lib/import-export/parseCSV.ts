@@ -1,38 +1,43 @@
 
-import Papa from 'papaparse';
+import { parse } from 'papaparse';
 
 /**
- * Parse a CSV file or string into an array of objects
- * @param input CSV file or string
- * @returns Parsed data as array of objects
+ * Takes a CSV file and returns the parsed data as an array of objects
+ * @param file The CSV file to parse
+ * @param options Parse options
+ * @returns Promise with parsed data
  */
-export async function parseCSV(input: File | string): Promise<any[]> {
+export async function parseCSV(file: File, options: any = {}) {
   return new Promise((resolve, reject) => {
-    try {
-      const options = {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      if (!e.target || !e.target.result) {
+        reject(new Error('Error reading file'));
+        return;
+      }
+      
+      const csv = e.target.result as string;
+      
+      parse(csv, {
         header: true,
         skipEmptyLines: true,
-        transformHeader: (header: string) => {
-          // Convert headers to camelCase or snake_case as needed
-          return header.trim().toLowerCase().replace(/\s+/g, '_');
-        },
-        complete: (results: Papa.ParseResult<any>) => {
+        transformHeader: (header) => header.trim().toLowerCase(),
+        complete: (results) => {
           resolve(results.data);
         },
-        error: (error: Papa.ParseError) => {
-          reject(new Error(`CSV parse error: ${error.message}`));
-        }
-      };
-      
-      if (typeof input === 'string') {
-        Papa.parse(input, options);
-      } else if (input instanceof File) {
-        Papa.parse(input, { ...options, download: false });
-      } else {
-        reject(new Error('Invalid input: must be a string or File'));
-      }
-    } catch (error) {
-      reject(error);
-    }
+        error: (error) => {
+          reject(error);
+        },
+        ...options
+      });
+    };
+    
+    reader.onerror = () => {
+      reject(new Error('Error reading file'));
+    };
+    
+    // Read the file as text
+    reader.readAsText(file);
   });
 }

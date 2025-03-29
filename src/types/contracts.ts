@@ -1,71 +1,30 @@
 
-// Re-export contract types from the central registry
-export type { 
-  Contract, 
-  DbContract, 
-  ContractDetailsForm, 
-  ContractTerm,
-  ContractSummary,
-  ContractForecast,
-  ContractActivity
-} from './db';
+import { ContractDetails } from '@/components/sites/forms/types/contractTypes';
 
-import { Contract, ContractTerm } from './db';
-import { ContractStatus, Json } from './common';
-
-/**
- * Contract data structure for API and components
- * @deprecated Use Contract from the central registry instead
- */
-export interface ContractData extends Contract {}
-
-/**
- * Contract summary data for dashboards and reports
- * @deprecated Use ContractSummary from the central registry instead
- */
-export interface ContractSummaryData {
-  total_count: number;
-  active_count: number;
-  expiring_soon_count: number;
-  monthly_revenue: number;
-  annual_revenue: number;
-}
-
-/**
- * Grouped contracts by client or status
- */
-export interface GroupedContracts {
-  label: string;
-  count: number;
-  value: number;
-  contracts: Contract[];
-}
-
-/**
- * Contract details for forms and detailed views
- * @deprecated Use ContractDetailsForm from the central registry instead
- */
-export interface ContractDetails {
+export interface ContractHistoryEntry {
   id?: string;
-  contractNumber?: string;
+  site_id: string;
+  contract_details: ContractDetails;
+  notes?: string;
+  created_at?: string;
+  created_by?: string;
+  version_number?: number;
+}
+
+export interface Quote {
+  id: string;
+  name: string;
+  clientName?: string;
+  siteName?: string;
+  status: string;
   startDate?: string;
   endDate?: string;
-  autoRenewal?: boolean;
-  renewalPeriod?: string;
-  renewalNoticeDays?: number;
-  noticeUnit?: string;
-  terminationPeriod?: string;
-  renewalTerms?: string;
-  contractLength?: number;
-  contractLengthUnit?: string;
-  serviceFrequency?: string;
-  serviceDeliveryMethod?: string;
-  terms?: ContractTerm[];
-  additionalContracts?: any[];
-  contractType?: string;
-  value?: number;
-  billingCycle?: string;
-  notes?: string;
-  type?: string;
-  status?: string;
+  expiryDate?: string;
+  totalPrice: number;
+  laborCost: number;
+  overheadPercentage: number;
+  marginPercentage: number;
+  subcontractorCost: number;
+  createdAt: string;
+  updatedAt: string;
 }
