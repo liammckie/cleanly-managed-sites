@@ -1,7 +1,6 @@
 
-import { Contract, DbContract } from '@/types/db';
-import { ContractDetails } from '@/types/contracts';
-import { Json } from '@/types/common';
+import { Contract, DbContract, ContractDetails } from '@/lib/types/contracts';
+import { Json } from '@/lib/types/common';
 
 /**
  * Convert a database contract to a frontend contract

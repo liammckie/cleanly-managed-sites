@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ContractVariationSelector } from './ContractVariationSelector';
 import { BillingVariationForm } from './billing';
 import { ContractorChangeForm } from './ContractorChangeForm';
@@ -32,13 +32,24 @@ export function ContractVariationPage() {
     );
   }
   
+  // Back button handler
+  const handleBack = () => {
+    if (variationType) {
+      // If we're on a specific variation type, go back to the selection screen
+      navigate(`/sites/${siteId}/contract-variations`);
+    } else {
+      // If we're on the selection screen, go back to the site detail
+      navigate(`/sites/${siteId}`);
+    }
+  };
+  
   // Render the appropriate component based on variation type
   const renderVariationContent = () => {
     switch (variationType) {
       case 'billing':
-        return <BillingVariationForm />;
+        return <BillingVariationForm siteId={siteId!} />;
       case 'contractor':
-        return <ContractorChangeForm />;
+        return <ContractorChangeForm siteId={siteId!} />;
       default:
         // If no specific variation or unknown, show the selector
         return <ContractVariationSelector siteId={siteId!} />;
@@ -47,6 +58,18 @@ export function ContractVariationPage() {
   
   return (
     <div className="container py-6">
+      <div className="mb-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleBack}
+          className="flex items-center"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> 
+          Back
+        </Button>
+      </div>
+      
       {renderVariationContent()}
     </div>
   );

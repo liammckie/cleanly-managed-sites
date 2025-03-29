@@ -38,7 +38,7 @@ export const UserRolesList: React.FC = () => {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-destructive">Error loading roles: {error.message}</div>
+          <div className="text-destructive">Error loading roles: {(error as Error).message}</div>
         </CardContent>
       </Card>
     );

@@ -2,8 +2,55 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/utils/userTypeAdapter';
-import { adaptUserRole, adaptUserRoleToApi } from '@/utils/userTypeAdapter';
+import { UserRole } from '@/lib/types/users';
+
+// Convert DB role to frontend role
+const adaptUserRole = (dbRole: any): UserRole => {
+  // Convert permissions array to permissions object for frontend
+  const permissionsObject: Record<string, boolean> = {};
+  
+  // If dbRole.permissions is an array, convert it to object
+  if (Array.isArray(dbRole.permissions)) {
+    dbRole.permissions.forEach((permission: string) => {
+      permissionsObject[permission] = true;
+    });
+  } else if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
+    // If it's already an object, use it directly
+    Object.assign(permissionsObject, dbRole.permissions);
+  }
+  
+  return {
+    id: dbRole.id,
+    name: dbRole.name,
+    description: dbRole.description,
+    permissions: permissionsObject,
+    created_at: dbRole.created_at,
+    updated_at: dbRole.updated_at,
+    user_count: 'user_count' in dbRole ? dbRole.user_count : undefined
+  };
+};
+
+// Convert frontend role to DB role
+const adaptUserRoleToApi = (role: UserRole): any => {
+  // Convert permissions object to array for backend
+  const permissionsArray: string[] = [];
+  
+  // Extract all permissions set to true
+  Object.entries(role.permissions).forEach(([key, value]) => {
+    if (value) {
+      permissionsArray.push(key);
+    }
+  });
+  
+  return {
+    id: role.id,
+    name: role.name,
+    description: role.description || '',
+    permissions: permissionsArray,
+    created_at: role.created_at || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+};
 
 // Fetch all roles
 const fetchRoles = async (): Promise<UserRole[]> => {
