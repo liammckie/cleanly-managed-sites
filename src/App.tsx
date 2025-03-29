@@ -62,8 +62,8 @@ const App = () => {
         <Route path="/contacts" element={<Contacts />} />
         
         {/* Contract variation routes */}
-        <Route path="/sites/:siteId/variations" element={<ContractVariationPage />} />
-        <Route path="/sites/:siteId/variations/:variationType" element={<ContractVariationPage />} />
+        <Route path="/sites/:siteId/contract-variations" element={<ContractVariationPage />} />
+        <Route path="/sites/:siteId/contract-variations/:variationType" element={<ContractVariationPage />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

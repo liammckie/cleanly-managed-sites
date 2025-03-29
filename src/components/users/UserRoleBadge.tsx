@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { UserRole } from '@/lib/types/userTypes';
+import { UserRole } from '@/lib/types/users';
 
 interface UserRoleBadgeProps {
   role: UserRole | string;

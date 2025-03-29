@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
 import { permissionCategories, permissionDescriptions } from '@/lib/permissions';
+import { UserRole } from '@/lib/types/users';
 
 interface CreateRoleDialogProps {
   isOpen: boolean;

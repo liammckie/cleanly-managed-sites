@@ -1,14 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
-import { Sidebar } from '@/components/ui/layout/Sidebar';
-import { Navbar } from '@/components/ui/layout/Navbar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import React, { useState } from 'react';
+import { PageLayout } from '@/components/ui/layout/PageLayout';
 import { UsersList } from '@/components/users/UsersList';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { NewUserDialog } from '@/components/users/NewUserDialog';
 import { useUsers } from '@/hooks/useUsers';
-import { PageLayout } from '@/components/ui/layout/PageLayout';
 
 const Users = () => {
   const [showNewUserDialog, setShowNewUserDialog] = useState(false);

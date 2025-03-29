@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PermissionCheckbox } from './PermissionCheckbox';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { UserRole } from '@/utils/userTypeAdapter';
+import { UserRole } from '@/lib/types/users';
 import { Loader2 } from 'lucide-react';
 
 interface NewRoleDialogProps {

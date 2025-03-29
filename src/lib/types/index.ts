@@ -15,11 +15,3 @@ export {
   adaptContractDetailsToDb, 
   adaptContractDetailsFromDb 
 } from '@/lib/adapters/contractAdapter';
-
-// Re-export user adapter functions for backward compatibility
-export {
-  adaptUserFromDb,
-  adaptUserToDb,
-  adaptUserRoleFromDb,
-  adaptUserRoleToDb
-} from './users';

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useRoles } from '@/hooks/useRoles';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { UserRole } from '@/types/db';
+import { UserRole } from '@/lib/types/users';
 
 interface DeleteRoleDialogProps {
   isOpen: boolean;

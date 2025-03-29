@@ -55,6 +55,24 @@ export interface DbUserRole {
 }
 
 /**
+ * User role with count of users (for admin displays)
+ */
+export interface UserRoleWithCount extends UserRole {
+  user_count: number;
+}
+
+/**
+ * User profile (simplified user information)
+ */
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  status: UserStatus;
+}
+
+/**
  * Convert database user to system user
  */
 export function adaptUserFromDb(dbUser: any): SystemUser {

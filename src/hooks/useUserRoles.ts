@@ -2,55 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/lib/types/users';
-
-// Convert DB role to frontend role
-const adaptUserRole = (dbRole: any): UserRole => {
-  // Convert permissions array to permissions object for frontend
-  const permissionsObject: Record<string, boolean> = {};
-  
-  // If dbRole.permissions is an array, convert it to object
-  if (Array.isArray(dbRole.permissions)) {
-    dbRole.permissions.forEach((permission: string) => {
-      permissionsObject[permission] = true;
-    });
-  } else if (typeof dbRole.permissions === 'object' && dbRole.permissions !== null) {
-    // If it's already an object, use it directly
-    Object.assign(permissionsObject, dbRole.permissions);
-  }
-  
-  return {
-    id: dbRole.id,
-    name: dbRole.name,
-    description: dbRole.description,
-    permissions: permissionsObject,
-    created_at: dbRole.created_at,
-    updated_at: dbRole.updated_at,
-    user_count: 'user_count' in dbRole ? dbRole.user_count : undefined
-  };
-};
-
-// Convert frontend role to DB role
-const adaptUserRoleToApi = (role: UserRole): any => {
-  // Convert permissions object to array for backend
-  const permissionsArray: string[] = [];
-  
-  // Extract all permissions set to true
-  Object.entries(role.permissions).forEach(([key, value]) => {
-    if (value) {
-      permissionsArray.push(key);
-    }
-  });
-  
-  return {
-    id: role.id,
-    name: role.name,
-    description: role.description || '',
-    permissions: permissionsArray,
-    created_at: role.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-};
+import { UserRole, adaptUserRoleFromDb, adaptUserRoleToDb } from '@/lib/types/users';
 
 // Fetch all roles
 const fetchRoles = async (): Promise<UserRole[]> => {
@@ -84,7 +36,7 @@ const fetchRoles = async (): Promise<UserRole[]> => {
       ...role,
       user_count: countMap[role.id] || 0
     };
-    return adaptUserRole(transformedRole);
+    return adaptUserRoleFromDb(transformedRole);
   });
 };
 
@@ -102,13 +54,13 @@ export function useUserRoles() {
     mutationFn: async (role: Omit<UserRole, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('user_roles')
-        .insert(adaptUserRoleToApi(role as UserRole))
+        .insert(adaptUserRoleToDb(role as UserRole))
         .select('*')
         .single();
 
       if (error) throw error;
       
-      return adaptUserRole(data);
+      return adaptUserRoleFromDb(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-roles'] });
@@ -124,14 +76,14 @@ export function useUserRoles() {
     mutationFn: async (role: UserRole) => {
       const { data, error } = await supabase
         .from('user_roles')
-        .update(adaptUserRoleToApi(role))
+        .update(adaptUserRoleToDb(role))
         .eq('id', role.id)
         .select('*')
         .single();
 
       if (error) throw error;
       
-      return adaptUserRole(data);
+      return adaptUserRoleFromDb(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-roles'] });
@@ -187,7 +139,7 @@ export function useUserRole(id: string) {
         
       if (error) throw error;
       
-      return adaptUserRole(data);
+      return adaptUserRoleFromDb(data);
     },
     enabled: !!id
   });
