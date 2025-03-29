@@ -1,38 +1,17 @@
 
-import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-const NotFound = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
+const NotFound: React.FC = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-6">Oops! Page not found</p>
-        <p className="text-gray-500 mb-8">
-          We couldn't find the page you're looking for.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={() => navigate(-1)} variant="outline">
-            Go Back
-          </Button>
-          <Button onClick={() => navigate("/")}>
-            Return to Dashboard
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col items-center justify-center h-screen text-center">
+      <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
+      <p className="text-gray-600 mb-6">The page you're looking for doesn't exist or has been moved.</p>
+      <Link to="/" className="text-primary hover:underline">
+        Return to Dashboard
+      </Link>
     </div>
   );
-};
+}
 
 export default NotFound;

@@ -1,6 +1,7 @@
 
 import { SiteFormData } from './siteFormData';
 
+// Create initial form data for new site creation
 export function getInitialFormData(): SiteFormData {
   return {
     name: '',
@@ -10,31 +11,46 @@ export function getInitialFormData(): SiteFormData {
     postalCode: '',
     country: 'Australia',
     status: 'active',
+    phone: '',
+    email: '',
+    representative: '',
+    customId: '',
     contacts: [],
-    notes: '',
-    locationDetails: {
-      floor: '',
-      building: '',
-      suite: '',
-      propertyType: '',
-      accessHours: '',
-      keyLocation: '',
-      parkingDetails: '',
-      siteSize: '',
-      siteSizeUnit: 'sqm',
+    contractDetails: {
+      contractNumber: '',
+      startDate: '',
+      endDate: '',
+      autoRenewal: false,
+      renewalPeriod: '12',
+      renewalNoticeDays: 30,
+      terminationPeriod: '30 days'
     },
     billingDetails: {
-      billingLines: [],
-      useClientInfo: false,
-      billingMethod: '',
-      paymentTerms: '',
-      billingAddress: {
-        street: '',
-        city: '',
-        state: '',
-        postcode: '',
-        country: 'Australia'
-      }
+      billingFrequency: 'monthly',
+      billingLines: []
+    },
+    subcontractors: [],
+    replenishables: {
+      stock: [],
+      supplies: [],
+      notes: ''
+    },
+    periodicals: {
+      items: []
+    },
+    securityDetails: {
+      alarmCode: '',
+      keyLocation: '',
+      accessNotes: ''
+    },
+    jobSpecifications: {
+      daysPerWeek: 5,
+      hoursPerDay: 8,
+      directEmployees: 0,
+      cleaningFrequency: 'daily',
+      serviceDays: '',
+      serviceTime: '',
+      scopeNotes: ''
     }
   };
 }

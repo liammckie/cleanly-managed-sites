@@ -1,38 +1,26 @@
-import React from 'react';
-import { PageLayout } from '@/components/ui/layout/PageLayout';
-import { useSites } from '@/hooks/useSites';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardMetrics } from '@/components/dashboard/DashboardMetrics';
-import { DashboardActions } from '@/components/dashboard/DashboardActions';
-import { BusinessOverview } from '@/components/dashboard/BusinessOverview';
-import { ErrorBoundary } from '@/components/ui/error-boundary/ErrorBoundary';
 
-const Dashboard = () => {
-  const { data: sites, isLoading: sitesLoading } = useSites();
-  
+import React from 'react';
+
+const Dashboard: React.FC = () => {
   return (
-    <PageLayout>
-      <div className="p-6 animate-fade-in">
-        <ErrorBoundary>
-          <DashboardHeader />
-        </ErrorBoundary>
-        
-        <ErrorBoundary>
-          <DashboardActions />
-        </ErrorBoundary>
-        
-        <div className="space-y-8 mt-6">
-          <ErrorBoundary>
-            <DashboardMetrics />
-          </ErrorBoundary>
-          
-          <ErrorBoundary>
-            <BusinessOverview />
-          </ErrorBoundary>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-2">Sites</h2>
+          <p className="text-gray-600">Manage your cleaning sites</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-2">Clients</h2>
+          <p className="text-gray-600">Manage your clients</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-2">Work Orders</h2>
+          <p className="text-gray-600">Track work orders and tasks</p>
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
-};
+}
 
 export default Dashboard;

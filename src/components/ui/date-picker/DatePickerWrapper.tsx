@@ -1,35 +1,29 @@
 
 import React from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
-import { cn } from '@/lib/utils';
 
-export interface DatePickerWrapperProps {
-  value: Date;
-  onChange: (date: Date) => void;
-  id?: string;
-  label?: string;
+interface DatePickerWrapperProps {
+  value?: Date | null;
+  onChange: (date?: Date | null) => void;
   placeholder?: string;
-  disabled?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 export function DatePickerWrapper({
   value,
   onChange,
-  id,
-  label,
-  placeholder,
-  disabled,
-  className
+  placeholder = "Select a date",
+  className,
+  disabled = false
 }: DatePickerWrapperProps) {
-  // Convert the props to what DatePicker expects
   return (
-    <div className={cn(className)}>
-      <DatePicker
-        date={value}
-        onSelect={onChange}
-        disabled={disabled}
-      />
-    </div>
+    <DatePicker
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={className}
+      disabled={disabled}
+    />
   );
 }
