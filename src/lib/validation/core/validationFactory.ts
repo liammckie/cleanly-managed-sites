@@ -1,63 +1,60 @@
 
-/**
- * Validation factory pattern for easily creating validation functions
- * for different schemas and use cases
- */
 import { z } from 'zod';
-import { validateWithZod } from '../index';
-import { ValidationResult, ZodValidationResult } from '@/lib/types/validationTypes';
-
-export interface ValidationFactoryOptions<T> {
-  schema: z.ZodSchema<T>;
-  errorMapper?: (errors: Record<string, string>) => Record<string, string>;
-  transformResult?: (result: ZodValidationResult<T>) => ValidationResult;
-}
+import { ValidationError, ValidationResult, ZodValidationResult } from '@/lib/types/validationTypes';
+import { createValidationResult, formatZodErrors } from './validationCore';
 
 /**
- * Create a validation function for a specific schema
+ * ValidationFactory provides a consistent way to validate data using Zod schemas
  */
-export function createValidator<T>(options: ValidationFactoryOptions<T>) {
-  const { schema, errorMapper, transformResult } = options;
+export class ValidationFactory<T> {
+  private schema: z.ZodType<T>;
   
-  return (data: any): ValidationResult & { data?: T } => {
-    // Validate with the provided schema
-    const result = validateWithZod<T>(schema, data);
-    
-    // Apply custom error mapping if provided
-    if (!result.success && result.errors && errorMapper) {
-      result.errors = errorMapper(result.errors);
+  constructor(schema: z.ZodType<T>) {
+    this.schema = schema;
+  }
+  
+  /**
+   * Validate data using the provided schema
+   */
+  validate(data: unknown): ValidationResult {
+    try {
+      const result = this.schema.safeParse(data);
+      
+      if (result.success) {
+        return createValidationResult(true);
+      } else {
+        const errors = formatZodErrors(result.error);
+        return {
+          valid: false,
+          errors
+        };
+      }
+    } catch (error) {
+      return {
+        valid: false,
+        errors: [{ field: 'general', message: 'Validation failed' }]
+      };
     }
-    
-    // Transform the result if a transformer is provided
-    if (transformResult) {
-      return transformResult(result);
+  }
+  
+  /**
+   * Convert from Zod validation result to our standard format
+   */
+  convertResult(result: ZodValidationResult<T>): ValidationResult {
+    if (result.success) {
+      return createValidationResult(true);
+    } else {
+      const validationErrors: ValidationError[] = 
+        Array.isArray(result.errors) ? result.errors : 
+        Object.entries(result.errors || {}).map(([key, value]) => ({
+          field: key,
+          message: value
+        }));
+      
+      return {
+        valid: false,
+        errors: validationErrors
+      };
     }
-    
-    // Default transformation to standard ValidationResult
-    return {
-      valid: result.success,
-      errors: !result.success && result.errors 
-        ? Object.entries(result.errors).map(([field, message]) => ({
-            field,
-            message: message || 'Invalid value'
-          }))
-        : [],
-      data: result.data
-    };
-  };
-}
-
-/**
- * Create a form validator that returns simple error records for React form integration
- */
-export function createFormValidator<T>(schema: z.ZodSchema<T>) {
-  return (data: any): { isValid: boolean; errors: Record<string, string>; data?: T } => {
-    const result = validateWithZod<T>(schema, data);
-    
-    return {
-      isValid: result.success,
-      errors: result.success ? {} : (result.errors || {}),
-      data: result.data
-    };
-  };
+  }
 }

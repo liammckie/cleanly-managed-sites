@@ -1,84 +1,87 @@
 
-/**
- * Validation related type definitions
- */
-
-/**
- * Error record for validation failures
- */
-export interface ValidationError {
-  field: string;
-  message: string;
-  code?: string;
-  row?: number;
-}
-
-/**
- * Validation message with type (error, warning, info)
- */
+// Basic validation types
 export interface ValidationMessage {
   field: string;
   message: string;
   type?: 'error' | 'warning' | 'info';
 }
 
-/**
- * Standard validation result
- */
+export interface ValidationError {
+  field: string;
+  message: string;
+  type?: string;
+}
+
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
   warnings?: ValidationMessage[];
-  message?: string;
-  validData?: any[];
+  data?: any;
 }
 
-/**
- * Options for validation
- */
-export interface ValidationOptions {
-  skipRequiredFields?: boolean;
-  additionalValidation?: (data: any) => ValidationError[];
-  skipValidation?: boolean;
-  checkDuplicates?: boolean;
-  updateExisting?: boolean;
-  ignoreErrors?: boolean;
-  idField?: string;
-}
-
-/**
- * Legacy validation result format (for backward compatibility)
- */
+// Legacy validation result for backward compatibility
 export interface LegacyValidationResult {
   isValid: boolean;
-  errors: string[];
+  errors?: string[];
   warnings?: string[];
+  message?: string;
 }
 
-/**
- * Zod-based validation result
- */
-export interface ZodValidationResult<T = any> {
+// Zod validation result
+export interface ZodValidationResult<T> {
   success: boolean;
-  errors?: ValidationError[];
   data?: T;
+  errors: ValidationError[];
 }
 
-/**
- * Convert between validation result formats
- */
-export function legacyToNewValidationResult(legacy: LegacyValidationResult): ValidationResult {
+// Import/export related validation
+export interface ImportOptions {
+  format?: 'json' | 'csv';
+  mode: 'full' | 'incremental';
+  updateExisting?: boolean;
+  skipValidation?: boolean;
+  type?: string;
+}
+
+export interface ExportOptions {
+  format: 'json' | 'csv' | 'xlsx';
+  includeArchived?: boolean;
+  dateRange?: [Date, Date];
+  fields?: string[];
+}
+
+export interface ImportResult {
+  success: boolean;
+  errors: string[];
+  imported?: number;
+  skipped?: number;
+  message?: string;
+  data?: any[];
+}
+
+export interface ExportResult {
+  success: boolean;
+  errors: string[];
+  exported?: number;
+  message?: string;
+  data?: any;
+  filename?: string;
+}
+
+// Utility functions for converting between validation result formats
+export const legacyToNewValidationResult = (legacy: LegacyValidationResult): ValidationResult => {
   return {
     valid: legacy.isValid,
-    errors: legacy.errors.map(msg => ({ field: 'unknown', message: msg })),
-    warnings: legacy.warnings?.map(msg => ({ field: 'unknown', message: msg, type: 'warning' }))
+    errors: legacy.errors?.map(err => ({ field: 'general', message: err })) || [],
+    warnings: legacy.warnings?.map(warn => ({ field: 'general', message: warn, type: 'warning' }))
   };
-}
+};
 
-export function newToLegacyValidationResult(result: ValidationResult): LegacyValidationResult {
+export const newToLegacyValidationResult = (result: ValidationResult): LegacyValidationResult => {
   return {
     isValid: result.valid,
-    errors: result.errors.map(err => `${err.field}: ${err.message}`),
-    warnings: result.warnings?.map(warn => `${warn.field}: ${warn.message}`)
+    errors: result.errors.map(err => err.message),
+    warnings: result.warnings?.map(warn => warn.message),
+    message: result.errors.length > 0 ? result.errors[0].message : undefined
   };
-}
+};

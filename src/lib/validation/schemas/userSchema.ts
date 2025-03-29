@@ -19,3 +19,14 @@ export const userSchema = z.object({
 
 // Export the type derived from the schema
 export type UserFormData = z.infer<typeof userSchema>;
+
+// Export types for roles
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: string[] | Record<string, boolean>;
+  user_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}

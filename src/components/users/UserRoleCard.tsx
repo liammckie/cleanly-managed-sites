@@ -7,5 +7,5 @@ const permissionDisplay = (permissions: string[] | Record<string, boolean>) => {
     permissions.forEach(p => { permRecord[p] = true; });
     return permRecord;
   }
-  return permissions;
+  return permissions as Record<string, boolean>;
 };

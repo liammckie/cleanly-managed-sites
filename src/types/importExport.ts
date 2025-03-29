@@ -19,3 +19,5 @@ export interface ImportOptions {
 }
 
 export type DataType = 'clients' | 'sites' | 'contracts' | 'users' | 'contractors';
+export type DataImportType = DataType;
+export type DataExportType = DataType;
