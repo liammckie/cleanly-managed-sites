@@ -42,15 +42,22 @@ export interface ContractForecast {
   month: string;
   value: number;
   cumulative: number;
+  revenue?: number; // Added to fix errors in useContractForecast.ts
 }
 
 export interface ContractTerm {
-  id: string;
+  id: string; // Changed to required to match import in lib/api/contracts.ts
   name: string;
   description?: string;
   value?: number | string;
   unit?: string;
   type?: string;
+  // Add properties used in ContractTermsSection.tsx
+  startDate?: string;
+  endDate?: string;
+  renewalTerms?: string;
+  terminationPeriod?: string;
+  autoRenew?: boolean;
 }
 
 export interface ContractDetails {
@@ -59,7 +66,7 @@ export interface ContractDetails {
   startDate?: string;
   endDate?: string;
   autoRenewal?: boolean;
-  renewalPeriod?: string | number;
+  renewalPeriod?: string;
   renewalNoticeDays?: number;
   terminationPeriod?: string;
   billingCycle?: string;
@@ -70,4 +77,31 @@ export interface ContractDetails {
   notes?: string;
   status?: string;
   terms?: ContractTerm[];
+  noticeUnit?: string; // Added to fix error in contractDataUtils.ts
+  contractLength?: number; // Added to fix error in contractDataUtils.ts
+}
+
+export interface ContractActivity {
+  id: string;
+  contract_id: string;
+  activity_type: string;
+  description: string;
+  created_at: string;
+  created_by?: string;
+  metadata?: Json;
+  // Add missing properties used in ContractActivityFeed.tsx
+  action?: string;
+  timestamp?: string;
+  userName?: string;
+  details?: any;
+}
+
+export interface ContractHistoryEntry {
+  id: string;
+  site_id: string;
+  contract_details: Json;
+  notes?: string;
+  created_at: string;
+  created_by?: string;
+  version_number: number;
 }

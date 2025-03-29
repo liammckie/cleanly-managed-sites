@@ -1,44 +1,22 @@
 
-/**
- * Export all validation functions from the validation module
- */
-
-// Import all validation functions
-import { validateClientData } from './clientValidation';
-import { validateSiteData } from './siteValidation';
-import { validateContractorData } from './contractorValidation';
-import { validateContractData } from './contractValidation';
-import { validateInvoiceData } from './invoiceValidation';
-import { validateGenericData, validateEmail, validateDateFormat } from './commonValidation';
-
-// Export all validation functions
+// Export validation functions
 export { validateClientData } from './clientValidation';
 export { validateSiteData } from './siteValidation';
-export { validateContractorData } from './contractorValidation';
 export { validateContractData } from './contractValidation';
+export { validateContractorData } from './contractorValidation';
 export { validateInvoiceData } from './invoiceValidation';
-export { validateGenericData, validateEmail, validateDateFormat } from './commonValidation';
 
-export type {
-  ValidationError,
-  ValidationMessage,
-  ValidationResult,
-  ValidationOptions,
-  LegacyValidationResult,
-  ZodValidationResult
-} from './types';
-
+// Export common validation helpers
 export {
-  legacyToNewValidationResult,
-  newToLegacyValidationResult
-} from './types';
+  isValidEmail,
+  isValidDateFormat,
+  validateRequiredFields,
+  validateWithZod,
+  recordExistsByField,
+  recordsExistByField,
+  simplifyValidationErrors,
+  validateGenericData
+} from './commonValidation';
 
-// Export validation modules for explicit imports
-export const validation = {
-  client: { validateClientData },
-  site: { validateSiteData },
-  contractor: { validateContractorData },
-  contract: { validateContractData },
-  invoice: { validateInvoiceData },
-  common: { validateGenericData, validateEmail, validateDateFormat }
-};
+// Export types
+export type { ValidationError, ValidationResult } from './commonValidation';

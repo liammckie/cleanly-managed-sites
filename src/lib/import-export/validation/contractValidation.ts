@@ -1,141 +1,83 @@
 
-import { validateGenericData, validateDateFormat } from './commonValidation';
-import { ValidationError, ValidationResult } from './types';
-import { ContractDetails } from '@/types/contracts';
+import { z } from 'zod';
+import { isValidDateFormat } from './commonValidation';
+import { simplifyValidationErrors, validateRequiredFields, ValidationError } from './commonValidation';
+
+// Schema for contract validation
+const contractSchema = z.object({
+  site_id: z.string().uuid("Invalid site ID format"),
+  contract_number: z.string().optional().nullable(),
+  start_date: z.string().refine(val => !val || isValidDateFormat(val), {
+    message: "Invalid start date format (use YYYY-MM-DD)"
+  }),
+  end_date: z.string().refine(val => !val || isValidDateFormat(val), {
+    message: "Invalid end date format (use YYYY-MM-DD)"
+  }),
+  value: z.number().optional().nullable(),
+  auto_renewal: z.boolean().optional(),
+  renewal_period: z.union([z.string(), z.number()]).optional().nullable(),
+  renewal_notice_days: z.number().optional().nullable(),
+  termination_period: z.string().optional().nullable(),
+  billing_cycle: z.string().optional().nullable(),
+  contract_type: z.string().optional().nullable(),
+  service_frequency: z.string().optional().nullable(),
+  service_delivery_method: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  status: z.string().optional().nullable()
+});
 
 /**
- * Partial contract entry with site_id and other details
+ * Validate contract data
  */
-export interface ContractHistoryEntry {
-  site_id: string;
-  contract_details?: ContractDetails;
-  id?: string;
-  notes?: string;
-  created_by?: string;
-  created_at?: string;
-  version_number?: number;
-}
-
-/**
- * Validates contract data for import
- * @param data The contract data to validate
- * @returns A validation result
- */
-export function validateContractData(data: any[]): ValidationResult<Partial<ContractHistoryEntry>[]> {
-  const requiredFields = ['site_id'];
-  
-  return validateGenericData<ContractHistoryEntry>(
-    data,
-    requiredFields,
-    (item, index) => {
-      const errors: ValidationError[] = [];
-      
-      // Ensure contract_details exists and is an object
-      if (!item.contract_details) {
-        errors.push({
-          path: 'contract_details',
-          message: 'Contract details are required',
-          row: index
-        });
-      } else if (typeof item.contract_details === 'string') {
-        // Try to parse if it's a string
-        try {
-          item.contract_details = JSON.parse(item.contract_details);
-        } catch (e) {
-          errors.push({
-            path: 'contract_details',
-            message: 'Contract details must be valid JSON',
-            row: index,
-            value: item.contract_details
-          });
-        }
-      }
-      
-      // Validate contract dates if they exist
-      if (item.contract_details && typeof item.contract_details === 'object') {
-        const contract = item.contract_details;
-        
-        if (contract.startDate) {
-          const startDateError = validateDateFormat(contract.startDate, 'startDate', index);
-          if (startDateError) errors.push(startDateError);
-        }
-        
-        if (contract.endDate) {
-          const endDateError = validateDateFormat(contract.endDate, 'endDate', index);
-          if (endDateError) errors.push(endDateError);
-          
-          // Check that end date is after start date
-          if (contract.startDate && contract.endDate && new Date(contract.endDate) <= new Date(contract.startDate)) {
-            errors.push({
-              path: 'endDate',
-              message: 'End date must be after start date',
-              row: index,
-              value: contract.endDate
-            });
-          }
-        }
-      }
-      
-      return errors;
-    }
-  );
-}
-
-/**
- * Validates contract terms within a contract
- * @param contractTerms The contract terms to validate
- * @param rowIndex Optional row index for error context
- * @returns Array of validation errors
- */
-export function validateContractTerms(contractTerms: any[], rowIndex?: number): ValidationError[] {
+export function validateContractData(contracts: any[]) {
   const errors: ValidationError[] = [];
+  const validContracts: any[] = [];
   
-  if (!Array.isArray(contractTerms)) {
-    return [{
-      path: 'terms',
-      message: 'Contract terms must be an array',
-      row: rowIndex,
-      value: contractTerms
-    }];
-  }
-  
-  contractTerms.forEach((term, index) => {
-    if (!term.name) {
+  contracts.forEach((contract, index) => {
+    // Required fields check
+    const requiredFields = ['site_id'];
+    const requiredErrors = validateRequiredFields(contract, requiredFields);
+    
+    Object.entries(requiredErrors).forEach(([field, message]) => {
       errors.push({
-        path: `terms[${index}].name`,
-        message: 'Term name is required',
-        row: rowIndex,
-        value: term
+        field: `${index}.${field}`,
+        message
+      });
+    });
+    
+    // Date validation
+    if (contract.start_date && !isValidDateFormat(contract.start_date)) {
+      errors.push({
+        field: `${index}.start_date`,
+        message: 'Invalid start date format (use YYYY-MM-DD)'
       });
     }
     
-    // Validate term dates
-    if (term.startDate && term.endDate) {
-      const startDateError = validateDateFormat(term.startDate, `terms[${index}].startDate`, rowIndex);
-      if (startDateError) errors.push(startDateError);
-      
-      const endDateError = validateDateFormat(term.endDate, `terms[${index}].endDate`, rowIndex);
-      if (endDateError) errors.push(endDateError);
-      
-      // Check that end date is after start date
-      if (new Date(term.endDate) <= new Date(term.startDate)) {
+    if (contract.end_date && !isValidDateFormat(contract.end_date)) {
+      errors.push({
+        field: `${index}.end_date`,
+        message: 'Invalid end date format (use YYYY-MM-DD)'
+      });
+    }
+    
+    // Schema validation
+    const result = contractSchema.safeParse(contract);
+    if (!result.success) {
+      const schemaErrors = simplifyValidationErrors(result.error);
+      Object.entries(schemaErrors).forEach(([field, message]) => {
         errors.push({
-          path: `terms[${index}].endDate`,
-          message: 'End date must be after start date',
-          row: rowIndex,
-          value: term.endDate
+          field: `${index}.${field}`,
+          message
         });
-      }
+      });
+    } else {
+      validContracts.push(contract);
     }
   });
   
-  return errors;
+  return {
+    valid: errors.length === 0,
+    errors,
+    validContracts
+  };
 }
-
-/**
- * Exports validation functions for explicit imports
- */
-export const contractValidation = {
-  validateContractData,
-  validateContractTerms
-};

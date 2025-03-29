@@ -1,3 +1,4 @@
+
 import { Json } from './common';
 
 export interface Contract {
@@ -47,3 +48,36 @@ export interface ContractDetailsForm {
   value?: number;
   notes?: string;
 }
+
+export interface UserRole {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+  user_count?: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  full_name: string;
+  avatar_url?: string;
+  role_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  title?: string;
+  phone?: string;
+  status: UserStatus;
+  last_login?: string;
+  custom_id?: string;
+  note?: string;
+  territories?: string[];
+  permissions?: Record<string, boolean>;
+}
+
+export type UserStatus = 'active' | 'inactive' | 'pending';
+export type UserPermission = string;

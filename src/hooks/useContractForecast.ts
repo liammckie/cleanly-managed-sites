@@ -3,29 +3,32 @@ import { useState, useEffect } from 'react';
 import { ContractForecast } from '@/types/contracts';
 
 export function useContractForecast() {
-  const [forecastData, setForecastData] = useState<ContractForecast[]>([]);
+  const [forecast, setForecast] = useState<ContractForecast[]>([
+    // Example forecast data
+    { month: 'Jan', value: 12000, cumulative: 12000, revenue: 12000 },
+    { month: 'Feb', value: 12000, cumulative: 24000, revenue: 12000 },
+    { month: 'Mar', value: 12000, cumulative: 36000, revenue: 12000 },
+    { month: 'Apr', value: 12000, cumulative: 48000, revenue: 12000 },
+    { month: 'May', value: 12000, cumulative: 60000, revenue: 12000 },
+    { month: 'Jun', value: 12000, cumulative: 72000, revenue: 12000 },
+    { month: 'Jul', value: 12000, cumulative: 84000, revenue: 12000 },
+    { month: 'Aug', value: 12000, cumulative: 96000, revenue: 12000 },
+    { month: 'Sep', value: 12000, cumulative: 108000, revenue: 12000 },
+    { month: 'Oct', value: 12000, cumulative: 120000, revenue: 12000 },
+    { month: 'Nov', value: 12000, cumulative: 132000, revenue: 12000 },
+    { month: 'Dec', value: 12000, cumulative: 144000, revenue: 12000 },
+  ]);
   
+  const [loading, setLoading] = useState(false);
+
+  // Here you would typically fetch the actual forecast data from your API
+  // This is just a placeholder
   useEffect(() => {
-    // Mock data for the chart
-    const mockForecast: ContractForecast[] = [
-      { month: 'Jan', revenue: 35000, cost: 25000, profit: 10000, contractCount: 12 },
-      { month: 'Feb', revenue: 32000, cost: 24000, profit: 8000, contractCount: 12 },
-      { month: 'Mar', revenue: 38000, cost: 26000, profit: 12000, contractCount: 13 },
-      { month: 'Apr', revenue: 42000, cost: 28000, profit: 14000, contractCount: 14 },
-      { month: 'May', revenue: 45000, cost: 30000, profit: 15000, contractCount: 14 },
-      { month: 'Jun', revenue: 48000, cost: 32000, profit: 16000, contractCount: 15 },
-      { month: 'Jul', revenue: 50000, cost: 33000, profit: 17000, contractCount: 16 },
-      { month: 'Aug', revenue: 52000, cost: 34000, profit: 18000, contractCount: 17 },
-      { month: 'Sep', revenue: 55000, cost: 36000, profit: 19000, contractCount: 18 },
-      { month: 'Oct', revenue: 58000, cost: 38000, profit: 20000, contractCount: 19 },
-      { month: 'Nov', revenue: 60000, cost: 39000, profit: 21000, contractCount: 20 },
-      { month: 'Dec', revenue: 62000, cost: 40000, profit: 22000, contractCount: 22 }
-    ];
-    
-    setForecastData(mockForecast);
+    // setLoading(true);
+    // You would fetch data here, for now we're using the static data
+    // setForecast(fetchedData);
+    // setLoading(false);
   }, []);
-  
-  return {
-    forecastData
-  };
+
+  return { forecast, loading };
 }

@@ -1,76 +1,102 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { ContractActivity } from '@/types/db';
+import { ContractActivity } from '@/types/contracts';
+import { mapFromDb } from '@/lib/utils/mappers';
 
-export function useContractActivities(contractId?: string) {
+/**
+ * Hook to fetch contract activity data
+ */
+export function useContractActivities(contractId?: string, limit?: number) {
   const [activities, setActivities] = useState<ContractActivity[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!contractId) return;
 
-    async function fetchContractActivities() {
-      setIsLoading(true);
-      setError(null);
-
+    const fetchActivities = async () => {
+      setLoading(true);
       try {
-        const { data, error: fetchError } = await supabase
-          .from('contract_activity')
+        const { data, error } = await supabase
+          .from('contract_activities') // Use the correct table name
           .select('*')
           .eq('contract_id', contractId)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(limit || 20);
 
-        if (fetchError) {
-          throw new Error(`Error fetching contract activities: ${fetchError.message}`);
-        }
-
-        setActivities(data as ContractActivity[]);
+        if (error) throw new Error(error.message);
+        
+        // Map the raw data to our ContractActivity type
+        const mappedActivities: ContractActivity[] = data.map(item => ({
+          id: item.id,
+          contract_id: item.contract_id,
+          activity_type: item.activity_type,
+          description: item.description,
+          created_at: item.created_at,
+          created_by: item.created_by,
+          metadata: item.metadata,
+          // Map additional fields used in UI
+          action: item.activity_type, // Assuming activity_type can be used as action
+          timestamp: item.created_at,
+          userName: item.metadata?.user_name || 'System',
+          details: item.metadata || {}
+        }));
+        
+        setActivities(mappedActivities);
       } catch (err) {
-        console.error('Error in useContractActivities:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-        toast.error('Failed to load contract activities');
+        console.error('Error fetching contract activities:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    }
+    };
 
-    fetchContractActivities();
-  }, [contractId]);
+    fetchActivities();
+  }, [contractId, limit]);
 
-  const addActivity = async (activityData: Omit<ContractActivity, 'id' | 'created_at'>) => {
+  const addActivity = async (activity: Partial<ContractActivity>) => {
+    if (!contractId) return null;
+    
     try {
-      const { data, error: insertError } = await supabase
-        .from('contract_activity')
-        .insert([{
+      const { data, error } = await supabase
+        .from('contract_activities')
+        .insert({
           contract_id: contractId,
-          activity_type: activityData.activity_type,
-          description: activityData.description,
-          created_by: activityData.created_by,
-          metadata: activityData.metadata
-        }])
+          activity_type: activity.activity_type,
+          description: activity.description,
+          metadata: activity.metadata || {}
+        })
         .select()
         .single();
 
-      if (insertError) {
-        throw new Error(`Error adding contract activity: ${insertError.message}`);
-      }
-
-      setActivities(prev => [data as ContractActivity, ...prev]);
-      return data;
+      if (error) throw new Error(error.message);
+      
+      // Create a properly mapped activity
+      const newActivity: ContractActivity = {
+        id: data.id,
+        contract_id: data.contract_id,
+        activity_type: data.activity_type,
+        description: data.description,
+        created_at: data.created_at,
+        created_by: data.created_by,
+        metadata: data.metadata,
+        // Additional fields
+        action: data.activity_type,
+        timestamp: data.created_at,
+        userName: data.metadata?.user_name || 'System',
+        details: data.metadata || {}
+      };
+      
+      // Update the local state
+      setActivities(prev => [newActivity, ...prev]);
+      
+      return newActivity;
     } catch (err) {
       console.error('Error adding contract activity:', err);
-      toast.error('Failed to record contract activity');
       throw err;
     }
   };
 
-  return {
-    activities,
-    isLoading,
-    error,
-    addActivity
-  };
+  return { activities, loading, error, addActivity };
 }

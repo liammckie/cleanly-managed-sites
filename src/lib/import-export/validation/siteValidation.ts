@@ -1,64 +1,67 @@
 
-import { validateGenericData, validateEmail } from './commonValidation';
-import { ValidationError, ValidationResult } from './types';
+import { z } from 'zod';
+import { isValidEmail } from './commonValidation';
+import { simplifyValidationErrors, validateRequiredFields, ValidationError } from './commonValidation';
 
-export interface SiteImportItem {
-  name: string;
-  client_id: string;
-  address: string;
-  city: string;
-  state: string;
-  postcode: string;
-  status?: string;
-  email?: string;
-  phone?: string;
-  representative?: string;
-  monthly_revenue?: number;
-  custom_id?: string;
-  notes?: string;
-}
+// Schema for site validation
+const siteSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  postcode: z.string().optional().nullable(),
+  status: z.enum(['active', 'inactive', 'pending', 'on-hold', 'lost']).optional(),
+  client_id: z.string().uuid("Invalid client ID format").optional().nullable(),
+  email: z.string().email("Invalid email format").optional().nullable(),
+  phone: z.string().optional().nullable(),
+  representative: z.string().optional().nullable()
+});
 
 /**
- * Validates site data for import
- * @param data The site data to validate
- * @returns A validation result
+ * Validate site data
  */
-export function validateSiteData(data: any[]): ValidationResult<SiteImportItem[]> {
-  const requiredFields = ['name', 'client_id', 'address', 'city', 'state', 'postcode'];
+export function validateSiteData(sites: any[]) {
+  const errors: ValidationError[] = [];
+  const validSites: any[] = [];
   
-  return validateGenericData<SiteImportItem>(
-    data,
-    requiredFields,
-    (item, index) => {
-      const errors: ValidationError[] = [];
-      
-      // Validate email if provided
-      if (item.email) {
-        const emailError = validateEmail(item.email, 'email', index);
-        if (emailError) errors.push(emailError);
-      }
-      
-      // Validate status if provided
-      if (item.status && !['active', 'inactive', 'pending', 'on-hold', 'lost'].includes(item.status)) {
-        errors.push({
-          path: 'status',
-          message: 'Status must be one of: active, inactive, pending, on-hold, lost',
-          row: index,
-          value: item.status
-        });
-      }
-      
-      // Validate monthly_revenue if provided
-      if (item.monthly_revenue !== undefined && isNaN(Number(item.monthly_revenue))) {
-        errors.push({
-          path: 'monthly_revenue',
-          message: 'Monthly revenue must be a number',
-          row: index,
-          value: item.monthly_revenue
-        });
-      }
-      
-      return errors;
+  sites.forEach((site, index) => {
+    // Required fields check
+    const requiredFields = ['name', 'address'];
+    const requiredErrors = validateRequiredFields(site, requiredFields);
+    
+    Object.entries(requiredErrors).forEach(([field, message]) => {
+      errors.push({
+        field: `${index}.${field}`,
+        message
+      });
+    });
+    
+    // Email validation if present
+    if (site.email && !isValidEmail(site.email)) {
+      errors.push({
+        field: `${index}.email`,
+        message: 'Invalid email format'
+      });
     }
-  );
+    
+    // Schema validation
+    const result = siteSchema.safeParse(site);
+    if (!result.success) {
+      const schemaErrors = simplifyValidationErrors(result.error);
+      Object.entries(schemaErrors).forEach(([field, message]) => {
+        errors.push({
+          field: `${index}.${field}`,
+          message
+        });
+      });
+    } else {
+      validSites.push(site);
+    }
+  });
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+    validSites
+  };
 }

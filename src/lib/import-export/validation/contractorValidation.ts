@@ -1,67 +1,70 @@
 
-import { validateGenericData, validateEmail } from './commonValidation';
-import { ValidationError, ValidationResult } from './types';
-import { ContractorRecord } from '@/lib/import-export/types';
+import { z } from 'zod';
+import { isValidEmail } from './commonValidation';
+import { simplifyValidationErrors, validateRequiredFields, ValidationError } from './commonValidation';
+
+// Schema for contractor validation
+const contractorSchema = z.object({
+  business_name: z.string().min(1, "Business name is required"),
+  contact_name: z.string().min(1, "Contact name is required"),
+  email: z.string().email("Invalid email format").optional().nullable(),
+  phone: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  postcode: z.string().optional().nullable(),
+  status: z.enum(['active', 'inactive', 'pending']).optional(),
+  contractor_type: z.string().min(1, "Contractor type is required"),
+  abn: z.string().optional().nullable(),
+  specialty: z.array(z.string()).optional().nullable(),
+  notes: z.string().optional().nullable()
+});
 
 /**
- * Validates contractor data for import
- * @param data The contractor data to validate
- * @returns A validation result
+ * Validate contractor data
  */
-export function validateContractorData(data: any[]): ValidationResult<ContractorRecord[]> {
-  const requiredFields = ['business_name', 'contact_name', 'contractor_type'];
+export function validateContractorData(contractors: any[]) {
+  const errors: ValidationError[] = [];
+  const validContractors: any[] = [];
   
-  return validateGenericData<ContractorRecord>(
-    data,
-    requiredFields,
-    (item, index) => {
-      const errors: ValidationError[] = [];
-      
-      // Validate email if provided
-      if (item.email) {
-        const emailError = validateEmail(item.email, 'email', index);
-        if (emailError) errors.push(emailError);
-      }
-      
-      // Validate status if provided
-      if (item.status && !['active', 'inactive', 'pending'].includes(item.status)) {
-        errors.push({
-          path: 'status',
-          message: 'Status must be one of: active, inactive, pending',
-          row: index,
-          value: item.status
-        });
-      }
-      
-      // Validate contractor_type
-      if (!item.contractor_type) {
-        errors.push({
-          path: 'contractor_type',
-          message: 'Contractor type is required',
-          row: index
-        });
-      }
-      
-      // Validate hourly_rate and day_rate if provided
-      if (item.hourly_rate !== undefined && isNaN(Number(item.hourly_rate))) {
-        errors.push({
-          path: 'hourly_rate',
-          message: 'Hourly rate must be a number',
-          row: index,
-          value: item.hourly_rate
-        });
-      }
-      
-      if (item.day_rate !== undefined && isNaN(Number(item.day_rate))) {
-        errors.push({
-          path: 'day_rate',
-          message: 'Day rate must be a number',
-          row: index,
-          value: item.day_rate
-        });
-      }
-      
-      return errors;
+  contractors.forEach((contractor, index) => {
+    // Required fields check
+    const requiredFields = ['business_name', 'contact_name', 'contractor_type'];
+    const requiredErrors = validateRequiredFields(contractor, requiredFields);
+    
+    Object.entries(requiredErrors).forEach(([field, message]) => {
+      errors.push({
+        field: `${index}.${field}`,
+        message
+      });
+    });
+    
+    // Email validation if present
+    if (contractor.email && !isValidEmail(contractor.email)) {
+      errors.push({
+        field: `${index}.email`,
+        message: 'Invalid email format'
+      });
     }
-  );
+    
+    // Schema validation
+    const result = contractorSchema.safeParse(contractor);
+    if (!result.success) {
+      const schemaErrors = simplifyValidationErrors(result.error);
+      Object.entries(schemaErrors).forEach(([field, message]) => {
+        errors.push({
+          field: `${index}.${field}`,
+          message
+        });
+      });
+    } else {
+      validContractors.push(contractor);
+    }
+  });
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+    validContractors
+  };
 }
