@@ -1,4 +1,9 @@
 
+/**
+ * Import/Export module
+ * Centralizes all import/export related functionality
+ */
+
 // Export validation types and functions
 export * from './validation';
 
@@ -6,7 +11,12 @@ export * from './validation';
 export { parseCSV } from './parseCSV';
 export { setupTestData } from './setupTestData';
 export { generateCSV, generateTemplateCSV } from './csvGenerator';
-export { convertCSVToClientFormat, convertCSVToSiteFormat, convertCSVToContractFormat, convertCSVToContractorFormat } from './fileFormatConversion';
+export { 
+  convertCSVToClientFormat, 
+  convertCSVToSiteFormat, 
+  convertCSVToContractFormat, 
+  convertCSVToContractorFormat 
+} from './fileFormatConversion';
 
 // Export import operations
 export { 
@@ -21,25 +31,24 @@ export {
 // Export specific import implementations for backward compatibility
 export { processClientImport } from './clientImport';
 
-// Export types
-export type {
+// Export all types from central types module for easy access
+export {
   ImportOptions,
   ImportResult,
   ExportOptions,
-  DataType,
+  ExportResult,
+  DataExportType,
+  DataImportType,
   ClientImportItem,
-  ContractorRecord,
-  InvoiceRecord,
+  ContractorImportItem as ContractorRecord,
+  InvoiceImportItem as InvoiceRecord,
   InvoiceLineItem,
   ValidationError,
   ValidationMessage,
   ValidationResult,
   ValidationOptions,
   LegacyValidationResult,
-  ZodValidationResult
-} from './types';
-
-export {
+  ZodValidationResult,
   legacyToNewValidationResult,
   newToLegacyValidationResult
-} from './types';
+} from '../types';

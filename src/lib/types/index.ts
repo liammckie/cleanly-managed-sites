@@ -1,19 +1,36 @@
 
-// Central hub for type exports to reduce duplicate definitions
-export * from './users';
-export * from './clients';
-export * from './contracts';
-export * from './sites';
-export * from './contacts';
-export * from './contractors';
-export * from './common';
-export * from './exportTypes';
-export * from './importTypes';
+/**
+ * Central hub for type exports
+ * This file exports all types from the types directory to provide a single import point
+ */
 
-// Re-export adapters from the contract module for backward compatibility
+// Export common types
+export * from './common';
+
+// Export domain-specific types
+export * from './userTypes';
+export * from './clientTypes';
+export * from './contractTypes';
+export * from './siteTypes';
+export * from './contactTypes';
+export * from './contractorTypes';
+
+// Export import/export types
+export * from './importExportTypes';
+export * from './validationTypes';
+
+// Re-export adapters for convenience
 export { 
-  adaptContractToFrontend, 
+  adaptContractFromDb,
   adaptContractToDb, 
   adaptContractDetailsToDb, 
-  adaptContractDetailsFromDb 
-} from './contracts';
+  adaptContractDetailsFromDb,
+  adaptContractDetailsToJson
+} from '../adapters/contractAdapter';
+
+export {
+  adaptUserFromDb,
+  adaptUserToDb,
+  adaptUserRoleFromDb,
+  adaptUserRoleToDb
+} from '../adapters/userAdapter';
