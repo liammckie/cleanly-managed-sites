@@ -4,16 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { SiteFormData } from '@/components/sites/forms/types/siteFormData';
-import { Json } from '@/lib/types';
-
-// Function to prepare site data for database update
-const prepareSiteForDb = (siteData: any) => {
-  return {
-    ...siteData,
-    contract_details: siteData.contract_details as Json,
-    billing_details: siteData.billing_details as Json
-  };
-};
+import { adaptSiteFormToDb, prepareSiteForDb } from '@/lib/types/adapters/siteAdapter';
 
 interface UpdateSiteMutation {
   id: string;
@@ -29,7 +20,9 @@ export const useSiteUpdate = (): {
   const updateSite = async (params: UpdateSiteMutation) => {
     const { id, data: siteData } = params;
     try {
+      // Use the adapter to prepare the site data for the database
       const dbReadySiteData = prepareSiteForDb(siteData);
+      
       const { data, error } = await supabase
         .from('sites')
         .update(dbReadySiteData)
@@ -41,7 +34,6 @@ export const useSiteUpdate = (): {
       }
       
       toast.success('Site updated successfully!');
-      // Instead of router.refresh(), we can either navigate to the same page or just return the data
       return data;
     } catch (error: any) {
       console.error('Error updating site:', error);
@@ -50,7 +42,7 @@ export const useSiteUpdate = (): {
     }
   };
 
-  const updateSiteMutation = useMutation<any, Error, UpdateSiteMutation>({
+  const updateSiteMutation = useMutation({
     mutationFn: (params) => updateSite(params),
   });
 

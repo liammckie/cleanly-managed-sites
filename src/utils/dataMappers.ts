@@ -1,5 +1,9 @@
-
-import { mapToDb, mapFromDb } from '@/lib/utils/mappers';
+import { 
+  adaptBillingLinesToDb, 
+  adaptBillingLinesFromDb, 
+  adaptContractDetailsToDb, 
+  adaptContractDetailsFromDb 
+} from '@/lib/types/adapters';
 import { 
   BillingLine, 
   ContractDetails, 
@@ -12,78 +16,28 @@ import {
  * Utility for mapping contract details to/from database format
  */
 export function mapContractDetailsToDb(contractDetails: Partial<ContractDetails> = {}): Record<string, any> {
-  return mapToDb({
-    id: contractDetails.id,
-    contractNumber: contractDetails.contractNumber,
-    startDate: contractDetails.startDate,
-    endDate: contractDetails.endDate,
-    autoRenewal: contractDetails.autoRenewal,
-    renewalPeriod: contractDetails.renewalPeriod,
-    renewalNoticeDays: contractDetails.renewalNoticeDays,
-    terminationPeriod: contractDetails.terminationPeriod,
-    billingCycle: contractDetails.billingCycle,
-    serviceFrequency: contractDetails.serviceFrequency,
-    serviceDeliveryMethod: contractDetails.serviceDeliveryMethod,
-    contractType: contractDetails.contractType || contractDetails.type,
-    value: contractDetails.value,
-    annualValue: contractDetails.annualValue,
-    notes: contractDetails.notes,
-    status: contractDetails.status,
-    terms: contractDetails.terms,
-    reviewDate: contractDetails.reviewDate,
-    noticePeriodDays: contractDetails.noticePeriodDays,
-    nextIncreaseDate: contractDetails.nextIncreaseDate,
-    specialTerms: contractDetails.specialTerms,
-    terminationClause: contractDetails.terminationClause,
-    renewalLengthMonths: contractDetails.renewalLengthMonths,
-  });
+  return adaptContractDetailsToDb(contractDetails as ContractDetails);
 }
 
 /**
  * Map contract details from database format to frontend format
  */
 export function mapContractDetailsFromDb(dbContractDetails: Record<string, any> = {}): Partial<ContractDetails> {
-  return mapFromDb(dbContractDetails) as Partial<ContractDetails>;
+  return adaptContractDetailsFromDb(dbContractDetails);
 }
 
 /**
  * Map billing lines from frontend format to DB format
  */
 export function mapBillingLinesToDb(billingLines: Partial<BillingLine>[] = []): any[] {
-  if (!billingLines || !Array.isArray(billingLines)) return [];
-  
-  return billingLines.map(line => ({
-    id: line.id,
-    description: line.description,
-    amount: line.amount,
-    frequency: line.frequency,
-    is_recurring: line.isRecurring || line.is_recurring,
-    on_hold: line.onHold || line.on_hold,
-    notes: line.notes,
-    weekly_amount: line.weeklyAmount || line.weekly_amount,
-    monthly_amount: line.monthlyAmount || line.monthly_amount,
-    annual_amount: line.annualAmount || line.annual_amount
-  }));
+  return adaptBillingLinesToDb(billingLines as BillingLine[]);
 }
 
 /**
  * Map billing lines from DB format to frontend format
  */
 export function mapBillingLinesFromDb(dbLines: any[] = []): Partial<BillingLine>[] {
-  if (!dbLines || !Array.isArray(dbLines)) return [];
-  
-  return dbLines.map(line => ({
-    id: line.id,
-    description: line.description,
-    amount: line.amount,
-    frequency: line.frequency,
-    isRecurring: line.is_recurring,
-    onHold: line.on_hold,
-    notes: line.notes,
-    weeklyAmount: line.weekly_amount,
-    monthlyAmount: line.monthly_amount,
-    annualAmount: line.annual_amount
-  }));
+  return adaptBillingLinesFromDb(dbLines);
 }
 
 /**

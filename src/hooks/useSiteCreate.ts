@@ -1,27 +1,20 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { mapToDb } from '@/lib/mappers';
-import type { Json } from '@/lib/types';
+import { prepareSiteForDb } from '@/lib/types/adapters/siteAdapter';
 import type { SiteFormData } from '@/components/sites/forms/types/siteFormData';
 
 export function useSiteCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const prepareSiteForDb = (siteData: any) => {
-    return {
-      ...siteData,
-      representative: siteData.representative || '',
-      contract_details: siteData.contract_details as Json,
-      billing_details: siteData.billing_details as Json
-    };
-  };
-
-  const createSite = async (siteData: any) => {
+  const createSite = async (siteData: SiteFormData) => {
     try {
       setIsSubmitting(true);
       
+      // Use the adapter to prepare the site data for the database
       const dbReadySiteData = prepareSiteForDb(siteData);
+      
       const { data, error } = await supabase
         .from('sites')
         .insert(dbReadySiteData)
