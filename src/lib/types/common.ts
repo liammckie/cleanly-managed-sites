@@ -3,33 +3,29 @@
  * Common type definitions used across the application
  */
 
-// Basic JSON type that works with DB serialization
-export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-export type Json = JsonValue;
+// User status enum
+export type UserStatus = 'active' | 'pending' | 'inactive';
 
-// Status enums
-export type SiteStatus = 'active' | 'inactive' | 'pending' | 'on-hold' | 'lost';
-export type ContractStatus = 'active' | 'pending' | 'expired' | 'terminated' | 'on-hold';
-export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+// Generic JSON type for flexible data storage
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-// Frequency and other common enums
-export type Frequency = 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'quarterly' | 'annually' | 'once';
-export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-export type EmploymentType = 'full-time' | 'part-time' | 'casual' | 'contract' | 'independent';
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
-export type QuoteStatus = 'draft' | 'pending' | 'accepted' | 'rejected' | 'expired';
+// Date formats
+export type DateFormat = 'iso' | 'short' | 'long' | 'relative';
 
-// Common database types
-export interface BaseRecord {
-  id: string;
-  created_at: string;
-  updated_at: string;
+// Common status types
+export type Status = 'active' | 'inactive' | 'pending' | 'archived' | 'draft';
+
+// Pagination params
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
 }
 
-// Standard API response format
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: string;
-  message?: string;
-  success: boolean;
+// Sort direction
+export type SortDirection = 'asc' | 'desc';
+
+// Sort params
+export interface SortParams {
+  field: string;
+  direction: SortDirection;
 }

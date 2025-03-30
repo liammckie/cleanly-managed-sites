@@ -65,5 +65,5 @@ export const UserRoleCard: React.FC<UserRoleCardProps> = ({ role, onEditClick, o
   );
 };
 
-// Add a default export of the component
+// Export as default
 export default UserRoleCard;
