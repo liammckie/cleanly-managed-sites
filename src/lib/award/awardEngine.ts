@@ -9,13 +9,15 @@ import { cleaningServicesAward } from './awardData';
 // Calculate job cost based on input parameters and award rules
 export function calculateJobCost(input: JobCostCalculationInput): CostCalculationResult {
   // Get base rate for the specified level
+  const level = String(input.level);
   const baseRate = input.baseRate || 
-    (cleaningServicesAward.employeeLevelRates[input.level] || 
-     cleaningServicesAward.baseLevelRates[input.level]);
+    (cleaningServicesAward.employeeLevelRates?.[level] || 
+     cleaningServicesAward.baseLevelRates?.[level] || 0);
   
   // Apply casual loading if applicable
+  const casualLoading = cleaningServicesAward.casualLoading || cleaningServicesAward.penalties.casual;
   const appliedBaseRate = input.employmentType === 'casual' 
-    ? baseRate * (1 + cleaningServicesAward.casualLoading) 
+    ? baseRate * (1 + casualLoading) 
     : baseRate;
   
   // Calculate labor cost based on hours and conditions
@@ -29,7 +31,8 @@ export function calculateJobCost(input: JobCostCalculationInput): CostCalculatio
     
     Object.entries(input.conditions).forEach(([condition, hours]) => {
       if (hours && hours > 0) {
-        const rate = cleaningServicesAward.conditionRates[condition as PayCondition] || 1;
+        const payCondition = condition as PayCondition;
+        const rate = cleaningServicesAward.conditionRates?.[payCondition] || 1;
         laborCost += (appliedBaseRate * rate * hours);
         totalHours += hours;
       }

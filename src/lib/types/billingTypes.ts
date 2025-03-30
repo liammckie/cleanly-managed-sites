@@ -1,61 +1,58 @@
 
 /**
- * Billing related type definitions
+ * Billing Types
+ * Defines the data structures for billing information throughout the application
  */
-import { Json } from './common';
 
-/**
- * Billing details structure
- */
-export interface BillingDetails {
-  frequency?: string;
-  payment_terms?: string;
-  invoicing_day?: number;
-  gst_registered?: boolean;
-  payment_method?: string;
-  account_number?: string;
-  account_name?: string;
-  billing_email?: string;
-  billing_address?: string;
-  billing_contact?: string;
-  billing_phone?: string;
-  special_instructions?: string;
-  purchase_order_required?: boolean;
-  auto_billing?: boolean;
-  billing_on_hold?: boolean;
-  billing_hold_start_date?: string;
-  billing_hold_end_date?: string;
-  billing_notes?: string;
-  xero_contact_id?: string;
-  [key: string]: any; // Allow additional properties to satisfy Json compatibility
+export interface BillingContact {
+  name: string;
+  email?: string;
+  phone?: string;
+  role?: string;
 }
 
-/**
- * Billing line item
- */
-export interface BillingLineItem {
+export interface BillingLine {
   id: string;
-  site_id: string;
   description: string;
   amount: number;
-  frequency?: string;
-  weekly_amount?: number;
-  monthly_amount?: number;
-  annual_amount?: number;
-  is_recurring?: boolean;
-  on_hold?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  frequency: string;
+  isRecurring: boolean;
+  onHold?: boolean;
+  weeklyAmount?: number;
+  monthlyAmount?: number;
+  annualAmount?: number;
 }
 
-/**
- * Billing summary data
- */
+export interface BillingDetails {
+  cycle?: string;
+  method?: string;
+  notes?: string;
+  contact?: BillingContact;
+  email?: string;
+  phone?: string;
+  poRequired?: boolean;
+  onHold?: boolean;
+  holdStartDate?: string;
+  holdEndDate?: string;
+  billingLines?: BillingLine[];
+}
+
+export interface BillingLineItem {
+  id: string;
+  description: string;
+  amount: number;
+  quantity?: number;
+  unitPrice?: number;
+  taxType?: string;
+  accountCode?: string;
+}
+
 export interface BillingSummary {
-  weekly_revenue?: number;
-  monthly_revenue?: number;
-  annual_revenue?: number;
-  monthly_cost?: number;
-  profit_margin?: number;
-  billing_lines?: BillingLineItem[];
+  totalBilled: number;
+  totalPaid: number;
+  totalOutstanding: number;
+  averageMonthly: number;
+  nextInvoiceDate?: string;
+  lastInvoiceDate?: string;
+  invoiceCount: number;
 }

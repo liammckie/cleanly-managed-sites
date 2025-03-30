@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { awardData } from '@/lib/award/awardData';
+import { awardData, cleaningServicesAward } from '@/lib/award/awardData';
 import { PayCondition } from '@/lib/award/types';
 
 const payConditionLabels: Record<string, string> = {
@@ -18,7 +18,7 @@ const payConditionLabels: Record<string, string> = {
 };
 
 export function AwardRatesTable() {
-  const levelRates = awardData.employeeLevelRates;
+  const levelRates = cleaningServicesAward.employeeLevelRates || {};
   
   // Extract rates for all employee levels
   const levels = Object.keys(levelRates).filter(level => level !== 'contractor');
@@ -38,14 +38,14 @@ export function AwardRatesTable() {
         <TableBody>
           {Object.keys(payConditionLabels).map(condition => {
             const payCondition = condition as PayCondition;
-            const rateDefinition = awardData.conditionRates[payCondition];
+            const rateDefinition = cleaningServicesAward.conditionRates?.[payCondition] || 1;
             
             return (
               <TableRow key={condition}>
                 <TableCell className="font-medium">{payConditionLabels[condition]}</TableCell>
                 
                 {levels.map(level => {
-                  const baseRate = levelRates[level];
+                  const baseRate = levelRates[level] || 0;
                   const multiplier = rateDefinition;
                   const rate = baseRate * multiplier;
                   

@@ -1,22 +1,35 @@
 
-// Define EmployeeLevel as an enum or type
-export type EmployeeLevel = 1 | 2 | 3 | 4 | 5;
+import { CleaningServicesAward, EmployeeLevel, PayCondition } from './types';
 
-// Export awardData for compatibility
+// Define award data with proper typing
 export const awardData = {
-  levels: [1, 2, 3, 4, 5],
-  rates: {
-    1: { hourlyRate: 22.5 },
-    2: { hourlyRate: 23.7 },
-    3: { hourlyRate: 24.8 },
-    4: { hourlyRate: 26.0 },
-    5: { hourlyRate: 27.5 }
-  }
+  levels: [1, 2, 3, 4, 5] as EmployeeLevel[],
+  employeeLevelRates: {
+    1: 22.5,
+    2: 23.7,
+    3: 24.8,
+    4: 26.0,
+    5: 27.5
+  },
+  conditionRates: {
+    base: 1.0,
+    saturday: 1.5,
+    sunday: 1.75,
+    publicHoliday: 2.5,
+    earlyMorning: 1.15,
+    evening: 1.15,
+    overnight: 1.3,
+    overtime1: 1.5,
+    overtime2: 2.0,
+    overtime3: 2.5
+  } as Record<PayCondition, number>
 };
 
 // Export the award settings
 export const defaultAwardSettings = {
-  baseRate: 22.5,
+  baseRateMultiplier: 1.0,
+  overheadPercentageDefault: 15,
+  marginPercentageDefault: 20,
   casualLoading: 0.25,
   saturdayLoading: 0.5,
   sundayLoading: 0.75,
@@ -25,7 +38,7 @@ export const defaultAwardSettings = {
 };
 
 // Export the cleaning services award
-export const cleaningServicesAward = {
+export const cleaningServicesAward: CleaningServicesAward = {
   name: "Cleaning Services Award",
   levels: [
     { id: 1, name: "Level 1", baseRate: 22.5 },
@@ -34,14 +47,36 @@ export const cleaningServicesAward = {
     { id: 4, name: "Level 4", baseRate: 26.0 },
     { id: 5, name: "Level 5", baseRate: 27.5 }
   ],
+  employeeLevelRates: {
+    '1': 22.5,
+    '2': 23.7,
+    '3': 24.8,
+    '4': 26.0,
+    '5': 27.5,
+    'contractor': 35.0
+  },
+  conditionRates: {
+    base: 1.0,
+    saturday: 1.5,
+    sunday: 1.75,
+    publicHoliday: 2.5,
+    earlyMorning: 1.15,
+    evening: 1.15,
+    overnight: 1.3,
+    overtime1: 1.5,
+    overtime2: 2.0,
+    overtime3: 2.5
+  },
   penalties: {
     casual: 0.25,
     saturday: 0.5,
     sunday: 0.75,
     publicHoliday: 1.5,
     evening: 0.15
+  },
+  casualLoading: 0.25,
+  defaultSettings: {
+    overheadPercentageDefault: 15,
+    marginPercentageDefault: 20
   }
 };
-
-// Update the problematic value to match the EmployeeLevel type
-const employeeLevel: EmployeeLevel = 5;

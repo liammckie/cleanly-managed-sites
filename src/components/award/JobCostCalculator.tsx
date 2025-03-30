@@ -1,30 +1,27 @@
-import { EmployeeLevel, EmploymentType, PayCondition } from '@/types/common';
-import React, { useState } from 'react';
-import { calculateJobCost } from '@/lib/award/awardEngine';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { awardData } from '@/lib/award/awardData';
-import { validateEmployeeLevel } from '@/lib/utils/typeMapping';
 
-const payConditionLabels: Record<string, string> = {
-  base: 'Base Rate',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-  publicHoliday: 'Public Holiday',
-  earlyMorning: 'Early Morning',
-  evening: 'Evening',
-  overnight: 'Night Shift',
-  overtime1: 'Overtime (1.5x)',
-  overtime2: 'Overtime (2x)',
-  overtime3: 'Overtime (Public Holiday)'
-};
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAwardEngine } from '@/hooks/useAwardEngine';
+import { EmployeeLevel, PayCondition, JobCostCalculationInput } from '@/lib/award/types';
+import { cleaningServicesAward } from '@/lib/award/awardData';
 
 export function JobCostCalculator() {
-  const [employmentType, setEmploymentType] = useState<EmploymentType>('full-time');
-  const [level, setLevel] = useState<EmployeeLevel>(1);
-  const [hours, setHours] = useState<Partial<Record<PayCondition, number>>>({
-    base: 38,
+  const { calculateShiftCost } = useAwardEngine();
+  const [activeTab, setActiveTab] = useState('simple');
+
+  const [level, setLevel] = useState<EmployeeLevel>(3);
+  const [hours, setHours] = useState(8);
+  const [employmentType, setEmploymentType] = useState<'casual' | 'permanent'>('permanent');
+  const [conditions, setConditions] = useState<Record<PayCondition, number>>({
+    base: 8,
     saturday: 0,
     sunday: 0,
+    publicHoliday: 0,
     earlyMorning: 0,
     evening: 0,
     overnight: 0,
@@ -35,136 +32,314 @@ export function JobCostCalculator() {
   const [overheadPercentage, setOverheadPercentage] = useState(15);
   const [marginPercentage, setMarginPercentage] = useState(20);
   
-  const handleChangeHours = (condition: PayCondition, value: number) => {
-    setHours(prev => ({
+  const [result, setResult] = useState<any>(null);
+  
+  const handleCalculate = () => {
+    const input: JobCostCalculationInput = {
+      level,
+      hours,
+      employmentType,
+      conditions,
+      overheadPercentage,
+      marginPercentage
+    };
+    
+    const calculationResult = calculateShiftCost(input);
+    setResult(calculationResult);
+  };
+  
+  const handleConditionChange = (condition: PayCondition, value: number) => {
+    setConditions(prev => ({
       ...prev,
       [condition]: value
     }));
   };
   
-  const result = calculateJobCost({
-    employmentType,
-    level,
-    hours: Object.values(hours).reduce((sum, val) => sum + (val || 0), 0),
-    conditions: hours,
-    overheadPercentage,
-    marginPercentage
-  });
-  
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Cost Calculator</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-medium mb-2">Employee Details</h3>
-              <div className="mb-4">
-                <label className="block mb-1">Employment Type</label>
-                <select 
-                  value={employmentType}
-                  onChange={(e) => setEmploymentType(e.target.value as EmploymentType)}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  <option value="full_time">Full Time</option>
-                  <option value="part_time">Part Time</option>
-                  <option value="casual">Casual</option>
-                </select>
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="simple">Simple Calculator</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced Calculator</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="simple" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Job Cost Calculator</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="level">Employee Level</Label>
+                  <Select 
+                    value={String(level)} 
+                    onValueChange={(value) => setLevel(Number(value) as EmployeeLevel)}
+                  >
+                    <SelectTrigger id="level">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cleaningServicesAward.levels.map(level => (
+                        <SelectItem key={level.id} value={String(level.id)}>
+                          Level {level.id} (${level.baseRate.toFixed(2)}/hr)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="employment-type">Employment Type</Label>
+                  <Select 
+                    value={employmentType} 
+                    onValueChange={(value) => setEmploymentType(value as 'casual' | 'permanent')}
+                  >
+                    <SelectTrigger id="employment-type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="permanent">Permanent</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="hours">Hours</Label>
+                <Input
+                  id="hours"
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  value={hours}
+                  onChange={(e) => setHours(Number(e.target.value))}
+                />
+              </div>
+              
+              <Button onClick={handleCalculate}>Calculate Cost</Button>
+            </CardContent>
+          </Card>
+          
+          {result && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Calculation Result</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Base Rate:</p>
+                    <p className="font-medium">${result.baseRate.toFixed(2)}/hr</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Hours:</p>
+                    <p className="font-medium">{result.totalHours}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Labor Cost:</p>
+                    <p className="font-medium">${result.laborCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Overhead:</p>
+                    <p className="font-medium">${result.overheadCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Margin:</p>
+                    <p className="font-medium">${result.margin.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Final Price:</p>
+                    <p className="font-medium text-lg">${result.finalPrice.toFixed(2)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="advanced" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Advanced Job Cost Calculator</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="adv-level">Employee Level</Label>
+                  <Select 
+                    value={String(level)} 
+                    onValueChange={(value) => setLevel(Number(value) as EmployeeLevel)}
+                  >
+                    <SelectTrigger id="adv-level">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cleaningServicesAward.levels.map(level => (
+                        <SelectItem key={level.id} value={String(level.id)}>
+                          Level {level.id} (${level.baseRate.toFixed(2)}/hr)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="adv-employment-type">Employment Type</Label>
+                  <Select 
+                    value={employmentType} 
+                    onValueChange={(value) => setEmploymentType(value as 'casual' | 'permanent')}
+                  >
+                    <SelectTrigger id="adv-employment-type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="permanent">Permanent</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <div>
-                <label className="block mb-1">Employee Level</label>
-                <select 
-                  value={level}
-                  onChange={(e) => setLevel(Number(e.target.value) as EmployeeLevel)}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  {Object.keys(awardData.employeeLevelRates).map(lvl => (
-                    <option key={lvl} value={lvl}>Level {lvl}</option>
-                  ))}
-                </select>
+                <h3 className="text-lg font-medium mb-2">Hours Breakdown</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="base-hours">Regular Hours</Label>
+                      <Input
+                        id="base-hours"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={conditions.base}
+                        onChange={(e) => handleConditionChange('base', Number(e.target.value))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="saturday-hours">Saturday Hours</Label>
+                      <Input
+                        id="saturday-hours"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={conditions.saturday}
+                        onChange={(e) => handleConditionChange('saturday', Number(e.target.value))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="sunday-hours">Sunday Hours</Label>
+                      <Input
+                        id="sunday-hours"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={conditions.sunday}
+                        onChange={(e) => handleConditionChange('sunday', Number(e.target.value))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="publicHoliday-hours">Public Holiday Hours</Label>
+                      <Input
+                        id="publicHoliday-hours"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={conditions.publicHoliday}
+                        onChange={(e) => handleConditionChange('publicHoliday', Number(e.target.value))}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="evening-hours">Evening Hours</Label>
+                      <Input
+                        id="evening-hours"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={conditions.evening}
+                        onChange={(e) => handleConditionChange('evening', Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Hours by Condition</h3>
-              {Object.keys(hours).map(condition => (
-                <div key={condition} className="flex items-center justify-between mb-2">
-                  <label>{payConditionLabels[condition]}</label>
-                  <input
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="overhead">Overhead Percentage (%)</Label>
+                  <Input
+                    id="overhead"
                     type="number"
                     min="0"
-                    value={hours[condition as PayCondition] || 0}
-                    onChange={(e) => handleChangeHours(
-                      condition as PayCondition, 
-                      parseFloat(e.target.value) || 0
-                    )}
-                    className="w-20 px-2 py-1 border rounded"
+                    step="0.5"
+                    value={overheadPercentage}
+                    onChange={(e) => setOverheadPercentage(Number(e.target.value))}
                   />
                 </div>
-              ))}
-            </div>
-          </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="margin">Margin Percentage (%)</Label>
+                  <Input
+                    id="margin"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={marginPercentage}
+                    onChange={(e) => setMarginPercentage(Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              
+              <Button onClick={handleCalculate}>Calculate Cost</Button>
+            </CardContent>
+          </Card>
           
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Cost Settings</h3>
-            <div className="flex items-center justify-between mb-2">
-              <label>Overhead Percentage</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={overheadPercentage}
-                onChange={(e) => setOverheadPercentage(parseFloat(e.target.value) || 0)}
-                className="w-20 px-2 py-1 border rounded"
-              />
-            </div>
-            <div className="flex items-center justify-between mb-2">
-              <label>Margin Percentage</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={marginPercentage}
-                onChange={(e) => setMarginPercentage(parseFloat(e.target.value) || 0)}
-                className="w-20 px-2 py-1 border rounded"
-              />
-            </div>
-          </div>
-          
-          <div className="mt-4 border-t pt-4">
-            <h3 className="font-medium mb-2">Results</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Base Rate</p>
-                <p className="font-medium">${result.baseRate.toFixed(2)}/hr</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Labor Cost</p>
-                <p className="font-medium">${result.laborCost.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Overhead</p>
-                <p className="font-medium">${result.overheadCost.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Margin</p>
-                <p className="font-medium">${result.margin.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Hours</p>
-                <p className="font-medium">{result.totalHours}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Price</p>
-                <p className="font-medium">${result.price.toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          {result && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Detailed Cost Calculation</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Base Rate:</p>
+                    <p className="font-medium">${result.baseRate.toFixed(2)}/hr</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Hours:</p>
+                    <p className="font-medium">{result.totalHours}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Labor Cost:</p>
+                    <p className="font-medium">${result.laborCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Overhead:</p>
+                    <p className="font-medium">${result.overheadCost.toFixed(2)} ({overheadPercentage}%)</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Cost:</p>
+                    <p className="font-medium">${result.totalCostBeforeMargin.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Margin:</p>
+                    <p className="font-medium">${result.margin.toFixed(2)} ({marginPercentage}%)</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">Final Price:</p>
+                    <p className="font-medium text-lg">${result.finalPrice.toFixed(2)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
